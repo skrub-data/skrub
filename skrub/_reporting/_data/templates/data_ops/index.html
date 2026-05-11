@@ -4,15 +4,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>run report</title>
+    <title>{{ report_title if report_title else "DataOp report" }}</title>
     <style>
      {% include "data_ops.css" %}
     </style>
 </head>
 
 <body>
-    {% if title %}
-        <h1>{{ title }}</h1>
+    {% if report_title %}
+        <h1>{{ report_title }}</h1>
     {% endif %}
     <p>
         Click on a node to display more information.

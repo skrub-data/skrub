@@ -47,12 +47,14 @@ RidgeClassifier(alpha=1.0)
 # We start from a very simple pipeline without any hyperparameters.
 
 # %%
+import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 import skrub
 import skrub.datasets
 
-data = skrub.datasets.fetch_toxicity().toxicity
+file_path = skrub.datasets.fetch_toxicity().path
+data = pd.read_csv(file_path)
 
 # This dataset is sorted -- all toxic tweets appear first, so we shuffle it
 data = data.sample(frac=1.0, random_state=1)

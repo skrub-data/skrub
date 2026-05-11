@@ -136,3 +136,131 @@ And we can obtain predictions on the test part:
 
 It is possible to define a custom split function to use instead of
 :func:`sklearn.model_selection.train_test_split`.
+
+Passing additional arguments to the splitter
+============================================
+
+Sometimes we want to pass additional data to the cross-validation splitter.
+
+For example, if there is a group structure in our data (such as sites,
+hospitals, etc.) and we want the model to generalize to unseen groups, we must
+ensure while evaluating it that each group goes entirely in the train set or the
+test set, but is not divided among the 2. This can be done with
+:class:`sklearn.model_selection.GroupKFold`,
+:class:`sklearn.model_selection.LeavePGroupsOut`, etc. . The ``split`` function
+of those objects accepts a ``groups`` parameter. We can compute the groups
+inside of the DataOp and pass them to :meth:`DataOp.skb.mark_as_X` and they will
+be passed to the splitter.
+
+>>> df = skrub.datasets.toy_products()
+>>> df
+   description  price            seller     category
+0       screen    100   supermarket.com  electronics
+1       hammer     15  bestproducts.com        tools
+2     keyboard     20   supermarket.com  electronics
+3      usb key      9  bestproducts.com  electronics
+4      charger     13  bestproducts.com  electronics
+5  screwdriver     12   supermarket.com        tools
+
+Suppose we want to assess generalization to new sellers. While splitting for
+cross-validation we must group products by seller. We do it with
+:class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+>>> from sklearn.dummy import DummyClassifier
+>>> from sklearn.model_selection import LeaveOneGroupOut
+
+>>> data = skrub.var("df", df)
+>>> groups = data["seller"]
+>>> X = data[["description", "price"]].skb.mark_as_X(
+...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+... )
+>>> y = data["category"].skb.mark_as_y()
+>>> pred = X.skb.apply(DummyClassifier(), y=y)
+>>> split = pred.skb.train_test_split()
+
+The train set only contains data from the "supermarket.com" seller.
+
+>>> split["X_train"]
+   description  price
+0       screen    100
+2     keyboard     20
+5  screwdriver     12
+
+The test set only contains data from the "bestproducts.com" seller.
+
+>>> split["X_test"]
+  description  price
+1      hammer     15
+3     usb key      9
+4     charger     13
+
+Passing additional arguments to the scorer
+==========================================
+
+Sometimes we have additional information to pass to the scorer such as sample
+weights, group information etc.
+
+We can control how scoring is performed by using
+:meth:`DataOp.skb.with_scoring`. It has a ``scoring`` parameter, which can be
+anything scikit-learn's :func:`~sklearn.model_selection.cross_validate` accepts
+for ``scoring`` such as a metric name, callable scorer, or dict mapping metric
+names to scorers (see the reference documentation of
+:meth:`DataOp.skb.with_scoring` for details).
+
+It also accepts a ``kwargs`` argument, which are passed to the scorer when
+evaluating the learner.
+
+Importantly, the ``scoring`` and ``kwargs`` can be DataOps, which will be
+computed when scoring the learner -- so for example, sample weights can be
+computed dynamically.
+
+Using the same toy dataset as above, suppose we want to give more weight to more
+expensive products:
+
+>>> X = data[["description", "price"]].skb.mark_as_X(cv=2)
+>>> y = data["category"].skb.mark_as_y()
+>>> pred = X.skb.apply(DummyClassifier(), y=y)
+
+The default score is the (unweighted) accuracy:
+
+>>> pred.skb.cross_validate() # doctest: +SKIP
+   fit_time  score_time  test_score
+0  0.003982    0.002405    0.666667
+1  0.002582    0.002169    0.666667
+
+We set the scoring to provide the sample weights:
+
+>>> sample_weight = X["price"]
+>>> pred.skb.with_scoring(
+...     "accuracy", kwargs={"sample_weight": sample_weight}
+... ).skb.cross_validate() # doctest: +SKIP
+   fit_time  score_time  test_accuracy
+0  0.003045    0.003275       0.888889
+1  0.002659    0.003026       0.647059
+
+Besides passing extra arguments, :meth:`DataOp.skb.with_scoring` can also be
+useful to control what should be used as the default scoring metric for our
+learner, just as the ``cv`` parameter of :meth:`DataOp.skb.mark_as_X` defines
+the default cross-validation splitting strategy.
+
+>>> split = pred.skb.train_test_split()
+>>> learner = pred.skb.with_scoring('neg_log_loss').skb.make_learner()
+>>> learner.fit(split['train'])
+SkrubLearner(data_op=<Scoring <Apply DummyClassifier> (1 scorers)>
+    This DataOp will be scored with:
+      - 'neg_log_loss'
+    Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.)
+>>> learner.score(split['test']) # doctest: +SKIP
+-0.6365141682948128
+
+Note that the score above is negative: it is the negative log loss we passed to
+``with_scoring``, and not the default score (accuracy, which would be positive).
+
+:meth:`DataOp.skb.with_scoring` only changes how scoring is performed
+(the outputs of :meth:`DataOp.skb.cross_validate`,
+:meth:`DataOp.skb.make_randomized_search`, :class:`SkrubLearner.score <SkrubLearner>` etc.),
+**not** the actual outputs of the learner (it does _not_ affect the outputs of
+:meth:`DataOp.skb.eval`, :class:`SkrubLearner.predict <SkrubLearner>`, etc.)
+
+This method can be called several times to add scorers that take different
+kwargs. See the reference documentation for details.

@@ -32,11 +32,14 @@ and see how we can perform a grid-search with it.
 #
 # Throughout this example, we will use the employee salaries dataset.
 
+import pandas as pd
+
 from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()
-X = dataset.X
-y = dataset.y
+df = pd.read_csv(dataset.employee_salaries_path)
+X = df.drop(columns=["current_annual_salary"])
+y = df["current_annual_salary"]
 
 X.head(10)
 

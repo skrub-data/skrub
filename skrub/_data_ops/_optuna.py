@@ -11,6 +11,7 @@ from sklearn.metrics import check_scoring
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import parse_version
 
+from .._utils import set_module
 from ._estimator import (
     _SEARCH_FITTED_ATTRIBUTES,
     _BaseParamSearch,
@@ -136,6 +137,7 @@ def _get_scorer(estimator, scoring):
     return scorer
 
 
+@set_module("skrub")
 class OptunaParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 

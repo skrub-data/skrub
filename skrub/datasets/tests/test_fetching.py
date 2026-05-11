@@ -53,6 +53,10 @@ def test_fetch_credit_fraud():
     assert data.baskets.shape == (92790, 2)
     with pytest.raises(ValueError, match=".*got: None"):
         skrub.datasets.fetch_credit_fraud(split=None)
+    for dataset in ["baskets", "products"]:
+        name = f"{dataset}_path"
+        assert name in data
+        assert data[name].endswith(f"{dataset}.csv")
 
 
 @xfail_with_download_error
@@ -67,6 +71,9 @@ def test_fetch_employee_salaries():
     assert data.employee_salaries.shape == (9228, 9)
     with pytest.raises(ValueError, match=".*got: None"):
         skrub.datasets.fetch_employee_salaries(split=None)
+    name = "employee_salaries_path"
+    assert name in data
+    assert data[name].endswith("employee_salaries.csv")
 
 
 @xfail_with_download_error
@@ -78,7 +85,6 @@ def test_fetch_employee_salaries():
         ("midwest_survey", (2494, 29)),
         ("open_payments", (73558, 6)),
         ("traffic_violations", (1578154, 43)),
-        ("toxicity", (1000, 2)),
         ("videogame_sales", (16572, 11)),
         ("bike_sharing", (17379, 11)),
     ],
@@ -90,20 +96,41 @@ def test_datasets_without_splitting(dataset_name, shape):
 
 
 @xfail_with_download_error
+def test_toxicity():
+    data = _fetching.fetch_toxicity()
+    assert data.toxicity.shape == (1000, 2)
+
+
+@xfail_with_download_error
 @pytest.mark.parametrize(
     "dataset_name, keys",
     [
-        ("flight_delays", ["flights", "airports", "weather", "stations", "metadata"]),
+        (
+            "flight_delays",
+            [
+                "flights",
+                "airports",
+                "weather",
+                "stations",
+                "metadata",
+                "flights_path",
+                "airports_path",
+                "weather_path",
+                "stations_path",
+            ],
+        ),
         (
             "country_happiness",
             [
                 "happiness_report",
-                "happiness_report",
                 "life_expectancy",
                 "legal_rights_index",
+                "happiness_report_path",
+                "life_expectancy_path",
+                "legal_rights_index_path",
             ],
         ),
-        ("movielens", ["movies", "ratings", "metadata"]),
+        ("movielens", ["movies", "ratings", "metadata", "movies_path", "ratings_path"]),
     ],
 )
 def test_fetching_several_tables(dataset_name, keys):

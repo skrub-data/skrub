@@ -45,9 +45,10 @@ from sklearn.base import BaseEstimator
 from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
+from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
-from .._utils import PassThrough, short_repr
+from .._utils import PassThrough, set_module, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
@@ -296,6 +297,13 @@ class DataOpImpl:
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        """
+        Title displayed above the preview value in the DataOp's repr and html repr.
+        """
+        return "Result"
 
 
 def _find_dataframe(data_op, func_name):
@@ -546,6 +554,7 @@ class _DataOpDoc:
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
+@set_module("skrub")
 class DataOp:
     """A skrub DataOp."""
 
@@ -698,7 +707,7 @@ class DataOp:
         if preview is NULL:
             return result
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
-        header = f"Result{subsample_msg}:"
+        header = f"{self._skrub_impl.__skrub_preview_heading__()}{subsample_msg}:"
         underline = "―" * len(header)
         return f"{result}\n{header}\n{underline}\n{preview!r}"
 
@@ -722,13 +731,20 @@ class DataOp:
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
             graph = strip_xml_declaration(graph)
+            has_graph = True
         except Exception:
             graph = (
                 "Please install Pydot and GraphViz to display the computation graph."
             )
+            has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            return f"<div>{graph}</div>"
+            if has_graph:
+                return f"<div>{graph}</div>"
+            return (
+                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
+                f"</div><div>{graph}</div></div>"
+            )
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"
@@ -736,14 +752,27 @@ class DataOp:
             )
         else:
             name_line = ""
-        title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
-        summary = "<samp>Show graph</samp>"
+        repr_start, _, repr_rest = short_repr(self).partition("\n")
+        if repr_rest:
+            repr_rest = f"\n<pre>\n{html.escape(repr_rest)}\n</pre>"
+        title = (
+            f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
+            f"<br />{repr_rest}\n"
+        )
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        details_open_or_not = (
+            "open"
+            if _config.get_config().get("data_ops_open_graph_dropdown", False)
+            else ""
+        )
         prefix = (
             f"{title}{name_line}"
-            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"<details {details_open_or_not}>\n"
+            f"<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
+            f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
+            "</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
@@ -792,10 +821,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
+    if exclude_cols is not None:
+        msg = f"`exclude_cols` must be None (the default) when {reason}"
     elif how not in ["auto", "no_wrap"]:
         msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
@@ -828,33 +859,25 @@ def _check_estimator_type(estimator):
     )
 
 
-def _check_apply_how(how):
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X):
+    """
+    Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
+    """
+    if not isinstance(no_wrap, bool):
+        raise TypeError(
+            "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
+            f"got: {no_wrap!r}."
+        )
     valid = ["auto", "cols", "frame", "no_wrap"]
-    if how in valid:
-        return how
-
-    # TODO remove when the old names are completely dropped in 0.7.0
-    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
-    if how in translate:
-        new = translate[how]
+    if how not in valid:
+        raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+    if how != "auto":
         warnings.warn(
-            (
-                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
-                " instead."
-            ),
+            "The 'how' parameter of .skb.apply() has been deprecated "
+            "and will  be removed in a future release. "
+            f"Use the 'no_wrap' parameter instead. Got how={how!r}",
             FutureWarning,
         )
-        return new
-
-    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-
-
-def _wrap_estimator(estimator, cols, how, allow_reject, X):
-    """
-    Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
-    needed.
-    """
-    how = _check_apply_how(how)
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -862,8 +885,11 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, how, allow_reject, reason)
 
+    if no_wrap:
+        _check("`no_wrap` is True")
+        return estimator
     if how == "no_wrap":
         _check("`how` is 'no_wrap'")
         return estimator
@@ -873,9 +899,17 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
+    if how == "auto":
+        return ApplyToCols(
+            estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
+        )
+    columnwise = {"cols": True, "frame": False}[how]
     return wrap_transformer(
-        estimator, cols, allow_reject=allow_reject, columnwise=columnwise
+        estimator,
+        cols=cols,
+        exclude_cols=exclude_cols,
+        allow_reject=allow_reject,
+        columnwise=columnwise,
     )
 
 
@@ -1052,9 +1086,9 @@ def X(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1114,9 +1148,9 @@ def y(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1332,6 +1366,8 @@ class Apply(DataOpImpl):
         "estimator",
         "y",
         "cols",
+        "exclude_cols",
+        "no_wrap",
         "how",
         "allow_reject",
         "unsupervised",
@@ -1369,11 +1405,15 @@ class Apply(DataOpImpl):
 
         if "fit" in method_name:
             cols = yield self.cols
+            exclude_cols = yield self.exclude_cols
+            no_wrap = yield self.no_wrap
             how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
+                no_wrap=no_wrap,
                 how=how,
                 allow_reject=allow_reject,
                 X=X,
@@ -1382,10 +1422,33 @@ class Apply(DataOpImpl):
 
         # 2. Call the appropriate estimator method
 
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()`. This is done even if the transformer is the
+            # last estimator, as it can make things easier for downstream nodes
+            # if we are building a transformer rather than a predictor.
+            method_name = "fit_transform"
+
+        if "transform" not in method_name:
+            # We are evaluating in another mode than transform or fit_transform
+            # and the current estimator has the corresponding method. We check
+            # if we are the last estimator: if we are not, we want to transform
+            # instead so that subsequent steps get the transformed data rather
+            # than, for example, a fitted estimator or a score.
+            #
+            # An example situation where this arises is are in score mode and
+            # we have an internal transformer such as PCA that has a score()
+            # method.
+            from ._evaluation import HasRunningApplyAncestor
+
+            has_running_apply_ancestor = yield HasRunningApplyAncestor()
+            if has_running_apply_ancestor:
+                method_name = "fit_transform" if "fit" in method_name else "transform"
+
         if "transform" in method_name and not hasattr(self.estimator_, method_name):
-            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
-            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
-            # with `.predict()`
+            # We are a predictor and need to do 'transform' or 'fit_transform'
+            # (as in `.skb.preview()` or `.skb.eval()`). We replace
+            # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
                 self.estimator_.fit(X, y, **fit_kwargs)
@@ -1394,11 +1457,6 @@ class Apply(DataOpImpl):
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
-
-        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
-            # We are a transformer in 'fit' mode. Rather than `fit()` we call
-            # `fit_transform()` so that subsequent steps can be fitted as well.
-            method_name = "fit_transform"
 
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
@@ -1488,7 +1546,11 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToCols", "ApplyToFrame"]:
+        if estimator.__class__.__name__ in [
+            "ApplyToEachCol",
+            "ApplyToSubFrame",
+            "ApplyToCols",
+        ]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
@@ -1943,7 +2005,7 @@ def eval_mode():
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      DataOp is defined or when we call ``.skb.eval()`` without
+      DataOp is defined or when we call :func:`DataOp.skb.eval()` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.
@@ -1974,3 +2036,50 @@ def eval_mode():
     2
     """
     return DataOp(EvalMode())
+
+
+class SplitX(DataOpImpl):
+    _fields = ["X", "cv", "split_kwargs"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.X)
+
+    def __repr__(self):
+        return "<X>"
+
+
+def _scorer_repr(scorer_info):
+    scorer = scorer_info["scoring"]
+    if name := scorer_info.get("name"):
+        prefix = f"{name}: "
+    else:
+        prefix = ""
+    if isinstance(scorer, (list, tuple, set, dict)):
+        return [f"{prefix}{s!r}" for s in scorer]
+    return [f"{prefix}{scorer!r}"]
+
+
+class Scoring(DataOpImpl):
+    _fields = ["pred", "scorers"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.pred)
+
+    def __repr__(self):
+        details = ["    This DataOp will be scored with:\n"]
+        all_scorer_reprs = []
+        for scorer_info in self.scorers:
+            all_scorer_reprs.extend(_scorer_repr(scorer_info))
+        details.extend(f"      - {s_repr}\n" for s_repr in all_scorer_reprs)
+        details.append(
+            "    Use .skb.cross_validate(…) or "
+            ".skb.make_learner(…).score(…) to compute scores."
+        )
+        return (
+            f"<Scoring {short_repr(self.pred)} ({len(all_scorer_reprs)} scorers)>\n"
+            f"{''.join(details)}"
+        )
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        return "Result (preview of the learner's output, not the scores)"

@@ -79,20 +79,12 @@ def test_input_is_sparse():
 
 def test_input_is_lazy():
     pl = pytest.importorskip("polars")
-    df = pl.DataFrame({"a": [1, 2]})
-    lazy_df = df.lazy()
+    lazy_df = pl.DataFrame({"a": [1, 2]}).lazy()
     check = CheckInputDataFrame()
-    with pytest.warns(UserWarning, match=".*only works on eager"):
-        out = check.fit_transform(lazy_df)
-    assert isinstance(out, pl.DataFrame)
-    from polars.testing import assert_frame_equal
-
-    assert_frame_equal(out, df)
-
-    with pytest.warns(UserWarning, match=".*only works on eager"):
-        out = check.transform(lazy_df)
-    assert isinstance(out, pl.DataFrame)
-    assert_frame_equal(out, df)
+    with pytest.raises(
+        TypeError, match="Only pandas and polars DataFrames are supported"
+    ):
+        check.fit_transform(lazy_df)
 
 
 def test_column_names_changed(df_module):

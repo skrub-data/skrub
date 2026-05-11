@@ -133,6 +133,13 @@ class ToDatetime(SingleColumnTransformer):
     is fitted, entries that fail to be converted during subsequent calls to
     ``transform`` are replaced with nulls.
 
+    .. caution ::
+
+       For versions of Pandas <3.0, inferring the format may fail if it includes
+       both date and time components, and the digits of the year are the same
+       as the digits of the hour and minutes, like ``"1959-07-01 19:59:16"``.
+       In such cases, the format should be specified explicitly.
+
     Examples
     --------
     >>> import pandas as pd
@@ -175,7 +182,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub.core.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.
@@ -205,7 +212,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'year' does not contain strings.
+    skrub.core.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -214,7 +221,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub.core.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that
@@ -466,6 +473,13 @@ def _guess_datetime_format(column):
 
 def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
+
+    .. caution ::
+
+       For versions of Pandas <3.0, inferring the format may fail if it includes
+       both date and time components, and the digits of the year are the same
+       as the digits of the hour and minutes, like ``"1959-07-01 19:59:16"``.
+       In such cases, the format should be specified explicitly.
 
     Parameters
     ----------

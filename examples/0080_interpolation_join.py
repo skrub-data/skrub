@@ -40,9 +40,9 @@ import pandas as pd
 from skrub.datasets import fetch_flight_delays
 
 dataset = fetch_flight_delays()
-weather = dataset.weather
+weather = pd.read_csv(dataset.weather_path)
 weather = weather.sample(100_000, random_state=0, ignore_index=True)
-stations = dataset.stations
+stations = pd.read_csv(dataset.stations_path)
 weather = stations.merge(weather, on="ID")[
     ["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY", "TMAX", "PRCP", "SNOW"]
 ]
@@ -128,11 +128,13 @@ aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 # ``'Origin'`` which refers to the departure airport’s IATA code. We use only a subset
 # to speed up the example.
 
-flights = dataset.flights
+flights = pd.read_csv(dataset.flights_path)
 flights["Year_Month_DayofMonth"] = pd.to_datetime(flights["Year_Month_DayofMonth"])
 flights = flights[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
-airports = dataset.airports[["iata", "airport", "state", "lat", "long"]]
+airports = pd.read_csv(dataset.airports_path)[
+    ["iata", "airport", "state", "lat", "long"]
+]
 flights = flights.merge(airports, left_on="Origin", right_on="iata")
 # printing the first row is more readable than the head() when we have many columns
 flights.iloc[0]

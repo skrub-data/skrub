@@ -61,7 +61,7 @@ def test_caching():
         mode="fit_transform",
         environment={"a": 10},
         clear=True,
-        callbacks=((lambda e, r: next(check)),),
+        callbacks=((lambda e, r, **kwargs: next(check)),),
     )
 
     # the check generator is exhausted (we reached the last yield)

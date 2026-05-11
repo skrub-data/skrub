@@ -194,7 +194,7 @@ html_theme_options = {
     #         "name": "PyData",
     #     },
     # ],
-    "header_links_before_dropdown": 4,
+    "header_links_before_dropdown": 5,
     "icon_links": [
         {
             "name": "GitHub",
@@ -233,7 +233,7 @@ html_theme_options = {
     # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
-    # "footer_start": ["test.html", "test.html"],
+    "footer_start": ["funding_footer.html"],
     # When specified as a dictionary, the keys should follow glob-style patterns, as in
     # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-exclude_patterns
     # In particular, "**" specifies the default for all pages
@@ -474,8 +474,8 @@ sphinx_gallery_conf = {
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
     "filename_pattern": ".*",
-    "examples_dirs": "../examples",
-    "gallery_dirs": "auto_examples",
+    "examples_dirs": ["../examples", "tutorials"],
+    "gallery_dirs": ["auto_examples", "auto_tutorials"],
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
     "binder": {

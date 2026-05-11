@@ -6,8 +6,100 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing Development
+Ongoing development
 ===================
+
+New Features
+------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+
+Release 0.9.0
+=============
+
+New Features
+------------
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- The diagrams displayed in notebooks for :class:`SkrubLearner`,
+  :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
+  display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
+
+Changes
+-------
+- :class:`TableReport` now accepts ``plot_distributions`` and
+  ``compute_associations`` parameters (``True``, ``False``, or ``"auto"``)
+  to explicitly control whether distribution plots and pairwise associations
+  are computed. The threshold parameters controlling the maximum number of
+  columns for which these are computed have been renamed to
+  ``plots_threshold`` and ``associations_threshold`` for clarity.
+  :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
+- The row indices of training and testing samples are now also included in the
+  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_numbers`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
+  columns to ``float32``.
+  :pr:`1910` by :user:`Varshith-yadaV <Varshith-yadaV>`.
+- :func:`~datasets.fetch_toxicity` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now accepts an ``exclude_cols`` parameter, making it
+  possible to transform the columns selected by ``cols`` except for an
+  explicit subset, mirroring :meth:`DataOp.skb.apply`.
+  :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
+- In python versions >= 3.11, :class:`ApplyToCols` now produces better error
+  tracebacks when the wrapped transformer fails, . :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+- The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
+  Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
+  :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Bugfixes
+--------
+- An error that could arise when calling ``score`` on a ``SkrubLearner`` that
+  contains an inner transformer that has a ``score`` method has been fixed.
+  :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Deprecations
+------------
+- The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
+  favor of ``cast_to_float`` in :pr:`1910`.
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The parameters ``max_plot_columns`` and ``max_association_columns`` of the
+  :class:`TableReport` have been deprecated in favor of ``plot_distributions``
+  and ``compute_associations``. :pr:`1907`.
+
+Release 0.8.0
+=============
 
 New Features
 ------------
@@ -19,12 +111,85 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The reports produced by :meth:`DataOp.skb.full_report` and
+  :meth:`SkrubLearner.report` now also display the values provided in the
+  environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaParamSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  cross-validation splitter used by :class:`DataOp` objects for validation,
+  hyperparameter search etc. For example, the groups for a
+  :class:`sklearn.model_selection.GroupKFold` can be computed as part of the
+  DataOp evaluation and used for splitting. This is achieved by passing the
+  splitter and its arguments to :meth:`DataOp.skb.mark_as_X`. :pr:`1943` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+
 
 Changes
 -------
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
+- ``ApplyToCols`` and ``ApplyToFrame`` have been merged into a single class,
+  :class:`ApplyToCols`,that covers the functionality of both the old classes by
+  detecting automatically whether the provided transformer should be applied
+  independently on each column, or on all selected columns as a single dataframe.
+  As a result, ``ApplyToCols`` and ``ApplyToFrame`` have been removed.
+  :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`. Examples in the gallery have
+  been updated accordingly in :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
+- :class:`~skrub.core.SingleColumnTransformer` and associated exception
+  :class:`~skrub.core.RejectColumn` (used internally by many skrub estimators) have
+  been added to the public API, in the newly-created ``skrub.core`` module.
+  :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
+- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+  :class:`Cleaner`. Also, exposed the list of null string values that will be set
+  to null by the :class:`Cleaner` as the parameter ``null_strings``.
+  :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
+- The configuration parameter "use_table_report" has been removed from the skrub
+  configuration. Use :meth:`patch_display` instead.
+  :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Updated how the ``column_filters`` parameter of :class:`TableReport` works.
+  It now accepts a dictionary where the key is the display name for the
+  dropdown menu, and the value is a filter of the columns that will be displayed.
+  Accepts either a list of column indices, a list of column names
+  or an instance of the :class:`Selector`.
+  :pr:`1976` by :user:`Lisa McBride <lisaleemcb>`.
+- The overplotting of the counts atop the vertical histogram bars in the
+  :class:`TableReport` has been removed due to formatting issues.
+  :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
+- The maximum number of associations that can be displayed in the
+  :class:`TableReport` has been increased to N=1000, and the associations
+  are now displayed in a scrollable table.
+  :pr:`1992` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
----------
+--------
+- The :class:`TableVectorizer` now correctly handles the case where one of the
+  provided encoders is a scikit-learn Pipeline that starts with a skrub
+  single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
+- Errors raised when a polars LazyFrame is passed where an eager DataFrame is
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.cross_validate` would raise an error when passed
+  ``return_indices=True``. Now it returns the train and test indices of each
+  fold in the ``train_indices`` and ``test_indices`` columns of the result
+  dataframe. :pr:`1953` by :user:`Jérôme Dockès <jeromedockes>`.
+- Polars LazyFrames are no longer collected automatically anywhere in the library;
+  a ``TypeError`` is now raised instead.
+  :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
+
 
 Release 0.7.2
 =============
@@ -36,11 +201,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------
@@ -94,6 +254,10 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`selectors.Selector` now has documentation for its :meth:`selectors.Selector.expand`
+  and :meth:`selectors.Selector.expand_index` methods, with added information and examples
+  in the user guide, as well as mentions in the corresponding constructor functions.
+  :pr:`1841` by :user:`Eloi Massoulié<emassoulie>`.
 
 Changes
 -------
@@ -269,7 +433,7 @@ Highlights
 New features
 ------------
 
-- The Skrub DataOps are new mechanism for building machine-learning
+- The skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
   hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
   Additional work from other contributors can be found

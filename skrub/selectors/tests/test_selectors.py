@@ -25,7 +25,9 @@ def test_repr():
     >>> s.float() & s.integer()
     (float() & integer())
     >>> s.has_nulls()
-    has_nulls()
+    has_nulls(0.0)
+    >>> s.has_dtype('x', 'y')
+    has_dtype('x', 'y')
     """
 
 
@@ -79,6 +81,25 @@ def test_dtype_selectors(df_module):
         assert s.any_date().expand(df) == ["datetime-col"]
 
 
+def test_has_dtype(df_module):
+    df = df_module.make_dataframe(
+        {
+            "int-col": [1, 2],
+            "float-col": [1.5, 2.5],
+            "list-col": [[1, 2], [3]],
+        }
+    )
+    int_dtype = sbd.dtype(sbd.col(df, "int-col"))
+    float_dtype = sbd.dtype(sbd.col(df, "float-col"))
+    list_dtype = sbd.dtype(sbd.col(df, "list-col"))
+
+    assert s.has_dtype(int_dtype).expand(df) == ["int-col"]
+    assert s.has_dtype(float_dtype).expand(df) == ["float-col"]
+    assert s.has_dtype(list_dtype).expand(df) == ["list-col"]
+    assert s.has_dtype(int_dtype, list_dtype).expand(df) == ["int-col", "list-col"]
+    assert s.has_dtype("definitely-not-a-dtype").expand(df) == []
+
+
 def test_dtype_pandas_object():
     # Testing for behavior with object and string columns
     df = pd.DataFrame({"string-object": ["foo", "bar"], "object-object": ["baz", 42]})
@@ -104,6 +125,28 @@ def test_cardinality_below(df_module, monkeypatch):
 def test_has_nulls(df_module):
     df = df_module.make_dataframe(dict(a=[0, 1, 2], b=[0, None, 2], c=["a", "b", None]))
     assert s.has_nulls().expand(df) == ["b", "c"]
+
+
+def test_has_nulls_proportion(df_module):
+    df = df_module.make_dataframe(
+        dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
+    )
+    assert s.has_nulls(proportion=0).expand(df) == ["a", "b", "c"]
+    assert s.has_nulls(proportion=0.20).expand(df) == ["a", "b", "c"]
+    assert s.has_nulls(proportion=0.45).expand(df) == ["b", "c"]
+    assert s.has_nulls(proportion=0.70).expand(df) == ["c"]
+    assert s.has_nulls(proportion=1.0).expand(df) == []
+
+
+def test_has_nulls_proportion_wrong(df_module):
+    df = df_module.make_dataframe(
+        dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
+    )
+    with pytest.raises(ValueError, match="should be a number in the range"):
+        s.has_nulls(proportion=None).expand(df)
+
+    with pytest.raises(ValueError, match="should be a number in the range"):
+        s.has_nulls(proportion="0.0").expand(df)
 
 
 @pytest.mark.parametrize("name", s.__all__)
@@ -137,6 +180,7 @@ def test_pickling_selectors_with_args(df_module):
         s.glob("int-*"),
         s.regex("^int-.*$"),
         s.cardinality_below(4),
+        s.has_dtype(sbd.dtype(sbd.col(df, "float-col"))),
         s.cols("int-col", "float-col"),
     ]:
         unpickled = pickle.loads(pickle.dumps(selector))

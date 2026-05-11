@@ -9,8 +9,9 @@ import numpy as np
 import pytest
 from sklearn.utils import Bunch
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, config_context
 from skrub import _dataframe as sbd
+from skrub import selectors as s
 from skrub._reporting._sample_table import make_table
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -37,13 +38,9 @@ def get_report_id(html):
 @skip_polars_installed_without_pyarrow
 def test_report(air_quality):
     col_filt = {
-        "first_2": {
-            "display_name": "First 2",
-            "columns": sbd.column_names(air_quality)[:2],
-        }
+        "First 2": sbd.column_names(air_quality)[:2],
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
-    assert report.max_association_columns == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -89,6 +86,42 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
+def test_deprecated_max_plot_columns(df_module):
+    """max_plot_columns warns and is converted to plot_distributions."""
+    df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
+
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        report = TableReport(df, max_plot_columns=3)
+    assert report.plot_distributions is False
+
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        report = TableReport(df, max_plot_columns=10)
+    assert report.plot_distributions is True
+
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        report = TableReport(df, max_plot_columns="all")
+    assert report.plot_distributions is True
+
+
+@skip_polars_installed_without_pyarrow
+def test_deprecated_max_association_columns(df_module):
+    """max_association_columns warns and is converted to compute_associations."""
+    df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
+
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        report = TableReport(df, max_association_columns=3)
+    assert report.compute_associations is False
+
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        report = TableReport(df, max_association_columns=10)
+    assert report.compute_associations is True
+
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        report = TableReport(df, max_association_columns="all")
+    assert report.compute_associations is True
+
+
+@skip_polars_installed_without_pyarrow
 def test_few_rows(df_module, check_polars_numpy2):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
@@ -103,9 +136,7 @@ def test_lazyframe_exception():
     pl = pytest.importorskip("polars")
     lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
 
-    with pytest.raises(
-        ValueError, match=r"TableReport does not support lazy dataframes"
-    ):
+    with pytest.raises(TypeError, match=r".*LazyFrames are not yet supported"):
         TableReport(lazy_df)
 
 
@@ -267,7 +298,7 @@ def test_write_to_stderr(df_module, capsys):
 
 
 @skip_polars_installed_without_pyarrow
-def test_max_plot_columns_parameter(df_module):
+def test_thresholds_parameter(df_module):
     df = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
@@ -289,23 +320,101 @@ def test_max_plot_columns_parameter(df_module):
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df4, max_plot_columns=10)._summary
+    with config_context(table_report_plots_threshold=10):
+        summary = TableReport(df4)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df5, max_plot_columns=15)._summary
+    with config_context(table_report_plots_threshold=15):
+        summary = TableReport(df5)._summary
     assert not summary["plots_skipped"]
 
     df6 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df6, max_plot_columns=None)._summary
+    summary = TableReport(df6)._summary
     assert not summary["plots_skipped"]
 
-    summary = TableReport(df6, max_plot_columns="all")._summary
+
+@skip_polars_installed_without_pyarrow
+def test_plot_distributions_parameter(df_module):
+    # True: always plot regardless of threshold
+    df7 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df7, plot_distributions=True)._summary
+    assert not summary["plots_skipped"]  # True ignores threshold
+
+    # False: never plot
+    df8 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df8, plot_distributions=False)._summary
+    assert summary["plots_skipped"]
+
+    # None and "auto": use threshold
+    d9 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(d9, plot_distributions=None)._summary
     assert not summary["plots_skipped"]
+
+    df10 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df10, plot_distributions="auto")._summary
+    assert summary["plots_skipped"]  # "auto" respects threshold
+
+
+@skip_polars_installed_without_pyarrow
+def test_compute_associations_parameter(df_module):
+    # True: always compute regardless of threshold
+    df11 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df11, compute_associations=True)._summary
+    assert not summary["associations_skipped"]  # True ignores threshold
+
+    # False: never compute
+    df12 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df12, compute_associations=False)._summary
+    assert summary["associations_skipped"]
+
+    # None and "auto": use threshold
+    df13 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(df13, compute_associations=None)._summary
+    assert not summary["associations_skipped"]
+
+    df14 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df14, compute_associations="auto")._summary
+    assert summary["associations_skipped"]  # "auto" respects threshold
+
+
+@skip_polars_installed_without_pyarrow
+def test_combined_parameters(df_module):
+    df15 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    with config_context(
+        table_report_plots_threshold=3, table_report_associations_threshold=3
+    ):
+        summary = TableReport(df15)._summary
+    assert summary["associations_skipped"] and summary["plots_skipped"]
+
+    df16 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    with config_context(table_report_associations_threshold=7):
+        summary = TableReport(df16, plot_distributions=False)._summary
+    assert not summary["associations_skipped"] and summary["plots_skipped"]
 
 
 def test_minimal_mode(pd_module):
@@ -342,7 +451,13 @@ def test_error_make_table():
         make_table(np.array([1]))
 
 
-@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+@pytest.mark.parametrize(
+    "arg",
+    [
+        "plot_distributions",
+        "compute_associations",
+    ],
+)
 def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
     with pytest.raises(ValueError):
@@ -386,7 +501,7 @@ numpy_test_cases = [
 
 @pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
 def test_numpy_array_columns(input_array, expected_columns):
-    report = TableReport(input_array, max_association_columns=0)
+    report = TableReport(input_array, compute_associations=False)
 
     assert report._summary["n_columns"] == expected_columns
 
@@ -498,3 +613,70 @@ def test_open_tab_minimal_mode(df_module):
     report2 = TableReport(df, open_tab="associations")
     report2._set_minimal_mode()
     assert report2.open_tab == "table"
+
+
+@pytest.mark.parametrize(
+    "filter",
+    [
+        {"indices": [0]},
+        {"column_names": ["data1", "names"]},
+        {"selector": s.string()},
+    ],
+    ids=[
+        "pass_index",
+        "pass_name",
+        "pass_input",
+    ],
+)
+def test_column_filters_pass(df_module, filter):
+    df = df_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+
+    report = TableReport(df, column_filters=filter)
+    (column_title,) = filter.keys()
+    html = report.html()
+    assert column_title in html
+
+
+@pytest.mark.parametrize(
+    "filter, expected, match",
+    [
+        (
+            0,
+            TypeError,
+            "column_filters should be a dict.*",
+        ),
+        (
+            {"indices": [0, 1, 100]},
+            ValueError,
+            "are out of range:.*",
+        ),
+        (
+            {"names": ["data1", " data2", "data3"]},
+            ValueError,
+            ".*are not in the dataframe:.*",
+        ),
+        (
+            {"mixed_input": ["data1", 0]},
+            TypeError,
+            "Custom column filters should.*",
+        ),
+        ({"selector": np.arange(3)}, TypeError, "Custom column filters should be.*"),
+    ],
+    ids=["fail_mapping", "fail_index", "fail_name", "fail_mixed_input", "fail_input"],
+)
+def test_column_filters_fail(df_module, filter, expected, match):
+    df = df_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+    with pytest.raises(expected, match=match):
+        TableReport(df, column_filters=filter)

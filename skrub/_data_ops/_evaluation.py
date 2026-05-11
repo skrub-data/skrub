@@ -20,10 +20,12 @@ from sklearn.base import clone as skl_clone
 from sklearn.utils import check_random_state
 
 from .._utils import short_repr
-from . import _choosing
+from . import _choosing, _utils
 from ._data_ops import (
     Apply,
     DataOp,
+    Scoring,
+    SplitX,
     Value,
     Var,
 )
@@ -87,6 +89,24 @@ class _CurrentNodeDuration:
     """
 
 
+class HasRunningApplyAncestor:
+    """
+    Whether there is an Apply node, other than the currently running one, on the stack.
+
+    A `_DataOpTraversal.handle_*()` method can yield an instance of this class
+    to know if there is an Apply node lower on the stack, i.e. if there is an
+    estimator downstream waiting for the result of the currently running node.
+
+    This is used to know if the current estimator is the 'last step in the
+    pipeline'. The 'last step' is treated differently: regardless of the
+    evaluation mode, previous steps should do a transform(). For example when
+    we call score() on a SkrubLearner, we need to call score() on the last
+    estimator it contains, but transform() on the transformers that are
+    evaluated before (even if they have a score() method, as some transformers
+    do).
+    """
+
+
 class _DataOpTraversal:
     """Base class for objects that manipulate DataOps."""
 
@@ -123,6 +143,12 @@ class _DataOpTraversal:
         # Used to detect circular references.
         running = set()
 
+        # IDs of Apply nodes that are the target of a _Computation currently on
+        # the stack.
+        # Allows distinguishing the last estimator in the pipeline from
+        # previous ones (see HasRunningApplyAncestor docstring).
+        running_apply = set()
+
         # Total time spent evaluating each node (not counting time spent
         # evaluating its children)
         node_durations = defaultdict(float)
@@ -143,12 +169,15 @@ class _DataOpTraversal:
             generator = handler(top)
             stack.append(_Computation(top_id, generator))
             running.add(top_id)
+            if isinstance(top, DataOp) and isinstance(top._skrub_impl, Apply):
+                running_apply.add(top_id)
 
         def pop():
             "Pop an item off the stack."
             top = stack.pop()
             if isinstance(top, _Computation):
                 running.remove(top.target_id)
+                running_apply.discard(top.target_id)
             return top
 
         def step():
@@ -180,6 +209,9 @@ class _DataOpTraversal:
             elif isinstance(top, _CurrentNodeDuration):
                 pop()
                 last_result = node_durations[stack[-1].target_id]
+            elif isinstance(top, HasRunningApplyAncestor):
+                pop()
+                last_result = bool(running_apply - {stack[-1].target_id})
             elif isinstance(top, DataOp):
                 push_computation(self.handle_data_op)
 
@@ -284,43 +316,46 @@ class _Evaluator(_DataOpTraversal):
         self._data_op = data_op
         return super().run(data_op)
 
-    def _fetch(self, data_op):
-        """Fetch the result from the cache or environment if possible.
-
-        Raises a KeyError otherwise
-        """
-        impl = data_op._skrub_impl
-        if impl.is_X and X_NAME in self.environment:
-            return self.environment[X_NAME]
-        if impl.is_y and Y_NAME in self.environment:
-            return self.environment[Y_NAME]
-        if (
-            # if Var, let the usual mechanism fetch the value from the
-            # environment and store in results dict. Otherwise override with
-            # the provided value.
-            not isinstance(impl, Var)
-            and impl.name is not None
-            and impl.name in self.environment
-        ):
-            return self.environment[impl.name]
-        return impl.results[self.mode]
-
-    def _store(self, data_op, result, duration):
+    def _store(self, data_op, result, duration, env_key):
         """Store a result in the cache."""
         data_op._skrub_impl.results[self.mode] = result
         metadata = data_op._skrub_impl.metadata.setdefault(self.mode, {})
         metadata["eval_duration"] = duration
+        metadata["env_key"] = env_key
 
     def handle_data_op(self, data_op):
+        impl = data_op._skrub_impl
         try:
-            return self._fetch(data_op)
+            return impl.results[self.mode]
         except KeyError:
             pass
-        result = yield from self._eval_data_op(data_op)
+
+        if impl.is_X and X_NAME in self.environment:
+            env_key, fetch = X_NAME, True
+        elif impl.is_y and Y_NAME in self.environment:
+            env_key, fetch = Y_NAME, True
+        elif impl.name is not None and impl.name in self.environment:
+            env_key = impl.name
+
+            # If data_op is a Var, let the usual eval mechanism fetch the value
+            # from the environment (it provides an error message if it is
+            # missing). For other types of nodes fetch the provided value
+            # directly. (if is_X or is_y then the value is always fetched
+            # directly from the environment, as X and y have priority over
+            # variable's names)
+            fetch = not isinstance(impl, Var)
+        else:
+            env_key, fetch = None, False
+
+        if fetch:
+            result = self.environment[env_key]
+        else:
+            result = yield from self._eval_data_op(data_op)
+
         duration = yield _CurrentNodeDuration()
-        self._store(data_op, result, duration)
+        self._store(data_op, result, duration=duration, env_key=env_key)
         for cb in self.callbacks:
-            cb(data_op, result)
+            cb(data_op, result, duration=duration, env_key=env_key)
         return result
 
     def _eval_data_op(self, data_op):
@@ -459,7 +494,7 @@ def _cache_pruner(data_op, mode):
     ref_counts = {node_id: len(parents) for node_id, parents in g["parents"].items()}
     id_map = {id(node): node_id for node_id, node in g["nodes"].items()}
 
-    def prune(data_op, result):
+    def prune(data_op, result, **kwargs):
         node_id = id_map[id(data_op)]
         for c in g["children"].get(node_id, ()):
             ref_counts[c] -= 1
@@ -654,21 +689,13 @@ def _choice_display_names(choices):
     When the choice is given an explicit `name` by the user that is used,
     otherwise a shorted repr + number suffix to make them unique.
     """
-    used = set()
+    rename = _utils.unique_renaming()
     names = {}
 
     def add(choice_ids):
         for c_id in choice_ids:
             stem = _choosing.get_display_name(choices[c_id])
-            if stem not in used:
-                used.add(stem)
-                names[c_id] = stem
-                continue
-            i = 1
-            while (numbered := f"{stem}_{i}") in used:
-                i += 1
-            used.add(numbered)
-            names[c_id] = numbered
+            names[c_id] = rename(stem)
         return names
 
     add(c_id for (c_id, c) in choices.items() if c.name is not None)
@@ -1113,6 +1140,26 @@ def find_node_by_name(data_op, name):
     return find_node(data_op, pred)
 
 
+def find_X_y_and_cv(data_op):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
+    result = {}
+    if (x_node := find_X(data_op)) is not None:
+        result["X"] = x_node
+        if isinstance(x_node._skrub_impl, SplitX):
+            result["cv"] = x_node._skrub_impl.cv
+            result["split_kwargs"] = x_node._skrub_impl.split_kwargs
+    if (y_node := find_y(data_op)) is not None:
+        result["y"] = y_node
+    return result
+
+
+def find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
+
+
 def needs_eval(obj, return_node=False):
     """
     Whether a python object contains any object that requires evaluation such
@@ -1135,6 +1182,7 @@ class _FindConflicts(_DataOpTraversal):
         self._names = {}
         self._x = {}
         self._y = {}
+        self._score_nodes = {}
 
     def handle_data_op(self, e):
         self._add(
@@ -1142,11 +1190,12 @@ class _FindConflicts(_DataOpTraversal):
             getattr(e._skrub_impl, "name", None),
             e._skrub_impl.is_X,
             e._skrub_impl.is_y,
+            isinstance(e._skrub_impl, Scoring),
         )
         yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None), False, False)
+        self._add(choice, getattr(choice, "name", None), False, False, False)
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
@@ -1164,6 +1213,13 @@ class _FindConflicts(_DataOpTraversal):
                 "2 different objects were marked as y:\n"
                 f"first object that used `.mark_as_y()`:\n{first}\n"
                 f"second object that used `.mark_as_y()`:\n{second}"
+            )
+        if conflict["reason"] == "is_score":
+            return (
+                "The DataOp can only contain one scoring node;\ngroup the "
+                ".skb.with_scoring() calls together with no other nodes in-between.\n"
+                f"first scoring node:\n{first}\n"
+                f"second scoring node:\n{second}\n"
             )
         assert conflict["reason"] == "name", conflict["reason"]
         name = conflict["name"]
@@ -1195,11 +1251,13 @@ class _FindConflicts(_DataOpTraversal):
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y):
+    def _add(self, obj, name, is_X, is_y, is_score):
         if is_X:
             self._add_to_dict(self._x, "X", obj, "is_X")
         if is_y:
             self._add_to_dict(self._y, "y", obj, "is_y")
+        if is_score:
+            self._add_to_dict(self._score_nodes, "score", obj, "is_score")
         self._add_to_dict(self._names, name, obj, "name")
 
 

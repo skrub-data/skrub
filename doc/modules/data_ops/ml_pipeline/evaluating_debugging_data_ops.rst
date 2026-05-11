@@ -26,7 +26,7 @@ Additionally, if computations fail in the plan, the report shows the offending
 node and the error message, which can help in debugging the plan.
 
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
-they can be saved to a different location with the ``ouptut_dir`` parameter.
+they can be saved to a different location with the ``output_dir`` parameter.
 Note that the default path can be altered with the
 ``SKRUB_DATA_DIR`` environment variable. See :ref:`user_guide_configuration_parameters`
 for more details.

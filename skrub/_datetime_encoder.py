@@ -48,7 +48,7 @@ def _is_date(col):
 @_is_date.specialize("pandas", argument_type="Column")
 def _is_date_pandas(col):
     col = sbd.drop_nulls(col)
-    return (col.dt.date == col).all()
+    return (col.dt.normalize() == col).all()
 
 
 @_is_date.specialize("polars", argument_type="Column")
@@ -257,7 +257,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
+    skrub.core.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
     :class:`ToDatetime`: can be used for converting strings to datetimes.
 

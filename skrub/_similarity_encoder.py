@@ -177,7 +177,7 @@ class SimilarityEncoder(OneHotEncoder):
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
 
-        The categories used can be found in the SimilarityEncoder.categories_
+        The categories used can be found in the :attr:`~skrub.SimilarityEncoder.categories_`
         attribute.
     dtype : number type, default=float64
         Desired dtype of output.

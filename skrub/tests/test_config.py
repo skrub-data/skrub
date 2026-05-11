@@ -1,8 +1,11 @@
+import pathlib
+import warnings
+
 import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _parse_env_bool
+from skrub._config import _get_default_data_dir, _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -26,23 +29,57 @@ def simple_series(df_module):
     return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
-def test_config_context():
-    assert get_config() == {
-        "use_table_report": False,
-        "use_table_report_data_ops": True,
-        "table_report_verbosity": 1,
-        "max_plot_columns": 30,
-        "max_association_columns": 30,
-        "subsampling_seed": 0,
-        "enable_subsampling": "default",
-        "float_precision": 3,
-        "cardinality_threshold": 40,
-        "eager_data_ops": True,
-    }
+def test_default_config():
+    cfg = get_config()
+    # Rather than asserting that the dictionary is exactly equal to the hard-coded
+    # default values, we check each expected default value individually.
+    assert cfg["use_table_report_data_ops"] is True
+    # On CI the absolute path is different, check that it ends with skrub_data
+    assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
+    assert cfg["table_report_verbosity"] == 1
+    assert cfg["table_report_plots_threshold"] == 30
+    assert cfg["table_report_associations_threshold"] == 30
+    assert cfg["subsampling_seed"] == 0
+    assert cfg["enable_subsampling"] == "default"
+    assert cfg["float_precision"] == 3
+    assert cfg["cardinality_threshold"] == 40
+    assert cfg["eager_data_ops"] is True
+    assert cfg["data_ops_open_graph_dropdown"] is False
 
-    # Not using as a context manager affects nothing
-    config_context(use_table_report=True)
-    assert get_config()["use_table_report"] is False
+    # Fail the test if new configuration keys are present but not checked here.
+    # doc/modules/configurations_and_utils/customizing_configurations.rst
+    # should also be updated if new configuration keys are added.
+    expected_keys = {
+        "use_table_report_data_ops",
+        "data_dir",
+        "table_report_verbosity",
+        "table_report_plots_threshold",
+        "table_report_associations_threshold",
+        "subsampling_seed",
+        "enable_subsampling",
+        "float_precision",
+        "cardinality_threshold",
+        "eager_data_ops",
+        "data_ops_open_graph_dropdown",
+    }
+    assert set(cfg.keys()) == expected_keys
+
+
+def test_deprecated_env_var_warning(monkeypatch, tmp_path):
+    """Test that using the deprecated SKRUB_DATA_DIRECTORY env var raises a warning."""
+    deprecated_data_dir = str(tmp_path / "deprecated_data")
+
+    with monkeypatch.context() as mp:
+        # Clear any existing SKB_DATA_DIRECTORY
+        mp.delenv("SKB_DATA_DIRECTORY", raising=False)
+        # Set the deprecated env var
+        mp.setenv("SKRUB_DATA_DIRECTORY", deprecated_data_dir)
+
+        # Call _get_default_data_folder and capture the warning
+        with pytest.warns(
+            DeprecationWarning, match="'SKRUB_DATA_DIRECTORY' is deprecated"
+        ):
+            _get_default_data_dir()
 
 
 def test_use_table_report_data_ops(simple_df):
@@ -54,38 +91,10 @@ def test_use_table_report_data_ops(simple_df):
 
 
 @skip_polars_installed_without_pyarrow
-def test_use_table_report(simple_df):
-    assert not _use_table_report(simple_df)
-    with config_context(use_table_report=True):
-        assert _use_table_report(simple_df)
-        with config_context(use_table_report=False):
-            assert not _use_table_report(simple_df)
-
-
-@skip_polars_installed_without_pyarrow
-def test_max_plot_columns(simple_df):
-    report = TableReport(simple_df)
-    assert report.max_association_columns == 30
-    assert report.max_plot_columns == 30
-
-    # Set default to 1
-    with config_context(max_plot_columns=1):
-        report = TableReport(simple_df)
-        assert report.max_association_columns == 30
-        assert report.max_plot_columns == 1
-
-        # Argument takes precedence over default configuration
-        report = TableReport(
-            simple_df, max_association_columns="all", max_plot_columns="all"
-        )
-        assert report.max_association_columns == "all"
-        assert report.max_plot_columns == "all"
-
-    # Check that max_plot_columns can be set after patching the TableReport
-    # repr_html.
-    with config_context(use_table_report=True):
-        with config_context(max_plot_columns=1):
-            assert "Plotting was skipped" in simple_df._repr_html_()
+def test_max_plot_columns():
+    with config_context(table_report_plots_threshold=1):
+        assert get_config()["table_report_associations_threshold"] == 30
+        assert get_config()["table_report_plots_threshold"] == 1
 
 
 def test_enable_subsampling(simple_df):
@@ -133,10 +142,9 @@ def test_float_precision(simple_series):
 @pytest.mark.parametrize(
     "params",
     [
-        {"use_table_report": "hello"},
         {"use_table_report_data_ops": 1},
-        {"max_plot_columns": "hello"},
-        {"max_association_columns": "hello"},
+        {"table_report_plots_threshold": "hello"},
+        {"table_report_associations_threshold": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
         {"float_precision": -1},
@@ -189,3 +197,87 @@ def test_wrong_verbosity():
     with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
         with config_context(table_report_verbosity=-1):
             pass
+
+
+def test_deprecated_max_plot_columns_set_config():
+    """set_config(max_plot_columns=...) warns and forwards
+    to table_report_plots_threshold."""
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        set_config(max_plot_columns=15)
+    assert get_config()["table_report_plots_threshold"] == 15
+    # Reset
+    set_config(table_report_plots_threshold=30)
+
+
+def test_deprecated_max_association_columns_set_config():
+    """set_config(max_association_columns=...) warns and forwards
+    to table_report_associations_threshold."""
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        set_config(max_association_columns=10)
+    assert get_config()["table_report_associations_threshold"] == 10
+    # Reset
+    set_config(table_report_associations_threshold=30)
+
+
+def test_deprecated_max_plot_columns_all_set_config():
+    """set_config(max_plot_columns='all') warns but does not change threshold."""
+    original = get_config()["table_report_plots_threshold"]
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        set_config(max_plot_columns="all")
+    assert get_config()["table_report_plots_threshold"] == original
+
+
+def test_deprecated_max_association_columns_all_set_config():
+    """set_config(max_association_columns='all') warns but does not change threshold."""
+    original = get_config()["table_report_associations_threshold"]
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        set_config(max_association_columns="all")
+    assert get_config()["table_report_associations_threshold"] == original
+
+
+@pytest.mark.parametrize(
+    "old_var,new_var",
+    [
+        ("SKB_MAX_PLOT_COLUMNS", "SKB_TABLE_REPORT_PLOTS_THRESHOLD"),
+        ("SKB_MAX_ASSOCIATION_COLUMNS", "SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD"),
+    ],
+)
+def test_deprecated_env_var_plot_association(monkeypatch, old_var, new_var):
+    """Deprecated SKB_MAX_PLOT_COLUMNS / SKB_MAX_ASSOCIATION_COLUMNS env vars warn."""
+    from skrub._config import _get_deprecated_int_env
+
+    with monkeypatch.context() as mp:
+        mp.delenv(new_var, raising=False)
+        mp.setenv(old_var, "42")
+        with pytest.warns(DeprecationWarning, match=f"'{old_var}' is deprecated"):
+            result = _get_deprecated_int_env(new_var, old_var, 30)
+        assert result == 42
+
+
+def test_get_deprecated_int_env_new_var_takes_precedence(monkeypatch):
+    """New env var takes precedence over deprecated one, no warning emitted."""
+    from skrub._config import _get_deprecated_int_env
+
+    with monkeypatch.context() as mp:
+        mp.setenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", "20")
+        mp.setenv("SKB_MAX_PLOT_COLUMNS", "99")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = _get_deprecated_int_env(
+                "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
+            )
+        assert result == 20
+        assert not any(issubclass(w.category, DeprecationWarning) for w in caught)
+
+
+def test_get_deprecated_int_env_default(monkeypatch):
+    """Returns default when neither env var is set."""
+    from skrub._config import _get_deprecated_int_env
+
+    with monkeypatch.context() as mp:
+        mp.delenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", raising=False)
+        mp.delenv("SKB_MAX_PLOT_COLUMNS", raising=False)
+        result = _get_deprecated_int_env(
+            "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
+        )
+    assert result == 30

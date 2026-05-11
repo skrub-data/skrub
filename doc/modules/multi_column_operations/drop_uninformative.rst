@@ -25,11 +25,6 @@ using various heuristics. These heuristics include:
   is set to ``False`` by default. Note that missing values are treated as distinct
   values, so constant columns with missing values will not be dropped.
 
-- **Dropping unique string/categorical columns**: Columns where each row has a
-  unique value (e.g., alphanumeric IDs) can be dropped. This is controlled by the
-  ``drop_if_unique`` parameter, which is ``False`` by default. Be cautious when
-  enabling this option, as it may remove columns containing free-flowing text.
-
 |DropUninformative| is used by both |TableVectorizer| and |Cleaner|, and both
 accept the same parameters for dropping columns.
 
@@ -64,42 +59,49 @@ To drop constant columns and those with only single values:
 2  2  6
 
 |
+Dropping columns with many missing values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Columns with too many missing values may not provide useful information for
+downstream models. The ``drop_null_fraction`` parameter allows dropping such
+columns when the proportion of missing values exceeds a specified threshold.
+
+Consider the following dataset:
+
+>>> import pandas as pd
+>>> from skrub import DropUninformative, ApplyToCols
+
+>>> df = pd.DataFrame({
+...     'patient_id': [1, 2, 3, 4, 5, 6, 7, 8],
+...     'age': [25.0, 30.0, None, 45.0, 50.0, None, 60.0, 65.0],
+...     'blood_pressure': [120, None, None, None, 140, None, None, 150],
+...     'diagnosis': ['flu', 'cold', None, None, None, None, None, None],
+...     'treatment': ['med_A', 'med_B', 'med_C', 'med_D', 'med_E', 'med_F', 'med_G', 'med_H']
+... })
 
 Applying |DropUninformative| only to a subset of columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+We can apply the |DropUninformative| transformer to specific columns using
+|ApplyToCols| and the skrub selectors. In this case, we want to drop columns with
+more than 50% missing values, but only if they have ``string`` type:
+
+>>> import skrub.selectors as s
+>>> cleaner = ApplyToCols(DropUninformative(drop_null_fraction=0.5), cols=s.string())
+>>> cleaned_df = cleaner.fit_transform(df)
+>>> cleaned_df
+   patient_id   age  blood_pressure treatment
+0           1  25.0           120.0     med_A
+1           2  30.0             NaN     med_B
+2           3   NaN             NaN     med_C
+3           4  45.0             NaN     med_D
+4           5  50.0           140.0     med_E
+5           6   NaN             NaN     med_F
+6           7  60.0             NaN     med_G
+7           8  65.0           150.0     med_H
+
+
 You can apply the |DropUninformative| transformer to specific columns using
-|ApplyToCols|.
-
->>> from skrub import ApplyToCols
->>> df = pd.DataFrame({
-... "id_to_drop": ["A1", "A2", "A3"],
-... "text_to_keep": ["foo", "bar", "baz"]
-... })
->>> df
-  id_to_drop text_to_keep
-0         A1          foo
-1         A2          bar
-2         A3          baz
-
-Dropping unique columns in this dataframe results in an empty dataframe:
-
->>> cleaner = Cleaner(drop_if_unique=True)
->>> cleaner.fit_transform(df)
-Empty DataFrame
-Columns: []
-Index: [0, 1, 2]
-
-To apply the transformer only to the ``id_to_drop`` column, use |ApplyToCols|:
-
->>> ApplyToCols(cleaner, cols="id_to_drop")
-ApplyToCols(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
->>> ApplyToCols(cleaner, cols="id_to_drop").fit_transform(df)
-  text_to_keep
-0          foo
-1          bar
-2          baz
-
 For more advanced filtering operations, refer to the User Guide on
 :ref:`user_guide_selectors` and the |ApplyToCols| documentation for details
 on applying transformers to specific columns.

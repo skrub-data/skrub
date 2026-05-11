@@ -171,7 +171,7 @@ def _load_dataframe_module_info(name):
                 "module": polars,
                 "types": MappingProxyType(
                     {
-                        "DataFrame": (polars.DataFrame, polars.LazyFrame),
+                        "DataFrame": (polars.DataFrame,),
                         "LazyFrame": (polars.LazyFrame,),
                         "EagerFrame": (polars.DataFrame,),
                         "Column": (polars.Series,),
@@ -261,6 +261,12 @@ dataop and turn it into an actual value or (ii) use op.skb.apply_func() or
 op.skb.apply() to schedule the operation for later execution (when the dataop is
 evaluated) rather than computing it immediately.
  """
+        )
+    if type(obj).__name__ == "LazyFrame":
+        raise TypeError(
+            "Expected a DataFrame but got an object "
+            f"of type {type(obj)}. LazyFrames are not yet supported; "
+            "please call collect() to convert to a DataFrame."
         )
     raise TypeError(
         "Operation not supported on this object. Expecting a Pandas or Polars "

@@ -64,10 +64,9 @@ API_REFERENCE = {
                 "autosummary": [
                     "tabular_pipeline",
                     "TableVectorizer",
+                    "ApplyToCols",
                     "SelectCols",
                     "DropCols",
-                    "ApplyToCols",
-                    "ApplyToFrame",
                 ],
             }
         ],
@@ -159,6 +158,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
+                    "selectors.Selector",
                     "selectors.all",
                     "selectors.any_date",
                     "selectors.boolean",
@@ -169,6 +169,7 @@ API_REFERENCE = {
                     "selectors.filter_names",
                     "selectors.float",
                     "selectors.glob",
+                    "selectors.has_dtype",
                     "selectors.has_nulls",
                     "selectors.integer",
                     "selectors.inv",
@@ -251,6 +252,9 @@ API_REFERENCE = {
                     "DataOp.skb.set_name",
                     "DataOp.skb.subsample",
                     "DataOp.skb.train_test_split",
+                    "DataOp.skb.with_scoring",
+                    "DataOp.skb.find",
+                    "DataOp.skb.find_X_y",
                 ],
                 "template": "autosummary/accessor_method.rst",
             },
@@ -274,6 +278,20 @@ API_REFERENCE = {
                 ],
                 "template": "base.rst",
             },
+        ],
+    },
+    "advanced": {
+        "title": "Advanced topics",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "core.SingleColumnTransformer",
+                    "core.RejectColumn",
+                ],
+            }
         ],
     },
     "config": {

@@ -2,10 +2,14 @@ import codecs
 import functools
 import json
 import numbers
+import warnings
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from skrub import selectors as s
 
 from .. import _config
 from .. import _dataframe as sbd
@@ -15,34 +19,80 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
-def _check_max_cols(max_plot_columns, max_association_columns):
-    max_plot_columns = (
-        max_plot_columns
-        if max_plot_columns is not None
-        else _config.get_config()["max_plot_columns"]
-    )
-    if (max_plot_columns != "all") and not (
-        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
-    ):
+def _validate_plot_and_association(plot_distributions, compute_associations, n_columns):
+    if plot_distributions is None:
+        plot_distributions = "auto"
+    if compute_associations is None:
+        compute_associations = "auto"
+
+    if plot_distributions not in (True, False, "auto"):
         raise ValueError(
-            "'max_plot_columns' must be a positive scalar or 'all', got"
-            f" {max_plot_columns!r}."
-        )
-    max_association_columns = (
-        max_association_columns
-        if max_association_columns is not None
-        else _config.get_config()["max_association_columns"]
-    )
-    if (max_association_columns != "all") and not (
-        isinstance(max_association_columns, numbers.Real)
-        and max_association_columns >= 0
-    ):
-        raise ValueError(
-            "'max_association_columns' must be a positive scalar or 'all', got "
-            f"{max_association_columns!r}."
+            "'plot_distributions' must be True, False, or 'auto', got"
+            f" {plot_distributions!r}."
         )
 
-    return max_plot_columns, max_association_columns
+    if compute_associations not in (True, False, "auto"):
+        raise ValueError(
+            "'compute_associations' must be True, False, or 'auto', got"
+            f" {compute_associations!r}."
+        )
+
+    if plot_distributions == "auto":
+        plot_distributions = (
+            _config.get_config()["table_report_plots_threshold"] >= n_columns
+        )
+    if compute_associations == "auto":
+        compute_associations = (
+            _config.get_config()["table_report_associations_threshold"] >= n_columns
+        )
+
+    return plot_distributions, compute_associations
+
+
+def _check_col_filter(name, cols, df):
+    err_msg = (
+        "Custom column filters should be either a Selector or a list of column names"
+        f"\n  or a list of column indices. Got a bad filter for key {name!r}: {cols!r}"
+    )
+    if isinstance(cols, s.Selector):
+        return cols.expand_index(df)
+    if not isinstance(cols, Sequence):
+        raise TypeError(err_msg)
+    if all(isinstance(c, str) for c in cols):
+        all_col_names = set(sbd.column_names(df))
+        bad_col_names = [c for c in cols if c not in all_col_names]
+        if bad_col_names:
+            raise ValueError(
+                "The following column names passed for "
+                f"filter {name!r} are not in the dataframe: {bad_col_names}"
+            )
+        return s.make_selector(cols).expand_index(df)
+    if all(isinstance(c, numbers.Integral) for c in cols):
+        bad_idx = [c for c in cols if not 0 <= c < sbd.shape(df)[1]]
+        if bad_idx:
+            raise ValueError(
+                "The following column indices passed for "
+                f"filter {name!r} are out of range: {bad_idx}"
+            )
+        return list(cols)
+    raise TypeError(err_msg)
+
+
+def _check_column_filters(column_filters, df):
+    if column_filters is None:
+        return None
+    if not isinstance(column_filters, Mapping):
+        raise TypeError(
+            "column_filters should be a dict mapping names to column lists, "
+            f"got object of type: {type(column_filters)}"
+        )
+    return {
+        str(name): {
+            "display_name": str(name),
+            "columns": _check_col_filter(name, cols, df),
+        }
+        for name, cols in column_filters.items()
+    }
 
 
 class TableReport:
@@ -69,49 +119,45 @@ class TableReport:
         Title for the report.
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
-        Each key is an id for the filter (e.g. ``"first_10"``) and the value is a
-        mapping with the keys ``display_name`` (the name shown in the menu,
-        e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
+        Each key is the filter named to be displayed in the dropdown menu
+        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
+        formats for the filter values are a list of column names,
+        a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
     verbose : int, default = 1
         Whether to print progress information while the report is being generated.
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    max_plot_columns : int, default=30
-        Maximum number of columns for which plots should be generated.
-        If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If "all", all columns will be plotted.
+    plot_distributions : bool or "auto", default="auto"
+        Whether to plot the distributions of the columns.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
+        - ``True``: always generate plots, regardless of column count.
+        - ``False``: never generate plots.
+        - ``"auto"`` (default): generate plots only when the number of columns
+          does not exceed the configured ``table_report_plots_threshold``
+          (see :func:`set_config`).
 
-        >>> from skrub import set_config
-        >>> set_config(max_plot_columns=30)
+    compute_associations : bool or "auto", default="auto"
+        Whether to compute associations between columns.
 
-        You can also enable this default more permanently via an environment variable:
+        - ``True``: always compute associations, regardless of column count.
+        - ``False``: never compute associations.
+        - ``"auto"`` (default): compute associations only when the number of
+          columns does not exceed the configured ``table_report_associations_threshold``
+          (see :func:`set_config`).
 
-        .. code:: shell
+    max_plot_columns : int or "all", deprecated
+        Deprecated in favor of ``plot_distributions``. This parameter overrides
+        the value chosen for ``plot_distributions`` when it is not None.
 
-            export SKB_MAX_PLOT_COLUMNS=30
+        .. deprecated:: 0.9.0
 
-    max_association_columns : int, default=30
-        Maximum number of columns for which associations should be computed.
-        If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If "all", the associations
-        for all columns will be computed.
+    max_association_columns : int or "all", deprecated
+        Deprecated in favor of ``compute_associations``. This parameter overrides
+        the value chosen for ``compute_associations`` when it is not None.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
-
-        >>> from skrub import set_config
-        >>> set_config(max_association_columns=30)
-
-        You can also enable this default more permanently via an environment variable:
-
-        .. code:: shell
-
-            export SKB_MAX_ASSOCIATION_COLUMNS=30
+        .. deprecated:: 0.9.0
 
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
@@ -173,10 +219,7 @@ class TableReport:
     in the report's dropdown menu.
 
     >>> filters = {
-    ...     "at_least_2": {
-    ...         "display_name": "Columns with at least 2 unique values",
-    ...         "columns": ["a", "b"],
-    ...     }
+    ...         "display_name": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
@@ -194,9 +237,12 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=None,
+        plot_distributions="auto",
+        compute_associations="auto",
+        open_tab="table",
+        # Deprecated parameters kept for backward compatibility
         max_plot_columns=None,
         max_association_columns=None,
-        open_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -235,19 +281,43 @@ class TableReport:
         }
         self._to_html_kwargs = {}
         self.title = title
-        self.column_filters = column_filters
-        self.max_plot_columns, self.max_association_columns = _check_max_cols(
-            max_plot_columns, max_association_columns
-        )
+        self.column_filters = _check_column_filters(column_filters, dataframe)
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
-        if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
-            raise ValueError(
-                "The TableReport does not support lazy dataframes. Please call"
-                " `.collect()` to use the TableReport on the current dataframe."
-            )
         self.n_columns = sbd.shape(self.dataframe)[1]
+
+        if max_plot_columns is not None:
+            warnings.warn(
+                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            plot_distributions = (
+                max_plot_columns == "all" or max_plot_columns >= self.n_columns
+            )
+
+        if max_association_columns is not None:
+            warnings.warn(
+                "'max_association_columns' is deprecated. Use 'compute_associations'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            compute_associations = (
+                max_association_columns == "all"
+                or max_association_columns >= self.n_columns
+            )
+
+        (
+            self.plot_distributions,
+            self.compute_associations,
+        ) = _validate_plot_and_association(
+            plot_distributions,
+            compute_associations,
+            self.n_columns,
+        )
 
     def _set_minimal_mode(self):
         """Put the report in minimal mode.
@@ -267,8 +337,8 @@ class TableReport:
         except AttributeError:
             pass
         self._to_html_kwargs["minimal_report_mode"] = True
-        self.max_association_columns = 0
-        self.max_plot_columns = 0
+        self.compute_associations = False
+        self.plot_distributions = False
         # In minimal mode, fall back to 'table' if user selected unavailable tabs
         if self.open_tab in ["distributions", "associations"]:
             self.open_tab = "table"
@@ -281,18 +351,10 @@ class TableReport:
 
     @functools.cached_property
     def _summary(self):
-        with_plots = (
-            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
-        )
-        with_associations = (
-            self.max_association_columns == "all"
-            or self.max_association_columns >= self.n_columns
-        )
-
         return summarize_dataframe(
             self.dataframe,
-            with_plots=with_plots,
-            with_associations=with_associations,
+            with_plots=self.plot_distributions,
+            with_associations=self.compute_associations,
             title=self.title,
             **self._summary_kwargs,
         )

@@ -2,18 +2,21 @@
 
 .. _user_guide_deduplicate:
 
-Deduplicating categorical data with |deduplicate|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to deduplicate categorical data with |deduplicate|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have a series or list that contains strings with typos, the |deduplicate|
 function may be used to remove the typos. This is done by creating a mapping
 between the typo strings and the correct strings.
 
-Deduplication is done by first computing the n-gram distance between unique
-categories in data, then performing hierarchical clustering on this distance
-matrix, and choosing the most frequent element in each cluster as the
-'correct' spelling. This method works best if the true number of
-categories is significantly smaller than the number of observed spellings.
+.. admonition:: How does this work?
+   :collapsible: closed
+
+   Deduplication is done by first computing the n-gram distance between unique
+   categories in data, then performing hierarchical clustering on this distance
+   matrix, and choosing the most frequent element in each cluster as the
+   'correct' spelling. This method works best if the true number of
+   categories is significantly smaller than the number of observed spellings.
 
 >>> from skrub.datasets import make_deduplication_data
 >>> duplicated = make_deduplication_data(examples=['black', 'white'],
@@ -54,6 +57,7 @@ Deduplicating values in a dataframe
 |deduplicate| can be used to replace values in a dataframe that contains typos.
 This can be done with ``deduplicate_correspondence`` computed above and the
 ``map`` function in pandas, or the ``replace`` function in polars.
+
 >>> import pandas as pd
 >>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
 >>> df
@@ -83,6 +87,7 @@ color  value deduplicated_color
 9  white      9              white
 
 With polars:
+
 >>> import polars as pl  # doctest: +SKIP
 >>> df = pl.DataFrame({'color': duplicated, 'value': range(10)}) # doctest: +SKIP
 >>> df.with_columns(deduplicated_color = pl.col("color").replace( # doctest: +SKIP
