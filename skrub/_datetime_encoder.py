@@ -155,11 +155,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     extracted features will be in the column's timezone.
 
     An input column that does not have a Date or Datetime dtype will be
-    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
-    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
-    only sends datetime columns to its ``datetime_encoder``. Therefore it is
-    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
-    ``datetime_encoder`` parameter.
+    rejected by raising a :class:`~core.RejectColumn` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes.
+    **Note:** the :class:`~skrub.TableVectorizer` only sends datetime columns to its
+    ``datetime_encoder``. Therefore it is always safe to use a ``DatetimeEncoder`` as
+    the :class:`~skrub.TableVectorizer`'s ``datetime_encoder`` parameter.
 
     The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
     The period of each feature is:
@@ -249,7 +249,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     (The number of seconds since Epoch can still be extracted but not "hour",
     "minute", etc.)
 
-    Non-datetime columns are rejected by raising a ``RejectColumn`` exception.
+    Non-datetime columns are rejected by raising a :class:`~core.RejectColumn` exception.
 
     >>> s = pd.Series(['2024-04-14', '2024-05-15'], name='birthday')
     >>> s
