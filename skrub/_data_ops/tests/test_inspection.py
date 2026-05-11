@@ -142,9 +142,13 @@ def test_full_report_open(monkeypatch):
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph():
-    g = skrub.as_data_op(0).skb.draw_graph()
+    data_op = skrub.as_data_op(0)
+    g = data_op.skb.draw_graph()
     assert repr(g) == "<GraphDrawing: use .open() to display>"
     assert b"<svg" in g.svg
+    uuid = str(data_op.skb.id).encode("utf-8")
+    assert uuid not in g.svg
+    assert uuid in data_op.skb.draw_graph(show_ids=True).svg
     assert "<svg" in g._repr_html_()
     assert g.png.startswith(b"\x89PNG")
     assert g._repr_png_().startswith(b"\x89PNG")
