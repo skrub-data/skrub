@@ -136,10 +136,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     ----------
     extracted_features_ : list of strings
         The features that are extracted, a subset of ["year", …, "nanosecond",
-        "weekday", "total_seconds", "day_of_year"]. If ``periodic_encoding`` is set to either
-        ``circular`` or ``spline``, the extracted periodic features will also be
+        "weekday", "total_seconds", "day_of_year"]. If ``periodic_encoding`` is set to
+        either ``circular`` or ``spline``, the extracted periodic features will also be
         added. Given a feature named ``date``, new features will be named
-        ``date_month_circular_0``, ``date_month_circular_1`` etc., or ``date_month_spline_00``, ``date_month_spline_01`` etc., accordingly.
+        ``date_month_circular_0``, ``date_month_circular_1`` etc., or
+        ``date_month_spline_00``, ``date_month_spline_01`` etc., accordingly.
 
     See Also
     --------
@@ -206,8 +207,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0          5.0       15.0        13.0          46.0           2.0
 
     We can also ask for the day of the week. The week starts at 1 on Monday and ends
-    at 7 on Sunday. This is consistent with the `ISO week date system <https://en.wikipedia.org/wiki/ISO_week_date>`_, the standard library
-    :meth:`datetime.isoweekday() <python:datetime.datetime.isoweekday>` and polars :meth:`weekday <polars:polars.Series.dt.weekday>`, but not with pandas
+    at 7 on Sunday. This is consistent with the
+    `ISO week date system <https://en.wikipedia.org/wiki/ISO_week_date>`_,
+    the standard library
+    :meth:`datetime.isoweekday() <python:datetime.datetime.isoweekday>` and polars
+    :meth:`weekday <polars:polars.Series.dt.weekday>`, but not with pandas
     :attr:`day_of_week <pandas:pandas.Series.dt.day_of_week>`, which counts days from 0.
 
     >>> login.dt.strftime('%A = %w')
