@@ -275,7 +275,7 @@ def deduplicate(
         if n_clusters is None:
             n_clusters = _guess_clusters(Z, distance_mat, n_jobs)
         clusters = fcluster(Z, n_clusters, criterion="maxclust")
-    except Exception:
+    except ValueError:
         if warn:
             warnings.warn(
                 "Deduplication could not cluster the data (too few or too similar"
