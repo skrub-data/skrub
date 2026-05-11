@@ -33,7 +33,8 @@ def test_input_is_an_array():
     assert sbd.column_names(d) == ["0", "1"]
 
     # 1D array
-    check.fit_transform(np.ones((2,)))
+    with pytest.raises(ValueError, match=".*incompatible shape"):
+        check.fit_transform(np.ones((2,)))
 
 
 @skip_polars_installed_without_pyarrow
