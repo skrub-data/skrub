@@ -212,7 +212,8 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         "".join(rng.choice(list(string.ascii_letters), 10)) for _ in range(size)
     ]
     d["cities"] = rng.choice(capitals, size=size)
-    d["encoded_cities"] = OrdinalEncoder().fit_transform(d[["cities"]])
+    cities_array = np.array(d["cities"]).reshape(-1, 1)
+    d["encoded_cities"] = list(OrdinalEncoder().fit_transform(cities_array))
     df_cities = pd.DataFrame(d)
 
     p = rng.uniform(0, 1, size=size)
