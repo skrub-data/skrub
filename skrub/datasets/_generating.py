@@ -5,6 +5,7 @@ Functions that generate example data.
 
 from __future__ import annotations
 
+import datetime
 import string
 import time
 
@@ -12,8 +13,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils import Bunch, check_random_state
-
-from skrub._utils import random_string
 
 
 def make_deduplication_data(
@@ -182,7 +181,7 @@ def toy_products():
 
 
 def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed=seed)
     t = time.time()
     capitals = [
         "Amsterdam",
@@ -209,36 +208,30 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
 
     d = {}
 
-    d["uid"] = [random_string() for i in range(size)]
-    d["cities"] = np.random.choice(capitals, size=size)
-    for i in range(size):
-        p = np.random.random()
-        if p < nulls:
-            d["cities"][i] = None
+    d["uid"] = [
+        "".join(rng.choice(list(string.ascii_letters), 10)) for _ in range(size)
+    ]
+    d["cities"] = rng.choice(capitals, size=size)
+    d["encoded_cities"] = OrdinalEncoder().fit_transform(d[["cities"]])
+    df_cities = pd.DataFrame(d)
 
-    cities_array = np.array(d["cities"]).reshape(-1, 1)
-    d["encoded_cities"] = list(OrdinalEncoder().fit_transform(cities_array))
+    p = rng.uniform(0, 1, size=size)
+    df_cities["cities"] = df_cities["cities"].where(p < nulls)
 
-    start_times, end_times = [], []
-    for _ in range(size):
-        s = np.random.randint(0, int(t))
-        e = np.random.randint(s, int(t))
-        p = np.random.random()
-        start_times.append(time.ctime(s))
+    s = rng.integers(0, int(t), size=size)
+    e = rng.integers(s, np.ones(size) * t)
+    v = np.vstack([s, e])
 
-        if p >= nulls:
-            end_times.append(time.ctime(e))
-        else:
-            end_times.append(None)
+    df_dates = pd.DataFrame(v.T, columns=["start", "end"])
+    df_dates = df_dates.map(datetime.fromtimestamp)
+    p = rng.uniform(0, 1, size=size)
+    df_dates["end"] = df_dates["end"].where(p < nulls)
 
-    d["start_times"] = pd.to_datetime(start_times)
-    d["end_times"] = pd.to_datetime(end_times)
+    metric_cols = [f"metric_{k}" for k in range(n_metrics)]
+    metrics_array = rng.random(size=(size, n_metrics))
+    df_metrics = pd.DataFrame(metrics_array, columns=metric_cols)
 
-    for k in range(n_metrics):
-        d[f"metric_{k}"] = np.random.random(size)
-
-    df = pd.DataFrame(d)
-
+    df = pd.concat((df_cities, df_dates, df_metrics))
     df["encoded_cities"] = df.encoded_cities.explode().astype(int)
 
     return df
