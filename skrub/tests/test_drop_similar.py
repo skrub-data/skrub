@@ -7,6 +7,7 @@ from skrub._drop_similar import DropSimilar
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 _THRESHOLD_ERROR = "Threshold must be a number between 0 and 1"
+_TYPE_ERROR = "Threshold must be a number"
 _PYARROW_ERROR = "DropSimilar requires the Pyarrow package to run on Polars dataframes."
 
 
@@ -86,18 +87,18 @@ def test_drop_similar(table_with_associations, threshold, result):
 
 
 @skip_polars_installed_without_pyarrow
-def test_wrong_threshold(df_module):
-    ds = DropSimilar(threshold=-0.5)
-    with pytest.raises(ValueError, match=_THRESHOLD_ERROR):
-        ds.fit_transform(df_module.make_dataframe({}))
-    ds = DropSimilar(threshold=3)
-    with pytest.raises(ValueError, match=_THRESHOLD_ERROR):
-        ds.fit_transform(df_module.make_dataframe({}))
-    ds = DropSimilar(threshold=False)
-    with pytest.raises(ValueError, match=_THRESHOLD_ERROR):
-        ds.fit_transform(df_module.make_dataframe({}))
-    ds = DropSimilar(threshold="lower")
-    with pytest.raises(ValueError, match=_THRESHOLD_ERROR):
+@pytest.mark.parametrize(
+    "threshold, error",
+    [
+        (-0.5, _THRESHOLD_ERROR),
+        (3, _THRESHOLD_ERROR),
+        (False, _TYPE_ERROR),
+        ("lower", _TYPE_ERROR),
+    ],
+)
+def test_wrong_threshold(df_module, threshold, error):
+    ds = DropSimilar(threshold=threshold)
+    with pytest.raises(ValueError, match=error):
         ds.fit_transform(df_module.make_dataframe({}))
 
 

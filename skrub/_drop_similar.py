@@ -1,3 +1,8 @@
+"""
+A transformer that removes columns from a dataframe if they are too closely
+correlated to at least one other.
+"""
+
 try:
     import polars as pl
 except ImportError:
@@ -154,8 +159,10 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     def fit_transform(self, X, y=None):
         # check that the threshold is correct
         if isinstance(self.threshold, bool) or not (
-            isinstance(self.threshold, numbers.Real) and 0 <= self.threshold <= 1
+            isinstance(self.threshold, numbers.Number)
         ):
+            raise ValueError(f"Threshold must be a number, got {self.threshold}")
+        elif not 0 <= self.threshold <= 1:
             raise ValueError(
                 f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
