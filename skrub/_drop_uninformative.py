@@ -31,6 +31,9 @@ class DropUninformative(SingleColumnTransformer):
         do not count as unique values for this criterion.
 
         .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
 
     See Also
     --------
