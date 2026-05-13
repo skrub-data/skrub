@@ -15,6 +15,7 @@ from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
+from ._convert_duration import ConvertDuration
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._select_cols import Drop
@@ -144,6 +145,7 @@ def _get_preprocessors(
             cols,
         ),
         (ToDatetime(format=datetime_format), cols),
+        (ConvertDuration(), cols),
     ]
 
     match parse_numbers, cast_to_float32:

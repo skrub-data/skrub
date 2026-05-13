@@ -1,6 +1,6 @@
 import re
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import joblib
 import numpy as np
@@ -1248,3 +1248,30 @@ def test_pipeline_in_table_vectorizer(df_module):
     fit_transform_result = tv.fit_transform(df)
     transform_result = tv.transform(df)
     assert fit_transform_result.shape == transform_result.shape == (2, 4)
+
+
+def test_convert_duration(df_module):
+    df = df_module.make_dataframe(
+        {
+            "duration": [
+                timedelta(seconds=3600),
+                timedelta(milliseconds=123),
+                timedelta(days=1),
+                timedelta(microseconds=456),
+            ]
+        }
+    )
+
+    expected = df_module.make_dataframe(
+        {
+            "duration": [3600.0, 0.123, 86400.0, 0.000456],
+        }
+    )
+
+    vectorizer = TableVectorizer()
+    transformed = vectorizer.fit_transform(df)
+    assert_array_almost_equal(transformed["duration"], expected["duration"])
+
+    vectorizer = Cleaner()
+    transformed = vectorizer.fit_transform(df)
+    assert_array_almost_equal(transformed["duration"], expected["duration"])

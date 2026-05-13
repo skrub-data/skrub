@@ -109,6 +109,7 @@ __all__ = [
     "abs",
     "total_seconds",
     "is_sorted",
+    "convert_duration",
 ]
 
 pandas_version = parse_version(parse_version(pd.__version__).base_version)
@@ -1498,3 +1499,20 @@ def _is_sorted_polars(col, descending=False):
         return drop_nulls(col).is_sorted(descending=descending)
     except pl.exceptions.InvalidOperationError:
         return False
+
+
+@dispatch
+def convert_duration(col):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@convert_duration.specialize("pandas", argument_type="Column")
+def _convert_duration_pandas(col):
+    return col.dt.total_seconds()
+
+
+@convert_duration.specialize("polars", argument_type="Column")
+def _convert_duration_polars(col):
+    # fractional=True returns a float with the duration in seconds,
+    # including the fractional part if the duration has a sub-second component
+    return col.dt.total_seconds(fractional=True)
