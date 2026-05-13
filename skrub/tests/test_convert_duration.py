@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import pytest
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_allclose
 
 from skrub._convert_duration import ConvertDuration
 from skrub.core import RejectColumn
@@ -22,7 +22,7 @@ def test_convert_duration(df_module):
 
     transformer = ConvertDuration()
     transformed = transformer.fit_transform(df)
-    assert_array_almost_equal(transformed, expected)
+    assert_allclose(transformed, expected)
 
 
 def test_convert_duration_rejects_non_duration(df_module):

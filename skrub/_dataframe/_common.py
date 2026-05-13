@@ -5,7 +5,6 @@ from collections.abc import Mapping, Sequence
 import numpy as np
 import pandas as pd
 import pandas.api.types
-import pytest
 from sklearn.utils.fixes import parse_version
 
 from skrub import _join_utils
@@ -1514,7 +1513,6 @@ def _convert_duration_pandas(col):
 
 @convert_duration.specialize("polars", argument_type="Column")
 def _convert_duration_polars(col):
-    pl = pytest.importorskip("polars")
     # total_nanoseconds is needed to have the proper resolution in old versions
     # of polars
     return (col.dt.total_nanoseconds() * 1e-9).cast(pl.Float64)

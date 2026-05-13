@@ -12,7 +12,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_allclose, assert_array_equal
 from packaging.version import parse
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
@@ -1039,4 +1039,7 @@ def test_convert_duration(df_module):
         "", [timedelta(days=1), timedelta(hours=1), timedelta(microseconds=1)]
     )
     out = ns.convert_duration(s)
-    assert ns.to_list(out) == [86400, 3600, 1e-6]
+    assert_allclose(
+        ns.to_numpy(out),
+        np.array([86400.0, 3600.0, 1e-6]),
+    )
