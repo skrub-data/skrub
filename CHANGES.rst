@@ -20,6 +20,11 @@ Changes
 
 Bugfixes
 --------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Deprecations
 ------------
