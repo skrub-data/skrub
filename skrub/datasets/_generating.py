@@ -230,16 +230,12 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         raise ValueError(f"nulls must be a number between 0 and 1, got {nulls!r}.")
 
     # Check that the other variables are integers
-    if not isinstance(seed, int):
-        raise ValueError(f"seed must be an integer, got {seed}.")
-    if not isinstance(size, int):
+    if not isinstance(seed, int) or seed < 0:
+        raise ValueError(f"seed must be a positive integer, got {seed}.")
+    if not isinstance(size, int) or size < 0:
         raise ValueError(f"size must be a positive integer, got {size}.")
-    elif size < 0:
-        raise ValueError(f"size must be a positive integer, got {size}.")
-    if not isinstance(n_metrics, int):
+    if not isinstance(n_metrics, int) or n_metrics < 0:
         raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
-    elif n_metrics < 0:
-        raise ValueError(f"n_metrics must be a positive integer, got {size}.")
 
     rng = np.random.default_rng(seed=seed)
     now = 1770000000

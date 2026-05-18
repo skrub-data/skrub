@@ -56,9 +56,26 @@ def test_toy_cities():
     assert pd.isnull(df_nulls["cities"]).all()
     assert not pd.isnull(df_no_nulls["cities"]).any()
 
-    with pytest.raises(ValueError, match="seed must be an integer"):
-        df = toy_cities(seed="yes")
-    with pytest.raises(ValueError, match="size must be a positive integer"):
-        df = toy_cities(size=-15)
-    with pytest.raises(ValueError, match="n_metrics must be a positive integer"):
-        df = toy_cities(n_metrics=3.8)
+
+_SEED_MESSAGE = "seed must be a positive integer"
+_SIZE_MESSAGE = "size must be a positive integer"
+_NULLS_MESSAGE = "nulls must be a number"
+_METRICS_MESSAGE = "n_metrics must be a positive integer"
+
+
+@pytest.mark.parametrize(
+    ("seed", "size", "n_metrics", "nulls", "message"),
+    [
+        ("yes", 10, 4, 0.1, _SEED_MESSAGE),
+        (-5, 10, 4, 0.1, _SEED_MESSAGE),
+        (25, None, 4, 0.1, _SIZE_MESSAGE),
+        (25, -8, 4, 0.1, _SIZE_MESSAGE),
+        (25, 10, 4.5, 0.1, _METRICS_MESSAGE),
+        (25, 10, -5, 0.1, _METRICS_MESSAGE),
+        (25, 10, 4, "nulls", _NULLS_MESSAGE),
+        (25, 10, 4, 3, _NULLS_MESSAGE),
+    ],
+)
+def test_toy_cities_errors(seed, size, n_metrics, nulls, message):
+    with pytest.raises(ValueError, match=message):
+        _ = toy_cities(seed=seed, size=size, nulls=nulls, n_metrics=n_metrics)
