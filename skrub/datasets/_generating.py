@@ -181,7 +181,8 @@ def toy_products():
 
 
 def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
-    """Custom dataframe example with a variety of column types.
+    """Generate a synthetic dataframe example with a variety of column types.
+    
     This can be used to showcase dataframes containing strings,
     dates and floats, columns containing null values, and strongly
     correlated columns.
