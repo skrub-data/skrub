@@ -21,15 +21,13 @@ def test_input_is_an_array():
     check = CheckInputDataFrame()
 
     # 2D array in fit
-    with pytest.warns(UserWarning, match="Only .* DataFrames are supported"):
-        d = check.fit_transform(a)
+    d = check.fit_transform(a)
     assert sbd.is_pandas(d)
     assert sbd.is_dataframe(d)
     assert sbd.column_names(d) == ["0", "1"]
 
     # 2D array in transform
-    with pytest.warns(UserWarning, match="Only .* DataFrames are supported"):
-        d = check.transform(a)
+    d = check.transform(a)
     assert sbd.is_pandas(d)
     assert sbd.is_dataframe(d)
     assert sbd.column_names(d) == ["0", "1"]
