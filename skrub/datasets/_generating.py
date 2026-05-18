@@ -215,11 +215,11 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     --------
     >>> from skrub.datasets import toy_cities
     >>> toy_cities(seed=5, size=3, n_metrics=2)
-            uid     cities  encoded_cities               start                 end  metric_0  metric_1
-    0  IPbQyAGoYc  Stockholm               1 1992-02-15 04:59:22                 NaT  0.227319  0.895448
-    1  otDvgcachZ     Vienna               2 2024-01-27 06:03:38 2024-11-26 17:22:08  0.872195  0.018517
-    2  jHNmownYjU        NaN               0 2001-04-28 14:12:32 2023-05-13 04:40:58  0.707496  0.001200
-    """  # noqa: E501
+              uid     cities  ...  metric_0  metric_1
+    0  IPbQyAGoYc  Stockholm  ...  0.227319  0.895448
+    1  otDvgcachZ     Vienna  ...  0.872195  0.018517
+    2  jHNmownYjU        NaN  ...  0.707496  0.001200
+    """
     rng = np.random.default_rng(seed=seed)
     t = time.time()
     capitals = [
