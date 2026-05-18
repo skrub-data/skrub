@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat
+from skrub._to_float import ToFloat, _str_replace
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -131,3 +131,8 @@ def test_parentheses_disabled(df_module):
     column = df_module.make_column("col", ["(1,234.56)"])
     with pytest.raises(RejectColumn):
         ToFloat(decimal=".", thousand=",", parentheses=False).fit_transform(column)
+
+
+def test_error_dispatch():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _str_replace(np.array([1]), decimal=".", thousand=None, parentheses=False)
