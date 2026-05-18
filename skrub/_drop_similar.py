@@ -73,76 +73,46 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> from skrub import DropSimilar
-    >>> from skrub.datasets import fetch_employee_salaries
-    >>> df = fetch_employee_salaries().X
-    >>> list(df.columns)
-    ['gender',
-    'department',
-    'department_name',
-    'division',
-    'assignment_category',
-    'employee_position_title',
-    'date_first_hired',
-    'year_first_hired']
-    >>> ds = DropSimilar(threshold=0.4)
+    >>> from skrub.datasets import toy_cities
+    >>> df = toy_cities(size=10)
+    >>> df.head()
+            uid   cities  encoded_cities    ...  metric_3
+    0  SHAoqcdajQ     Rome            13.0  ...  0.016102
+    1  HVAFYLGCDW  Vilnius            17.0  ...  0.773668
+    2  oQIauSCbNL   Madrid             9.0  ...  0.471049
+    3  SjeSbCepzv     Rome            13.0  ...  0.406865
+    4  ubagaIBHnG    Sofia            14.0  ...  0.666826
+    >>> ds = DropSimilar(threshold=0.8)
     >>> clean_df = ds.fit_transform(df)
 
     `ds` has now removed a column for each pair with association above 0.6.
     These associations are stored in the `table_associations_` attribute:
 
-    >>> ds.table_associations_
-            left_column_name        right_column_name  cramer_v
-    0                department          department_name  1.000000
-    1                  division      assignment_category  0.601097
-    2       assignment_category  employee_position_title  0.496814
-    3                  division  employee_position_title  0.416034
-    4           department_name  employee_position_title  0.413871
-    5                department  employee_position_title  0.413871
-    6           department_name      assignment_category  0.408823
-    7                department      assignment_category  0.408823
-    8                    gender               department  0.370436
-    9                    gender          department_name  0.370436
-    10               department                 division  0.362828
-    11          department_name                 division  0.362828
-    12  employee_position_title         date_first_hired  0.305385
-    13                   gender  employee_position_title  0.263627
-    14                   gender      assignment_category  0.255649
-    15                   gender                 division  0.248813
-    16               department         date_first_hired  0.150310
-    17          department_name         date_first_hired  0.150310
-    18         date_first_hired         year_first_hired  0.142581
-    19  employee_position_title         year_first_hired  0.140087
-    20                 division         date_first_hired  0.111298
-    21                   gender         date_first_hired  0.099101
-    22      assignment_category         date_first_hired  0.074086
-    23          department_name         year_first_hired  0.069520
-    24               department         year_first_hired  0.069520
-    25                   gender         year_first_hired  0.063211
-    26                 division         year_first_hired  0.060613
-    27      assignment_category         year_first_hired  0.044855
+    >>> ds.table_associations_.head()
+    left_column_name right_column_name  cramer_v
+    0           cities    encoded_cities  1.000000
+    1              uid    encoded_cities  0.110980
+    2              uid            cities  0.110980
+    3         metric_0          metric_3  0.102975
+    4              uid               end  0.102827
 
-    Six pairs are above the threshold, and they can be eliminated by
-    dropping three columns. Therefore, these three have been marked
-    as dropped by `ds`:
+    A single pair is above the threshold, `cities` and `encoded_cities`,
+    with an association score of 1. Since one is an encoding of the other,
+    this is to be expected.
+    Therefore, one of these two has been marked as dropped by `ds`:
 
     >>> ds.to_drop_
-    ['department_name', 'assignment_category', 'employee_position_title']
+    ['encoded_cities']
 
-    This leaves us with the shortened employee salary database:
+    This leaves us with the shortened dataframe:
 
     >>> clean_df
-        gender department                                           division date_first_hired  year_first_hired
-    0         F        POL  MSB Information Mgmt and Tech Division Records...       09/22/1986              1986
-    1         M        POL         ISB Major Crimes Division Fugitive Section       09/12/1988              1988
-    2         F        HHS      Adult Protective and Case Management Services       11/19/1989              1989
-    3         M        COR                         PRRS Facility and Security       05/05/2014              2014
-    4         M        HCA                        Affordable Housing Programs       03/05/2007              2007
-    ...     ...        ...                                                ...              ...               ...
-    9223      F        HHS                        School Based Health Centers       11/03/2015              2015
-    9224      F        FRS                           Human Resources Division       11/28/1988              1988
-    9225      M        HHS  Child and Adolescent Mental Health Clinic Serv...       04/30/2001              2001
-    9226      M        CCL                              Council Central Staff       09/05/2006              2006
-    9227      M        DLC                Licensure, Regulation and Education       01/30/2012              2012
+            uid   cities    ...  metric_3
+    0  SHAoqcdajQ     Rome  ...  0.016102
+    1  HVAFYLGCDW  Vilnius  ...  0.773668
+    2  oQIauSCbNL   Madrid  ...  0.471049
+    3  SjeSbCepzv     Rome  ...  0.406865
+    4  ubagaIBHnG    Sofia  ...  0.666826
     """  # noqa: E501
 
     def __init__(self, threshold=0.8):
