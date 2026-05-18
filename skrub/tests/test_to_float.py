@@ -136,3 +136,14 @@ def test_parentheses_disabled(df_module):
 def test_error_dispatch():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         _str_replace(np.array([1]), decimal=".", thousand=None, parentheses=False)
+
+
+def test_is_string(df_module):
+    # checking that is_string is correctly called at transform time
+    column = df_module.make_column("col", ["1,234.5"])
+    to_float = ToFloat(decimal=".", thousand=",").fit(column)
+
+    new_column = df_module.make_column("col", ["1,400.5"])
+    transformed = to_float.transform(new_column)
+    expected = sbd.to_float32(df_module.make_column("col", [1400.5]))
+    df_module.assert_column_equal(transformed, expected)
