@@ -49,3 +49,8 @@ def test_toy_cities():
         }
     )
     pd.testing.assert_series_equal(df["cities"], expected["cities"])
+
+    df_nulls = toy_cities(nulls=1, size=10)
+    df_no_nulls = toy_cities(nulls=0, size=10)
+    assert pd.isnull(df_nulls["cities"]).all()
+    assert not pd.isnull(df_no_nulls["cities"]).any()

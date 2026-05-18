@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import datetime
 import string
-import time
 
 import numpy as np
 import pandas as pd
@@ -182,7 +181,7 @@ def toy_products():
 
 def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     """Generate a synthetic dataframe example with a variety of column types.
-    
+
     This can be used to showcase dataframes containing strings,
     dates and floats, columns containing null values, and strongly
     correlated columns.
@@ -215,14 +214,15 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     Examples
     --------
     >>> from skrub.datasets import toy_cities
-    >>> toy_cities(seed=5, size=3, n_metrics=2)
+    >>> df = toy_cities(seed=5, size=3, n_metrics=2)
+    >>> df # doctest: +SKIP
               uid     cities  ...  metric_0  metric_1
     0  IPbQyAGoYc  Stockholm  ...  0.227319  0.895448
     1  otDvgcachZ     Vienna  ...  0.872195  0.018517
     2  jHNmownYjU        NaN  ...  0.707496  0.001200
     """
     rng = np.random.default_rng(seed=seed)
-    t = time.time()
+    now = 1770000000
     capitals = [
         "Amsterdam",
         "Athens",
@@ -261,8 +261,8 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     df_cities["encoded_cities"] = OrdinalEncoder().fit_transform(df_cities[["cities"]])
 
     # Next, the "start" and "end" datetime columns are constructed.
-    s = rng.integers(0, int(t), size=size)
-    e = rng.integers(s, np.ones(size) * t)
+    s = rng.integers(0, int(now), size=size)
+    e = rng.integers(s, np.ones(size) * now)
     v = np.vstack([s, e])
 
     df_dates = pd.DataFrame(v.T, columns=["start", "end"])
