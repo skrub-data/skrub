@@ -286,7 +286,10 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     v = np.vstack([s, e])
 
     df_dates = pd.DataFrame(v.T, columns=["start", "end"])
-    df_dates = df_dates.map(datetime.datetime.fromtimestamp)
+    if hasattr(df_dates, "map"):
+        df_dates = df_dates.map(datetime.datetime.fromtimestamp)
+    else:
+        df_dates = df_dates.applymap(datetime.datetime.fromtimestamp)
     # As above, "end" sees some of its values set to null.
     p = rng.uniform(0, 1, size=size)
     df_dates["end"] = df_dates["end"].where(p >= nulls)
