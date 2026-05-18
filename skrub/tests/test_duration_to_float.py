@@ -46,3 +46,8 @@ def test_dispatched_duration_to_float(df_module):
         sbd.to_numpy(out),
         np.array([86400.0, 3600.0, 1e-6]),
     )
+
+
+def test_error_dispatch():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        duration_to_float(np.array([1]))
