@@ -1268,10 +1268,12 @@ def test_convert_duration(df_module):
         }
     )
 
+    # The TableVectorizer should convert to float
     vectorizer = TableVectorizer()
     transformed = vectorizer.fit_transform(df)
     assert_array_almost_equal(transformed["duration"], expected["duration"])
 
+    # The Cleaner should not alter the dtype
     vectorizer = Cleaner()
     transformed = vectorizer.fit_transform(df)
-    assert_array_almost_equal(transformed["duration"], expected["duration"])
+    df_module.assert_column_equal(transformed["duration"], df["duration"])

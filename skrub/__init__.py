@@ -9,6 +9,7 @@ from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_to_cols import ApplyToCols
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
+from ._convert_duration import DurationToFloat
 from ._data_ops import (
     DataOp,
     OptunaParamSearch,
@@ -65,6 +66,7 @@ __all__ = [
     "TableReport",
     "tabular_pipeline",
     "DatetimeEncoder",
+    "DurationToFloat",
     "ToDatetime",
     "Joiner",
     "fuzzy_join",

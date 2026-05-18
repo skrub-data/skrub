@@ -1,10 +1,33 @@
 """This transformer converts durations to seconds."""
 
+try:
+    import polars as pl
+except ImportError:
+    pass
+
 from . import _dataframe as sbd
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 
-class ConvertDuration(SingleColumnTransformer):
+@dispatch
+def duration_to_float(col):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@duration_to_float.specialize("pandas", argument_type="Column")
+def _duration_to_float_pandas(col):
+    return col.dt.total_seconds()
+
+
+@duration_to_float.specialize("polars", argument_type="Column")
+def _duration_to_float_polars(col):
+    # total_nanoseconds is needed to have the proper resolution in old versions
+    # of polars
+    return (col.dt.total_nanoseconds() * 1e-9).cast(pl.Float64)
+
+
+class DurationToFloat(SingleColumnTransformer):
     """Convert duration columns to seconds.
 
     This transformer converts duration columns to seconds. It only works on
@@ -17,7 +40,7 @@ class ConvertDuration(SingleColumnTransformer):
 
     >>> import pandas as pd
     >>> from datetime import timedelta
-    >>> from skrub._convert_duration import ConvertDuration
+    >>> from skrub import DurationToFloat
     >>> s = pd.Series([
     ...     timedelta(seconds=3600), timedelta(minutes=2), timedelta(days=1)
     ... ])
@@ -26,7 +49,7 @@ class ConvertDuration(SingleColumnTransformer):
     1   0 days 00:02:00
     2   1 days 00:00:00
     dtype: timedelta64[...]
-    >>> converter = ConvertDuration()
+    >>> converter = DurationToFloat()
     >>> converter.fit_transform(s)
     0    3600.0
     1    120.0
@@ -80,5 +103,5 @@ class ConvertDuration(SingleColumnTransformer):
     def transform(self, col, y=None):
         del y
 
-        column = sbd.convert_duration(col)
+        column = duration_to_float(col)
         return column

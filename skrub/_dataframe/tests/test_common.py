@@ -12,7 +12,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_array_equal
 from packaging.version import parse
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
@@ -1032,14 +1032,3 @@ def test_is_sorted_object_dtypes(col, df_module):
     # to add the code / computation time to handle those discrepancies.
     # However, is_sorted should not crash and return a Boolean in all cases.
     assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)
-
-
-def test_convert_duration(df_module):
-    s = df_module.make_column(
-        "", [timedelta(days=1), timedelta(hours=1), timedelta(microseconds=1)]
-    )
-    out = ns.convert_duration(s)
-    assert_allclose(
-        ns.to_numpy(out),
-        np.array([86400.0, 3600.0, 1e-6]),
-    )
