@@ -6,6 +6,7 @@ Functions that generate example data.
 from __future__ import annotations
 
 import datetime
+import numbers
 import string
 
 import numpy as np
@@ -221,6 +222,25 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     1  otDvgcachZ     Vienna  ...  0.872195  0.018517
     2  jHNmownYjU        NaN  ...  0.707496  0.001200
     """
+
+    # Check that the nulls probability is valid
+    if isinstance(nulls, bool) or not (isinstance(nulls, numbers.Number)):
+        raise ValueError(f"nulls must be a number, got {nulls}.")
+    elif not 0 <= nulls <= 1:
+        raise ValueError(f"nulls must be a number between 0 and 1, got {nulls!r}.")
+
+    # Check that the other variables are integers
+    if not isinstance(seed, int):
+        raise ValueError(f"seed must be an integer, got {seed}.")
+    if not isinstance(size, int):
+        raise ValueError(f"size must be a positive integer, got {size}.")
+    elif size < 0:
+        raise ValueError(f"size must be a positive integer, got {size}.")
+    if not isinstance(n_metrics, int):
+        raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
+    elif n_metrics < 0:
+        raise ValueError(f"n_metrics must be a positive integer, got {size}.")
+
     rng = np.random.default_rng(seed=seed)
     now = 1770000000
     capitals = [

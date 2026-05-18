@@ -4,6 +4,7 @@ Tests generating.py (synthetic dataset generation).
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from skrub.datasets._generating import make_deduplication_data, toy_cities
 
@@ -54,3 +55,10 @@ def test_toy_cities():
     df_no_nulls = toy_cities(nulls=0, size=10)
     assert pd.isnull(df_nulls["cities"]).all()
     assert not pd.isnull(df_no_nulls["cities"]).any()
+
+    with pytest.raises(ValueError, match="seed must be an integer"):
+        df = toy_cities(seed="yes")
+    with pytest.raises(ValueError, match="size must be a positive integer"):
+        df = toy_cities(size=-15)
+    with pytest.raises(ValueError, match="n_metrics must be a positive integer"):
+        df = toy_cities(n_metrics=3.8)
