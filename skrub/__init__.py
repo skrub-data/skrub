@@ -9,7 +9,6 @@ from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_to_cols import ApplyToCols
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
-from ._convert_duration import DurationToFloat
 from ._data_ops import (
     DataOp,
     OptunaParamSearch,
@@ -31,6 +30,7 @@ from ._data_ops import (
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import deduplicate
 from ._drop_uninformative import DropUninformative
+from ._duration_to_float import DurationToFloat
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner

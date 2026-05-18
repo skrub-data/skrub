@@ -1250,7 +1250,7 @@ def test_pipeline_in_table_vectorizer(df_module):
     assert fit_transform_result.shape == transform_result.shape == (2, 4)
 
 
-def test_convert_duration(df_module):
+def test_duration_to_float(df_module):
     df = df_module.make_dataframe(
         {
             "duration": [

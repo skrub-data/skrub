@@ -15,9 +15,9 @@ from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
-from ._convert_duration import DurationToFloat
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
+from ._duration_to_float import DurationToFloat
 from ._select_cols import Drop
 from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
