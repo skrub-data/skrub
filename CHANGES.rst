@@ -20,6 +20,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`choose_from` now accepts numpy arrays, tuples, and other iterables in
+  addition to lists. Previously, passing a numpy array raised an opaque
+  ``ValueError`` from a downstream truthiness check. :pr:`<NUM>` by
+  :user:`Matthew Van Horn <mvanhorn>`.
 
 Deprecations
 ------------

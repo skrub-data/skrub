@@ -53,6 +53,22 @@ def test_discretized_choice_iter():
         skrub.choose_float(10.0, 20.0, n_steps=0, name="c")
 
 
+def test_choose_from_normalizes_iterables_to_list():
+    outcomes = np.linspace(0, 10, 5)
+    c = skrub.choose_from(outcomes, name="lr")
+    assert c.default() == outcomes[0]
+    assert c.outcomes == list(outcomes)
+    assert len(c.outcomes) == 5
+
+    c = skrub.choose_from((1, 2, 3), name="c")
+    assert c.default() == 1
+    assert c.outcomes == [1, 2, 3]
+
+    c = skrub.choose_from((i for i in range(3)), name="c")
+    assert c.default() == 0
+    assert c.outcomes == [0, 1, 2]
+
+
 def test_bad_outcomes():
     with pytest.raises(ValueError, match="Choice should be given at least one outcome"):
         skrub.choose_from([], name="c")
