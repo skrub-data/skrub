@@ -1,6 +1,7 @@
 import time
 from collections import namedtuple
 
+import numpy as np
 import pytest
 
 import skrub
@@ -323,6 +324,22 @@ def test_describe_steps():
     BinOp: add
     * Cached, not recomputed
     """
+
+
+def test_concat_all_numpy_horizontal():
+    a = skrub.var("a", np.eye(3))
+    b = skrub.var("b", np.eye(3))
+    result = a.skb.concat([b], axis=1).skb.eval()
+    assert isinstance(result, np.ndarray)
+    assert result.shape == (3, 6)
+
+
+def test_concat_all_numpy_vertical():
+    a = skrub.var("a", np.eye(3))
+    b = skrub.var("b", np.eye(3))
+    result = a.skb.concat([b], axis=0).skb.eval()
+    assert isinstance(result, np.ndarray)
+    assert result.shape == (6, 3)
 
 
 def _generator_result(g):

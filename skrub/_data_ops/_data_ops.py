@@ -1915,6 +1915,10 @@ class Concat(DataOpImpl):
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
+        arrays = [e.first, *e.others]
+        if arrays and all(isinstance(a, np.ndarray) for a in arrays):
+            return np.concatenate(arrays, axis=e.axis)
+
         if not sbd.is_dataframe(e.first):
             raise TypeError(
                 "`concat` can only be used with dataframes. "

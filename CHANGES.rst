@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- :meth:`DataOp.skb.concat` now accepts numpy arrays when all inputs
+  are arrays, returning a numpy array. Mixed dataframe / numpy inputs
+  still raise as before. :pr:`<NUM>` by
+  :user:`Matthew Van Horn <mvanhorn>`.
 
 Changes
 -------
