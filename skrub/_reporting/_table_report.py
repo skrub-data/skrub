@@ -448,6 +448,48 @@ class TableReport:
         # stage and with a UTF-8 encoding.
         file.write(html)
 
+    def write_json(self, file):
+        """Store the report data into a JSON file.
+
+        The JSON output is the same as that returned by :meth:`json`: a
+        JSON object containing the report data, excluding the underlying
+        dataframe and the sample table.
+
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the JSON output.
+        """
+        data = self.json()
+        if isinstance(file, (str, Path)):
+            with open(file, "w", encoding="utf8") as stream:
+                stream.write(data)
+            return
+
+        try:
+            # We don't have information about the write mode of the provided
+            # file-object. We start by writing bytes into it.
+            file.write(data.encode("utf-8"))
+            return
+        except TypeError:
+            # We end-up here if the file-object was open in text mode
+            # Let's give it another chance in this mode.
+            pass
+
+        if (encoding := getattr(file, "encoding", None)) is not None:
+            try:
+                encoding_name = codecs.lookup(encoding).name
+            except LookupError:  # pragma: no cover
+                encoding_name = None
+            if encoding_name != "utf-8":
+                raise ValueError(
+                    "If `file` is a text file it should use utf-8 encoding; got:"
+                    f" {encoding!r}"
+                )
+        # We write into the file-object expecting it to be in text mode at this
+        # stage and with a UTF-8 encoding.
+        file.write(data)
+
     def open(self):
         """Open the HTML report in a web browser."""
         open_in_browser(self.html())

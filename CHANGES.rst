@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- :class:`TableReport` has a new :meth:`TableReport.write_json` method
+  that writes the report's JSON representation to a given path or file object,
+  mirroring :meth:`TableReport.write_html`. :pr:`<NUM>` by
+  :user:`Matthew Van Horn <mvanhorn>`.
 
 Changes
 -------

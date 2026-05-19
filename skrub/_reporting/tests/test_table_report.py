@@ -253,6 +253,56 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
     assert "</html>" not in saved_content
 
 
+@pytest.mark.parametrize(
+    "filename_type",
+    ["str", "Path", "text_file_object", "binary_file_object"],
+)
+def test_write_json(tmp_path, pd_module, filename_type):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    tmp_file_path = tmp_path / Path("report.json")
+
+    # making sure we are closing the open files, and dealing with the first
+    # condition which doesn't require opening any file
+    with contextlib.ExitStack() as stack:
+        if filename_type == "str":
+            filename = str(tmp_file_path)
+        elif filename_type == "text_file_object":
+            filename = stack.enter_context(open(tmp_file_path, "w", encoding="utf-8"))
+        elif filename_type == "binary_file_object":
+            filename = stack.enter_context(open(tmp_file_path, "wb"))
+        else:
+            filename = tmp_file_path
+
+        report.write_json(filename)
+        assert tmp_file_path.exists()
+
+    with open(tmp_file_path, encoding="utf-8") as file:
+        data = json.loads(file.read())
+    assert isinstance(data, dict)
+    assert "title" in data
+    assert "dataframe" not in data
+    assert "sample_table" not in data
+
+
+def test_write_json_with_not_utf8_encoding(tmp_path, pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+    tmp_file_path = tmp_path / Path("report.json")
+
+    with open(tmp_file_path, "w", encoding="latin-1") as file:
+        encoding = getattr(file, "encoding", None)
+        with pytest.raises(
+            ValueError,
+            match=(
+                "If `file` is a text file it should use utf-8 encoding; got:"
+                f" {encoding!r}"
+            ),
+        ):
+            report.write_json(file)
+
+
 @skip_polars_installed_without_pyarrow
 def test_verbosity_parameter(df_module, capsys):
     df = df_module.make_dataframe(
