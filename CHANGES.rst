@@ -11,6 +11,9 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
