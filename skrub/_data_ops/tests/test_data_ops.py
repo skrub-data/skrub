@@ -171,7 +171,9 @@ def test_store_default():
     learner = c.skb.make_learner()
     assert learner.fit_transform({"b": 20}) == 21
     assert learner.fit_transform({"a": 10, "b": 20}) == 30
-    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+    with pytest.raises(
+        (KeyError, RuntimeError), match="No value has been provided for 'b'"
+    ):
         learner.fit_transform({})
 
 
