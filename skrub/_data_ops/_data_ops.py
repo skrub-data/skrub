@@ -946,7 +946,7 @@ def _check_var_value(value):
 class Var(DataOpImpl):
     "A `skrub.var()` DataOp."
 
-    _fields = ["name", "value"]
+    _fields = ["name", "value", "store_default"]
 
     def compute(self, e, mode, environment):
         if mode == "preview":
@@ -958,7 +958,9 @@ class Var(DataOpImpl):
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if environment.get("_skrub_use_var_values", False) and e.value is not NULL:
+        if (
+            e.store_default or environment.get("_skrub_use_var_values", False)
+        ) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(f"No value has been provided for {e.name!r}")
 
@@ -966,10 +968,17 @@ class Var(DataOpImpl):
         return self.value
 
     def __repr__(self):
-        return f"<Var {self.name!r}>"
+        default_type = (
+            "" if not self.store_default else f" {self.value.__class__.__name__}"
+        )
+        return f"<{self.__class__.__name__} {self.name!r}{default_type}>"
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        return "Result (also the default value)"
 
 
-def var(name, value=NULL):
+def var(name, value=NULL, *, store_default=False):
     """Create a skrub variable.
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
@@ -990,6 +999,10 @@ def var(name, value=NULL):
         available, it is used to provide a preview of the learner's results,
         to detect errors in the learner early, and to provide better help and
         tab-completion in interactive Python shells.
+    store_default : bool, default = False
+        If True, the provided value is not only used for previews but is stored
+        as a default value for this variable. Thus passing a value for it in
+        the environment is optional.
 
     Returns
     -------
@@ -1069,7 +1082,14 @@ def var(name, value=NULL):
     """
     check_name(name, is_var=True)
     _check_var_value(value)
-    return DataOp(Var(name, value=value))
+    if not isinstance(store_default, bool):
+        raise TypeError(
+            "store_default should be a Boolean, "
+            f"got object of type {type(store_default)}: {store_default!r}"
+        )
+    if store_default and value is NULL:
+        raise TypeError("value must be provided when store_default is True.")
+    return DataOp(Var(name, value=value, store_default=store_default))
 
 
 def X(value=NULL):
@@ -1130,7 +1150,7 @@ def X(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("X", value=value)).skb.mark_as_X()
+    return DataOp(Var("X", value=value, store_default=False)).skb.mark_as_X()
 
 
 def y(value=NULL):
@@ -1192,7 +1212,7 @@ def y(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("y", value=value)).skb.mark_as_y()
+    return DataOp(Var("y", value=value, store_default=False)).skb.mark_as_y()
 
 
 class Value(DataOpImpl):

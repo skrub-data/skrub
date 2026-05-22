@@ -567,7 +567,11 @@ class _Cloner(_DataOpTraversal):
             return self._replace[id(data_op)]
         impl = data_op._skrub_impl
         new_impl = impl.__replace__(**evaluated_attributes)
-        if isinstance(new_impl, Var) and self.drop_preview_data:
+        if (
+            isinstance(new_impl, Var)
+            and not new_impl.store_default
+            and self.drop_preview_data
+        ):
             new_impl.value = NULL
         clone = DataOp(new_impl)
         self._replace[id(data_op)] = clone
