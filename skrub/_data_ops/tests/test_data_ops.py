@@ -903,7 +903,7 @@ def test_set_data_errors():
     with pytest.raises(ValueError, match="no corresponding variable.*'x'"):
         c.skb.set_data({"a": 4, "b": 2, "x": 3})
     # errors in the preview computation are propagated
-    with pytest.raises(RuntimeError, match="integer division or modulo by zero"):
+    with pytest.raises(RuntimeError, match="(division|division or modulo) by zero"):
         c.skb.set_data({"a": 4, "b": 0})
 
 
