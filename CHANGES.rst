@@ -11,6 +11,11 @@ Ongoing development
 
 New Features
 ------------
+- A parameter ``store_default`` has been added to :func:`var`. It allows
+  indicating that the provided preview ``value`` should also be treated as a
+  default value for this variable in all contexts (for example in a
+  SkrubLearner's method like ``fit`` or ``predict``).
+  :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
