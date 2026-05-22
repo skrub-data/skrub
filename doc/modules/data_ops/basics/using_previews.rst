@@ -46,6 +46,32 @@ one example dataset.
 It is not necessary to provide a value for every variable: it is however advisable
 to do so when possible, as it allows to catch errors early on.
 
+Defining a default value for a variable
+---------------------------------------
+
+If we pass ``store_default=True`` to :func:`var`, the provided ``value`` is not
+only an example value to use for previews but a default value for this variable
+in all contexts -- then it is always optional to pass a value for it in the
+environment, and if not found the default is used.
+
+>>> a = skrub.var('a', 0)
+>>> a
+<Var 'a'>
+Result:
+―――――――
+0
+>>> b = skrub.var('b', 1, store_default=True)
+>>> b
+<Var 'b' int>
+Result (also the default value):
+――――――――――――――――――――――――――――――――
+1
+>>> c = a + b
+>>> c.skb.eval({'a': 10}) # the default 1 is used for 'b'
+11
+
+See the documentation of :func:`var` for details.
+
 Disabling previews and eager checks
 -----------------------------------
 
