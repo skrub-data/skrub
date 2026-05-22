@@ -151,6 +151,39 @@ def test_choice_in_environment():
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
 
+def test_store_default():
+    a = skrub.var("a", 1, store_default=True)
+    b = skrub.var("b", 2)
+    c = a + b
+    assert c.skb.eval() == 3
+    # When we pass a (non-empty) environment, 'a' is optional because it has a
+    # default
+    assert c.skb.eval({"b": 20}) == 21
+    # Whereas b is not
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+        c.skb.eval({"a": 10})
+    d = c.skb.clone(drop_values=True)
+    assert d.skb.get_data() == {"a": 1}
+    assert d.skb.eval({"b": 20}) == 21
+    assert d.skb.eval({"a": 10, "b": 20}) == 30
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+        d.skb.eval({})
+    learner = c.skb.make_learner()
+    assert learner.fit_transform({"b": 20}) == 21
+    assert learner.fit_transform({"a": 10, "b": 20}) == 30
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+        learner.fit_transform({})
+
+
+def test_store_default_errors():
+    with pytest.raises(TypeError, match="store_default should be a Boolean"):
+        skrub.var("a", 1, store_default=2)
+    with pytest.raises(
+        TypeError, match="value must be provided when store_default is True"
+    ):
+        skrub.var("a", store_default=True)
+
+
 def test_if_else():
     a = skrub.var("a")
     b = skrub.var("b")

@@ -973,9 +973,8 @@ class Var(DataOpImpl):
         )
         return f"<{self.__class__.__name__} {self.name!r}{default_type}>"
 
-    @staticmethod
-    def __skrub_preview_heading__():
-        return "Result (also the default value)"
+    def __skrub_preview_heading__(self):
+        return "Result (also the default value)" if self.store_default else "Result"
 
 
 def var(name, value=NULL, *, store_default=False):
@@ -1066,7 +1065,7 @@ def var(name, value=NULL, *, store_default=False):
     ―――――――
     5
 
-    The values are also used as defaults for ``eval()``:
+    The values are also used for ``eval()`` when no environment is provided:
 
     >>> c.skb.eval()
     5
@@ -1076,6 +1075,24 @@ def var(name, value=NULL, *, store_default=False):
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
+
+    When passing ``store_default=True``, the preview value is treated as a
+    default value for that variable. It is kept when cloning the DataOp or
+    creating a Learner, and is always optional in the provided environment.
+
+    >>> c = skrub.var('a', 0, store_default=True) + skrub.var('b', 1)
+    >>> c.skb.get_data()
+    {'a': 0, 'b': 1}
+    >>> c.skb.clone().skb.get_data()
+    {'a': 0}
+
+    For the learner 'b' is mandatory but 'a' is optional and has default value
+    0.
+
+    >>> c.skb.make_learner().fit_transform({'b': 10})
+    10
+    >>> c.skb.make_learner().fit_transform({'b': 10, 'a': 100})
+    110
 
     Much more information about skrub variables is provided in the examples
     gallery.
