@@ -115,6 +115,23 @@ def test_report_fit_mode():
     assert "olleh" in node_1_report
 
 
+def test_report_score_mode_with_scoring():
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.make_learner()
+    )
+    with pytest.raises(
+        NotImplementedError,
+        match=re.escape(
+            "Creating the report for 'score' mode when .skb.with_scoring() "
+            "has been used is not implemented yet."
+        ),
+    ):
+        learner.report(environment={}, mode="score")
+
+
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report_open(monkeypatch):
     mock = Mock()

@@ -25,6 +25,7 @@ from ._data_ops import (
     Apply,
     DataOp,
     Scoring,
+    SplitX,
     Value,
     Var,
 )
@@ -88,6 +89,24 @@ class _CurrentNodeDuration:
     """
 
 
+class HasRunningApplyAncestor:
+    """
+    Whether there is an Apply node, other than the currently running one, on the stack.
+
+    A `_DataOpTraversal.handle_*()` method can yield an instance of this class
+    to know if there is an Apply node lower on the stack, i.e. if there is an
+    estimator downstream waiting for the result of the currently running node.
+
+    This is used to know if the current estimator is the 'last step in the
+    pipeline'. The 'last step' is treated differently: regardless of the
+    evaluation mode, previous steps should do a transform(). For example when
+    we call score() on a SkrubLearner, we need to call score() on the last
+    estimator it contains, but transform() on the transformers that are
+    evaluated before (even if they have a score() method, as some transformers
+    do).
+    """
+
+
 class _DataOpTraversal:
     """Base class for objects that manipulate DataOps."""
 
@@ -124,6 +143,12 @@ class _DataOpTraversal:
         # Used to detect circular references.
         running = set()
 
+        # IDs of Apply nodes that are the target of a _Computation currently on
+        # the stack.
+        # Allows distinguishing the last estimator in the pipeline from
+        # previous ones (see HasRunningApplyAncestor docstring).
+        running_apply = set()
+
         # Total time spent evaluating each node (not counting time spent
         # evaluating its children)
         node_durations = defaultdict(float)
@@ -144,12 +169,15 @@ class _DataOpTraversal:
             generator = handler(top)
             stack.append(_Computation(top_id, generator))
             running.add(top_id)
+            if isinstance(top, DataOp) and isinstance(top._skrub_impl, Apply):
+                running_apply.add(top_id)
 
         def pop():
             "Pop an item off the stack."
             top = stack.pop()
             if isinstance(top, _Computation):
                 running.remove(top.target_id)
+                running_apply.discard(top.target_id)
             return top
 
         def step():
@@ -181,6 +209,9 @@ class _DataOpTraversal:
             elif isinstance(top, _CurrentNodeDuration):
                 pop()
                 last_result = node_durations[stack[-1].target_id]
+            elif isinstance(top, HasRunningApplyAncestor):
+                pop()
+                last_result = bool(running_apply - {stack[-1].target_id})
             elif isinstance(top, DataOp):
                 push_computation(self.handle_data_op)
 
@@ -1107,6 +1138,26 @@ def find_node_by_name(data_op, name):
         return getattr(obj, "name", None) == name
 
     return find_node(data_op, pred)
+
+
+def find_X_y_and_cv(data_op):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
+    result = {}
+    if (x_node := find_X(data_op)) is not None:
+        result["X"] = x_node
+        if isinstance(x_node._skrub_impl, SplitX):
+            result["cv"] = x_node._skrub_impl.cv
+            result["split_kwargs"] = x_node._skrub_impl.split_kwargs
+    if (y_node := find_y(data_op)) is not None:
+        result["y"] = y_node
+    return result
+
+
+def find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
 
 
 def needs_eval(obj, return_node=False):

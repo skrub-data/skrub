@@ -6,18 +6,30 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing Development
+Ongoing development
 ===================
 
 New Features
 ------------
-- The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
-  a timestamp column and computes sessions based on the given session duration.
-  Additionally, it is possible to provide a ``by`` column or list of columns
-  (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
-  value. A new dataset has also been added and can be accessed by using the fetcher
-  :class:`~skrub.datasets.fetch_wowah`.
-  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+
+Changes
+-------
+- An unnecessary warning that was raised when passing a numpy array to the
+  TableVectorizer has been removed. :pr:`1908` by
+  :user:`Sandrine Henry <sandrineh>`.
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+
+Release 0.9.0
+=============
+
+New Features
+------------
 - It is now possible to pass additional (dynamically computed) arguments to the
   scorers used by :class:`DataOp` objects for validation, hyperparameter search
   etc. For example, sample weights. This is achieved by passing the scorers and
@@ -27,6 +39,18 @@ New Features
   :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
   display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
+- A new dataframe generator, :func:`datasets.toy_cities`, has been added for
+  use cases on dataframes with variable sizes and variable correlation between
+  columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
@@ -40,18 +64,45 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_numbers`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
+  columns to ``float32``.
+  :pr:`1910` by :user:`Varshith-yadaV <Varshith-yadaV>`.
+- :func:`~datasets.fetch_toxicity` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by :user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
   :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now accepts an ``exclude_cols`` parameter, making it
+  possible to transform the columns selected by ``cols`` except for an
+  explicit subset, mirroring :meth:`DataOp.skb.apply`.
+  :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
+- In python versions >= 3.11, :class:`ApplyToCols` now produces better error
+  tracebacks when the wrapped transformer fails, . :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+- The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
+  Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
+  :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
-
+- An error that could arise when calling ``score`` on a ``SkrubLearner`` that
+  contains an inner transformer that has a ``score`` method has been fixed.
+  :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
-
+- The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
+  favor of ``cast_to_float`` in :pr:`1910`.
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The parameters ``max_plot_columns`` and ``max_association_columns`` of the
+  :class:`TableReport` have been deprecated in favor of ``plot_distributions``
+  and ``compute_associations``. :pr:`1907`.
 
 Release 0.8.0
 =============
@@ -84,9 +135,6 @@ New Features
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
-- :func:`selectors.has_dtype` has been added, allowing users to select columns
-  by passing the dtype objects they want to match. :pr:`2027` by
-  :user:`kudos07 <kudos07>`.
 
 Changes
 -------
@@ -159,11 +207,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------

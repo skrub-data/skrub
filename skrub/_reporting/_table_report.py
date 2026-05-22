@@ -147,6 +147,18 @@ class TableReport:
           columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
 
+    max_plot_columns : int or "all", deprecated
+        Deprecated in favor of ``plot_distributions``. This parameter overrides
+        the value chosen for ``plot_distributions`` when it is not None.
+
+        .. deprecated:: 0.9.0
+
+    max_association_columns : int or "all", deprecated
+        Deprecated in favor of ``compute_associations``. This parameter overrides
+        the value chosen for ``compute_associations`` when it is not None.
+
+        .. deprecated:: 0.9.0
+
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
         Must be one of "table", "stats", "distributions", or "associations".
