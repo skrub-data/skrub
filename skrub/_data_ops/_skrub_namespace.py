@@ -1241,6 +1241,14 @@ class SkrubNamespace:
         dict mapping variable names to their values
             Variables for which no value was given do not appear in the result.
 
+        See Also
+        --------
+        DataOp.skb.get_vars
+            Obtain the variables (the ``skrub.var()`` objects) themselves.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
+
         Examples
         --------
         >>> import skrub
@@ -1397,6 +1405,9 @@ class SkrubNamespace:
         --------
         DataOp.skb.get_data :
             Get the values of the variables contained in the DataOp.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
 
         DataOp.skb.set_name :
             Assign a name to a DataOp.
