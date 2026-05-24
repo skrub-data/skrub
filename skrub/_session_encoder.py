@@ -19,6 +19,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from . import selectors as s
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._utils import random_string
 
@@ -113,8 +114,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     by at most ``session_gap`` minutes. Additionally, it is possible to provide a column
     or list of columns that identifies the user (specified by the ``group_by`` column).
     When the time gap between consecutive events exceeds ``session_gap``, or
-    when the user changes, a new session begins. All unrelated columns are passed
-    through unchanged.
+    when what identifies a user changes, a new session begins. All unrelated columns
+    are passed through unchanged.
 
     Parameters
     ----------
@@ -145,15 +146,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     Examples
     --------
     Consider this example where we have a dataframe with user events, and we want
-    to identify sessions based on a 30-minute gap between events for each user:
+    to identify sessions based on a 30-minute gap between events for each user.
+    Users are identified by the value of the column ``user_id``.
 
     >>> import pandas as pd
     >>> from datetime import datetime, timedelta
     >>> encoder = SessionEncoder(
     ...     group_by='user_id', timestamp_col='timestamp', session_gap=30
     ... )
-
-    >>> # Create a sample dataframe with events from different users
     >>> data = {
     ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
     ...     'timestamp': [
@@ -200,8 +200,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     timestamp_col='timestamp',
     ...     session_gap=30
     ... )
-
-    >>> # Create a sample dataframe where user_id + device_id identifies a user
     >>> data_multi = {
     ...     'user_id': [1, 1, 1, 1, 2, 2],
     ...     'device_id': ['mobile', 'mobile', 'desktop', 'desktop', 'mobile', 'mobile'],
@@ -233,7 +231,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     - User 1 on "mobile" has session 1 (different device, so separate session).
     - User 2 on "mobile" has session 2 (different user).
 
-    You can also use SessionEncoder without a user identifier column. In this case,
+    You can also use ``SessionEncoder`` without a user identifier column. In this case,
     sessions are separated only by time gaps. This is useful for analyzing a single
     timeseries or events that don't have a user dimension:
 
@@ -242,8 +240,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     timestamp_col='timestamp',
     ...     session_gap=30
     ... )
-
-    >>> # Create a sample dataframe with only timestamps
     >>> data_no_group = {
     ...     'timestamp': [
     ...         pd.Timestamp('2024-01-01 10:00:00'),
@@ -314,25 +310,26 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             The transformed dataframe with session information.
         """
         self.all_inputs_ = sbd.column_names(X)
-        # check that the required columns are present in the input dataframe
-        if self.group_by is not None:
-            if isinstance(self.group_by, str):
-                self.group_by_columns = [self.group_by]
-            elif isinstance(self.group_by, Iterable) and not isinstance(
-                self.group_by, str
-            ):
-                self.group_by_columns = list(self.group_by)
-            else:
-                raise TypeError("group_by must be a string, a list of strings, or None")
-        if self.group_by is not None:
-            for col in self.group_by_columns:
-                if col not in self.all_inputs_:
-                    raise ValueError(f"Column '{col}' not found in input dataframe")
 
+        # Check that the timestamp column is present
         if self.timestamp_col not in self.all_inputs_:
             raise ValueError(
                 f"Column '{self.timestamp_col}' not found in input dataframe"
             )
+        # check that the required columns are present in the input dataframe
+        self._group_by_columns = []
+        if self.group_by is not None:
+            if isinstance(self.group_by, str):
+                self._group_by_columns = [self.group_by]
+            elif isinstance(self.group_by, Iterable) and not isinstance(
+                self.group_by, str
+            ):
+                self._group_by_columns = list(self.group_by)
+            else:
+                raise TypeError("group_by must be a string, a list of strings, or None")
+            for col in self._group_by_columns:
+                if col not in self.all_inputs_:
+                    raise ValueError(f"Column '{col}' not found in input dataframe")
 
         # check the correctness of the values of session_gap
         if not isinstance(self.session_gap, numbers.Number) or self.session_gap <= 0:
@@ -341,13 +338,24 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         row_order_col = f"_row_order_skrub_{random_string()}"
         X = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
 
+        # Removing unrelated columns for computing the sessions
+        cols_to_remove = [
+            _
+            for _ in self.all_inputs_
+            if _ not in self._group_by_columns + [self.timestamp_col]
+        ]
+        if cols_to_remove:
+            X_selected = sbd.drop_columns(X, s.cols(*cols_to_remove).expand(X))
+        else:
+            X_selected = X
+
         # sort the input dataframe by the "group_by" and "timestamp" columns
         sort_by = (
-            self.group_by_columns + [self.timestamp_col]
+            self._group_by_columns + [self.timestamp_col]
             if self.group_by is not None
             else [self.timestamp_col]
         )
-        X_sorted = sbd.sort(X, by=sort_by)
+        X_sorted = sbd.sort(X_selected, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
         # add the session id
@@ -356,11 +364,13 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         )
         # drop the factorized "group_by" column if the original "group_by"
         # column was not numeric
-        to_drop = [col for col in factorized_by if col not in self.group_by_columns]
+        to_drop = [col for col in factorized_by if col not in self._group_by_columns]
         X_with_session_id = sbd.drop_columns(X_with_session_id, to_drop)
 
         X_result = sbd.sort(X_with_session_id, by=row_order_col)
         X_result = sbd.drop_columns(X_result, row_order_col)
+        if cols_to_remove:
+            X_result = sbd.concat(X_result, s.select(X, cols_to_remove), axis=1)
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
@@ -390,7 +400,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
             if not sbd.is_numeric(X[col])
             else X[col]
-            for col in self.group_by_columns
+            for col in self._group_by_columns
         }
 
         X_factorized = sbd.with_columns(X, **factorized_columns)
