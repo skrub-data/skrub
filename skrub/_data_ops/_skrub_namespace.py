@@ -1012,6 +1012,11 @@ class SkrubNamespace:
             estimators) or cache with the original, and possibly without the
             variables' values.
 
+        See Also
+        --------
+        DataOp.skb.set_data
+            Set the initial (preview) values for variables contained in the DataOp.
+
         Examples
         --------
         >>> import skrub
@@ -1301,7 +1306,7 @@ class SkrubNamespace:
         >>> c = a + b
 
         We have initialized our variables without any value, there is no preview
-        result available for our DataOp c:
+        result available for our DataOp ``c``:
 
         >>> c
         <BinOp: add>
