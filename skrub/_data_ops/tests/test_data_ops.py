@@ -1002,15 +1002,15 @@ def test_find():
     assert e.skb.find(-1) is None
     assert e.skb.find(lambda n: False) is None
     with pytest.raises(
-        TypeError, match="what should either be a string, and int or a callable"
+        TypeError, match="what should either be a string, an int or a callable"
     ):
         e.skb.find(c)
     with pytest.raises(
-        TypeError, match="what should either be a string, and int or a callable"
+        TypeError, match="what should either be a string, an int or a callable"
     ):
         e.skb.find(None)
     with pytest.raises(
-        TypeError, match="what should either be a string, and int or a callable"
+        TypeError, match="what should either be a string, an int or a callable"
     ):
         e.skb.find(())
 

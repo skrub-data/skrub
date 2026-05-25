@@ -3468,6 +3468,11 @@ class SkrubNamespace:
         [4 rows x 9 columns]
         >>> found is vectorized
         True
+
+        When no matching node is found, ``None`` is returned:
+
+        >>> print(pred.skb.find('does not exist'))
+        None
         """
         if not isinstance(what, DataOp) and callable(what):
             return find_node(self._data_op, what)
@@ -3476,7 +3481,7 @@ class SkrubNamespace:
         if isinstance(what, int):
             return find_node_by_uuid(self._data_op, what)
         raise TypeError(
-            "what should either be a string, and int or a callable accepting a "
+            "what should either be a string, an int or a callable accepting a "
             f"DataOp and returning a Boolean, got object of type: {type(what)}."
         )
 
