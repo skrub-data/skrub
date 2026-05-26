@@ -614,18 +614,20 @@ def fetch_electricity_usage(data_home=None):
 
     Description of the dataset:
         This dataset was generated from data obtained from the
-        ENTSOE Open Data portal.:
-        https://transparency.entsoe.eu/load-domain/r2/totalLoadR2/show?name=&defaultValue=false&viewType=TABLE&areaType=BZN&atch=false&dateTime.dateTime=12.10.2023+00:00%7CUTC%7CDAY&biddingZone.values=CTY%7C10YFR-RTE------C!BZN%7C10YFR-RTE------C&dateTime.timezone=UTC&dateTime.timezone_input=UTC#
-        and the Open Meteo Historcal Weather API:
+        ENTSOE Open Data portal under the open source license (CC-BY 4.0):
+
+        ..  codeblock::
+            https://transparency.entsoe.eu/load-domain/r2/totalLoadR2/show?name=&defaultValue=false&viewType=TABLE&areaType=BZN&atch=false&dateTime.dateTime=12.10.2023+00:00%7CUTC%7CDAY&biddingZone.values=CTY%7C10YFR-RTE------C!BZN%7C10YFR-RTE------C&dateTime.timezone=UTC&dateTime.timezone_input=UTC#
+
+        and the Open Meteo Historical Weather API:
         https://open-meteo.com/en/docs/historical-forecast-api
-        This is a time-series forecasting use case.
+        in accordance with the licence described:
+        https://open-meteo.com/en/licence
 
-        This dataset gives the total electricity load in MW in France,
-        covering a time range from March 23, 2021 to May 31,
-        2025.
-
-        In addition, the dataset contains weather data for several cities
-        within France.
+        This is a time-series forecasting use case. This dataset gives the total
+        electricity load in MW in France, covering a time range from
+        March 23, 2021 to May 31, 2025. In addition, the dataset contains
+        weather data for several cities within France.
 
         It can be downloaded/loaded using the
         sklearn.datasets.fetch_electricity_usage function.
@@ -641,5 +643,9 @@ def fetch_electricity_usage(data_home=None):
     Path : PosixPath
          The path to the electricity usage CSV files
 
+    References
+    ----------
+    .. [1] For more detailed instructions on how to use this dataset, please refer
+           to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
     """
-    return download_dataset("electricity_usage", data_home=None)
+    return download_dataset("electricity_usage", data_home=data_home)
