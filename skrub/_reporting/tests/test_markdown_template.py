@@ -114,7 +114,7 @@ def test_markdown_associations_highlighting_and_headers(df_module):
     if "| col1 | col2 |" in markdown or "| col2 | col1 |" in markdown:
         matches = re.findall(strong_assoc_pattern, markdown)
         # May be 0 if association is not exactly > 0.9
-        assert len(matches) >= 1
+        assert len(matches) == 1
 
 
 def test_markdown_column_statistics_and_constants(df_module):
@@ -158,7 +158,7 @@ def test_markdown_edge_cases(df_module):
     )
     report_empty = TableReport(df_empty)
     markdown_empty = report_empty.markdown()
-    assert "## Columns" in markdown_empty
+    assert markdown_empty == "The dataframe is empty.\n"
 
     # Single row
     df_single = df_module.make_dataframe(
