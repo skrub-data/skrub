@@ -338,7 +338,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         row_order_col = f"_row_order_skrub_{random_string()}"
         X = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
 
-        # Removing unrelated columns for computing the sessions
+        # Dropping unneeded columns to reduce the sorting overhead
         if cols_to_remove := [
             _
             for _ in self.all_inputs_
@@ -357,7 +357,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         X_sorted = sbd.sort(X_selected, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
-        # add the session id
 
         X_with_session_id = self._add_session_id(
             X_factorized,
@@ -375,8 +374,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # If unrelated columns were removed earlier, bring them back here
         if cols_to_remove:
             X_result = sbd.concat(X_result, s.select(X, cols_to_remove), axis=1)
-            # proper_column_order = self.all_inputs_ + [self._session_id_name]
-            X_result = s.select(X_result, self.all_inputs_ + [self._session_id_name])
+
+        # Reordering columns so that the session_id is added as the last column
+        X_result = s.select(X_result, self.all_inputs_ + [self._session_id_name])
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
