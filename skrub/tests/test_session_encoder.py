@@ -7,7 +7,7 @@ import pytest
 from skrub import SessionEncoder
 from skrub import _dataframe as sbd
 from skrub._session_encoder import (
-    _add_session_id,
+    _add_session_column,
     _factorize_column,
 )
 
@@ -412,6 +412,13 @@ def test_session_encoder_invalid_parameters(df_module):
         }
     )
 
+    # Test non-numeric session_gap
+    se_non_numeric = SessionEncoder(
+        group_by="user_id", timestamp_col="timestamp", session_gap="thirty"
+    )
+    with pytest.raises(TypeError, match="Expected a number"):
+        se_non_numeric.fit_transform(df)
+
     # Test negative session_gap
     se_negative = SessionEncoder(
         group_by="user_id", timestamp_col="timestamp", session_gap=-10
@@ -426,12 +433,12 @@ def test_session_encoder_invalid_parameters(df_module):
     with pytest.raises(ValueError, match="session_gap must be a positive number"):
         se_zero.fit_transform(df)
 
-    # Test non-numeric session_gap
-    se_non_numeric = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap="thirty"
+    # Test invalid suffix (None)
+    se_invalid_suffix = SessionEncoder(
+        group_by="user_id", timestamp_col="timestamp", suffix=None
     )
-    with pytest.raises(ValueError, match="session_gap must be a positive number"):
-        se_non_numeric.fit_transform(df)
+    with pytest.raises(ValueError, match="Expected a string as suffix"):
+        se_invalid_suffix.fit_transform(df)
 
 
 def test_session_encoder_preserves_columns(df_module):
@@ -538,14 +545,17 @@ def test_check_is_new_session_no_by(df_module):
         }
     )
     session_id = sbd.to_list(
-        sbd.col(_add_session_id(df, [], "timestamp", 30), "timestamp_session_id")
+        sbd.col(
+            _add_session_column(df, [], "timestamp", 30, suffix="session_id"),
+            "timestamp_session_id",
+        )
     )
     # Expected: first two events in session 0, last two events in session 1
     assert session_id == [0, 0, 1, 1]
 
 
 def test_check_is_new_session_with_by(df_module):
-    """_add_session_id returns a dataframe with a ``timestamp_session_id``
+    """_add_session_column returns a dataframe with a ``timestamp_session_id``
     column when a group_by-list is provided.  A new session starts when the group key
     changes (even for a tiny time gap) or when the time gap exceeds
     ``session_gap``.
@@ -568,12 +578,46 @@ def test_check_is_new_session_with_by(df_module):
             ],
         }
     )
-    result = _add_session_id(df, ["user_id"], "timestamp", 30)
+    result = _add_session_column(df, ["user_id"], "timestamp", 30, "session_id")
 
-    # _add_session_id now returns the full dataframe with session_id added
+    # _add_session_column now returns the full dataframe with session_id added
     assert "timestamp_session_id" in sbd.column_names(result)
     session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     assert session_ids == [0, 0, 1, 1]
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    ["timestamp", "something_else"],
+)
+@pytest.mark.parametrize(
+    "suffix",
+    [None, "session_id", "test_suffix"],
+)
+def test_proper_suffix(timestamp, suffix, df_module):
+    df = df_module.make_dataframe(
+        {
+            "user_id": [1, 1, 2, 2],
+            timestamp: [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),  # same user, 5 min gap
+                datetime.datetime(2024, 1, 1, 10, 6),  # different user, 1 min gap
+                datetime.datetime(2024, 1, 1, 10, 10),  # same user, 4 min gap
+            ],
+        }
+    )
+    if suffix is None:
+        with pytest.raises(ValueError, match="Expected a string as suffix*"):
+            SessionEncoder(
+                timestamp_col=timestamp, group_by="user_id", suffix=suffix
+            ).fit_transform(df)
+    else:
+        result = SessionEncoder(
+            timestamp_col=timestamp, group_by="user_id", suffix=suffix
+        ).fit_transform(df)
+        # _add_session_column now returns the full dataframe with session_id added
+        expected_name = f"{timestamp}_{suffix}"
+        assert expected_name in sbd.column_names(result)
 
 
 def test_session_encoder_preserves_input_order(df_module):
@@ -606,7 +650,11 @@ def test_session_encoder_preserves_input_order(df_module):
     "func",
     (
         partial(
-            _add_session_id, group_by=[], timestamp_col="timestamp", session_gap=30
+            _add_session_column,
+            group_by=[],
+            timestamp_col="timestamp",
+            session_gap=30,
+            suffix="_session_id",
         ),
         partial(_factorize_column, column_name="user_id"),
     ),

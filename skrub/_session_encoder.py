@@ -331,6 +331,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             raise ValueError(
                 f"session_gap must be a positive number, got {self.session_gap}"
             )
+        if not isinstance(self.suffix, str) or self.suffix is None:
+            raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
 
         self._session_id_name = f"{self.timestamp_col}_{self.suffix}"
 
