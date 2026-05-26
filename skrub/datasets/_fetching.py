@@ -642,4 +642,4 @@ def fetch_electricity_usage(data_home=None):
          The path to the electricity usage CSV files
 
     """
-    return download_dataset("electricity_usage", data_home=None)
+    return download_dataset("electricity_usage", data_home=data_home)
