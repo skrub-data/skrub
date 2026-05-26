@@ -147,6 +147,8 @@ class SkrubNamespace:
         estimator,
         y=None,
         cols=_SELECT_ALL_COLUMNS,
+        exclude_cols=None,
+        no_wrap=False,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -158,8 +160,10 @@ class SkrubNamespace:
             Apply(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
                 X=self._data_op,
                 y=y,
+                no_wrap=no_wrap,
                 how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
@@ -176,6 +180,7 @@ class SkrubNamespace:
         y=None,
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
+        no_wrap=False,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -206,7 +211,20 @@ class SkrubNamespace:
             _not_ be applied. The columns that are matched by ``cols`` AND not
             matched by ``exclude_cols`` are transformed.
 
+        no_wrap : bool, default = False
+            Disable wrapping of transformers in :class:`ApplyToCols`.
+
+            By default, when ``estimator`` is a transformer and the input is a
+            DataFrame, the transformer is wrapped in an instance of
+            :class:`ApplyToCols`, which allows applying it to part of the
+            dataframe only through the ``cols`` and ``allow_reject``
+            parameters. Passing ``no_wrap=True`` disables this wrapping in all
+            cases. When ``no_wrap`` is True, ``cols`` and ``allow_reject``
+            cannot be used.
+
         how : "auto", "cols", "frame" or "no_wrap", optional
+            Deprecated. Use ``no_wrap`` instead.
+
             How the estimator is applied. In most cases the default "auto"
             is appropriate.
 
@@ -225,6 +243,8 @@ class SkrubNamespace:
               transformer, the "no_wrap" strategy is chosen. Otherwise if the
               estimator has a ``__single_column_transformer__`` attribute,
               "cols" is chosen. Otherwise "frame" is chosen.
+
+            .. deprecated:: 0.9.0
 
         allow_reject : bool, optional
             Whether the transformer can refuse to transform columns for which
@@ -431,14 +451,15 @@ class SkrubNamespace:
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
-        if exclude_cols is not None:
-            cols = s.make_selector(cols) - exclude_cols
+
         # unsupervised should be an actual bool
         unsupervised = bool(unsupervised)
         return self._apply(
             estimator=estimator,
             y=y,
             cols=cols,
+            exclude_cols=exclude_cols,
+            no_wrap=no_wrap,
             how=how,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
@@ -694,7 +715,7 @@ class SkrubNamespace:
         2     cup  2020-04-04
         3   spoon  2020-04-05
         """
-        return self._apply(SelectCols(cols), how="no_wrap")
+        return self._apply(SelectCols(cols), no_wrap=True)
 
     @checked_data_op_constructor
     def drop(self, cols):
@@ -747,7 +768,7 @@ class SkrubNamespace:
         2   3         5
         3   4         1
         """
-        return self._apply(DropCols(cols), how="no_wrap")
+        return self._apply(DropCols(cols), no_wrap=True)
 
     @checked_data_op_constructor
     def concat(self, others, axis=0):
@@ -3203,15 +3224,13 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToSubFrame(transformer=TableVectorizer())
+        ApplyToCols(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToSubFrame`` or
-        ``ApplyToEachCol`` depending if the transformer is applied to each column
-        separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToSubFrame`` or ``transformers_``
-        attribute of ``ApplyToEachCol`` (a dictionary mapping column names to the
-        corresponding transformer).
+        they will be wrapped in a meta-estimator :class:`ApplyToCols`. The
+        actual transformer can be retrieved through the ``transformer_`` (or
+        ``transformers_``, in the case of single-column transformers); see the
+        documentation of :class:`ApplyToCols` for details.
 
         >>> fitted_vectorizer.transformer_
         <GetAttr 'transformer_'>
@@ -3237,8 +3256,8 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToEachCol(cols=(string() - cols('date')),
-                     transformer=StringEncoder(n_components=2))
+        ApplyToCols(cols=(string() - cols('date')),
+                    transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>
         Result:

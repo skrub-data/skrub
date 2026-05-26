@@ -47,9 +47,6 @@ class ToFloat(SingleColumnTransformer):
     >>> float_s[0]            # doctest: +SKIP
     np.float32(1.1)
 
-    Note that a column such as the example above may easily occur as the output
-    of ``CleanNullStrings``.
-
     A numeric column will also be converted to floats:
 
     >>> s = pd.Series([1, 2, 3])

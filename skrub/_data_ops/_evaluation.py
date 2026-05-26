@@ -89,6 +89,24 @@ class _CurrentNodeDuration:
     """
 
 
+class HasRunningApplyAncestor:
+    """
+    Whether there is an Apply node, other than the currently running one, on the stack.
+
+    A `_DataOpTraversal.handle_*()` method can yield an instance of this class
+    to know if there is an Apply node lower on the stack, i.e. if there is an
+    estimator downstream waiting for the result of the currently running node.
+
+    This is used to know if the current estimator is the 'last step in the
+    pipeline'. The 'last step' is treated differently: regardless of the
+    evaluation mode, previous steps should do a transform(). For example when
+    we call score() on a SkrubLearner, we need to call score() on the last
+    estimator it contains, but transform() on the transformers that are
+    evaluated before (even if they have a score() method, as some transformers
+    do).
+    """
+
+
 class _DataOpTraversal:
     """Base class for objects that manipulate DataOps."""
 
@@ -125,6 +143,12 @@ class _DataOpTraversal:
         # Used to detect circular references.
         running = set()
 
+        # IDs of Apply nodes that are the target of a _Computation currently on
+        # the stack.
+        # Allows distinguishing the last estimator in the pipeline from
+        # previous ones (see HasRunningApplyAncestor docstring).
+        running_apply = set()
+
         # Total time spent evaluating each node (not counting time spent
         # evaluating its children)
         node_durations = defaultdict(float)
@@ -145,12 +169,15 @@ class _DataOpTraversal:
             generator = handler(top)
             stack.append(_Computation(top_id, generator))
             running.add(top_id)
+            if isinstance(top, DataOp) and isinstance(top._skrub_impl, Apply):
+                running_apply.add(top_id)
 
         def pop():
             "Pop an item off the stack."
             top = stack.pop()
             if isinstance(top, _Computation):
                 running.remove(top.target_id)
+                running_apply.discard(top.target_id)
             return top
 
         def step():
@@ -182,6 +209,9 @@ class _DataOpTraversal:
             elif isinstance(top, _CurrentNodeDuration):
                 pop()
                 last_result = node_durations[stack[-1].target_id]
+            elif isinstance(top, HasRunningApplyAncestor):
+                pop()
+                last_result = bool(running_apply - {stack[-1].target_id})
             elif isinstance(top, DataOp):
                 push_computation(self.handle_data_op)
 
