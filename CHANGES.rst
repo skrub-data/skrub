@@ -14,6 +14,9 @@ New Features
 
 Changes
 -------
+- An unnecessary warning that was raised when passing a numpy array to the
+  TableVectorizer has been removed. :pr:`1908` by
+  :user:`Sandrine Henry <sandrineh>`.
 
 Bugfixes
 --------
@@ -42,6 +45,12 @@ New Features
   the ``cv`` splitter and ``split_kwargs`` passed to
   :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
   by :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
+- A new dataframe generator, :func:`datasets.toy_cities`, has been added for
+  use cases on dataframes with variable sizes and variable correlation between
+  columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
@@ -59,9 +68,9 @@ Changes
   control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
   to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
   columns to ``float32``.
-  :pr:`1910` by :user:`<Varshith-yadaV>`.
-- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
-  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
+  :pr:`1910` by :user:`Varshith-yadaV <Varshith-yadaV>`.
+- :func:`~datasets.fetch_toxicity` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by :user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -129,9 +138,6 @@ New Features
   for several French cities and corresponding weather data.
   :pr:`2013` by :user:`Lisa McBride<lisaleemcb>`.
 
-- :func:`selectors.has_dtype` has been added, allowing users to select columns
-  by passing the dtype objects they want to match. :pr:`2027` by
-  :user:`kudos07 <kudos07>`.
 
 Changes
 -------

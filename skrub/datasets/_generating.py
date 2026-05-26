@@ -5,10 +5,13 @@ Functions that generate example data.
 
 from __future__ import annotations
 
+import numbers
 import string
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils import Bunch, check_random_state
 
 
@@ -175,3 +178,123 @@ def toy_products():
             ],
         }
     )
+
+
+def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
+    """Generate a synthetic dataframe example with a variety of column types.
+
+    This can be used to showcase dataframes containing strings,
+    dates and floats, columns containing null values, and strongly
+    correlated columns.
+
+    Contains the following columns:
+    uid: A random identifying string of characters.
+    cities: A city randomly picked in a list of 20, or a null value.
+    encoded_cities: Ordinal encoding applied to the previous column.
+    start: A datetime.
+    end: A datetime later than the previous, or a null value.
+    metric_1, metric_2, etc: Randomly chosen float values.
+
+    Parameters
+    ----------
+    seed : int, default=0
+        Seed for random generation.
+    size : int, default=1000
+        Number of rows in the output.
+    nulls : float in [0, 1], default=0.1
+        Probability of a cell in 'cities' or 'end' being null.
+    n_metrics : int, default=4
+        Number of 'metrics' columns added.
+
+    Returns
+    -------
+    pandas dataframe
+        The randomly-generated dataframe, with `size` rows and
+        `5 + n_metrics` columns.
+
+    Examples
+    --------
+    >>> from skrub.datasets import toy_cities
+    >>> df = toy_cities(seed=5, size=3, n_metrics=2)
+    >>> df # doctest: +SKIP
+              uid     cities  ...  metric_0  metric_1
+    0  IPbQyAGoYc  Stockholm  ...  0.227319  0.895448
+    1  otDvgcachZ     Vienna  ...  0.872195  0.018517
+    2  jHNmownYjU        NaN  ...  0.707496  0.001200
+    """
+
+    # Check that the nulls probability is valid
+    if isinstance(nulls, bool) or not (isinstance(nulls, numbers.Number)):
+        raise ValueError(f"nulls must be a number, got {nulls}.")
+    elif not 0 <= nulls <= 1:
+        raise ValueError(f"nulls must be a number between 0 and 1, got {nulls!r}.")
+
+    # Check that the other variables are integers
+    if not isinstance(seed, int) or seed < 0:
+        raise ValueError(f"seed must be a positive integer, got {seed}.")
+    if not isinstance(size, int) or size < 0:
+        raise ValueError(f"size must be a positive integer, got {size}.")
+    if not isinstance(n_metrics, int) or n_metrics < 0:
+        raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
+
+    rng = np.random.default_rng(seed=seed)
+    now = datetime.fromisoformat("2024-01-01").timestamp()
+    capitals = [
+        "Amsterdam",
+        "Athens",
+        "Berlin",
+        "Bucharest",
+        "Budapest",
+        "Copenhagen",
+        "Dublin",
+        "Helsinki",
+        "London",
+        "Madrid",
+        "Paris",
+        "Prague",
+        "Riga",
+        "Rome",
+        "Sofia",
+        "Stockholm",
+        "Vienna",
+        "Vilnius",
+        "Warsaw",
+        "Zagreb",
+    ]
+
+    # The first two columns are randomly constructed using lists.
+    d = {}
+
+    d["uid"] = [
+        "".join(rng.choice(list(string.ascii_letters), 10)) for _ in range(size)
+    ]
+    d["cities"] = rng.choice(capitals, size=size)
+    df_cities = pd.DataFrame(d)
+
+    # `cities` gets assigned null values, and the ordinal encoder is run.
+    p = rng.uniform(0, 1, size=size)
+    df_cities["cities"] = df_cities["cities"].where(p >= nulls)
+    df_cities["encoded_cities"] = OrdinalEncoder().fit_transform(df_cities[["cities"]])
+
+    # Next, the "start" and "end" datetime columns are constructed.
+    s = rng.integers(0, int(now), size=size)
+    e = rng.integers(s, np.ones(size) * now)
+    v = np.vstack([s, e])
+
+    df_dates = pd.DataFrame(v.T, columns=["start", "end"])
+    if hasattr(df_dates, "map"):
+        df_dates = df_dates.map(datetime.fromtimestamp)
+    else:
+        df_dates = df_dates.applymap(datetime.fromtimestamp)
+    # As above, "end" sees some of its values set to null.
+    p = rng.uniform(0, 1, size=size)
+    df_dates["end"] = df_dates["end"].where(p >= nulls)
+
+    # Finally, constructing as many "metrics" float columns as specified.
+    metric_cols = [f"metric_{k}" for k in range(n_metrics)]
+    metrics_array = rng.random(size=(size, n_metrics))
+    df_metrics = pd.DataFrame(metrics_array, columns=metric_cols)
+
+    df = pd.concat((df_cities, df_dates, df_metrics), axis=1)
+
+    return df
