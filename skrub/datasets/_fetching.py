@@ -615,9 +615,7 @@ def fetch_electricity_usage(data_home=None):
     Description of the dataset:
         This dataset was generated from data obtained from the
         ENTSOE Open Data portal under the open source license (CC-BY 4.0):
-
-        ..  codeblock::
-            https://transparency.entsoe.eu/load-domain/r2/totalLoadR2/show?name=&defaultValue=false&viewType=TABLE&areaType=BZN&atch=false&dateTime.dateTime=12.10.2023+00:00%7CUTC%7CDAY&biddingZone.values=CTY%7C10YFR-RTE------C!BZN%7C10YFR-RTE------C&dateTime.timezone=UTC&dateTime.timezone_input=UTC#
+        https://transparencyplatform.zendesk.com/hc/article_attachments/40921869376401
 
         and the Open Meteo Historical Weather API:
         https://open-meteo.com/en/docs/historical-forecast-api
