@@ -7,18 +7,15 @@
 
 ## Columns
 
-{% for col in summary.columns %}
-### `{{ col.name }}`
+| Position | Column | Type | Unique | Nulls | High Card | Constant |
+|---|---|---|---|---|---|---|
+{% for col in summary.columns %}| {{ col.position }} | {% if col.nulls_level == 'high' %}**`{{ col.name }}`**{% else %}`{{ col.name }}`{% endif %} | {{ col.dtype }} | {{ col.n_unique }} ({{ "%.1f" | format(col.unique_proportion * 100) }}%) | {{ col.null_count }} ({{ "%.2f" | format(col.null_proportion * 100) }}%) | {{ col.is_high_cardinality }} | {{ col.value_is_constant }} |
+{% endfor %}
 
-| Property | Value |
-|---|---|
-| Position | {{ col.position }} |
-| Type | {{ col.dtype }} |
-| Unique values | {{ col.n_unique }} ({{ "%.1f" | format(col.unique_proportion * 100) }}%) |
-| Nulls | {{ col.null_count }} ({{ "%.2f" | format(col.null_proportion * 100) }}%) — {{ col.nulls_level }} |
-| High cardinality | {{ col.is_high_cardinality }} |
-{% if col.value_is_constant %}| Constant value | true |
-{% endif %}
+{% for col in summary.columns %}
+{% if col.value_counts or (col.mean is defined and col.mean is not none) %}
+
+### `{{ col.name }}` — Details
 {% if col.value_counts %}
 
 **Most frequent values:**
@@ -43,6 +40,7 @@
 | 75th pct | {{ col.quantiles[0.75] }} |
 | Max | {{ col.quantiles[1.0] }} |
 {% endif %}
+{% endif %}
 {% endfor %}
 
 ---
@@ -52,7 +50,7 @@
 {% if summary.top_associations %}
 | Left column | Right column | Cramér's V |
 |---|---|---|
-{% for assoc in summary.top_associations %}| {{ assoc.left_column_name }} | {{ assoc.right_column_name }} | {{ "%.4f" | format(assoc.cramer_v) }} |
+{% for assoc in summary.top_associations %}| {{ assoc.left_column_name }} | {{ assoc.right_column_name }} | {% if assoc.cramer_v > 0.9 %}**{{ "%.4f" | format(assoc.cramer_v) }}**{% else %}{{ "%.4f" | format(assoc.cramer_v) }}{% endif %} |
 {% endfor %}
 {% else %}
 Associations were not computed.

@@ -403,18 +403,6 @@ class TableReport:
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
-    def better_json(self):
-        """Get the report data in JSON format.
-
-        Returns
-        -------
-        str :
-            The JSON data.
-        """
-        to_remove = ["dataframe", "sample_table"]
-        data = {k: v for k, v in self._summary.items() if k not in to_remove}
-        return json.dumps(data, cls=JSONEncoder)
-
     def markdown(self):
         """Get the report as a Markdown string.
 
