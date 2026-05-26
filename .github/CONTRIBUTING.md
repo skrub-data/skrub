@@ -35,14 +35,15 @@ you find one, please:
 
 1.  **Check if an issue already exists** by searching the [GitHub
     issues](https://github.com/skrub-data/skrub/issues?q=is%3Aissue)
+
     - If **open**, leave a 👍 on the original message to signal that you
       are also affected.
 
     - If closed, check for one of the following:
-
-      : - A **merged pull request** may indicate the bug is fixed.
+      - A **merged pull request** may indicate the bug is fixed.
       Update your skrub version or note if the fix is pending a
-      release. - A **wontfix label** or reasoning may be provided if the
+      release.
+      - A **wontfix label** or reasoning may be provided if the
       issue was closed without a fix.
 
 2.  If the issue does not exist, [create a new
@@ -164,9 +165,10 @@ When contributing, keep these project goals in mind:
   compiled languages.
 
 - **Production-friendly code**:
-
-  : - Target the widest possible range of Python versions and
-  dependencies. - Minimize the use of external dependencies. - Ensure backward compatibility as much as possible.
+  - Target the widest possible range of Python versions and
+  dependencies.
+  - Minimize the use of external dependencies.
+  - Ensure backward compatibility as much as possible.
 
 - **Performance over readability**: Optimized code may be less readable,
   so please include clear and detailed comments. Refer to this [best
@@ -177,9 +179,9 @@ When contributing, keep these project goals in mind:
   for clarity.
 
 - **Document public API components**:
-
-  : - Document all public functions, methods, variables, and class
-  signatures. - The public API refers to all components available for import and
+  - Document all public functions, methods, variables, and class
+  signatures.
+  - The public API refers to all components available for import and
   use by library users. Anything that doesn\'t begin with an
   underscore is considered part of the public API.
 
@@ -375,16 +377,12 @@ pixi run clean-doc
 The documentation will be generated in the `doc/_build/html/` directory.
 You can view it by opening the local `doc/_build/html/index.html` file.
 
-:::: warning
-::: title
-Warning
-:::
+#### Warning
 
 On Intel-based macOS systems (`osx-64`), some pixi environments may not
 resolve correctly due to missing upstream package builds (e.g., for
 PyTorch). If you encounter issues, you can always fall back to using
 `make` as described above.
-::::
 
 ### Editing the API reference documentation
 
