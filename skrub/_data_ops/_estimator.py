@@ -20,6 +20,7 @@ from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
+    choices,
     eval_choices,
     evaluate,
     find_first_apply,
@@ -307,12 +308,28 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
+    def get_named_params(self):
+        data_op_choices = choices(self.data_op)
+        return {
+            name: v
+            for k, v in get_params(self.data_op).items()
+            if (name := data_op_choices[k].name) is not None
+        }
+
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
         if not deep:
             return params
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
+
+    def set_named_params(self, **params):
+        data_op_choices = choices(self.data_op)
+        name_to_id = {
+            c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
+        }
+        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
+        return self
 
     def set_params(self, **params):
         if "data_op" in params:
