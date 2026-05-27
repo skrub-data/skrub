@@ -145,7 +145,7 @@ def _make_full_report(
     overwrite=False,
     title=None,
 ):
-    _check_graphviz()
+    _utils.check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full DataOps plan
@@ -330,28 +330,10 @@ def _dot_id(n):
     return f"node_{n}"
 
 
-def _has_graphviz():
-    try:
-        import pydot
-
-        g = pydot.Dot()
-        g.add_node(pydot.Node("node 0"))
-        g.create_svg()
-        return True
-    except Exception:
-        return False
-
-
-def _check_graphviz():
-    if _has_graphviz():
-        return
-    raise ImportError("Please install pydot and graphviz to draw data_op graphs.")
-
-
 def draw_data_op_graph(data_op, url=None, direction="TB"):
     # TODO if pydot or graphviz not available fallback on some other plotting
     # solution eg a vendored copy of mermaid? outputting html instead of svg
-    _check_graphviz()
+    _utils.check_graphviz()
 
     import pydot
 
