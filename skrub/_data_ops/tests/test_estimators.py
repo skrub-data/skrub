@@ -1226,6 +1226,19 @@ def test_set_data_op_in_params():
     assert learner.fit_transform(data) == -10
 
 
+def test_get_set_named_params():
+    a = skrub.as_data_op("")
+    b = skrub.choose_from(["A", "B", "C"], name="b")
+    c = skrub.choose_from(["U", "V", "W"])
+    d = a + "_" + b + c
+    learner = d.skb.make_learner()
+    assert learner.fit_transform({}) == "A_U"
+    assert learner.get_named_params() == {"b": None}
+    learner.set_named_params(b=1)
+    assert learner.fit_transform({}) == "B_U"
+    assert learner.get_named_params() == {"b": 1}
+
+
 def test_find_fitted_estimator():
     learner = (
         (skrub.X() * 1.0)
