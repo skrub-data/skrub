@@ -51,6 +51,9 @@ New Features
 - :func:`selectors.has_dtype` has been added, allowing users to select columns
   by passing the dtype objects they want to match. :pr:`2027` by
   :user:`kudos07 <kudos07>`.
+- A new dataframe generator, :func:`datasets.toy_cities`, has been added for
+  use cases on dataframes with variable sizes and variable correlation between
+  columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------

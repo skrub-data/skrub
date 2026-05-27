@@ -36,8 +36,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
+from skrub._data_ops import _utils
 from skrub._data_ops._estimator import _SharedDict
-from skrub._data_ops._inspection import _has_graphviz
 
 #
 # testing utils
@@ -1157,7 +1157,7 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
