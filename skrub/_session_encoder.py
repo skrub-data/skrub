@@ -136,6 +136,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         between two events exceeds this value, they are considered to be in
         different sessions.
 
+    suffix : str, default="session_id"
+        The suffix to be added to the name of the timestamp column. The format
+        will be "TIMESTAMP_SUFFIX".
+
     Attributes
     ----------
     all_inputs_ : list of str
@@ -274,6 +278,29 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     - The event at 11:00 starts a new session 1 (45 min gap > 30 min).
     - The event at 11:10 continues session 1 (10 min gap < 30 min).
 
+    It is also possible to change the suffix that is added at the end of the session
+    ID column via the "suffix" parameter. This is useful, for example, if you want
+    to add sessions based on different groupings or intervals:
+
+    >>> import pandas as pd
+    >>> from skrub import SessionEncoder
+    >>> from datetime import datetime, timedelta
+    >>> encoder = SessionEncoder(
+    ...     group_by='user_id', timestamp_col='timestamp', session_gap=30
+    ... )
+    >>> data = {
+    ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
+    ...     'timestamp': [
+    ...         pd.Timestamp('2024-01-01 10:00:00'),
+    ...         pd.Timestamp('2024-01-01 10:05:00'),  # 5 min later, same session
+    ...         pd.Timestamp('2024-01-01 11:00:00'),  # 55 min later, new session
+    ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
+    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 20 min later, same session
+    ...     ],
+    ...     'action': ['login', 'view', 'purchase', 'login', 'purchase']
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> encoder_user = SessionEncoder(group_)
 
     """
 
