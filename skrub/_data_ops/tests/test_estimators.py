@@ -1230,7 +1230,7 @@ def test_get_set_named_params():
     a = skrub.as_data_op("")
     b = skrub.choose_from(["A", "B", "C"], name="b")
     c = skrub.choose_from(["U", "V", "W"])
-    d = a + "_" + b + c
+    d = a + b + "_" + c
     learner = d.skb.make_learner()
     assert learner.fit_transform({}) == "A_U"
     assert learner.get_named_params() == {"b": None}
