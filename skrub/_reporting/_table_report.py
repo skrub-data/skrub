@@ -127,7 +127,7 @@ class TableReport:
     verbose : int, default = None
         Whether to print progress information while the report is being generated.
 
-        * verbose = None uses the global configuration (see :func:`set_config`),
+        * verbose = ``None`` uses the global configuration (see :func:`set_config`),
           which then defaults to 1.
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
