@@ -1076,7 +1076,8 @@ def var(name, value=NULL, *, store_default=False):
 
     When passing ``store_default=True``, the preview value is treated as a
     default value for that variable. It is kept when cloning the DataOp or
-    creating a Learner, and is always optional in the provided environment.
+    creating a Learner, and is always optional (does not need to be present) in
+    the provided environment.
 
     >>> c = skrub.var('a', 0, store_default=True) + skrub.var('b', 1)
     >>> c.skb.get_data()
