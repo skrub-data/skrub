@@ -1336,6 +1336,9 @@ class SkrubNamespace:
         ―――――――
         6
 
+        (Note that ``set_data`` returns a new DataOp (``d``) and leaves the
+        original one (``c``) unchanged.)
+
         DataOps that use ``d`` can compute previews of the results because unlike ``c``,
         ``d`` has values for its variables:
 
