@@ -743,9 +743,7 @@ class DataOp:
             graph = strip_xml_declaration(graph)
             has_graph = True
         except Exception:
-            graph = (
-                "Please install Pydot and GraphViz to display the computation graph."
-            )
+            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
             has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
