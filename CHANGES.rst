@@ -17,6 +17,8 @@ Changes
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
