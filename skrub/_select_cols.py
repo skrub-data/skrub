@@ -197,6 +197,50 @@ class DropCols(TransformerMixin, BaseEstimator):
 
 
 class Drop(SingleColumnTransformer):
+    """Drop the selected DataFrame's column.
+
+    The other columns are kept in their original order. A ``ValueError`` is raised if
+    any of the provided column names are not in the dataframe.
+
+
+    Parameters
+    ----------
+    cols : list of str, str or :ref:`selector <selectors_ref>`
+        The columns to drop, or a selector. A single column name can be passed as a
+        ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
+        :ref:`selectors <user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    DropCols : drop columns by name, or skrub selectors.
+    ApplyToCols: Can be used to Apply a transformer to selected columns in a dataframe.
+    TableVectorizer: Transform a dataframe to a numeric (vectorized) representation.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub import ApplyToCols, Drop
+    >>> df = pd.DataFrame({"num": [1,2,3], "text": ["hello", "world", "foo"]})
+    >>> df
+       num  text
+       1    hello
+       2    world
+       3    foo
+    >>> drop_text = ApplyToCols(Drop(), cols="text")
+    >>> drop_text.fit_transform(df)
+        num
+        1
+        2
+        3
+    >>> from skrub import TableVectorizer
+    >>> TableVectorizer(numeric=Drop()).fit_transform(df)
+        text_foo  text_hello  text_world
+    0       0.0         1.0         0.0
+    1       0.0         0.0         1.0
+    2       1.0         0.0         0.0
+    
+    """  
+
     def fit_transform(self, column, y=None):
         self.all_outputs_ = []
         return []
