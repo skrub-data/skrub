@@ -11,6 +11,17 @@ Ongoing development
 
 New Features
 ------------
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
+  provides an alternative for referring to a node, in the environment passed to
+  :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
+  :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
 
 Changes
 -------
