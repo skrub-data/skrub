@@ -42,14 +42,19 @@ def _add_session_column_pandas(
     # pandas 3.0 changed the resolution of astype(int) for datetime columns from
     # nanoseconds to milliseconds, so we need to adjust the time difference calculation
     # accordingly
+    #
+    # astype(int64) is needed (rather than just int) because on windows this converts
+    # to int32
     if parse(pd.__version__).major <= 2:
         # check if the time difference between events exceeds the session gap
         time_diff = (
-            X[timestamp_col].astype(int).diff().fillna(0) // 10**6 > session_gap * 1000
+            X[timestamp_col].astype("int64").diff().fillna(0) // 10**6
+            > session_gap * 1000
         )
     else:
         time_diff = (
-            X[timestamp_col].astype(int).diff().fillna(0) // 10**3 > session_gap * 1000
+            X[timestamp_col].astype("int64").diff().fillna(0) // 10**3
+            > session_gap * 1000
         )
     if split_by:
         # check if the "split_by" column changes
