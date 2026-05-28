@@ -78,6 +78,7 @@ __all__ = [
     "is_categorical",
     "to_categorical",
     "is_all_null",
+    "is_empty_frame",
     #
     # Inspecting, selecting and modifying values
     #
@@ -1010,6 +1011,21 @@ def _is_all_null_polars(col):
         return True
     # Column type is not Null, not all values are null (check if NaN etc.): slower
     return all(is_null(col))
+
+
+@dispatch
+def is_empty_frame(obj):
+    raise_dispatch_unregistered_type(obj, kind="object")
+
+
+@is_empty_frame.specialize("pandas", argument_type="DataFrame")
+def _is_empty_frame_pandas(obj):
+    return obj.empty
+
+
+@is_empty_frame.specialize("polars", argument_type="DataFrame")
+def _is_empty_frame_polars(obj):
+    return obj.is_empty()
 
 
 #

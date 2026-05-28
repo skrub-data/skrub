@@ -2,7 +2,9 @@ import datetime
 from functools import partial
 
 import numpy as np
+import pandas as pd
 import pytest
+from packaging.version import parse
 
 from skrub import SessionEncoder
 from skrub import _dataframe as sbd
@@ -134,6 +136,13 @@ def test_session_encoder_basic(
         counted_sessions[group_key].add(session_id)
     for group_key, sessions in counted_sessions.items():
         assert len(sessions) == group_key_to_sessions[group_key]
+
+    # Checking that fit then transform still works
+    result_fit = se.fit(example_session_data).transform(example_session_data)
+    # content of the "session_id" column after sessionization
+    session_ids_fit = sbd.to_list(sbd.col(result_fit, "timestamp_session_id"))
+
+    assert session_ids == session_ids_fit
 
 
 @pytest.mark.parametrize(
@@ -562,6 +571,29 @@ def test_check_is_new_session_no_by(df_module):
     assert session_id == [0, 0, 1, 1]
 
 
+@pytest.mark.skipif(parse(pd.__version__).major >= 3, reason="Test only for pandas < 3")
+def test_add_session_column_old_pandas(df_module):
+    """Old versions of pandas have a different branch that needs to be covered"""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ]
+        }
+    )
+    session_id = sbd.to_list(
+        sbd.col(
+            _add_session_column(df, [], "timestamp", 30 * 60, suffix="session_id"),
+            "timestamp_session_id",
+        )
+    )
+    # Expected: first two events in session 0, last two events in session 1
+    assert session_id == [0, 0, 1, 1]
+
+
 def test_check_is_new_session_with_by(df_module):
     """_add_session_column returns a dataframe with a ``timestamp_session_id``
     column when a group_by-list is provided.  A new session starts when the group key
@@ -670,3 +702,11 @@ def test_session_encoder_preserves_input_order(df_module):
 def test_error_dispatch(func):
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
         func(np.array([1]))
+
+
+def test_empty_frame(df_module):
+    empty_df = df_module.make_dataframe({"timestamp": []})
+    encoder = SessionEncoder("timestamp")
+    result = encoder.fit_transform(empty_df)
+
+    assert sbd.column_names(result) == ["timestamp", "timestamp_session_id"]

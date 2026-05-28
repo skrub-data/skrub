@@ -13,6 +13,7 @@ of the "by" column(s) and a session number
 import numbers
 from collections.abc import Iterable
 
+import numpy as np
 import pandas as pd
 from packaging.version import parse
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -375,6 +376,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
 
         self._session_id_name = f"{self.timestamp_col}_{self.suffix}"
+
+        if sbd.is_empty_frame(X):
+            X = sbd.with_columns(
+                X, **{self._session_id_name: np.array([], dtype=np.float32)}
+            )
+            return X
 
         # Adding a row order column to sort lines back
         row_order_col = f"_row_order_skrub_{random_string()}"

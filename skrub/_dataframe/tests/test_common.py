@@ -687,6 +687,14 @@ def test_is_all_null_polars(pl_module):
     assert ns.is_all_null(col)
 
 
+def test_is_empty_frame(df_module):
+    empty_frame = df_module.make_dataframe({"a": []})
+    not_empty_frame = df_module.make_dataframe({"a": [1]})
+
+    assert ns.is_empty_frame(empty_frame)
+    assert not ns.is_empty_frame(not_empty_frame)
+
+
 # Inspecting, selecting and modifying values
 # ==========================================
 #
