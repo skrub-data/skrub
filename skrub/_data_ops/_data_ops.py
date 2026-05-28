@@ -37,6 +37,7 @@ import re
 import textwrap
 import traceback
 import types
+import uuid
 import warnings
 
 import numpy as np
@@ -252,6 +253,14 @@ class DataOpImpl:
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
+            # The uuid is like an auto-generated name. It behaves like the name
+            # (must be unique within a dataop, is preserved by clone, ...) and
+            # is used for the same things (find a node, inject a value for its
+            # output in the environment). It is less explicit / reliable but
+            # always available.
+            # It is not used internally for example to discover the graph
+            # topology: we rely on actual Python object ids for this.
+            self.uuid = uuid.uuid4().int
             self.description = None
             self.checked = False
 
@@ -264,6 +273,7 @@ class DataOpImpl:
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
+        new.uuid = self.uuid
         new.description = self.description
         new.checked = False
         return new
