@@ -292,6 +292,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
       it is forwarded to :class:`ToDatetime`. Otherwise, the format is inferred.
 
     - :class:`ToFloat`:
+
       - if ``parse_numbers=True``, apply :class:`ToFloat` on string columns,
         converting strings whose non-missing values can all be parsed as numbers
         to ``float32``;
@@ -302,12 +303,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings unless they are numerical,
-    categorical, or datetime. This step is controlled by the ``cast_to_str``
-    parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
-    When ``cast_to_str=True``, string conversion is applied.
+      categorical, or datetime. This step is controlled by the ``cast_to_str``
+      parameter. When ``cast_to_str=False`` (default), string conversion is
+      skipped. When ``cast_to_str=True``, string conversion is applied.
 
-    Example:
 
+
+    Examples
+    --------
+    >>> from skrub import Cleaner
     >>> import pandas as pd
     >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
     >>> Cleaner(parse_numbers=False).fit_transform(df).dtypes  # doctest: +SKIP
@@ -321,11 +325,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     num        ...
     f          float32
     dtype: object
-
-    Examples
-    --------
-    >>> from skrub import Cleaner
-    >>> import pandas as pd
     >>> df = pd.DataFrame({
     ...     'A': ['one', 'two', 'two', 'three'],
     ...     'B': ['02/02/2024', '23/02/2024', '12/03/2024', '13/03/2024'],
