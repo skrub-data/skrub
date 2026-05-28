@@ -266,6 +266,7 @@ API_REFERENCE = {
                     "DataOp.skb.is_X",
                     "DataOp.skb.is_y",
                     "DataOp.skb.name",
+                    "DataOp.skb.id",
                     "DataOp.skb.applied_estimator",
                 ],
                 "template": "autosummary/accessor_attribute.rst",
