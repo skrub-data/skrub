@@ -14,6 +14,8 @@ New Features
 
 Changes
 -------
+- :meth:`choose_from` now accepts numpy arrays as input. :pr:`` by
+  :user:``
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.

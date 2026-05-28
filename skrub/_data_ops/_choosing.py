@@ -391,6 +391,7 @@ def choose_from(outcomes, *, name=None):
         outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
     else:
         outcome_names = None
+        outcomes = list(outcomes)
     return Choice(outcomes, outcome_names=outcome_names, name=name)
 
 

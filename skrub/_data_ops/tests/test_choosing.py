@@ -33,6 +33,13 @@ def test_bad_name(name):
         skrub.choose_int(0, 10, n_steps=5, name=name)
 
 
+def test_when_isinstance_false():
+    outcomes = np.array([10, 20])
+    c = skrub.choose_from(outcomes, name="c")
+    assert c.outcomes == list(outcomes)
+    assert c.outcome_names is None
+
+
 def test_discretized_choice_iter():
     c = skrub.choose_int(10, 20, n_steps=6, name="c")
     assert list(c) == list(range(10, 21, 2))
