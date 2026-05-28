@@ -15,8 +15,7 @@ New Features
   a timestamp column and computes sessions based on the given session duration.
   Additionally, it is possible to provide a ``by`` column or list of columns
   (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
-  value. A new dataset has also been added and can be accessed by using the fetcher
-  :class:`~skrub.datasets.fetch_wowah`.
+  value. A new synthetic dataset generator has also been added.
   :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 Changes
 -------

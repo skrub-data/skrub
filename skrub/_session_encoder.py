@@ -131,10 +131,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         provided, sessions are detected based on the time gap between events, and all
         events are considered to belong to the same user (or group).
 
-    session_gap : int, default=30
-        The maximum gap (in minutes) between events in a session. If the gap
+    session_gap : int, default=1800
+        The maximum gap (in seconds) between events in a session. If the gap
         between two events exceeds this value, they are considered to be in
-        different sessions.
+        different sessions. Default is 1800 seconds (30 minutes).
 
     suffix : str, default="session_id"
         The suffix to be added to the name of the timestamp column. The format
@@ -282,30 +282,48 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ID column via the "suffix" parameter. This is useful, for example, if you want
     to add sessions based on different groupings or intervals:
 
-    >>> import pandas as pd
-    >>> from skrub import SessionEncoder
-    >>> from datetime import datetime, timedelta
-    >>> encoder = SessionEncoder(
-    ...     group_by='user_id', timestamp_col='timestamp', session_gap=30
-    ... )
-    >>> data = {
-    ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
+    >>> data_multi = {
+    ...     'user_id': [1, 1, 1, 1, 2, 2],
+    ...     'device_id': ['mobile', 'mobile', 'desktop', 'desktop', 'mobile', 'mobile'],
     ...     'timestamp': [
     ...         pd.Timestamp('2024-01-01 10:00:00'),
-    ...         pd.Timestamp('2024-01-01 10:05:00'),  # 5 min later, same session
-    ...         pd.Timestamp('2024-01-01 11:00:00'),  # 55 min later, new session
+    ...         pd.Timestamp('2024-01-01 10:10:00'),  # 10 min later, same session
+    ...         pd.Timestamp('2024-01-01 10:05:00'),  # Different device (sorted),
+    ...                                                 # different session
+    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 15 min later, same session
     ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
-    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 20 min later, same session
+    ...         pd.Timestamp('2024-01-01 10:15:00'),  # 15 min later, same session
     ...     ],
-    ...     'action': ['login', 'view', 'purchase', 'login', 'purchase']
+    ...     'action': ['view', 'purchase', 'view', 'checkout', 'login', 'view']
     ... }
-    >>> df = pd.DataFrame(data)
-    >>> encoder_user = SessionEncoder(group_)
+    >>> df = pd.DataFrame(data_multi)
+    >>> encoder_user = SessionEncoder("timestamp",
+    ... group_by=["user_id"], suffix="user")
+    >>> encoder_user.fit_transform(df)
+    user_id device_id           timestamp    action  timestamp_user
+    0        1    mobile 2024-01-01 10:00:00      view                  0
+    1        1    mobile 2024-01-01 10:10:00  purchase                  0
+    2        1   desktop 2024-01-01 10:05:00      view                  0
+    3        1   desktop 2024-01-01 10:20:00  checkout                  0
+    4        2    mobile 2024-01-01 10:00:00     login                  1
+    5        2    mobile 2024-01-01 10:15:00      view                  1
+
+    >>> encoder_user_device = SessionEncoder("timestamp",
+    ... group_by=["user_id", "device_id"],
+    ... suffix="user_device")
+    >>> encoder_user_device.fit_transform(df)
+    user_id device_id           timestamp    action  timestamp_user_device
+    0        1    mobile 2024-01-01 10:00:00      view                      1
+    1        1    mobile 2024-01-01 10:10:00  purchase                      1
+    2        1   desktop 2024-01-01 10:05:00      view                      0
+    3        1   desktop 2024-01-01 10:20:00  checkout                      0
+    4        2    mobile 2024-01-01 10:00:00     login                      2
+    5        2    mobile 2024-01-01 10:15:00      view                      2
 
     """
 
     def __init__(
-        self, timestamp_col, group_by=None, session_gap=30, suffix="session_id"
+        self, timestamp_col, group_by=None, session_gap=30 * 60, suffix="session_id"
     ):
         self.timestamp_col = timestamp_col
         self.group_by = group_by
