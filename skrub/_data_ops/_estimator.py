@@ -16,11 +16,11 @@ from .. import _dataframe as sbd
 from .. import _join_utils
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
+from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
-    choices,
     eval_choices,
     evaluate,
     find_first_apply,
@@ -308,58 +308,49 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
-    def get_named_params(self):
+    def get_choices(self):
         """
-        Get the tunable parameter (choices) values indexed by choice name.
+        Get the outcomes that have been set for choices in the DataOp.
 
-        The returned dictionary can be used with
-        :meth:`SkrubLearner.set_named_params`.
-
-        This is similar to :meth:`SkrubLearner.get_params` and
-        :meth:`SkrubLearner.set_params`, which are a standard scikit-learn
-        interface, except that:
-
-        - only skrub choices that were given an explicit name are returned
-        - the keys in the returned dictionary are the choice names.
-
-        In :meth:`SkrubLearner.get_params`, all the choices (and the
-        ``data_op`` attribute itself) are returned, but the keys are positional
-        indices which are only valid for a specific DataOp (and its clones).
-        Therefore the named versions are a more reliable way to transfer
-        parameters to a different DataOp.
+        The returned dictionary can be used with :meth:`SkrubLearner.set_choices`.
 
         Returns
         -------
         dict
-            The choices set on this SkrubLearner. For discrete choices (created
-            with :func:`skrub.choose_from`, :func:`skrub.choose_bool`, ...) the
-            value is the index of the selected outcome in the outcome list (not
-            its value).
+            The choices set on this SkrubLearner. The key is the choice name
+            when it has been set, otherwise an internal ID which is only valid
+            for the current SkrubLearner, or a clone of it or one generated
+            from the same DataOp.
+
+            For discrete choices (created with :func:`skrub.choose_from`,
+            :func:`skrub.choose_bool`, ...) the value is the index of the
+            selected outcome in the outcome list (not its value).
 
         See Also
         --------
-        SkrubLearner.set_named_params
-            Set the params returned by ``get_named_params`` on a learner.
+        SkrubLearner.set_choices
+            Set the choices returned by ``get_choices`` on a learner.
 
         SkrubLearner.describe_params
             Get a dictionary describing all choices. It cannot be used to set
-            parameters but is more helpful for manual inspection, as it
-            includes all choices, shows the outcome values rather than
-            indices, and shows the default values for parameters that have not
-            been set.
+            parameters but is more helpful for manual inspection.
 
         Notes
         -----
-        For background information see the scikit-learn  about
-        `documentation <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
-        about ``get_params`` and ``set_params``
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`.
         """  # noqa: E501
-        data_op_choices = choices(self.data_op)
-        return {
-            name: v
-            for k, v in get_params(self.data_op).items()
-            if (name := data_op_choices[k].name) is not None
-        }
+        data_op_choices = _evaluation.choices(self.data_op)
+        result = {}
+        for k, v in get_params(self.data_op).items():
+            name = data_op_choices[k].name
+            if name is None:
+                result[k] = v
+            else:
+                result[name] = v
+        return result
 
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
@@ -368,53 +359,42 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
 
-    def set_named_params(self, **params):
+    def set_choices(self, choices):
         """
         Set the tunable parameters (choices), indexed by choice name.
 
         Typically, the passed dictionary is created by
-        :meth:`SkrubLearner.get_named_params`.
-
-        This is similar to :meth:`SkrubLearner.get_params` and
-        :meth:`SkrubLearner.set_params`, which are a standard scikit-learn
-        interface, except that:
-
-        - only skrub choices that were given an explicit name are considered
-        - the keys are the choice names.
-
-        In :meth:`SkrubLearner.set_params` keys are positional indices defined
-        by skrub and only valid for a specific DataOp. Therefore
-        :meth:`set_named_params` is a more convenient way to set parameters or
-        transfer them to a different DataOp, but it only allows setting choices
-        that have a name.
+        :meth:`SkrubLearner.get_choices`.
 
         Parameters
         ----------
-        params : dict
-           The key is the name of a skrub choice, and the value is the value
-           for numeric choices (:func:`choose_int`, :func:`choose_bool`), or
-           the outcome index for discrete choices (:func:`choose_from`).
+        choices : dict
+           The key is the name of a skrub choice, and the value is the choice
+           outcome for numeric choices (:func:`choose_int`,
+           :func:`choose_bool`), or the outcome index for discrete choices
+           (:func:`choose_from`).
 
         See Also
         --------
-        SkrubLearner.get_named_params
-            Get the dictionary of named parameters, which can be used to set
-            them on another learner.
+        SkrubLearner.get_choices
+            Get the dictionary of choices, which can be used to set them on
+            another learner.
 
         Notes
         -----
-        For background information see the scikit-learn  about
-        `documentation <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
-        about ``get_params`` and ``set_params``
-
-        Examples
-        --------
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`.
         """
-        data_op_choices = choices(self.data_op)
+        data_op_choices = _evaluation.choices(self.data_op)
         name_to_id = {
             c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
         }
-        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
+        set_params(
+            self.data_op,
+            {k if isinstance(k, int) else name_to_id[k]: v for k, v in choices.items()},
+        )
         return self
 
     def set_params(self, **params):
