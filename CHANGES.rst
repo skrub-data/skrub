@@ -19,9 +19,8 @@ New Features
 
 Changes
 -------
-- An unnecessary warning that was raised when passing a numpy array to the
-  TableVectorizer has been removed. :pr:`1908` by
-  :user:`Sandrine Henry <sandrineh>`.
+- Grouped Examples into three sections. :pr:`` by
+  :user:`Maureen Githaiga <maureen-githaiga>`.
 
 Bugfixes
 --------
