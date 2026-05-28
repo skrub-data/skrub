@@ -588,7 +588,7 @@ def test_add_session_column_old_pandas(df_module):
     )
     session_id = sbd.to_list(
         sbd.col(
-            _add_session_column(df, [], "timestamp", 30 * 60, suffix="session_id"),
+            _add_session_column(df, [], "timestamp", 30 * 60, "timestamp_session_id"),
             "timestamp_session_id",
         )
     )
