@@ -31,12 +31,14 @@ except ImportError:
 
 
 @dispatch
-def _add_session_column(X, group_by, timestamp_col, session_gap, suffix):
+def _add_session_column(X, group_by, timestamp_col, session_gap, session_column_name):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
 @_add_session_column.specialize("pandas")
-def _add_session_column_pandas(X, group_by, timestamp_col, session_gap, suffix):
+def _add_session_column_pandas(
+    X, group_by, timestamp_col, session_gap, session_column_name
+):
     # pandas 3.0 changed the resolution of astype(int) for datetime columns from
     # nanoseconds to milliseconds, so we need to adjust the time difference calculation
     # accordingly
@@ -58,13 +60,14 @@ def _add_session_column_pandas(X, group_by, timestamp_col, session_gap, suffix):
     else:
         is_new_session = time_diff
     # Compute cumulative sum of is_new_session to create session IDs
-    column_name = f"{timestamp_col}_{suffix}"
-    X[column_name] = is_new_session.cumsum()
+    X[session_column_name] = is_new_session.cumsum()
     return X
 
 
 @_add_session_column.specialize("polars")
-def _add_session_column_polars(X, group_by, timestamp_col, session_gap, suffix):
+def _add_session_column_polars(
+    X, group_by, timestamp_col, session_gap, session_column_name
+):
     # check if the time difference between events exceeds the session gap
     time_diff = X[timestamp_col].dt.epoch("ms").diff().fill_null(0) > session_gap * 1000
     if group_by:
@@ -78,8 +81,7 @@ def _add_session_column_polars(X, group_by, timestamp_col, session_gap, suffix):
     else:
         is_new_session = time_diff
     # Add session_id by computing cumulative sum of is_new_session
-    column_name = f"{timestamp_col}_{suffix}"
-    return X.with_columns(is_new_session.cum_sum().alias(column_name))
+    return X.with_columns(is_new_session.cum_sum().alias(session_column_name))
 
 
 @dispatch
@@ -377,6 +379,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
         self._session_id_name = f"{self.timestamp_col}_{self.suffix}"
 
+        if self._session_id_name in self.all_inputs_:
+            self._session_id_name += f"_skrub_{random_string()}"
+
         if sbd.is_empty_frame(X):
             X = sbd.with_columns(
                 X, **{self._session_id_name: np.array([], dtype=np.float32)}
@@ -496,7 +501,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             factorized_by,
             self.timestamp_col,
             self.session_gap,
-            self.suffix,
+            self._session_id_name,
         )
         return X_with_session_id
 

@@ -710,3 +710,48 @@ def test_empty_frame(df_module):
     result = encoder.fit_transform(empty_df)
 
     assert sbd.column_names(result) == ["timestamp", "timestamp_session_id"]
+
+
+def test_not_overwriting_columns(df_module):
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "timestamp_session_id": [1, 2, 3, 4],
+        }
+    )
+    encoder = SessionEncoder("timestamp")
+    result = encoder.fit_transform(df)
+
+    col_names = sbd.column_names(result)
+    assert "timestamp" in col_names
+    assert "timestamp_session_id" in col_names
+    # The original "timestamp_session_id" column should not be overwritten
+    # The new column has name "timestamp_session_id_skrub_RANDOM_SUFFIX"
+    assert col_names[2].removeprefix("timestamp_session_id").startswith("_skrub_")
+
+    # Check that this also works for a custom suffix
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "timestamp_custom_name": [1, 2, 3, 4],
+        }
+    )
+    encoder = SessionEncoder("timestamp", suffix="custom_name")
+    result = encoder.fit_transform(df)
+
+    col_names = sbd.column_names(result)
+    assert "timestamp" in col_names
+    assert "timestamp_custom_name" in col_names
+    # The original "timestamp_custom_name" column should not be overwritten
+    # The new column has name "timestamp_custom_name_skrub_RANDOM_SUFFIX"
+    assert col_names[2].removeprefix("timestamp_custom_name").startswith("_skrub_")
