@@ -235,6 +235,7 @@ API_REFERENCE = {
                     "DataOp.skb.freeze_after_fit",
                     "DataOp.skb.full_report",
                     "DataOp.skb.get_data",
+                    "DataOp.skb.set_data",
                     "DataOp.skb.get_vars",
                     "DataOp.skb.make_learner",
                     "DataOp.skb.make_grid_search",

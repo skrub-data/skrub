@@ -17,6 +17,10 @@ New Features
   robust way of transferring selected hyperparameters from one DataOp to a
   different one than :meth:`SkrubLearner.get_params` and
   :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
   provides an alternative for referring to a node, in the environment passed to
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in

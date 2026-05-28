@@ -405,12 +405,12 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         if allow_skipping and not _config.get_config().get("eager_data_ops", True):
             return data_op
 
-        if not data_op._skrub_impl.checked:
-            try:
-                func_name = data_op._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
+        try:
+            func_name = data_op._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
 
+        if not data_op._skrub_impl.checked:
             conflicts = find_conflicts(data_op)
             if conflicts is not None:
                 raise ValueError(conflicts["message"])
