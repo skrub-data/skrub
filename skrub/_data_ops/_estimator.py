@@ -308,28 +308,25 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
-    def get_choices(self):
+    def get_named_params(self):
         """
-        Get the outcomes that have been set for choices in the DataOp.
+        Get the outcomes that have been set for named choices in the DataOp.
 
-        The returned dictionary can be used with :meth:`SkrubLearner.set_choices`.
+        The returned dictionary can be used with :meth:`SkrubLearner.set_named_params`.
+        Only choices that have been given an explicit name are included in the result.
 
         Returns
         -------
         dict
-            The choices set on this SkrubLearner. The key is the choice name
-            when it has been set, otherwise an internal ID which is only valid
-            for the current SkrubLearner, or a clone of it or one generated
-            from the same DataOp.
-
+            The choices set on this SkrubLearner. The key is the choice name.
             For discrete choices (created with :func:`skrub.choose_from`,
             :func:`skrub.choose_bool`, ...) the value is the index of the
             selected outcome in the outcome list (not its value).
 
         See Also
         --------
-        SkrubLearner.set_choices
-            Set the choices returned by ``get_choices`` on a learner.
+        SkrubLearner.set_named_params
+            Set the choices returned by ``get_named_params`` on a learner.
 
         SkrubLearner.describe_params
             Get a dictionary describing all choices. It cannot be used to set
@@ -340,17 +337,16 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         This is similar to the standard scikit-learn
         `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
         implemented by :meth:`SkrubLearner.get_params` and
-        :meth:`SkrubLearner.set_params`.
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
         """  # noqa: E501
         data_op_choices = _evaluation.choices(self.data_op)
-        result = {}
-        for k, v in get_params(self.data_op).items():
-            name = data_op_choices[k].name
-            if name is None:
-                result[k] = v
-            else:
-                result[name] = v
-        return result
+        return {
+            name: v
+            for k, v in get_params(self.data_op).items()
+            if (name := data_op_choices[k].name) is not None
+        }
 
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
@@ -359,16 +355,16 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
 
-    def set_choices(self, choices):
+    def set_named_params(self, **params):
         """
         Set the tunable parameters (choices), indexed by choice name.
 
         Typically, the passed dictionary is created by
-        :meth:`SkrubLearner.get_choices`.
+        :meth:`SkrubLearner.get_named_params`.
 
         Parameters
         ----------
-        choices : dict
+        params : dict
            The key is the name of a skrub choice, and the value is the choice
            outcome for numeric choices (:func:`choose_int`,
            :func:`choose_bool`), or the outcome index for discrete choices
@@ -376,7 +372,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
 
         See Also
         --------
-        SkrubLearner.get_choices
+        SkrubLearner.get_named_params
             Get the dictionary of choices, which can be used to set them on
             another learner.
 
@@ -385,16 +381,15 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         This is similar to the standard scikit-learn
         `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
         implemented by :meth:`SkrubLearner.get_params` and
-        :meth:`SkrubLearner.set_params`.
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
         """
         data_op_choices = _evaluation.choices(self.data_op)
         name_to_id = {
             c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
         }
-        set_params(
-            self.data_op,
-            {k if isinstance(k, int) else name_to_id[k]: v for k, v in choices.items()},
-        )
+        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
         return self
 
     def set_params(self, **params):
