@@ -220,6 +220,7 @@ API_REFERENCE = {
                 "description": (
                     "The ``skb`` accessor exposes all DataOps methods and attributes."
                 ),
+                "sort": True,
                 "autosummary": [
                     "DataOp.skb.apply",
                     "DataOp.skb.apply_func",
@@ -260,6 +261,7 @@ API_REFERENCE = {
             },
             {
                 "description": "Accessor attributes.",
+                "sort": True,
                 "autosummary": [
                     "DataOp.skb.description",
                     "DataOp.skb.is_X",
@@ -339,3 +341,9 @@ API_REFERENCE = {
         ],
     },
 }
+# Some autosummary lists are long; for those alphabetical order is the most
+# useful for browsing. Sections flagged with "sort": True are reordered here.
+for module in API_REFERENCE.values():
+    for section in module["sections"]:
+        if section.pop("sort", False):
+            section["autosummary"].sort()
