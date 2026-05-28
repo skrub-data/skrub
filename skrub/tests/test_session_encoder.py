@@ -112,7 +112,9 @@ def test_session_encoder_basic(
 ):
     """Test basic sessionization grouping by user_id or username."""
     # Apply SessionEncoder grouping by the specified column
-    se = SessionEncoder(group_by=by_column, timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(
+        group_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+    )
     result = se.fit_transform(example_session_data)
 
     # Check that we have the expected total number of sessions
@@ -146,7 +148,9 @@ def test_session_encoder_different_users_different_sessions(
 ):
     """Test that different users/groups have different session IDs."""
     # Apply SessionEncoder
-    se = SessionEncoder(group_by=by_column, timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(
+        group_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+    )
     result = se.fit_transform(example_session_data)
 
     # content of the "session_id" column after sessionization
@@ -183,7 +187,9 @@ def test_session_encoder_multi_by_columns(example_session_data_multi_by):
     Total: 4 sessions
     """
     se = SessionEncoder(
-        group_by=["user_id", "device_id"], timestamp_col="timestamp", session_gap=30
+        group_by=["user_id", "device_id"],
+        timestamp_col="timestamp",
+        session_gap=30 * 60,
     )
     result = se.fit_transform(example_session_data_multi_by)
 
@@ -235,7 +241,9 @@ def test_session_encoder_multiple_users(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(
+        group_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
     result = se.fit_transform(df)
 
     # After sorting by user_id and timestamp, each user should have 1 session
@@ -266,7 +274,7 @@ def test_session_encoder_time_gap_threshold(df_module):
 
     # With 20-minute gap: should create 2 sessions (split at 35-min gap)
     se_20 = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=20
+        group_by="user_id", timestamp_col="timestamp", session_gap=20 * 60
     )
     result_20 = se_20.fit_transform(df)
     session_ids_20 = sbd.to_list(sbd.col(result_20, "timestamp_session_id"))
@@ -274,7 +282,7 @@ def test_session_encoder_time_gap_threshold(df_module):
 
     # With 40-minute gap: should create 1 session (all gaps < 40 min)
     se_40 = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=40
+        group_by="user_id", timestamp_col="timestamp", session_gap=40 * 60
     )
     result_40 = se_40.fit_transform(df)
     session_ids_40 = sbd.to_list(sbd.col(result_40, "timestamp_session_id"))
@@ -302,7 +310,7 @@ def test_session_encoder_no_user_column(df_module):
     )
 
     # Without 'group_by', sessions are separated only by time gaps
-    se = SessionEncoder(group_by=None, timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(group_by=None, timestamp_col="timestamp", session_gap=30 * 60)
     result = se.fit_transform(df)
 
     session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
@@ -546,7 +554,7 @@ def test_check_is_new_session_no_by(df_module):
     )
     session_id = sbd.to_list(
         sbd.col(
-            _add_session_column(df, [], "timestamp", 30, suffix="session_id"),
+            _add_session_column(df, [], "timestamp", 30 * 60, suffix="session_id"),
             "timestamp_session_id",
         )
     )
@@ -578,7 +586,7 @@ def test_check_is_new_session_with_by(df_module):
             ],
         }
     )
-    result = _add_session_column(df, ["user_id"], "timestamp", 30, "session_id")
+    result = _add_session_column(df, ["user_id"], "timestamp", 30 * 60, "session_id")
 
     # _add_session_column now returns the full dataframe with session_id added
     assert "timestamp_session_id" in sbd.column_names(result)

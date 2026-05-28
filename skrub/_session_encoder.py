@@ -2,8 +2,8 @@
 The SessionEncoder is a transformer that takes as input:
 - a "timestamp" column, which identifies the time of an event
 - a "by" column or list of columns, which identifies a user
-- a "session_gap" value, which identifies the maximum allowed gap between events
-in a session
+- a "session_gap" value, which identifies the maximum allowed gap in seconds
+between events in a session
 
 It returns a dataframe with the same number of rows as the input, but with the
 column "session_id": a unique identifier for each session, which is a combination
@@ -42,13 +42,11 @@ def _add_session_column_pandas(X, group_by, timestamp_col, session_gap, suffix):
     if parse(pd.__version__).major <= 2:
         # check if the time difference between events exceeds the session gap
         time_diff = (
-            X[timestamp_col].astype(int).diff().fillna(0) // 10**6
-            > session_gap * 60 * 1000
+            X[timestamp_col].astype(int).diff().fillna(0) // 10**6 > session_gap * 1000
         )
     else:
         time_diff = (
-            X[timestamp_col].astype(int).diff().fillna(0) // 10**3
-            > session_gap * 60 * 1000
+            X[timestamp_col].astype(int).diff().fillna(0) // 10**3 > session_gap * 1000
         )
     if group_by:
         # check if the "group_by" column changes
@@ -67,9 +65,7 @@ def _add_session_column_pandas(X, group_by, timestamp_col, session_gap, suffix):
 @_add_session_column.specialize("polars")
 def _add_session_column_polars(X, group_by, timestamp_col, session_gap, suffix):
     # check if the time difference between events exceeds the session gap
-    time_diff = (
-        X[timestamp_col].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
-    )
+    time_diff = X[timestamp_col].dt.epoch("ms").diff().fill_null(0) > session_gap * 1000
     if group_by:
         # check if the "group_by" column changes
         group_diff = X.select(
@@ -113,7 +109,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     """Encode sessions from a dataframe.
 
     A session is defined as a sequence of events  where consecutive events are separated
-    by at most ``session_gap`` minutes. Additionally, it is possible to provide a column
+    by at most ``session_gap`` seconds. Additionally, it is possible to provide a column
     or list of columns that identifies the user (specified by the ``group_by`` column).
     When the time gap between consecutive events exceeds ``session_gap``, or
     when what identifies a user changes, a new session begins. All unrelated columns
@@ -137,8 +133,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         different sessions. Default is 1800 seconds (30 minutes).
 
     suffix : str, default="session_id"
-        The suffix to be added to the name of the timestamp column. The format
-        will be "TIMESTAMP_SUFFIX".
+        The suffix to be added to the name of the timestamp column.
 
     Attributes
     ----------
@@ -147,7 +142,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
     all_outputs_: list of str
         All column names in the input dataframe plus the new column that identifies
-        the session, with name "{timestamp}_session_id".
+        the session, with name "{timestamp}_{suffix}".
 
     Examples
     --------
@@ -159,7 +154,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> from skrub import SessionEncoder
     >>> from datetime import datetime, timedelta
     >>> encoder = SessionEncoder(
-    ...     group_by='user_id', timestamp_col='timestamp', session_gap=30
+    ...     group_by='user_id', timestamp_col='timestamp', session_gap=30 * 60
     ... )
     >>> data = {
     ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
@@ -205,7 +200,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> encoder_multi = SessionEncoder(
     ...     group_by=['user_id', 'device_id'],
     ...     timestamp_col='timestamp',
-    ...     session_gap=30
+    ...     session_gap=30 * 60
     ... )
     >>> data_multi = {
     ...     'user_id': [1, 1, 1, 1, 2, 2],
@@ -250,7 +245,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> encoder_no_group = SessionEncoder(
     ...     group_by=None,
     ...     timestamp_col='timestamp',
-    ...     session_gap=30
+    ...     session_gap=30 * 60
     ... )
     >>> data_no_group = {
     ...     'timestamp': [
@@ -445,6 +440,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         return self.fit_transform(X)
 
     def _check_input_dataframe(self):
+        """
+        Check that the input columns are present and correct
+        """
+
         # Check that the timestamp column is present
         if self.timestamp_col not in self.all_inputs_:
             raise ValueError(
@@ -466,8 +465,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
                     raise ValueError(f"Column '{col}' not found in input dataframe")
 
     def _factorize_columns(self, X):
-        # convert group_by columns to numerical columns if they're not already, to
-        # ensure that the diff operation works correctly
+        """
+        convert group_by columns to numerical columns if they're not already, to
+        ensure that the diff operation works correctly
+        """
+
         if not self.group_by:
             return X, []
         factorized_columns = {
