@@ -111,10 +111,11 @@ class TableReport:
         from the beginning (head) of the dataframe and half from the end
         (tail). Note this is only for display. Summary statistics, histograms
         etc. are computed using the whole dataframe.
-    order_by : str
-        Column name to use for sorting. Other numerical columns will be plotted
-        as function of the sorting column. Must be of numerical or datetime
-        type.
+    order_by : str, deprecated
+        Deprecated. Column name to use for sorting. Other numerical columns
+        will be plotted as function of the sorting column. Must be of
+        numerical or datetime type. Prefer sorting the dataframe prior to
+        creating the report (e.g. ``df.sort_values('col')``).
     title : str
         Title for the report.
     column_filters : dict
@@ -274,6 +275,16 @@ class TableReport:
                 f"'open_tab' must be one of {valid_tabs}, got {open_tab!r}."
             )
         self.open_tab = open_tab
+
+        # Deprecate order_by parameter on TableReport; prefer pre-sorted dataframes
+        if order_by is not None:
+            warnings.warn(
+                "'order_by' parameter of TableReport is deprecated and will be"
+                " removed in a future version. Sort your dataframe before passing"
+                " it to TableReport (e.g. df.sort_values('col')).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._summary_kwargs = {
             "order_by": order_by,
