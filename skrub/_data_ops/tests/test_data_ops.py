@@ -67,6 +67,10 @@ def test_environement_with_values():
     # we can still inject values for internal nodes or choices in this setting
     assert f.skb.eval({"d": "goodbye"}) == "goodbye!"
 
+    # we can also inject values by using the id
+    assert isinstance(d.skb.id, int)
+    assert f.skb.eval({d.skb.id: "using id"}) == "using id!"
+
     # however if we provide a binding for any of the variables we must do it
     # for all the variables actually used, `value` is not considered for any
     # variable.
@@ -915,6 +919,35 @@ def test_get_vars():
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
 
 
+def test_set_data():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a + b
+    d = c.skb.set_data({"a": 1, "b": 2})
+    # the new dataop has been primed so its preview is already available
+    assert "3" in repr(d)
+    assert d.skb.preview() == 3
+    assert d.skb.get_data() == {"a": 1, "b": 2}
+    assert c.skb.get_data() == {}
+    # setting only part of the variables
+    assert d.skb.set_data({"a": 10}).skb.get_data() == {"a": 10, "b": 2}
+    # note below the new dataop has incomplete data so still no preview
+    assert c.skb.set_data({"a": 10}).skb.get_data() == {"a": 10}
+
+
+def test_set_data_errors():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a // b
+    assert c.skb.set_data({"a": 4, "b": 2}).skb.preview() == 2
+    # setting bad data
+    with pytest.raises(ValueError, match="no corresponding variable.*'x'"):
+        c.skb.set_data({"a": 4, "b": 2, "x": 3})
+    # errors in the preview computation are propagated
+    with pytest.raises(RuntimeError, match="(division|division or modulo) by zero"):
+        c.skb.set_data({"a": 4, "b": 0})
+
+
 @pytest.mark.parametrize("needs_data", [False, True])
 @pytest.mark.parametrize("has_preview", [False, True])
 @pytest.mark.parametrize("regression", [False, True])
@@ -1014,13 +1047,10 @@ def test_copy_attrs():
     # non-regression for #1781 some attributes could be missing after
     # .set_name(), .mark_as_X() etc.
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    out = (
-        skrub.var("X", df)
-        .skb.apply(PassThrough())
-        .skb.mark_as_X()
-        .skb.set_name("transform")
-    )
-    assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    x = skrub.var("X", df).skb.apply(PassThrough()).skb.mark_as_X()
+    named = x.skb.set_name("transform")
+    assert isinstance(named.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    assert named.skb.id == x.skb.id
 
 
 def test_find():
@@ -1032,13 +1062,23 @@ def test_find():
     assert e.skb.find("c") is c
     assert e.skb.find(lambda n: not hasattr(n, "skb") and n.name == "c") is c
     assert e.skb.find("d") is d
+    assert e.skb.find(d.skb.id) is d
     assert e.skb.find(lambda n: hasattr(n, "skb") and n.skb.name == "d") is d
     assert e.skb.find("z") is None
+    assert e.skb.find(-1) is None
     assert e.skb.find(lambda n: False) is None
-    with pytest.raises(TypeError, match="what should either be a string or a callable"):
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
         e.skb.find(c)
-    with pytest.raises(TypeError, match="what should either be a string or a callable"):
-        e.skb.find(0)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(None)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(())
 
 
 def test_find_X_y():

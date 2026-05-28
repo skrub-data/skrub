@@ -16,6 +16,14 @@ New Features
   default value for this variable in all contexts (for example in a
   SkrubLearner's method like ``fit`` or ``predict``).
   :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
+  provides an alternative for referring to a node, in the environment passed to
+  :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
+  :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------

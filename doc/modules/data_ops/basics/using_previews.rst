@@ -46,6 +46,9 @@ one example dataset.
 It is not necessary to provide a value for every variable: it is however advisable
 to do so when possible, as it allows to catch errors early on.
 
+Note: you can obtain the preview values with :meth:`DataOp.skb.get_data`, and
+set different ones with :meth:`DataOp.skb.set_data`.
+
 Defining a default value for a variable
 ---------------------------------------
 

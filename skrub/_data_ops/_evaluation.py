@@ -334,6 +334,8 @@ class _Evaluator(_DataOpTraversal):
             env_key, fetch = X_NAME, True
         elif impl.is_y and Y_NAME in self.environment:
             env_key, fetch = Y_NAME, True
+        elif impl.uuid in self.environment:
+            env_key, fetch = impl.uuid, True
         elif impl.name is not None and impl.name in self.environment:
             env_key = impl.name
 
@@ -1144,6 +1146,15 @@ def find_node_by_name(data_op, name):
     return find_node(data_op, pred)
 
 
+def find_node_by_uuid(data_op, uuid):
+    def pred(obj):
+        if isinstance(obj, DataOp):
+            return obj._skrub_impl.uuid == uuid
+        return False
+
+    return find_node(data_op, pred)
+
+
 def find_X_y_and_cv(data_op):
     """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
     result = {}
@@ -1184,6 +1195,7 @@ class _FindConflicts(_DataOpTraversal):
 
     def __init__(self):
         self._names = {}
+        self._uuids = {}
         self._x = {}
         self._y = {}
         self._score_nodes = {}
@@ -1191,15 +1203,16 @@ class _FindConflicts(_DataOpTraversal):
     def handle_data_op(self, e):
         self._add(
             e,
-            getattr(e._skrub_impl, "name", None),
-            e._skrub_impl.is_X,
-            e._skrub_impl.is_y,
-            isinstance(e._skrub_impl, Scoring),
+            name=getattr(e._skrub_impl, "name", None),
+            uuid=e._skrub_impl.uuid,
+            is_X=e._skrub_impl.is_X,
+            is_y=e._skrub_impl.is_y,
+            is_score=isinstance(e._skrub_impl, Scoring),
         )
         yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None), False, False, False)
+        self._add(choice, name=getattr(choice, "name", None))
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
@@ -1225,22 +1238,30 @@ class _FindConflicts(_DataOpTraversal):
                 f"first scoring node:\n{first}\n"
                 f"second scoring node:\n{second}\n"
             )
-        assert conflict["reason"] == "name", conflict["reason"]
-        name = conflict["name"]
-        msg = (
-            f"Choice and node names must be unique. The name {name!r} was used "
-            "for 2 different objects:\n"
-            f"first object using the name {name!r}:\n{first}\n"
-            f"second object using the name {name!r}:\n{second}"
-        )
-        if repr(first) == repr(second):
-            msg += (
-                "\nIs it possible that you accidentally added a transformation twice, "
-                "for example by re-running a Jupyter notebook cell that rebinds a "
-                "Python variable to a new skrub data_op "
-                "(eg `data_op = data_op.skb.apply(...)`)?"
+        if conflict["reason"] == "name":
+            name = conflict["key"]
+            msg = (
+                f"Choice and node names must be unique. The name {name!r} was used "
+                "for 2 different objects:\n"
+                f"first object using the name {name!r}:\n{first}\n"
+                f"second object using the name {name!r}:\n{second}"
             )
-        return msg
+            if repr(first) == repr(second):
+                msg += (
+                    "\nIs it possible that you accidentally "
+                    "added a transformation twice, "
+                    "for example by re-running a Jupyter notebook cell that rebinds a "
+                    "Python variable to a new skrub data_op "
+                    "(eg `data_op = data_op.skb.apply(...)`)?"
+                )
+            return msg
+        assert conflict["reason"] == "uuid", conflict["reason"]
+        uuid = conflict["key"]
+        return (
+            f"Node IDs must be unique. The id {uuid} was used for 2 different objects. "
+            "Is it possible you used a DataOp _and_ a copy of it generated with "
+            "clone() or set_name() in the same DataOp?"
+        )
 
     def _add_to_dict(self, d, key, val, reason):
         if key is None:
@@ -1251,11 +1272,13 @@ class _FindConflicts(_DataOpTraversal):
             return
         if other is val:
             return
-        conflict = {"name": key, "nodes": (other, val), "reason": reason}
+        conflict = {"key": key, "nodes": (other, val), "reason": reason}
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y, is_score):
+    def _add(
+        self, obj, *, name=None, uuid=None, is_X=False, is_y=False, is_score=False
+    ):
         if is_X:
             self._add_to_dict(self._x, "X", obj, "is_X")
         if is_y:
@@ -1263,6 +1286,7 @@ class _FindConflicts(_DataOpTraversal):
         if is_score:
             self._add_to_dict(self._score_nodes, "score", obj, "is_score")
         self._add_to_dict(self._names, name, obj, "name")
+        self._add_to_dict(self._uuids, uuid, obj, "uuid")
 
 
 def find_conflicts(data_op):
