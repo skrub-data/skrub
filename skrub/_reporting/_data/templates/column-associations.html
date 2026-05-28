@@ -79,8 +79,7 @@
         In this case, one of them may be redundant and for some models (such as linear models) it might be beneficial to remove it.
     </div>
 
-    {% else %}
-    {% if summary["n_columns"] == 1 %}
+    {% elif summary['n_columns'] == 1%}
     No associations were computed because the dataframe has only one column.
     {% else %}
     No strong associations between any pair of columns were identified by a quick screening of a subsample of the dataframe.
