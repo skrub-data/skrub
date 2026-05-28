@@ -340,6 +340,11 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         :meth:`SkrubLearner.set_params`, but a more robust way to transfer
         hyperparameters to another DataOp with a different topology, as relies
         on choice names rather than indices.
+
+        Examples
+        --------
+        See the documentation for :meth:`SkrubLearner.set_named_params` for
+        examples.
         """  # noqa: E501
         data_op_choices = _evaluation.choices(self.data_op)
         return {
@@ -384,7 +389,77 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         :meth:`SkrubLearner.set_params`, but a more robust way to transfer
         hyperparameters to another DataOp with a different topology, as relies
         on choice names rather than indices.
-        """
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.decomposition import PCA
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler
+        >>> from sklearn.linear_model import Ridge
+        >>> from sklearn.datasets import make_regression
+
+        >>> X, y = make_regression(random_state=0)
+        >>> transform = (
+        ...     skrub.X(X)
+        ...     .skb.apply(
+        ...         skrub.choose_from(
+        ...             [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
+        ...             name="scaler",
+        ...         )
+        ...     )
+        ...     .skb.apply(
+        ...         PCA(n_components=skrub.choose_int(10, 30, name="n_components"))
+        ...     )
+        ... )
+        >>> pred = transform.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.1, 10.0, log=True)), y=skrub.y(y)
+        ... )
+        >>> best_learner = pred.skb.make_randomized_search(
+        ...     fitted=True, random_state=0
+        ... ).best_learner_
+
+        We can inspect the best hyperparameters found by the search:
+
+        >>> best_learner.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11, 'choose_float(0.1, 10.0, log=True)': 0.351...}
+
+        Now suppose we want to transfer them to a learner for a different DataOp, for
+        example one that only does the transformation:
+
+        >>> transformer = transform.skb.make_learner()
+
+        This transformer has no values set, it uses the default parameters:
+
+        >>> transformer.describe_params()
+        {'scaler': 'MinMaxScaler()', 'n_components': 20}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 20)
+
+        We can get the params out of our best learner:
+
+        >>> best_learner.get_named_params()
+        {'scaler': 2, 'n_components': np.int64(11)}
+
+        Note that the ridge's ``alpha`` does not appear, as it has no name, and that the
+        value for the scaler is the outcome's **index**, rather than its value (the
+        SquashingScaler is the third item in the outcome list).
+
+        >>> transformer.set_named_params(**best_learner.get_named_params())
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 11)
+
+        We can also set parameters manually:
+
+        >>> transformer.set_named_params(n_components=7)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 7}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 7)
+        """  # noqa: E501
         data_op_choices = _evaluation.choices(self.data_op)
         name_to_id = {
             c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
