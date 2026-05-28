@@ -1,3 +1,6 @@
+"""
+This module provides the implementation of the DatetimeEncoder
+"""
 from datetime import datetime, timezone
 
 import numpy as np
