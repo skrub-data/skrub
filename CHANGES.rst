@@ -25,6 +25,8 @@ Changes
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
+- Improving the association tab error message when only one column is present
+  :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 
 Bugfixes
 --------
