@@ -443,6 +443,10 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+    assert (
+        "No associations were computed because the dataframe has only one "
+        "column." in html
+    )
 
 
 def test_error_make_table():
