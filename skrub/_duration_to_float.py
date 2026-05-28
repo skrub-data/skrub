@@ -33,7 +33,6 @@ class DurationToFloat(SingleColumnTransformer):
     This transformer converts duration columns to seconds. It only works on
     columns with duration dtype. Other dtypes are rejected.
 
-    For ``pandas``, only columns with ``duration`` dtype are modified:
 
     Examples
     --------
