@@ -1,5 +1,5 @@
 """
-This module provides the implementation of the DattetimeEncoder
+This module provides the implementation of the DatetimeEncoder
 """
 from datetime import datetime, timezone
 
