@@ -61,7 +61,7 @@ def example_session_data_multi_by(df_module):
 
     A user is uniquely identified by the combination of ``user_id`` and
     ``device_id``.  The same ``user_id`` on two different devices produces
-    independent sessions, which lets us verify that ``group_by`` accepts a list of
+    independent sessions, which lets us verify that ``split_by`` accepts a list of
     column names.
     """
     timestamps = []
@@ -103,19 +103,19 @@ def example_session_data_multi_by(df_module):
 
 
 @pytest.mark.parametrize(
-    "by_column,expected_sessions,group_key_to_sessions",
+    "by_column,expected_sessions,split_key_to_sessions",
     [
         ("user_id", 6, {101: 3, 102: 2, 103: 1}),
         ("username", 6, {"alice": 3, "bob": 2, "charlie": 1}),
     ],
 )
 def test_session_encoder_basic(
-    example_session_data, by_column, expected_sessions, group_key_to_sessions
+    example_session_data, by_column, expected_sessions, split_key_to_sessions
 ):
     """Test basic sessionization grouping by user_id or username."""
     # Apply SessionEncoder grouping by the specified column
     se = SessionEncoder(
-        group_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+        split_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
     )
     result = se.fit_transform(example_session_data)
 
@@ -135,7 +135,7 @@ def test_session_encoder_basic(
             counted_sessions[group_key] = set()
         counted_sessions[group_key].add(session_id)
     for group_key, sessions in counted_sessions.items():
-        assert len(sessions) == group_key_to_sessions[group_key]
+        assert len(sessions) == split_key_to_sessions[group_key]
 
     # Checking that fit then transform still works
     result_fit = se.fit(example_session_data).transform(example_session_data)
@@ -158,7 +158,7 @@ def test_session_encoder_different_users_different_sessions(
     """Test that different users/groups have different session IDs."""
     # Apply SessionEncoder
     se = SessionEncoder(
-        group_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+        split_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
     )
     result = se.fit_transform(example_session_data)
 
@@ -196,7 +196,7 @@ def test_session_encoder_multi_by_columns(example_session_data_multi_by):
     Total: 4 sessions
     """
     se = SessionEncoder(
-        group_by=["user_id", "device_id"],
+        split_by=["user_id", "device_id"],
         timestamp_col="timestamp",
         session_gap=30 * 60,
     )
@@ -251,7 +251,7 @@ def test_session_encoder_multiple_users(df_module):
     )
 
     se = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
     )
     result = se.fit_transform(df)
 
@@ -283,7 +283,7 @@ def test_session_encoder_time_gap_threshold(df_module):
 
     # With 20-minute gap: should create 2 sessions (split at 35-min gap)
     se_20 = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=20 * 60
+        split_by="user_id", timestamp_col="timestamp", session_gap=20 * 60
     )
     result_20 = se_20.fit_transform(df)
     session_ids_20 = sbd.to_list(sbd.col(result_20, "timestamp_session_id"))
@@ -291,7 +291,7 @@ def test_session_encoder_time_gap_threshold(df_module):
 
     # With 40-minute gap: should create 1 session (all gaps < 40 min)
     se_40 = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=40 * 60
+        split_by="user_id", timestamp_col="timestamp", session_gap=40 * 60
     )
     result_40 = se_40.fit_transform(df)
     session_ids_40 = sbd.to_list(sbd.col(result_40, "timestamp_session_id"))
@@ -301,7 +301,7 @@ def test_session_encoder_time_gap_threshold(df_module):
 def test_session_encoder_no_user_column(df_module):
     """Test sessionization without a user identifier column.
 
-    When ``group_by`` is None, all events are treated as from the same "user", and
+    When ``split_by`` is None, all events are treated as from the same "user", and
     sessions are separated only by time gaps.
     """
     timestamps = [
@@ -319,7 +319,7 @@ def test_session_encoder_no_user_column(df_module):
     )
 
     # Without 'group_by', sessions are separated only by time gaps
-    se = SessionEncoder(group_by=None, timestamp_col="timestamp", session_gap=30 * 60)
+    se = SessionEncoder(split_by=None, timestamp_col="timestamp", session_gap=30 * 60)
     result = se.fit_transform(df)
 
     session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
@@ -342,7 +342,7 @@ def test_session_encoder_single_event(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
     session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
@@ -360,7 +360,7 @@ def test_session_encoder_empty_dataframe(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
     assert sbd.shape(result)[0] == 0
@@ -392,7 +392,7 @@ def test_session_encoder_empty_dataframe(df_module):
             23,  # invalid type for 'group_by'
             "timestamp",
             TypeError,
-            "group_by must be a string, a list of strings, or None",
+            "split_by must be a string, a list of strings, or None",
         ),
     ],
 )
@@ -413,7 +413,7 @@ def test_session_encoder_missing_column_error(
     )
 
     se = SessionEncoder(
-        group_by=group_by_param,
+        split_by=group_by_param,
         timestamp_col=timestamp_col_param,
     )
     with pytest.raises(expected_error_type, match=expected_error_match):
@@ -431,28 +431,28 @@ def test_session_encoder_invalid_parameters(df_module):
 
     # Test non-numeric session_gap
     se_non_numeric = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap="thirty"
+        split_by="user_id", timestamp_col="timestamp", session_gap="thirty"
     )
     with pytest.raises(TypeError, match="Expected a number"):
         se_non_numeric.fit_transform(df)
 
     # Test negative session_gap
     se_negative = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=-10
+        split_by="user_id", timestamp_col="timestamp", session_gap=-10
     )
     with pytest.raises(ValueError, match="session_gap must be a positive number"):
         se_negative.fit_transform(df)
 
     # Test zero session_gap
     se_zero = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", session_gap=0
+        split_by="user_id", timestamp_col="timestamp", session_gap=0
     )
     with pytest.raises(ValueError, match="session_gap must be a positive number"):
         se_zero.fit_transform(df)
 
     # Test invalid suffix (None)
     se_invalid_suffix = SessionEncoder(
-        group_by="user_id", timestamp_col="timestamp", suffix=None
+        split_by="user_id", timestamp_col="timestamp", suffix=None
     )
     with pytest.raises(ValueError, match="Expected a string as suffix"):
         se_invalid_suffix.fit_transform(df)
@@ -471,7 +471,7 @@ def test_session_encoder_preserves_columns(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
     result_cols = sbd.column_names(result)
@@ -493,7 +493,7 @@ def test_session_encoder_fit_and_transform(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
 
     # Test fit returns self
     se_fitted = se.fit(df)
@@ -515,7 +515,7 @@ def test_get_feature_names(df_module):
         }
     )
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
     se.fit(df)
     feature_names = se.get_feature_names_out()
 
@@ -563,7 +563,9 @@ def test_check_is_new_session_no_by(df_module):
     )
     session_id = sbd.to_list(
         sbd.col(
-            _add_session_column(df, [], "timestamp", 30 * 60, suffix="session_id"),
+            _add_session_column(
+                df, [], "timestamp", 30 * 60, session_column_name="timestamp_session_id"
+            ),
             "timestamp_session_id",
         )
     )
@@ -618,7 +620,9 @@ def test_check_is_new_session_with_by(df_module):
             ],
         }
     )
-    result = _add_session_column(df, ["user_id"], "timestamp", 30 * 60, "session_id")
+    result = _add_session_column(
+        df, ["user_id"], "timestamp", 30 * 60, "timestamp_session_id"
+    )
 
     # _add_session_column now returns the full dataframe with session_id added
     assert "timestamp_session_id" in sbd.column_names(result)
@@ -649,11 +653,11 @@ def test_proper_suffix(timestamp, suffix, df_module):
     if suffix is None:
         with pytest.raises(ValueError, match="Expected a string as suffix*"):
             SessionEncoder(
-                timestamp_col=timestamp, group_by="user_id", suffix=suffix
+                timestamp_col=timestamp, split_by="user_id", suffix=suffix
             ).fit_transform(df)
     else:
         result = SessionEncoder(
-            timestamp_col=timestamp, group_by="user_id", suffix=suffix
+            timestamp_col=timestamp, split_by="user_id", suffix=suffix
         ).fit_transform(df)
         # _add_session_column now returns the full dataframe with session_id added
         expected_name = f"{timestamp}_{suffix}"
@@ -677,7 +681,7 @@ def test_session_encoder_preserves_input_order(df_module):
 
     df = df_module.make_dataframe({"timestamp": timestamps, "user_id": user_ids})
 
-    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
     # The user_id column must still be in the original order
@@ -691,10 +695,10 @@ def test_session_encoder_preserves_input_order(df_module):
     (
         partial(
             _add_session_column,
-            group_by=[],
+            split_by=[],
             timestamp_col="timestamp",
             session_gap=30,
-            suffix="_session_id",
+            session_column_name="timestamp_session_id",
         ),
         partial(_factorize_column, column_name="user_id"),
     ),
