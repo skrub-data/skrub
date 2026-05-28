@@ -274,6 +274,39 @@ class Selector:
                 matching_col_names.append(col_name)
         return matching_col_names
 
+    def drop(self, df):
+        """Apply the selector to a dataframe and return a dataframe without the \
+        selected columns.
+        Parameters
+        ----------
+        df : dataframe
+        Returns
+        -------
+        dataframe
+            The dataframe without the columns matched by the selector.
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from skrub import selectors as s
+        >>> selector = s.glob("*_mm")
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "height_mm": [210.0, 297.0],
+        ...         "width_mm": [188.5, 210.0],
+        ...         "kind": ["A5", "A4"],
+        ...         "ID": [5, 4],
+        ...     }
+        ... )
+        >>> selector.drop(df)
+           kind  ID
+        0    A5   5
+        1    A4   4
+        """
+        all_cols = sbd.column_names(df)
+        matched_cols = self.expand(df)
+        remaining_cols = [col for col in all_cols if col not in matched_cols]
+        return _select_col_names(df, remaining_cols)
+
     def expand_index(self, df):
         """Lists the indices of dataframe ``df``'s columns that the selector \
         would retain if applied to ``df``.
