@@ -44,10 +44,7 @@ def _add_session_column_pandas(
     # dividing by 10**9 because int64 is in ms, while session_gap is in seconds
     # as_unit("ns") is because the timestamp might be in a different unit (e.g. ms),
     # and we want to make sure it's in ns for the diff to work correctly
-    time_diff = (
-        X[timestamp_col].dt.as_unit("ns").astype("int64").diff().fillna(0) // 10**9
-        > session_gap
-    )
+    time_diff = X[timestamp_col].diff().dt.total_seconds().fillna(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
         group_diff = (X[split_by].diff().fillna(0) != 0).any(axis=1)
@@ -70,9 +67,7 @@ def _add_session_column_polars(
     # session_gap is in seconds
     # using ns for consistency with pandas, which uses ns for timestamps, and
     # to avoid issues with timestamps in different units
-    time_diff = (
-        X[timestamp_col].dt.epoch("ns").diff().fill_null(0) // 10**9 > session_gap
-    )
+    time_diff = X[timestamp_col].diff().dt.total_seconds().fill_null(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
         group_diff = X.select(
