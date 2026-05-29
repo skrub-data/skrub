@@ -11,6 +11,9 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
   provides an alternative for referring to a node, in the environment passed to
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
@@ -19,8 +22,13 @@ New Features
 
 Changes
 -------
-- Grouped Examples into three sections. :pr:`` by
+- Grouped Examples into three sections. :pr:`690` by
   :user:`Maureen Githaiga <maureen-githaiga>`.
+- An unnecessary warning that was raised when passing a numpy array to the
+  TableVectorizer has been removed. :pr:`1908` by
+  :user:`Sandrine Henry <sandrineh>`.
+- Improving the association tab error message when only one column is present
+  :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 
 Bugfixes
 --------

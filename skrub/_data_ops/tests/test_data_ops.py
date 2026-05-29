@@ -882,6 +882,35 @@ def test_get_vars():
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
 
 
+def test_set_data():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a + b
+    d = c.skb.set_data({"a": 1, "b": 2})
+    # the new dataop has been primed so its preview is already available
+    assert "3" in repr(d)
+    assert d.skb.preview() == 3
+    assert d.skb.get_data() == {"a": 1, "b": 2}
+    assert c.skb.get_data() == {}
+    # setting only part of the variables
+    assert d.skb.set_data({"a": 10}).skb.get_data() == {"a": 10, "b": 2}
+    # note below the new dataop has incomplete data so still no preview
+    assert c.skb.set_data({"a": 10}).skb.get_data() == {"a": 10}
+
+
+def test_set_data_errors():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a // b
+    assert c.skb.set_data({"a": 4, "b": 2}).skb.preview() == 2
+    # setting bad data
+    with pytest.raises(ValueError, match="no corresponding variable.*'x'"):
+        c.skb.set_data({"a": 4, "b": 2, "x": 3})
+    # errors in the preview computation are propagated
+    with pytest.raises(RuntimeError, match="(division|division or modulo) by zero"):
+        c.skb.set_data({"a": 4, "b": 0})
+
+
 @pytest.mark.parametrize("needs_data", [False, True])
 @pytest.mark.parametrize("has_preview", [False, True])
 @pytest.mark.parametrize("regression", [False, True])
