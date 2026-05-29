@@ -363,7 +363,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     dtype: object
 
     Columns can be excluded from processing by combining the ``Cleaner`` with
-    `:class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
+    :class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
     processing and keep it as a string, we can do:
 
     >>> from skrub import ApplyToCols
