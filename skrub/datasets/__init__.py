@@ -14,7 +14,13 @@ from ._fetching import (
     fetch_traffic_violations,
     fetch_videogame_sales,
 )
-from ._generating import make_deduplication_data, toy_cities, toy_orders, toy_products
+from ._generating import (
+    make_deduplication_data,
+    make_retail_events,
+    toy_cities,
+    toy_orders,
+    toy_products,
+)
 from ._utils import get_data_dir
 
 __all__ = [
@@ -34,6 +40,7 @@ __all__ = [
     "fetch_videogame_sales",
     "get_data_dir",
     "make_deduplication_data",
+    "make_retail_events",
     "toy_orders",
     "toy_products",
     "toy_cities",
