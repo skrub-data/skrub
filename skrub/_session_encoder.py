@@ -41,8 +41,11 @@ def _add_session_column_pandas(
     # astype(int64) is needed (rather than just int) because on windows this converts
     # to int32
     # check if the time difference between events exceeds the session gap
-    # dividing by 10**6 because int64 is in us, while session_gap is in seconds
-    time_diff = X[timestamp_col].astype("int64").diff().fillna(0) // 10**6 > session_gap
+    # dividing by 10**9 because int64 is in ms, while session_gap is in seconds
+    time_diff = (
+        X[timestamp_col].dt.as_unit("ns").astype("int64").diff().fillna(0) // 10**9
+        > session_gap
+    )
     if split_by:
         # check if the "split_by" column changes
         group_diff = (X[split_by].diff().fillna(0) != 0).any(axis=1)
@@ -61,11 +64,10 @@ def _add_session_column_polars(
     X, split_by, timestamp_col, session_gap, session_column_name
 ):
     # check if the time difference between events exceeds the session gap
-    # setting the time unit to "us" (microseconds) for consistency with pandas
-    # int64 representation of timestamps, and dividing by 10**6 because session_gap is
-    # in seconds
+    # setting the time unit to "ns" (nanoseconds), and dividing by 10**9 because
+    # session_gap is in seconds
     time_diff = (
-        X[timestamp_col].dt.epoch("us").diff().fill_null(0) // 10**6 > session_gap
+        X[timestamp_col].dt.epoch("ns").diff().fill_null(0) // 10**9 > session_gap
     )
     if split_by:
         # check if the "split_by" column changes
