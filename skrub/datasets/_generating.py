@@ -345,15 +345,13 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
             for ``SessionEncoder(timestamp_col="timestamp", ...)`` and
             :class:`~skrub.DatetimeEncoder`.
           - ``device_type`` : str — one of ``"mobile"``, ``"desktop"``,
-            ``"tablet"``; encode with :class:`~sklearn.preprocessing.OneHotEncoder`.
+            ``"tablet"``.
           - ``page_category`` : str — one of ``"electronics"``, ``"fashion"``,
-            ``"home"``, ``"sports"``, ``"books"``; encode with
-            :class:`~sklearn.preprocessing.OneHotEncoder`.
+            ``"home"``, ``"sports"``, ``"books"``.
           - ``event_type`` : str — one of ``"page_view"``, ``"search"``,
-            ``"add_to_cart"``, ``"wishlist"``; encode with
-            :class:`~sklearn.preprocessing.OneHotEncoder`.
+            ``"add_to_cart"``, ``"wishlist"``.
           - ``time_on_page`` : float — seconds spent on the page (exponential
-            distribution, mean ≈ 120 s).
+            distribution, mean ~ 120 s).
           - ``price_viewed`` : float — price of the item viewed (log-normal).
 
         - ``y`` : :class:`~pandas.Series` of bool, name ``"converted"`` — the
@@ -363,7 +361,7 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     --------
     >>> from skrub.datasets import make_retail_events
     >>> bunch = make_retail_events(n_users=20, n_events=100, random_state=0)
-    >>> bunch.X.shape[1]  # 7 feature columns; rows ≈ n_events
+    >>> bunch.X.shape[1]  # 7 feature columns; rows ~ n_events
     7
     >>> bunch.X.columns.tolist()
     ['user_id', 'timestamp', 'device_type', 'page_category', 'event_type', 'time_on_page', 'price_viewed']
@@ -381,12 +379,12 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     # a small number of users generate the bulk of the activity.
     activity_weights = rng.pareto(2.0, size=n_users) + 1.0
     activity_weights /= activity_weights.sum()
+    # The multinomial draw gives us the number of events per user, summing to n_events.
     events_per_user = rng.multinomial(n_events, activity_weights)
 
     # --- timestamps with realistic session structure ---------------------
     # Events form *sessions*: bursts of activity where consecutive events are
-    # only ~90 s apart, separated by long idle gaps (at least 2 h).  This
-    # structure is what SessionEncoder is designed to detect.
+    # only ~90 s apart, separated by long idle gaps (at least 2 h).
     #
     # For each user:
     #   1. Split their event budget into sessions of Poisson(3)+1 events.
@@ -407,6 +405,8 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
             continue
 
         # Split into sessions; each session has at least 1 event.
+        # The size of each session (number of events) is drawn from a Poisson
+        # distribution with mean 3, plus 1 to ensure at least one event per session.
         session_sizes = []
         remaining = int(n_user_events)
         while remaining > 0:
@@ -414,6 +414,7 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
             session_sizes.append(size)
             remaining -= size
 
+        # Number of sessions per user
         n_sessions = len(session_sizes)
 
         # Session start times: inter-session gaps drawn from Exponential so
@@ -457,9 +458,9 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     )
 
     # --- numerical features ----------------------------------------------
-    # time_on_page: seconds spent on page (heavy-tailed)
+    # time_on_page: seconds spent on page
     time_on_page = rng.exponential(scale=120.0, size=n_actual).round(1)
-    # price_viewed: item price in USD (log-normal, median ≈ e^3.5 ≈ 33)
+    # price_viewed: item price in USD (log-normal, median ~ e^3.5 ~ 33)
     price_viewed = np.exp(rng.normal(loc=3.5, scale=1.2, size=n_actual)).round(2)
 
     # --- assemble & sort -------------------------------------------------
@@ -480,8 +481,7 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
 
     # --- target: converted (bool), assigned per session ------------------
     # A session either converts or it does not — all events in a session
-    # share the same label.  This is the realistic framing: a checkout
-    # either happens in a session or it doesn't.
+    # share the same label.
     #
     # The conversion probability is a logistic function of session-level
     # summaries of observable features, so the model can learn it:
@@ -490,6 +490,8 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     #               (add_to_cart >> wishlist >> search >> page_view)
     #   device     : dominant device (desktop > tablet > mobile)
     #   price      : mean price viewed (expensive items convert less)
+
+    # First, add the weights corresponding to each feature to the event-level dataframe.
     event_intent = X["event_type"].map(
         {"add_to_cart": 2.0, "wishlist": 0.8, "search": 0.0, "page_view": -0.5}
     )
@@ -498,11 +500,17 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     )
     price_score_col = -0.2 * np.log1p(X["price_viewed"])
 
+    # Then, select only the session key and the relevant features
     tmp = X[["_session_key"]].assign(
         event_intent=event_intent,
         device_score=device_score_col,
         price_score=price_score_col,
     )
+    # Now aggregate at the session level.
+    # - For event_intent, we take the max to get the most purchase-intent event in
+    # the session.
+    # - For device_score and price_score, we take the mean across events in the session
+    # Then, to get a single session-level logit, we sum the three aggregated features.
     session_logits = (
         tmp.groupby("_session_key")
         .agg(
@@ -517,12 +525,21 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     # consistent within a session.
     unique_keys = session_logits.index.tolist()
     noise = dict(zip(unique_keys, rng.normal(0.0, 0.5, size=len(unique_keys))))
+    # add the noise to the session logits, then apply the logistic function to get a
+    # conversion probability per session, then draw the binary label from a Bernoulli.
+    # For every session key k, session_prob[k] is the conversion probability of
+    # that session, and session_converted[k] is the binary label indicating whether
+    # that session converted or not.
     session_prob = {
         k: 1.0 / (1.0 + np.exp(-(session_logits[k] + noise[k]))) for k in unique_keys
     }
     session_converted = {k: bool(rng.binomial(1, session_prob[k])) for k in unique_keys}
 
+    # Finally, get the label for each event by mapping its session key to the
+    # session_converted dict. This is our y
     y = X["_session_key"].map(session_converted).rename("converted").astype(bool)
+    # Drop the session key (the SessionEncoder should be able to recover it from
+    # user_id and timestamp)
     X = X.drop(columns=["_session_key"])
 
     return Bunch(X=X, y=y)
