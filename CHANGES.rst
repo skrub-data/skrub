@@ -32,6 +32,10 @@ Bugfixes
 Deprecations
 ------------
 
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`.
+  This parameter will be removed in a future release.
+
 
 Release 0.9.0
 =============
