@@ -114,8 +114,10 @@ class TableReport:
     order_by : str, deprecated
         Deprecated. Column name to use for sorting. Other numerical columns
         will be plotted as function of the sorting column. Must be of
-        numerical or datetime type. Prefer sorting the dataframe prior to
-        creating the report (e.g. ``df.sort_values('col')``).
+        numerical or datetime type.
+
+        .. deprecated:: 0.10.0
+
     title : str
         Title for the report.
     column_filters : dict
@@ -280,8 +282,7 @@ class TableReport:
         if order_by is not None:
             warnings.warn(
                 "'order_by' parameter of TableReport is deprecated and will be"
-                " removed in a future version. Sort your dataframe before passing"
-                " it to TableReport (e.g. df.sort_values('col')).",
+                " removed in a future version.",
                 DeprecationWarning,
                 stacklevel=2,
             )
