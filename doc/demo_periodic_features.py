@@ -8,6 +8,7 @@ The plot was added in https://github.com/skrub-data/skrub/pull/1924
 Thyng, K. M., Greene, C. A., Hetland, R. D., Zimmerle, H. M., & DiMarco, S. F. (2016).
 True colors of oceanography. Oceanography, 29(3), 10.
 
+To reproduce, install the cmocean package and use the following colormap:
 cmap = cmocean.cm.thermal
 
 link: http://tos.org/oceanography/assets/docs/29-3_thyng.pdf
