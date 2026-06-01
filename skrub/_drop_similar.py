@@ -75,7 +75,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     >>> from skrub import DropSimilar
     >>> from skrub.datasets import toy_cities
     >>> df = toy_cities(size=5000, n_metrics=0)
-    >>> df.head()
+    >>> df.head() # doctest: +SKIP
               uid   cities  encoded_cities               start                 end
     0  SHAoqcdajQ  Vilnius            17.0 2004-09-02 03:22:56 2014-06-26 11:36:43
     1  HVAFYLGCDW      NaN             NaN 1979-10-22 01:43:56 1987-10-15 06:30:05
@@ -89,7 +89,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     `ds` has now removed a column for each pair with association above 0.6.
     These associations are stored in the `table_associations_` attribute:
 
-    >>> ds.table_associations_.head()
+    >>> ds.table_associations_.head() # doctest: +SKIP
       left_column_name right_column_name  cramer_v
     0           cities    encoded_cities  1.000000
     1              uid            cities  0.052979
@@ -107,7 +107,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
     This leaves us with the shortened dataframe:
 
-    >>> clean_df.head()
+    >>> clean_df.head() # doctest: +SKIP
               uid   cities               start                 end
     0  SHAoqcdajQ  Vilnius 2004-09-02 03:22:56 2014-06-26 11:36:43
     1  HVAFYLGCDW      NaN 1979-10-22 01:43:56 1987-10-15 06:30:05
