@@ -74,14 +74,14 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     --------
     >>> from skrub import DropSimilar
     >>> from skrub.datasets import toy_cities
-    >>> df = toy_cities(size=10)
+    >>> df = toy_cities(size=5000)
     >>> df.head()
-            uid   cities  encoded_cities    ...  metric_3
-    0  SHAoqcdajQ     Rome            13.0  ...  0.016102
-    1  HVAFYLGCDW  Vilnius            17.0  ...  0.773668
-    2  oQIauSCbNL   Madrid             9.0  ...  0.471049
-    3  SjeSbCepzv     Rome            13.0  ...  0.406865
-    4  ubagaIBHnG    Sofia            14.0  ...  0.666826
+              uid   cities  encoded_cities  ...  metric_3
+    0  SHAoqcdajQ  Vilnius            17.0  ...  0.202946
+    1  HVAFYLGCDW      NaN             NaN  ...  0.161701
+    2  oQIauSCbNL     Rome            13.0  ...  0.674011
+    3  SjeSbCepzv  Vilnius            17.0  ...  0.534058
+    4  ubagaIBHnG   London             8.0  ...  0.982400
     >>> ds = DropSimilar(threshold=0.8)
     >>> clean_df = ds.fit_transform(df)
 
@@ -89,12 +89,12 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     These associations are stored in the `table_associations_` attribute:
 
     >>> ds.table_associations_.head()
-    left_column_name right_column_name  cramer_v
+      left_column_name right_column_name  cramer_v
     0           cities    encoded_cities  1.000000
-    1              uid    encoded_cities  0.110980
-    2              uid            cities  0.110980
-    3         metric_0          metric_3  0.102975
-    4              uid               end  0.102827
+    1              uid    encoded_cities  0.052979
+    2              uid            cities  0.052979
+    3              end          metric_1  0.050453
+    4           cities          metric_2  0.047520
 
     A single pair is above the threshold, `cities` and `encoded_cities`,
     with an association score of 1. Since one is an encoding of the other,
@@ -107,12 +107,12 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     This leaves us with the shortened dataframe:
 
     >>> clean_df
-            uid   cities    ...  metric_3
-    0  SHAoqcdajQ     Rome  ...  0.016102
-    1  HVAFYLGCDW  Vilnius  ...  0.773668
-    2  oQIauSCbNL   Madrid  ...  0.471049
-    3  SjeSbCepzv     Rome  ...  0.406865
-    4  ubagaIBHnG    Sofia  ...  0.666826
+              uid   cities  ...  metric_3
+    0  SHAoqcdajQ  Vilnius  ...  0.202946
+    1  HVAFYLGCDW      NaN  ...  0.161701
+    2  oQIauSCbNL     Rome  ...  0.674011
+    3  SjeSbCepzv  Vilnius  ...  0.534058
+    4  ubagaIBHnG   London  ...  0.982400
     """  # noqa: E501
 
     def __init__(self, threshold=0.8):
