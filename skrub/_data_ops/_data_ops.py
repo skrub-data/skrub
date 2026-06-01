@@ -37,6 +37,7 @@ import re
 import textwrap
 import traceback
 import types
+import uuid
 import warnings
 
 import numpy as np
@@ -252,6 +253,14 @@ class DataOpImpl:
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
+            # The uuid is like an auto-generated name. It behaves like the name
+            # (must be unique within a dataop, is preserved by clone, ...) and
+            # is used for the same things (find a node, inject a value for its
+            # output in the environment). It is less explicit / reliable but
+            # always available.
+            # It is not used internally for example to discover the graph
+            # topology: we rely on actual Python object ids for this.
+            self.uuid = uuid.uuid4().int
             self.description = None
             self.checked = False
 
@@ -264,6 +273,7 @@ class DataOpImpl:
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
+        new.uuid = self.uuid
         new.description = self.description
         new.checked = False
         return new
@@ -395,12 +405,12 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         if allow_skipping and not _config.get_config().get("eager_data_ops", True):
             return data_op
 
-        if not data_op._skrub_impl.checked:
-            try:
-                func_name = data_op._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
+        try:
+            func_name = data_op._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
 
+        if not data_op._skrub_impl.checked:
             conflicts = find_conflicts(data_op)
             if conflicts is not None:
                 raise ValueError(conflicts["message"])
@@ -733,9 +743,7 @@ class DataOp:
             graph = strip_xml_declaration(graph)
             has_graph = True
         except Exception:
-            graph = (
-                "Please install Pydot and GraphViz to display the computation graph."
-            )
+            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
             has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:

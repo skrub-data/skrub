@@ -40,6 +40,7 @@ from ._evaluation import (
     evaluate,
     find_node,
     find_node_by_name,
+    find_node_by_uuid,
     find_X_y_and_cv,
     nodes,
 )
@@ -1012,6 +1013,11 @@ class SkrubNamespace:
             estimators) or cache with the original, and possibly without the
             variables' values.
 
+        See Also
+        --------
+        DataOp.skb.set_data
+            Set the initial (preview) values for variables contained in the DataOp.
+
         Examples
         --------
         >>> import skrub
@@ -1241,6 +1247,14 @@ class SkrubNamespace:
         dict mapping variable names to their values
             Variables for which no value was given do not appear in the result.
 
+        See Also
+        --------
+        DataOp.skb.get_vars
+            Obtain the variables (the ``skrub.var()`` objects) themselves.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
+
         Examples
         --------
         >>> import skrub
@@ -1259,6 +1273,124 @@ class SkrubNamespace:
             if isinstance(impl, Var) and impl.value is not NULL:
                 data[impl.name] = impl.value
         return data
+
+    @checked_data_op_constructor
+    def set_data(self, data):
+        """
+        Get a new DataOp with the provided preview values set on the variables.
+
+        Returns
+        -------
+        DataOp
+            A clone of the original DataOp, with the values in ``data`` used
+            as the preview values for the corresponding variables.
+
+        See Also
+        --------
+        DataOp.skb.get_data
+            Obtain the preview values currently set on the variables.
+
+        DataOp.skb.get_vars
+            Obtain the variables (the ``skrub.var()`` objects) themselves.
+
+        DataOp.skb.clone
+            Obtain an independent clone of the DataOp, which does not contain
+            any computed preview results. The parameter ``drop_values``
+            controls whether the values set on variables (if any) should be
+            kept.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a')
+        >>> b = skrub.var('b')
+        >>> c = a + b
+
+        We have initialized our variables without any value, there is no preview
+        result available for our DataOp ``c``:
+
+        >>> c
+        <BinOp: add>
+        >>> c * 2
+        <BinOp: mul>
+
+        As usual, we can evaluate ``c``, passing values for the variables it
+        contains:
+
+        >>> c.skb.eval({'a': 1, 'b': 2})
+        3
+
+        But suppose we want to start working in a more interactive fashion and would
+        benefit from preview computations that run whenever we use our DataOp, without
+        needing to explicitly call ``eval``. We can inject values into the existing
+        DataOp.
+
+        >>> d = c.skb.set_data({'a': 1, 'b': 2})
+        >>> d
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+        >>> d * 2
+        <BinOp: mul>
+        Result:
+        ―――――――
+        6
+
+        (Note that ``set_data`` returns a new DataOp (``d``) and leaves the
+        original one (``c``) unchanged.)
+
+        DataOps that use ``d`` can compute previews of the results because unlike ``c``,
+        ``d`` has values for its variables:
+
+        >>> c.skb.get_data()
+        {}
+        >>> d.skb.get_data()
+        {'a': 1, 'b': 2}
+
+        If the DataOp already contained preview values, they are replaced by
+        the provided ones. If we pass values for only some of the variables,
+        any already-existing values for the other variables are kept:
+
+        >>> e = d.skb.set_data({'a': 10})
+        >>> e.skb.get_data()
+        {'a': 10, 'b': 2}
+        >>> e
+        <BinOp: add>
+        Result:
+        ―――――――
+        12
+
+        If we want to drop the values attached to variables we can use
+        :meth:`DataOp.skb.clone`. By default it drops values (we can pass
+        ``drop_values=False`` to prevent that).
+
+        >>> f = e.skb.clone()
+        >>> f
+        <BinOp: add>
+        >>> f.skb.get_data()
+        {}
+
+        When we call ``set_data``, passing keys in ``data`` that do not have a
+        corresponding variable in the DataOp is an error.
+
+        >>> f.skb.set_data({'x': 0})
+        Traceback (most recent call last):
+            ...
+        ValueError: The following keys were passed to set_data but have no corresponding variable in the DataOp: ['x']
+        """  # noqa: E501
+        new = self.clone(drop_values=False)
+        new_vars = new.skb.get_vars()
+        bad_keys = [k for k in data if k not in new_vars]
+        if bad_keys:
+            raise ValueError(
+                "The following keys were passed to set_data "
+                f"but have no corresponding variable in the DataOp: {bad_keys}"
+            )
+        for name, var in new_vars.items():
+            if name in data:
+                var._skrub_impl.value = data[name]
+        return new
 
     @_check_before
     def get_vars(self, all_named_ops=False):
@@ -1282,6 +1414,9 @@ class SkrubNamespace:
         --------
         DataOp.skb.get_data :
             Get the values of the variables contained in the DataOp.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
 
         DataOp.skb.set_name :
             Assign a name to a DataOp.
@@ -1361,7 +1496,7 @@ class SkrubNamespace:
         }
 
     @_check_before
-    def draw_graph(self):
+    def draw_graph(self, *, show_ids=False):
         """Get an SVG string representing the computation graph.
 
         In addition to the usual ``str`` methods, the result has an ``open()``
@@ -1376,7 +1511,7 @@ class SkrubNamespace:
            display it in a browser window.
         """
 
-        return draw_data_op_graph(self._data_op)
+        return draw_data_op_graph(self._data_op, show_ids=show_ids)
 
     @_check_before
     def describe_steps(self):
@@ -3201,6 +3336,73 @@ class SkrubNamespace:
         """
         return self._data_op._skrub_impl.description
 
+    @property
+    def id(self):
+        """
+        A unique ID for this DataOp.
+
+        The ID is generated when the DataOp is defined and preserved when
+        serializing, copying or cloning the DataOp. It can be used to look up a
+        specific node with :meth:`DataOp.skb.find` or override its computation
+        by using the ID as a key in the environment passed, for example, to
+        :meth:`DataOp.skb.eval` or :meth:`SkrubLearner.predict`.
+
+        Usually, giving a node an explicit name with
+        :meth:`DataOp.skb.set_name` if preferred than relying on the ID, but
+        the ID can be useful if you do not control the definition of the DataOp
+        or if you have an already-fitted SkrubLearner and want to override a
+        node which was not given a name.
+
+        See Also
+        --------
+        DataOp.skb.set_name
+            Set a name for the DataOp. In most cases using a name is preferred
+            to relying on the ID.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var("a")
+        >>> b = skrub.var("b")
+        >>> c = skrub.var("c")
+        >>> d = a + b
+        >>> d
+        <BinOp: add>
+        >>> d.skb.id #  doctest: +SKIP
+        244252108859391526605448044030022310698
+        >>> e = d * c
+        >>> e.skb.find(d.skb.id)
+        <BinOp: add>
+        >>> env = {"a": 1, "b": 2, "c": 5}
+        >>> e.skb.eval(env)  # (1 + 2) * 5
+        15
+
+        Override the computation of d, injecting 100 as its value:
+
+        >>> e.skb.eval(env | {d.skb.id: 100})  # 100 * 5
+        500
+
+        Note: the preferred way to refer to a node is to rely on an
+        explicit name rather than the ID:
+
+        >>> d = (a + b).skb.set_name("d")
+        >>> d.skb.name
+        'd'
+        >>> e = d * c
+        >>> e.skb.find("d")
+        <d | BinOp: add>
+        >>> e.skb.eval(env | {"d": 100})  # 100 * 5
+        500
+        """
+        return self._data_op._skrub_impl.uuid
+
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
@@ -3281,9 +3483,11 @@ class SkrubNamespace:
 
         Parameters
         ----------
-        what : str or callable
+        what : str, int or callable
             - If a string, it is the name (set with
               :meth:`DataOp.skb.set_name`) of the node to search for.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
             - If a callable, it is the search predicate: it accepts a DataOp
               and returns a Boolean. The first node for which it returns True
               is returned.
@@ -3303,6 +3507,12 @@ class SkrubNamespace:
 
         SkrubLearner.truncated_after
             Truncate the (possibly fitted) SkrubLearner after the specified node.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
 
         Examples
         --------
@@ -3392,13 +3602,20 @@ class SkrubNamespace:
         [4 rows x 9 columns]
         >>> found is vectorized
         True
+
+        When no matching node is found, ``None`` is returned:
+
+        >>> print(pred.skb.find('does not exist'))
+        None
         """
         if not isinstance(what, DataOp) and callable(what):
             return find_node(self._data_op, what)
         if isinstance(what, str):
             return find_node_by_name(self._data_op, what)
+        if isinstance(what, int):
+            return find_node_by_uuid(self._data_op, what)
         raise TypeError(
-            "what should either be a string or a callable accepting a "
+            "what should either be a string, an int or a callable accepting a "
             f"DataOp and returning a Boolean, got object of type: {type(what)}."
         )
 

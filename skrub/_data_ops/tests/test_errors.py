@@ -188,6 +188,12 @@ def test_duplicate_y():
         skrub.y() + skrub.var("a").skb.mark_as_y()
 
 
+def test_duplicate_id():
+    a = skrub.as_data_op(0)
+    with pytest.raises(ValueError, match="Node IDs must be unique"):
+        a + a.skb.clone()
+
+
 def test_2_scoring_nodes():
     with pytest.raises(ValueError, match=r".*can only contain one scoring node"):
         skrub.X().skb.apply(DummyClassifier(), y=skrub.y()).skb.with_scoring(

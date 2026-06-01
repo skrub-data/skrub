@@ -124,9 +124,11 @@ class TableReport:
         formats for the filter values are a list of column names,
         a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
-    verbose : int, default = 1
+    verbose : int, default = None
         Whether to print progress information while the report is being generated.
 
+        * verbose = ``None`` uses the global configuration (see :func:`set_config`),
+          which then defaults to 1.
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
     plot_distributions : bool or "auto", default="auto"
