@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from skrub._drop_similar import DropSimilar
+from skrub._drop_similar import DropSimilar, _filter_associations
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 _THRESHOLD_ERROR = "Threshold must be a number between 0 and 1"
@@ -84,6 +84,40 @@ def test_drop_similar(table_with_associations, threshold, result):
     kept_cols = list(ds.get_feature_names_out())
     assert kept_cols == resulting_columns
     assert resulting_columns == result
+
+
+def test_fit_transform(table_with_associations):
+    ds = DropSimilar()
+    res_fit_transform = ds.fit_transform(table_with_associations)
+    ds.fit(table_with_associations)
+    res_transform = ds.transform(table_with_associations)
+    fit_transform_columns = list(res_fit_transform.columns)
+    transform_columns = list(res_transform.columns)
+    assert fit_transform_columns == transform_columns
+
+
+@pytest.mark.parametrize(
+    "threshold, result",
+    [
+        (1.0, [1.0]),
+        (0.4, [1.0, 0.5]),
+        (0, [1.0, 0.5, 0.1]),
+    ],
+)
+def test_filter_associations(df_module, threshold, result):
+    df_associations = df_module.make_dataframe(
+        {
+            "left_column_name": ["a", "b", "a"],
+            "left_column_idx": [0, 1, 0],
+            "right_column_name": ["b", "c", "c"],
+            "right_column_idx": [1, 2, 2],
+            "cramer_v": [1.0, 0.5, 0.1],
+            "pearson_corr": [None, None, None],
+        }
+    )
+
+    df_filtered = _filter_associations(df_associations, threshold)
+    assert list(df_filtered["cramer_v"]) == result
 
 
 @skip_polars_installed_without_pyarrow
