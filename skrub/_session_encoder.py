@@ -159,7 +159,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> from skrub import SessionEncoder
     >>> from datetime import datetime, timedelta
     >>> encoder = SessionEncoder(
-    ...     split_by='user_id', timestamp_col='timestamp', session_gap=30 * 60
+    ...     split_by='user_id', timestamp_col='timestamp'
     ... )
     >>> data = {
     ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
@@ -205,7 +205,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> encoder_multi = SessionEncoder(
     ...     split_by=['user_id', 'device_id'],
     ...     timestamp_col='timestamp',
-    ...     session_gap=30 * 60
     ... )
     >>> data_multi = {
     ...     'user_id': [1, 1, 1, 1, 2, 2],
@@ -250,7 +249,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     >>> encoder_no_split = SessionEncoder(
     ...     split_by=None,
     ...     timestamp_col='timestamp',
-    ...     session_gap=30 * 60
     ... )
     >>> data_no_split = {
     ...     'timestamp': [
@@ -277,6 +275,25 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     - Events at 10:00, 10:10, and 10:15 form session 0 (all gaps < 30 min).
     - The event at 11:00 starts a new session 1 (45 min gap > 30 min).
     - The event at 11:10 continues session 1 (10 min gap < 30 min).
+
+    It is possible to change the duration of the session gap by setting the
+    ``session_gap`` parameter. For example, we can set it to 5 minutes (300 seconds)
+    instead of the default 30 minutes, and this will change the session assignments
+    accordingly:
+
+    >>> encoder_new_gap = SessionEncoder(
+    ...     split_by=None,
+    ...     timestamp_col='timestamp',
+    ...     session_gap=300
+    ... )
+    >>> result_new_gap = encoder_new_gap.fit_transform(df_no_split)
+    >>> result_new_gap
+                timestamp event_type  timestamp_session_id
+    0 2024-01-01 10:00:00      start                     0
+    1 2024-01-01 10:10:00     action                     1
+    2 2024-01-01 10:15:00     action                     1
+    3 2024-01-01 11:00:00    restart                     2
+    4 2024-01-01 11:10:00     action                     3
 
     It is also possible to change the suffix that is added at the end of the session
     ID column via the "suffix" parameter. This is useful, for example, if you want
