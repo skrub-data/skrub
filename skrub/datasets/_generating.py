@@ -339,11 +339,8 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
 
         - ``X`` : :class:`~pandas.DataFrame` with columns:
 
-          - ``user_id`` : str — user identifier, suitable for
-            ``SessionEncoder(split_by="user_id", ...)``.
-          - ``timestamp`` : :class:`~pandas.Timestamp` — event time, suitable
-            for ``SessionEncoder(timestamp_col="timestamp", ...)`` and
-            :class:`~skrub.DatetimeEncoder`.
+          - ``user_id`` : str — user identifier.
+          - ``timestamp`` : :class:`~pandas.Timestamp` — event time.
           - ``device_type`` : str — one of ``"mobile"``, ``"desktop"``,
             ``"tablet"``.
           - ``page_category`` : str — one of ``"electronics"``, ``"fashion"``,
