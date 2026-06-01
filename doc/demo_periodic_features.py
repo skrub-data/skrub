@@ -25,7 +25,7 @@ from polars import selectors as cs
 
 from skrub import DatetimeEncoder
 
-plt.rcParams.update({"font.size": 20})  # Set to your desired font size
+plt.rcParams.update({"font.size": 25})  # Set to your desired font size
 # %%
 # Defining a separate dataframe for each range for better control on the x-axis ticks
 
