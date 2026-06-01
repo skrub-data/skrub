@@ -113,7 +113,7 @@ titlefontsize = 38
 fig, axs = plt.subplots(
     4,
     1,
-    figsize=(20, 15),
+    figsize=(18, 12),
     layout="constrained",
 )
 
