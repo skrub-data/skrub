@@ -18,15 +18,17 @@ This example shows how to use |SessionEncoder| in a skrub DataOps workflow to
 create session-level features (sessionization) for conversion prediction, that is
 predicting whether a user session will eventually lead to a purchase.
 
-**What is sessionization?**
+.. note::
 
-Sessionization is the process of grouping a sequence of events (like user
-interactions) into meaningful sessions. A session typically starts fresh or
-after a period of inactivity. For example, in an online retail context, you
-might define a new session whenever more than 30 minutes pass with no activity
-from a user. This allows you to extract session-level features (like the total
-number of events in a session or the dominant device type used) which often have
-greater predictive power than raw individual events.
+    **What is sessionization?**
+
+    Sessionization is the process of grouping a sequence of events (like user
+    interactions) into meaningful sessions. A session typically starts fresh or
+    after a period of inactivity. For example, in an online retail context, you
+    might define a new session whenever more than 30 minutes pass with no activity
+    from a user. This allows you to extract session-level features (like the total
+    number of events in a session or the dominant device type used) which often have
+    greater predictive power than raw individual events.
 
 We will:
 
@@ -41,32 +43,35 @@ purchase event or not.
 """
 
 # %%
-import skrub
-from skrub.datasets import make_retail_events
+# %%
+# Since this is temporal data, we use a time-aware CV strategy with
+# |TimeSeriesSplit| to avoid leakage. We reuse the same splitter for all evaluations.
+from sklearn.model_selection import TimeSeriesSplit
+
+splitter = TimeSeriesSplit(n_splits=5)
 
 # %%
 # We begin by generating the data with |make_retail_events| and marking feature
 # and target data with |skrub.X| and |skrub.y| so they can be used
 # in a DataOps workflow.
 
+import skrub
+from skrub.datasets import make_retail_events
+
 events = make_retail_events(n_users=20, n_events=5000, random_state=0)
 X, y = skrub.X(events.X), skrub.y(events.y)
 X
 # %%
-# As a sanity check, evaluate a |DummyClassifier| on the original event data
-# (without session features).  Since it's a DummyClassifier, we expect
+# Sanity check: evaluate a DummyClassifier on raw event data
+# ---------------------------------------------------------------
+# We begin by evaluating a |DummyClassifier| on the original event data
+# (without session features).  Since it's a |DummyClassifier|, we expect
 # chance-level performance (ROC-AUC of 0.5).
 from sklearn.dummy import DummyClassifier
 
 dummy = DummyClassifier(strategy="most_frequent")
 dummy_pred = X.skb.apply(dummy, y=y)
 dummy_learner = dummy_pred.skb.make_learner()
-# %%
-# Because this is temporal data, we use a time-aware CV strategy with
-# |TimeSeriesSplit| to avoid leakage. We reuse the same splitter for all evaluations.
-from sklearn.model_selection import TimeSeriesSplit
-
-splitter = TimeSeriesSplit(n_splits=5)
 dummy_results = skrub.cross_validate(
     dummy_learner, environment=dummy_pred.skb.get_data(), cv=splitter, scoring="roc_auc"
 )
@@ -97,7 +102,7 @@ print(f"ROC-AUC without session encoding: {results['test_score'].mean():.3f}")
 # that raw event-level features are not sufficient for good conversion prediction.
 # This baseline is limited because it cannot directly use session-level behavior
 # (for example, whether "add_to_cart" happened in the same session).
-#
+
 # %%
 # A better approach: session encoding and aggregation
 # ------------------------------------------------------
@@ -119,21 +124,24 @@ X_sessions
 # ``timestamp_session_id`` identifies the session of each event.
 # We use it to compute session-level aggregates and join them back to event-level rows.
 #
-# We will compute the following session-level features:
+# .. admonition:: Session-level feature engineering
+#    :collapsible: closed
 #
-# - ``session_has_add_to_cart``: whether the session includes at least one "add_to_cart"
-#   event
-# - ``session_n_events``: the total number of events in the session
-# - ``session_mean_price``: the mean price viewed during the session
-# - ``session_dominant_device``: the most frequently used device type in the session
-# - ``event_rank_in_session``: the rank of the event within its session (0 for the
-#   first event, 1 for the second, etc.)
-# - ``is_last_event_in_session``: whether the event is the last event in its session
+#    We will compute the following session-level features:
 #
-# We also compute one user-level historical feature after sorting by timestamp:
+#    - ``session_has_add_to_cart``: whether the session includes at least one
+#      "add_to_cart" event
+#    - ``session_n_events``: the total number of events in the session
+#    - ``session_mean_price``: the mean price viewed during the session
+#    - ``session_dominant_device``: the most frequently used device type in the session
+#    - ``event_rank_in_session``: the rank of the event within its session (0 for the
+#      first event, 1 for the second, etc.)
+#    - ``is_last_event_in_session``: whether the event is the last event in its session
 #
-# - ``time_since_last_event``: the time in seconds since the previous event for the
-#   same user (NaN for the first event of each user)
+#    We also compute one user-level historical feature after sorting by timestamp:
+#
+#    - ``time_since_last_event``: the time in seconds since the previous event for the
+#      same user (NaN for the first event of each user)
 
 
 def most_frequent(series):
@@ -194,9 +202,12 @@ results_enriched = skrub.cross_validate(
 print(f"ROC-AUC with session encoding: {results_enriched['test_score'].mean():.3f}")
 
 # %%
-# The enriched model should outperform the baseline, showing the value of
+# The enriched model clearly outperforms the baseline, showing the value of
 # session-level context for conversion prediction.
-#
+
+# %%
+# Discussion
+# -----------
 # In DataOps, these aggregations are evaluated with temporal ordering in mind,
 # which helps prevent leakage: features for an event are computed only from data
 # available up to that event timestamp (provided that the correct splitter is used).
