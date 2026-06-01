@@ -74,14 +74,14 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     --------
     >>> from skrub import DropSimilar
     >>> from skrub.datasets import toy_cities
-    >>> df = toy_cities(size=5000)
+    >>> df = toy_cities(size=5000, n_metrics=0)
     >>> df.head()
-              uid   cities  encoded_cities  ...  metric_1  metric_2  metric_3
-    0  SHAoqcdajQ  Vilnius            17.0  ...  0.243604  0.064329  0.202946
-    1  HVAFYLGCDW      NaN             NaN  ...  0.019476  0.012149  0.161701
-    2  oQIauSCbNL     Rome            13.0  ...  0.889626  0.844165  0.674011
-    3  SjeSbCepzv  Vilnius            17.0  ...  0.623557  0.340779  0.534058
-    4  ubagaIBHnG   London             8.0  ...  0.728491  0.283959  0.982400
+              uid   cities  encoded_cities               start                 end
+    0  SHAoqcdajQ  Vilnius            17.0 2004-09-02 03:22:56 2014-06-26 11:36:43
+    1  HVAFYLGCDW      NaN             NaN 1979-10-22 01:43:56 1987-10-15 06:30:05
+    2  oQIauSCbNL     Rome            13.0 1986-08-09 19:01:10 2002-04-06 03:56:09
+    3  SjeSbCepzv  Vilnius            17.0 2008-11-26 15:57:13 2021-11-16 23:16:13
+    4  ubagaIBHnG   London             8.0 1982-09-13 20:54:54 2000-12-02 07:36:41
 
     >>> ds = DropSimilar(threshold=0.8)
     >>> clean_df = ds.fit_transform(df)
@@ -92,10 +92,10 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     >>> ds.table_associations_.head()
       left_column_name right_column_name  cramer_v
     0           cities    encoded_cities  1.000000
-    1              uid    encoded_cities  0.052979
-    2              uid            cities  0.052979
-    3              end          metric_1  0.050453
-    4           cities          metric_2  0.047520
+    1              uid            cities  0.052979
+    2              uid    encoded_cities  0.052979
+    3   encoded_cities               end  0.046455
+    4           cities               end  0.046455
 
     A single pair is above the threshold, `cities` and `encoded_cities`,
     with an association score of 1. Since one is an encoding of the other,
@@ -108,12 +108,12 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     This leaves us with the shortened dataframe:
 
     >>> clean_df.head()
-                 uid     cities               start  ...  metric_1  metric_2  metric_3
-    0     SHAoqcdajQ    Vilnius 2004-09-02 03:22:56  ...  0.243604  0.064329  0.202946
-    1     HVAFYLGCDW        NaN 1979-10-22 01:43:56  ...  0.019476  0.012149  0.161701
-    2     oQIauSCbNL       Rome 1986-08-09 19:01:10  ...  0.889626  0.844165  0.674011
-    3     SjeSbCepzv    Vilnius 2008-11-26 15:57:13  ...  0.623557  0.340779  0.534058
-    4     ubagaIBHnG     London 1982-09-13 20:54:54  ...  0.728491  0.283959  0.982400
+              uid   cities               start                 end
+    0  SHAoqcdajQ  Vilnius 2004-09-02 03:22:56 2014-06-26 11:36:43
+    1  HVAFYLGCDW      NaN 1979-10-22 01:43:56 1987-10-15 06:30:05
+    2  oQIauSCbNL     Rome 1986-08-09 19:01:10 2002-04-06 03:56:09
+    3  SjeSbCepzv  Vilnius 2008-11-26 15:57:13 2021-11-16 23:16:13
+    4  ubagaIBHnG   London 1982-09-13 20:54:54 2000-12-02 07:36:41
     """  # noqa: E501
 
     def __init__(self, threshold=0.8):
