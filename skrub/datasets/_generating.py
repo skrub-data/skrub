@@ -272,9 +272,7 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     df_cities = pd.DataFrame(d)
 
     # `cities` gets assigned null values, and the ordinal encoder is run.
-    p = rng.uniform(0, 1, size=size)
-    df_cities["cities"] = df_cities["cities"].where(p >= nulls)
-    df_cities["encoded_cities"] = OrdinalEncoder().fit_transform(df_cities[["cities"]])
+    p_cities = rng.uniform(0, 1, size=size)
 
     # Next, the "start" and "end" datetime columns are constructed.
     s = rng.integers(0, int(now), size=size)
@@ -287,13 +285,16 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     else:
         df_dates = df_dates.applymap(datetime.fromtimestamp)
     # As above, "end" sees some of its values set to null.
-    p = rng.uniform(0, 1, size=size)
-    df_dates["end"] = df_dates["end"].where(p >= nulls)
+    p_end = rng.uniform(0, 1, size=size)
+    df_dates["end"] = df_dates["end"].where(p_end >= nulls)
 
     # Finally, constructing as many "metrics" float columns as specified.
     metric_cols = [f"metric_{k}" for k in range(n_metrics)]
     metrics_array = rng.random(size=(size, n_metrics))
     df_metrics = pd.DataFrame(metrics_array, columns=metric_cols)
+
+    df_cities["cities"] = df_cities["cities"].where(p_cities >= nulls)
+    df_cities["encoded_cities"] = OrdinalEncoder().fit_transform(df_cities[["cities"]])
 
     df = pd.concat((df_cities, df_dates, df_metrics), axis=1)
 
