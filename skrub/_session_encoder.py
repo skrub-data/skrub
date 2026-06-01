@@ -3,7 +3,7 @@ The SessionEncoder is a transformer that takes as input:
 - a "timestamp" column, which identifies the time of an event
 - a "by" column or list of columns, which identifies a user
 - a "session_gap" value, which identifies the maximum allowed gap in seconds
-between events in a session
+  between events in a session
 
 It returns a dataframe with the same number of rows as the input, but with the
 column "session_id": a unique identifier for each session, which is a combination
