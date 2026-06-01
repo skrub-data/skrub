@@ -28,8 +28,8 @@ X, y = skrub.X(events.X), skrub.y(events.y)
 
 # %%
 # As a sanity check, evaluate a |DummyClassifier| on the original event data
-# (without session features). We expect chance-level performance
-# (ROC-AUC of 0.5).
+# (without session features).  As it's a DummyClassifier, we expect
+# chance-level performance (ROC-AUC of 0.5).
 from sklearn.dummy import DummyClassifier
 
 dummy = DummyClassifier(strategy="most_frequent")
