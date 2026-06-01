@@ -76,12 +76,13 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     >>> from skrub.datasets import toy_cities
     >>> df = toy_cities(size=5000)
     >>> df.head()
-              uid   cities  encoded_cities  ...  metric_3
-    0  SHAoqcdajQ  Vilnius            17.0  ...  0.202946
-    1  HVAFYLGCDW      NaN             NaN  ...  0.161701
-    2  oQIauSCbNL     Rome            13.0  ...  0.674011
-    3  SjeSbCepzv  Vilnius            17.0  ...  0.534058
-    4  ubagaIBHnG   London             8.0  ...  0.982400
+              uid   cities  encoded_cities  ...  metric_1  metric_2  metric_3
+    0  SHAoqcdajQ  Vilnius            17.0  ...  0.243604  0.064329  0.202946
+    1  HVAFYLGCDW      NaN             NaN  ...  0.019476  0.012149  0.161701
+    2  oQIauSCbNL     Rome            13.0  ...  0.889626  0.844165  0.674011
+    3  SjeSbCepzv  Vilnius            17.0  ...  0.623557  0.340779  0.534058
+    4  ubagaIBHnG   London             8.0  ...  0.728491  0.283959  0.982400
+
     >>> ds = DropSimilar(threshold=0.8)
     >>> clean_df = ds.fit_transform(df)
 
@@ -106,13 +107,13 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
     This leaves us with the shortened dataframe:
 
-    >>> clean_df
-              uid   cities  ...  metric_3
-    0  SHAoqcdajQ  Vilnius  ...  0.202946
-    1  HVAFYLGCDW      NaN  ...  0.161701
-    2  oQIauSCbNL     Rome  ...  0.674011
-    3  SjeSbCepzv  Vilnius  ...  0.534058
-    4  ubagaIBHnG   London  ...  0.982400
+    >>> clean_df.head()
+                 uid     cities               start  ...  metric_1  metric_2  metric_3
+    0     SHAoqcdajQ    Vilnius 2004-09-02 03:22:56  ...  0.243604  0.064329  0.202946
+    1     HVAFYLGCDW        NaN 1979-10-22 01:43:56  ...  0.019476  0.012149  0.161701
+    2     oQIauSCbNL       Rome 1986-08-09 19:01:10  ...  0.889626  0.844165  0.674011
+    3     SjeSbCepzv    Vilnius 2008-11-26 15:57:13  ...  0.623557  0.340779  0.534058
+    4     ubagaIBHnG     London 1982-09-13 20:54:54  ...  0.728491  0.283959  0.982400
     """  # noqa: E501
 
     def __init__(self, threshold=0.8):
