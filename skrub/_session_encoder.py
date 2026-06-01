@@ -47,10 +47,10 @@ def _add_session_column_pandas(
     time_diff = X[timestamp_col].diff().dt.total_seconds().fillna(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
-        group_diff = (X[split_by].diff().fillna(0) != 0).any(axis=1)
+        has_split_change = (X[split_by].diff().fillna(0) != 0).any(axis=1)
         # a new session starts if either the "split_by" column changes or the time
         # gap is exceeded
-        is_new_session = group_diff | time_diff
+        is_new_session = has_split_change | time_diff
     else:
         is_new_session = time_diff
     # Compute cumulative sum of is_new_session to create session IDs
@@ -70,12 +70,12 @@ def _add_session_column_polars(
     time_diff = X[timestamp_col].diff().dt.total_seconds().fill_null(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
-        group_diff = X.select(
+        has_split_change = X.select(
             pl.any_horizontal(pl.col(split_by).diff().fill_null(0) != 0)
         ).to_series()
         # a new session starts if either the "split_by" column changes or the time
         # gap is exceeded
-        is_new_session = group_diff | time_diff
+        is_new_session = has_split_change | time_diff
     else:
         is_new_session = time_diff
     # Add session_id by computing cumulative sum of is_new_session
@@ -124,10 +124,13 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         is used to determine the start and end of a session.
 
     split_by : optional[str, list[str]], default=None
-        The name of the column, or list of columns, to group by. This parameter
-        is used to group events into sessions by, for example, user. If not
-        provided, sessions are detected based on the time gap between events, and all
-        events are considered to belong to the same user (or group).
+        The name of the column, or list of columns, to use to define sessions.
+        A session boundary is created when the value in any of these columns
+        changes, or when the time gap between events exceeds ``session_gap``.
+        This is typically a user identifier column, but it can also be used to define
+        sessions by other groupings (e.g. user and device type).
+        If not provided, sessions are detected based on the time gap between events,
+        and all events are considered to belong to the same user (or group).
 
     session_gap : int, default=1800
         The maximum gap (in seconds) between events in a session. If the gap
@@ -235,7 +238,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     - User 1 on "mobile" has session 1 (different device, so separate session).
     - User 2 on "mobile" has session 2 (different user).
 
-    Note that sessions are defined by sorting over the grouping columns and then
+    Note that sessions are defined by sorting over the ``split_by`` columns and then
     by the timestamp: this is why, while the "desktop"
     session of User 1 starts after their "mobile" session, it has session id ``0``
     since in alphabetical ordering "desktop" is first.
@@ -244,12 +247,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     sessions are separated only by time gaps. This is useful for analyzing a single
     timeseries or events that don't have a user dimension:
 
-    >>> encoder_no_group = SessionEncoder(
+    >>> encoder_no_split = SessionEncoder(
     ...     split_by=None,
     ...     timestamp_col='timestamp',
     ...     session_gap=30 * 60
     ... )
-    >>> data_no_group = {
+    >>> data_no_split = {
     ...     'timestamp': [
     ...         pd.Timestamp('2024-01-01 10:00:00'),
     ...         pd.Timestamp('2024-01-01 10:10:00'),  # 10 min gap
@@ -259,9 +262,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     ],
     ...     'event_type': ['start', 'action', 'action', 'restart', 'action']
     ... }
-    >>> df_no_group = pd.DataFrame(data_no_group)
-    >>> result_no_group = encoder_no_group.fit_transform(df_no_group)
-    >>> result_no_group
+    >>> df_no_split = pd.DataFrame(data_no_split)
+    >>> result_no_split = encoder_no_split.fit_transform(df_no_split)
+    >>> result_no_split
                  timestamp event_type  timestamp_session_id
     0 2024-01-01 10:00:00      start                     0
     1 2024-01-01 10:10:00     action                     0
@@ -399,15 +402,15 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if cols_to_remove := [
             _
             for _ in self.all_inputs_
-            if _ not in self._group_by_columns + [self.timestamp_col]
+            if _ not in self._split_by_columns + [self.timestamp_col]
         ]:
             X_selected = sbd.drop_columns(X, s.cols(*cols_to_remove).expand(X))
         else:
             X_selected = X
 
-        # sort the input dataframe by the "group_by" and "timestamp" columns
+        # sort the input dataframe by the "split_by" and "timestamp" columns
         sort_by = (
-            self._group_by_columns + [self.timestamp_col]
+            self._split_by_columns + [self.timestamp_col]
             if self.split_by is not None
             else [self.timestamp_col]
         )
@@ -422,9 +425,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # Reordering rows back to the original order
         X_result = sbd.sort(X_with_session_id, by=row_order_col)
 
-        # drop the factorized "group_by" columns if the original "group_by"
+        # drop the factorized "split_by" columns if the original "split_by"
         # columns were not numeric, and the column used to reorder
-        to_drop = [col for col in factorized_by if col not in self._group_by_columns]
+        to_drop = [col for col in factorized_by if col not in self._split_by_columns]
         to_drop += [row_order_col]
         X_result = sbd.drop_columns(X_result, to_drop)
 
@@ -465,17 +468,17 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
                 f"Column '{self.timestamp_col}' not found in input dataframe"
             )
         # check that the required columns are present in the input dataframe
-        self._group_by_columns = []
+        self._split_by_columns = []
         if self.split_by is not None:
             if isinstance(self.split_by, str):
-                self._group_by_columns = [self.split_by]
+                self._split_by_columns = [self.split_by]
             elif isinstance(self.split_by, Iterable) and not isinstance(
                 self.split_by, str
             ):
-                self._group_by_columns = list(self.split_by)
+                self._split_by_columns = list(self.split_by)
             else:
                 raise TypeError("split_by must be a string, a list of strings, or None")
-            for col in self._group_by_columns:
+            for col in self._split_by_columns:
                 if col not in self.all_inputs_:
                     raise ValueError(f"Column '{col}' not found in input dataframe")
 
@@ -491,7 +494,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
             if not sbd.is_numeric(X[col])
             else X[col]
-            for col in self._group_by_columns
+            for col in self._split_by_columns
         }
 
         X_factorized = sbd.with_columns(X, **factorized_columns)
