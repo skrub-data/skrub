@@ -27,8 +27,8 @@ Changes
   :user:`Sandrine Henry <sandrineh>`.
 - Improving the association tab error message when only one column is present
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
-- Fixed Handling of numpy arrays in :meth: `DataOp.skb.concat`.
-  :pr:`2096` by :user: `Ayesha Siddiqua <siddiqua-tamk>`.
+- Added support for numpy arrays in :meth:`DataOp.skb.concat`.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 Bugfixes
 --------
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
