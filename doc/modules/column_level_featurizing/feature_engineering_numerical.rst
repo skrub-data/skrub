@@ -34,7 +34,8 @@ while retaining most of the information for training models.
 >>> import pandas as pd
 >>> from skrub import ToFloat
 >>> s = pd.Series(['1.1', None, '3.3'], name='x')
->>> ToFloat().fit_transform(s)
+>>> to_float = ToFloat()
+>>> to_float.fit_transform(s)
 0    1.1
 1    NaN
 2    3.3
