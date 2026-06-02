@@ -123,7 +123,7 @@ def test_repr():
     Result:
     ―――――――
     'one two'
-    >>> skrub.var('a', 1, store_default=True)
+    >>> skrub.var('a', 1, becomes_default=True)
     <Var 'a' int>
     Result (also the default value):
     ――――――――――――――――――――――――――――――――

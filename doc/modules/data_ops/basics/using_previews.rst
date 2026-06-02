@@ -52,7 +52,7 @@ set different ones with :meth:`DataOp.skb.set_data`.
 Defining a default value for a variable
 ---------------------------------------
 
-If we pass ``store_default=True`` to :func:`var`, the provided ``value`` is not
+If we pass ``becomes_default=True`` to :func:`var`, the provided ``value`` is not
 only an example value to use for previews but a default value for this variable
 in all contexts -- then it is always optional to pass a value for it in the
 environment, and if not found the default is used.
@@ -63,7 +63,7 @@ environment, and if not found the default is used.
 Result:
 ―――――――
 0
->>> b = skrub.var('b', 1, store_default=True)
+>>> b = skrub.var('b', 1, becomes_default=True)
 >>> b
 <Var 'b' int>
 Result (also the default value):

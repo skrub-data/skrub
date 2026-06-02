@@ -155,8 +155,8 @@ def test_choice_in_environment():
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
 
-def test_store_default():
-    a = skrub.var("a", 1, store_default=True)
+def test_becomes_default():
+    a = skrub.var("a", 1, becomes_default=True)
     b = skrub.var("b", 2)
     c = a + b
     assert c.skb.eval() == 3
@@ -183,13 +183,13 @@ def test_store_default():
         learner.fit_transform({})
 
 
-def test_store_default_errors():
-    with pytest.raises(TypeError, match="store_default should be a Boolean"):
-        skrub.var("a", 1, store_default=2)
+def test_becomes_default_errors():
+    with pytest.raises(TypeError, match="becomes_default should be a Boolean"):
+        skrub.var("a", 1, becomes_default=2)
     with pytest.raises(
-        TypeError, match="value must be provided when store_default is True"
+        TypeError, match="value must be provided when becomes_default is True"
     ):
-        skrub.var("a", store_default=True)
+        skrub.var("a", becomes_default=True)
 
 
 def test_if_else():

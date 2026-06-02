@@ -571,7 +571,7 @@ class _Cloner(_DataOpTraversal):
         new_impl = impl.__replace__(**evaluated_attributes)
         if (
             isinstance(new_impl, Var)
-            and not new_impl.store_default
+            and not new_impl.becomes_default
             and self.drop_preview_data
         ):
             new_impl.value = NULL
