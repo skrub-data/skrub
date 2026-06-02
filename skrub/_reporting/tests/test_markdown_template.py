@@ -2,6 +2,8 @@
 
 import re
 
+import pytest
+
 from skrub import TableReport
 from skrub.datasets import toy_cities
 
@@ -10,8 +12,9 @@ def test_markdown_report_structure_and_titles(df_module):
     """Test basic structure, headers, and title handling."""
     df = df_module.make_dataframe(
         {
-            "A": [1, 2, 3, 4, 5],
-            "B": ["a", "b", "a", "b", "c"],
+            "first": [1, 2, 3],
+            "second": [4, 5, 6],
+            "third": [7, 8, 9],
         }
     )
 
@@ -22,8 +25,9 @@ def test_markdown_report_structure_and_titles(df_module):
     assert "Test Report" in markdown
     assert "## Columns" in markdown
     assert "## Associations (Cramér's V)" in markdown
-    assert "`A`" in markdown
-    assert "`B`" in markdown
+    assert "`first`" in markdown
+    assert "`second`" in markdown
+    assert "`third`" in markdown
     assert markdown.startswith("#")  # Should have a header
 
     # Test default title
@@ -31,24 +35,13 @@ def test_markdown_report_structure_and_titles(df_module):
     markdown_default = report_default.markdown()
     assert "# " in markdown_default  # Header should exist
     # Shape info should be present
-    assert "**Shape:** 5 rows × 2 columns" in markdown
-
-
-def test_markdown_columns_table_structure(df_module):
-    """Test columns table headers, positions, and row count."""
-    df = df_module.make_dataframe(
-        {
-            "first": [1, 2, 3],
-            "second": [4, 5, 6],
-            "third": [7, 8, 9],
-        }
-    )
-    report = TableReport(df)
-    markdown = report.markdown()
+    assert "**shape** 3 rows × 3 columns" in markdown
+    # Unique values should be present (default value)
+    assert "40 unique values." in markdown
 
     # Check for table headers
     assert (
-        "| Position | Column | Type | Unique | Nulls | High Card | Constant |"
+        "| Position | Column | Type | Unique | Nulls | High Cardinality | Constant |"
         in markdown
     )
 
@@ -78,8 +71,8 @@ def test_markdown_data_format_and_highlighting(df_module):
     # Test format with nulls and varying data
     df = df_module.make_dataframe(
         {
-            "A": [1, 2, 3, None],
-            "B": ["a", "b", "a", "a"],
+            "A": [1, 2, 3, None, 4],
+            "B": ["a", "b", "a", "a", "c"],
             "high_nulls": [None, None, None, None, 1],
             "low_nulls": [1, 2, 3, 4, 5],
         }
@@ -100,7 +93,11 @@ def test_markdown_data_format_and_highlighting(df_module):
 def test_markdown_associations_highlighting_and_headers(df_module):
     """Test associations table structure, highlighting of strong associations."""
 
-    df = df_module.make_dataframe(toy_cities().to_dict())
+    if df_module.name == "polars":
+        pl = pytest.importorskip("polars")
+        df = pl.from_pandas(toy_cities())
+    else:
+        df = toy_cities()
     report = TableReport(df, compute_associations=True)
     markdown = report.markdown()
 

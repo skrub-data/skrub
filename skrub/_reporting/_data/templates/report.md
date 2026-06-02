@@ -1,21 +1,26 @@
 # {{ summary.title if summary.title else "DataFrame Report" }}
 
-**Module:** {{ summary.dataframe_module }}
-**Shape:** {{ summary.n_rows }} rows × {{ summary.n_columns }} columns
+This is a skrub [TableReport](https://skrub-data.org/stable/reference/generated/skrub.TableReport.html#skrub.TableReport).
+
+The provided dataframe uses the {{ summary.dataframe_module }} library. It has
+**shape** {{ summary.n_rows }} rows × {{ summary.n_columns }} columns.
+
+Columns are marked as "high cardinality" if they contain more than
+{{ summary.cardinality_threshold }} unique values.
 
 ---
 
 ## Columns
 
-| Position | Column | Type | Unique | Nulls | High Card | Constant |
+| Position | Column | Type | Unique | Nulls | High Cardinality | Constant |
 |---|---|---|---|---|---|---|
-{% for col in summary.columns %}| {{ col.position }} | {% if col.nulls_level == 'high' %}**`{{ col.name }}`**{% else %}`{{ col.name }}`{% endif %} | {{ col.dtype }} | {{ col.n_unique }} ({{ "%.1f" | format(col.unique_proportion * 100) }}%) | {{ col.null_count }} ({{ "%.2f" | format(col.null_proportion * 100) }}%) | {{ col.is_high_cardinality }} | {{ col.value_is_constant }} |
+{% for col in summary.columns %}| {{ col.position }} | {% if col.nulls_level != 'ok' %}**`{{ col.name }}`**{% else %}`{{ col.name }}`{% endif %} | {{ col.dtype }} | {{ col.n_unique }} ({{ "%.1f" | format(col.unique_proportion * 100) }}%) | {{ col.null_count }} ({{ "%.2f" | format(col.null_proportion * 100) }}%) | {{ col.is_high_cardinality }} | {{ col.value_is_constant }} |
 {% endfor %}
 
 {% for col in summary.columns %}
 {% if col.value_counts or (col.mean is defined and col.mean is not none) %}
 
-### `{{ col.name }}` — Details
+### Column `{{ col.name }}` — Details
 {% if col.value_counts %}
 
 **Most frequent values:**
@@ -32,13 +37,14 @@
 | Statistic | Value |
 |---|---|
 | Mean | {{ "%.4f" | format(col.mean) }} |
-| Std dev | {{ "%.4f" | format(col.standard_deviation) }} |
+{% if col.quantiles is defined and col.quantiles %}| Std dev | {{ "%.4f" | format(col.standard_deviation) }} |
 | IQR | {{ col.inter_quartile_range }} |
 | Min | {{ col.quantiles[0.0] }} |
 | 25th pct | {{ col.quantiles[0.25] }} |
 | Median | {{ col.quantiles[0.5] }} |
 | 75th pct | {{ col.quantiles[0.75] }} |
 | Max | {{ col.quantiles[1.0] }} |
+{% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
