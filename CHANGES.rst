@@ -35,9 +35,19 @@ Changes
 
 Bugfixes
 --------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). This is done
+  by the new transformer :class:`DurationToFloat`. :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Deprecations
 ------------
+
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`
+  :pr:`2101` by :user:`Heidi Koivisto <uniheko>`.
 
 
 Release 0.9.0
