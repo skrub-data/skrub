@@ -1,10 +1,5 @@
 """This transformer converts durations to seconds."""
 
-try:
-    import polars as pl
-except ImportError:
-    pass
-
 from . import _dataframe as sbd
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
@@ -17,14 +12,14 @@ def duration_to_float(col):
 
 @duration_to_float.specialize("pandas", argument_type="Column")
 def _duration_to_float_pandas(col):
-    return col.dt.total_seconds()
+    return sbd.to_float32(col.dt.total_seconds())
 
 
 @duration_to_float.specialize("polars", argument_type="Column")
 def _duration_to_float_polars(col):
     # total_nanoseconds is needed to have the proper resolution in old versions
     # of polars
-    return (col.dt.total_nanoseconds() * 1e-9).cast(pl.Float64)
+    return sbd.to_float32(col.dt.total_nanoseconds() * 1e-9)
 
 
 class DurationToFloat(SingleColumnTransformer):
