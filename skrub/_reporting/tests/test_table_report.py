@@ -86,43 +86,45 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
-def test_deprecated_max_plot_columns(df_module):
+@pytest.mark.parametrize(
+    "max_plot_columns, expected",
+    [
+        (3, False),
+        (10, True),
+        ("all", True),
+    ],
+)
+def test_deprecated_max_plot_columns(df_module, max_plot_columns, expected):
     """max_plot_columns warns and is converted to plot_distributions."""
     df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
 
     with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns=3)
-    assert report.plot_distributions is False
-
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns=10)
-    assert report.plot_distributions is True
-
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns="all")
-    assert report.plot_distributions is True
+        report = TableReport(df, max_plot_columns=max_plot_columns)
+    assert report.plot_distributions is expected
 
 
 @skip_polars_installed_without_pyarrow
-def test_deprecated_max_association_columns(df_module):
+@pytest.mark.parametrize(
+    "max_association_columns, expected",
+    [
+        (3, False),
+        (10, True),
+        ("all", True),
+    ],
+)
+def test_deprecated_max_association_columns(
+    df_module, max_association_columns, expected
+):
     """max_association_columns warns and is converted to compute_associations."""
     df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
 
     with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns=3)
-    assert report.compute_associations is False
-
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns=10)
-    assert report.compute_associations is True
-
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns="all")
-    assert report.compute_associations is True
+        report = TableReport(df, max_association_columns=max_association_columns)
+    assert report.compute_associations is expected
 
 
 @skip_polars_installed_without_pyarrow
-def test_few_rows(df_module, check_polars_numpy2):
+def test_few_rows(df_module):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
 
@@ -254,7 +256,15 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
 
 
 @skip_polars_installed_without_pyarrow
-def test_verbosity_parameter(df_module, capsys):
+@pytest.mark.parametrize(
+    "verbose, op",
+    [
+        (None, "!="),
+        (0, "=="),
+        (1, "!="),
+    ],
+)
+def test_verbosity_parameter(df_module, capsys, verbose, op):
     df = df_module.make_dataframe(
         dict(
             a=[1, 2, 3, 4],
@@ -263,17 +273,13 @@ def test_verbosity_parameter(df_module, capsys):
         )
     )
 
-    report = TableReport(df)
+    report = TableReport(df, verbose=verbose)
     report.html()
-    assert capsys.readouterr().err != ""
 
-    report_2 = TableReport(df, verbose=0)
-    report_2.html()
-    assert capsys.readouterr().err == ""
-
-    report_3 = TableReport(df, verbose=1)
-    report_3.html()
-    assert capsys.readouterr().err != ""
+    if op == "!=":
+        assert capsys.readouterr().err != ""
+    elif op == "==":
+        assert capsys.readouterr().err == ""
 
 
 @skip_polars_installed_without_pyarrow
@@ -298,104 +304,89 @@ def test_write_to_stderr(df_module, capsys):
 
 
 @skip_polars_installed_without_pyarrow
-def test_thresholds_parameter(df_module):
+@pytest.mark.parametrize(
+    "range_stop, table_report_plots_threshold, op",
+    [
+        (10, None, "assert not"),
+        (30, None, "assert not"),
+        (31, None, "assert"),
+        (12, 10, "assert"),
+        (12, 15, "assert not"),
+        (5, None, "assert not"),
+    ],
+)
+def test_thresholds_parameter(df_module, range_stop, table_report_plots_threshold, op):
     df = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
+        {f"col_{i}": [i + j for j in range(3)] for i in range(range_stop)}
     )
-    summary = TableReport(df)._summary
-    assert not summary["plots_skipped"]
 
-    df2 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
-    )
-    summary = TableReport(df2)._summary
-    assert not summary["plots_skipped"]
+    if range_stop == 12:
+        with config_context(table_report_plots_threshold=table_report_plots_threshold):
+            summary = TableReport(df)._summary
+            if op == "assert not":
+                assert not summary["plots_skipped"]
+            elif op == "assert":
+                assert summary["plots_skipped"]
 
-    df3 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
-    )
-    summary = TableReport(df3)._summary
-    assert summary["plots_skipped"]
-
-    df4 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    with config_context(table_report_plots_threshold=10):
-        summary = TableReport(df4)._summary
-    assert summary["plots_skipped"]
-
-    df5 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    with config_context(table_report_plots_threshold=15):
-        summary = TableReport(df5)._summary
-    assert not summary["plots_skipped"]
-
-    df6 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
-    )
-    summary = TableReport(df6)._summary
-    assert not summary["plots_skipped"]
+    else:
+        summary = TableReport(df)._summary
+        if op == "assert not":
+            assert not summary["plots_skipped"]
+        elif op == "assert":
+            assert summary["plots_skipped"]
 
 
 @skip_polars_installed_without_pyarrow
-def test_plot_distributions_parameter(df_module):
-    # True: always plot regardless of threshold
-    df7 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+@pytest.mark.parametrize(
+    "range_stop, plot_distributions, op",
+    [
+        (31, True, "assert not"),
+        (12, False, "assert"),
+        (5, None, "assert not"),
+        (31, "auto", "assert"),
+    ],
+)
+def test_plot_distributions_parameter(df_module, range_stop, plot_distributions, op):
+    # Expected behavior:
+    #   True: always plot regardless of threshold
+    #   False: never plot
+    #   None and "auto": use threshold
+    df = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(range_stop)}
     )
-    summary = TableReport(df7, plot_distributions=True)._summary
-    assert not summary["plots_skipped"]  # True ignores threshold
-
-    # False: never plot
-    df8 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    summary = TableReport(df8, plot_distributions=False)._summary
-    assert summary["plots_skipped"]
-
-    # None and "auto": use threshold
-    d9 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
-    )
-    summary = TableReport(d9, plot_distributions=None)._summary
-    assert not summary["plots_skipped"]
-
-    df10 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
-    )
-    summary = TableReport(df10, plot_distributions="auto")._summary
-    assert summary["plots_skipped"]  # "auto" respects threshold
+    summary = TableReport(df, plot_distributions=plot_distributions)._summary
+    if op == "assert not":
+        assert not summary["plots_skipped"]
+    elif op == "assert":
+        assert summary["plots_skipped"]
 
 
 @skip_polars_installed_without_pyarrow
-def test_compute_associations_parameter(df_module):
-    # True: always compute regardless of threshold
-    df11 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+@pytest.mark.parametrize(
+    "range_stop, compute_associations, op",
+    [
+        (31, True, "assert not"),
+        (12, False, "assert"),
+        (5, None, "assert not"),
+        (31, "auto", "assert"),
+    ],
+)
+def test_compute_associations_parameter(
+    df_module, range_stop, compute_associations, op
+):
+    # Expected behavior:
+    #   True: always compute regardless of threshold
+    #   False: never compute
+    #   None and "auto": use threshold
+    #   "auto" respects threshold
+    df = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(range_stop)}
     )
-    summary = TableReport(df11, compute_associations=True)._summary
-    assert not summary["associations_skipped"]  # True ignores threshold
-
-    # False: never compute
-    df12 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    summary = TableReport(df12, compute_associations=False)._summary
-    assert summary["associations_skipped"]
-
-    # None and "auto": use threshold
-    df13 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
-    )
-    summary = TableReport(df13, compute_associations=None)._summary
-    assert not summary["associations_skipped"]
-
-    df14 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
-    )
-    summary = TableReport(df14, compute_associations="auto")._summary
-    assert summary["associations_skipped"]  # "auto" respects threshold
+    summary = TableReport(df, compute_associations=compute_associations)._summary
+    if op == "assert not":
+        assert not summary["associations_skipped"]
+    elif op == "assert":
+        assert summary["associations_skipped"]
 
 
 @skip_polars_installed_without_pyarrow
@@ -486,19 +477,7 @@ def test_array_dim_check():
 
 
 numpy_test_cases = [
-    (
-        np.array(
-            [
-                [1, 2, 3],
-                [
-                    4,
-                    5,
-                    6,
-                ],
-            ]
-        ),
-        3,
-    ),
+    (np.array([[1, 2, 3], [4, 5, 6]]), 3),
     (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
 ]
 
@@ -550,8 +529,11 @@ def test_polars_df_no_pyarrow():
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_parameter(df_module):
-    """Test the open_tab parameter functionality"""
+@pytest.mark.parametrize(
+    "open_tab",
+    ["table", "stats", "distributions", "associations"],
+)
+def test_open_tab_parameter(df_module, open_tab):
     df = df_module.make_dataframe(
         {
             "A": [1, 2, 3, 4, 5],
@@ -559,26 +541,17 @@ def test_open_tab_parameter(df_module):
         }
     )
 
-    # Test open behavior (should be 'table')
-    report1 = TableReport(df)
-    assert report1.open_tab == "table"
+    if open_tab == "table":
+        report = TableReport(df)
+    else:
+        report = TableReport(df, open_tab=open_tab)
+    assert report.open_tab == open_tab
 
-    # Test explicitly set to 'stats'
-    report2 = TableReport(df, open_tab="stats")
-    assert report2.open_tab == "stats"
-
-    # Test set to 'distributions'
-    report3 = TableReport(df, open_tab="distributions")
-    assert report3.open_tab == "distributions"
-
-    # Test set to 'associations'
-    report4 = TableReport(df, open_tab="associations")
-    assert report4.open_tab == "associations"
-
-    # Test HTML generation includes correct attributes
-    html_snippet = report2.html_snippet()
-    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
-    assert "data-is-selected" in html_snippet
+    if open_tab == "stats":
+        # Test HTML generation includes correct attributes
+        html_snippet = report.html_snippet()
+        assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
+        assert "data-is-selected" in html_snippet
 
 
 @skip_polars_installed_without_pyarrow
@@ -599,7 +572,8 @@ def test_open_tab_wrong_names(df_module):
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_minimal_mode(df_module):
+@pytest.mark.parametrize("open_tab", ["distributions", "associations"])
+def test_open_tab_minimal_mode(df_module, open_tab):
     """Test that default_tab falls back to 'table' in minimal mode when needed"""
     df = df_module.make_dataframe(
         {
@@ -609,14 +583,9 @@ def test_open_tab_minimal_mode(df_module):
     )
 
     # Test minimal mode with open_tab set to 'distributions'
-    report1 = TableReport(df, open_tab="distributions")
-    report1._set_minimal_mode()
-    assert report1.open_tab == "table"
-
-    # Test minimal mode with open_tab set to 'associations'
-    report2 = TableReport(df, open_tab="associations")
-    report2._set_minimal_mode()
-    assert report2.open_tab == "table"
+    report = TableReport(df, open_tab=open_tab)
+    report._set_minimal_mode()
+    assert report.open_tab == "table"
 
 
 @pytest.mark.parametrize(
