@@ -323,17 +323,12 @@ def test_thresholds_parameter(df_module, range_stop, table_report_plots_threshol
     if range_stop == 12:
         with config_context(table_report_plots_threshold=table_report_plots_threshold):
             summary = TableReport(df)._summary
-            if op == "assert not":
-                assert not summary["plots_skipped"]
-            elif op == "assert":
-                assert summary["plots_skipped"]
-
     else:
         summary = TableReport(df)._summary
-        if op == "assert not":
-            assert not summary["plots_skipped"]
-        elif op == "assert":
-            assert summary["plots_skipped"]
+    if op == "assert not":
+        assert not summary["plots_skipped"]
+    elif op == "assert":
+        assert summary["plots_skipped"]
 
 
 @skip_polars_installed_without_pyarrow
