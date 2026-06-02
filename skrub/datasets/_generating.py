@@ -5,9 +5,9 @@ Functions that generate example data.
 
 from __future__ import annotations
 
+import datetime
 import numbers
 import string
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -388,7 +388,7 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     #   2. Space session starts by Exponential gaps >> session_gap, spread
     #      across a 90-day window.
     #   3. Within each session, place events with Exponential(90 s) gaps.
-    base_time = pd.Timestamp("2024-01-01")
+    base_time = datetime.datetime(2024, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
     total_window_s = 90 * 24 * 3600  # 90 days
     within_session_mean_s = 90.0  # ~1.5 min between events inside a session
     min_between_session_s = 2 * 3600  # 2 h minimum gap — well above session_gap
