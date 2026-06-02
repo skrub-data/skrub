@@ -122,6 +122,14 @@ def test_deprecated_max_association_columns(df_module):
 
 
 @skip_polars_installed_without_pyarrow
+def test_deprecated_order_by(df_module):
+    """`order_by` parameter should emit a DeprecationWarning."""
+    df = df_module.make_dataframe({"a": [1, 2, 3]})
+    with pytest.warns(DeprecationWarning, match="order_by"):
+        TableReport(df, order_by="a")
+
+
+@skip_polars_installed_without_pyarrow
 def test_few_rows(df_module, check_polars_numpy2):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
@@ -443,6 +451,10 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+    assert (
+        "No associations were computed because the dataframe has only one "
+        "column." in html
+    )
 
 
 def test_error_make_table():
