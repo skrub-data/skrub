@@ -441,7 +441,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         if self.numeric_dtype is not None:
             warnings.warn(
                 "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
-                " removed in a future version. "
+                " removed in a future version."
                 "Use `cast_to_float32=True` instead.",
                 DeprecationWarning,
                 stacklevel=2,
@@ -461,7 +461,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             )
         if not isinstance(cast_to_float32, bool):
             raise TypeError(
-                f"`cast_to_float32` must be a boolean. Found {cast_to_float32!r}."
+                f"`cast_to_float32` must be a boolean.Found {cast_to_float32!r}."
             )
 
         all_steps = _get_preprocessors(
