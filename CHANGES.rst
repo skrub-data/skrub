@@ -11,18 +11,40 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
+  provides an alternative for referring to a node, in the environment passed to
+  :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
+  :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
-
+- Improving the association tab error message when only one column is present
+  :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
+- Added support for numpy arrays in :meth:`DataOp.skb.concat`.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 Bugfixes
 --------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). This is done
+  by the new transformer :class:`DurationToFloat`. :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+
 
 Deprecations
 ------------
+
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`
+  :pr:`2101` by :user:`Heidi Koivisto <uniheko>`.
 
 
 Release 0.9.0

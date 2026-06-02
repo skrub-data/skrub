@@ -145,7 +145,7 @@ def _make_full_report(
     overwrite=False,
     title=None,
 ):
-    _check_graphviz()
+    _utils.check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full DataOps plan
@@ -236,6 +236,7 @@ def _make_full_report(
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
+                node_uuid=node._skrub_impl.uuid,
                 node_type=node._skrub_impl.__class__.__name__,
                 is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
@@ -287,7 +288,7 @@ class GraphDrawing:
         return f"<{self.__class__.__name__}: use .open() to display>"
 
 
-def _node_kwargs(data_op, url=None):
+def _node_kwargs(data_op, *, url=None, show_ids=False):
     impl = data_op._skrub_impl
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
@@ -309,6 +310,8 @@ def _node_kwargs(data_op, url=None):
         label = f"y: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#fad9c6"
+    if show_ids:
+        label = f"{label}\nid: {impl.uuid}"
     if url is not None and (computed_url := url(data_op)) is not None:
         kwargs["URL"] = computed_url
         label = label.replace("\n", "<br />")
@@ -330,35 +333,17 @@ def _dot_id(n):
     return f"node_{n}"
 
 
-def _has_graphviz():
-    try:
-        import pydot
-
-        g = pydot.Dot()
-        g.add_node(pydot.Node("node 0"))
-        g.create_svg()
-        return True
-    except Exception:
-        return False
-
-
-def _check_graphviz():
-    if _has_graphviz():
-        return
-    raise ImportError("Please install pydot and graphviz to draw data_op graphs.")
-
-
-def draw_data_op_graph(data_op, url=None, direction="TB"):
+def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
     # TODO if pydot or graphviz not available fallback on some other plotting
     # solution eg a vendored copy of mermaid? outputting html instead of svg
-    _check_graphviz()
+    _utils.check_graphviz()
 
     import pydot
 
     g = graph(data_op)
     dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
-        kwargs = _node_kwargs(e, url=url)
+        kwargs = _node_kwargs(e, url=url, show_ids=show_ids)
         kwargs["id"] = _dot_id(node_id)
         node = pydot.Node(_dot_id(node_id), **kwargs)
         dot_graph.add_node(node)
