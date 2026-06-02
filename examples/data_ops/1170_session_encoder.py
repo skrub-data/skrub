@@ -18,9 +18,7 @@ This example shows how to use |SessionEncoder| in a skrub DataOps workflow to
 create session-level features (sessionization) for conversion prediction, that is
 predicting whether a user session will eventually lead to a purchase.
 
-.. note::
-
-    **What is sessionization?**
+.. topic:: What is sessionization?
 
     Sessionization is the process of grouping a sequence of events (like user
     interactions) into meaningful sessions. A session typically starts fresh or
