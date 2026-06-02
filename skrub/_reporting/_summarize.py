@@ -174,7 +174,7 @@ def _summarize_column(
             1, dataframe_summary["n_rows"]
         )
         summary["is_high_cardinality"] = (
-            summary["n_unique"] > summary["cardinality_threshold"]
+            summary["n_unique"] > _config.get_config()["cardinality_threshold"]
         )
     except Exception:
         # for some dtypes n_unique can fail eg with a typeerror for
