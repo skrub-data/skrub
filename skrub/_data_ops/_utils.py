@@ -125,3 +125,44 @@ def unique_renaming():
         return numbered
 
     return rename
+
+
+def graphviz_error_message(html=False):
+    if html:
+        return """\
+To display the DataOp graph, please install Pydot and Graphviz
+and make sure the dot command is in your <code>$PATH</code>.<br/>
+You may also need to run <code>dot -c</code> in bash or powershell
+to rebuild the plugin cache of Graphviz.<br/>
+Graphviz must be installed using your system's
+package manager rather than pip.<br/>
+<a href="https://pypi.org/project/pydot/">Pydot documentation</a><br/>
+<a href="https://graphviz.org/download/">Graphviz installation instructions</a><br/>
+"""
+    else:
+        return """\
+To display the DataOp graph,
+please install Pydot and Graphviz and make sure the 'dot' command is in your $PATH.
+You may also need to run 'dot -c' in bash or powershell
+to rebuild the plugin cache of Graphviz.
+Graphviz must be installed using your system's package manager rather than pip.
+https://pypi.org/project/pydot/
+https://graphviz.org/download/"""
+
+
+def has_graphviz():
+    try:
+        import pydot
+
+        g = pydot.Dot()
+        g.add_node(pydot.Node("node 0"))
+        g.create_svg()
+        return True
+    except Exception:
+        return False
+
+
+def check_graphviz():
+    if has_graphviz():
+        return
+    raise RuntimeError(graphviz_error_message())
