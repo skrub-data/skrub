@@ -6,14 +6,30 @@ to skip while running the validation tests, so that CI will
 not fail.
 Therefore, developers having formatted methods to numpydoc
 should also remove their corresponding references from the list.
+
+All tests are skipped by default. To run them and see which docstrings
+need to be fixed, set the environment variable::
+
+    SKRUB_CHECK_DOCSTRINGS=1 pytest skrub/tests/test_docstrings.py -v
+
+Items listed in `DOCSTRING_TEMP_IGNORE_SET` are individually skipped even
+when the env variable is set, so you can focus on newly introduced issues.
 """
 
 import inspect
+import os
 import re
 from importlib import import_module
 
 import pytest
 from numpydoc.validate import validate
+
+# Set SKRUB_CHECK_DOCSTRINGS=1 to run the validation tests instead of skipping them.
+_CHECK_DOCSTRINGS = os.environ.get("SKRUB_CHECK_DOCSTRINGS", "0") == "1"
+skip_docstring_tests = pytest.mark.skipif(
+    not _CHECK_DOCSTRINGS,
+    reason="Set SKRUB_CHECK_DOCSTRINGS=1 to run docstring validation tests",
+)
 
 DOCSTRING_TEMP_IGNORE_SET = {
     # TODO remove
@@ -164,7 +180,7 @@ def filter_errors(errors, method, estimator_cls=None):
         yield code, message
 
 
-@pytest.mark.xfail(strict=False)
+@skip_docstring_tests
 @pytest.mark.parametrize(
     ["estimator_cls", "method"],
     get_methods_to_validate(),
@@ -197,7 +213,7 @@ def test_estimator_docstrings(estimator_cls, method, request):
         raise ValueError(repr_errors(res, estimator_cls, method))
 
 
-@pytest.mark.xfail(strict=False)
+@skip_docstring_tests
 @pytest.mark.parametrize(
     ["func", "name"],
     get_functions_to_validate(),
