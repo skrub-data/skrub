@@ -238,7 +238,7 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
 
     rng = np.random.default_rng(seed=seed)
-    now = datetime.fromisoformat("2024-01-01").timestamp()
+    now = datetime.datetime.fromisoformat("2024-01-01").timestamp()
     capitals = [
         "Amsterdam",
         "Athens",
@@ -283,9 +283,9 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
 
     df_dates = pd.DataFrame(v.T, columns=["start", "end"])
     if hasattr(df_dates, "map"):
-        df_dates = df_dates.map(datetime.fromtimestamp)
+        df_dates = df_dates.map(datetime.datetime.fromtimestamp)
     else:
-        df_dates = df_dates.applymap(datetime.fromtimestamp)
+        df_dates = df_dates.applymap(datetime.datetime.fromtimestamp)
     # As above, "end" sees some of its values set to null.
     p = rng.uniform(0, 1, size=size)
     df_dates["end"] = df_dates["end"].where(p >= nulls)
