@@ -86,6 +86,7 @@ def test_drop_similar(table_with_associations, threshold, result):
     assert resulting_columns == result
 
 
+@skip_polars_installed_without_pyarrow
 def test_fit_transform(table_with_associations):
     ds = DropSimilar()
     res_fit_transform = ds.fit_transform(table_with_associations)
