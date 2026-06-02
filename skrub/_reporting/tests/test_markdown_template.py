@@ -5,6 +5,7 @@ import re
 import pytest
 
 from skrub import TableReport
+from skrub.conftest import skip_polars_installed_without_pyarrow
 from skrub.datasets import toy_cities
 
 
@@ -90,6 +91,7 @@ def test_markdown_data_format_and_highlighting(df_module):
     assert "**`low_nulls`**" not in markdown
 
 
+@skip_polars_installed_without_pyarrow
 def test_markdown_associations_highlighting_and_headers(df_module):
     """Test associations table structure, highlighting of strong associations."""
 
