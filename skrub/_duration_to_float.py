@@ -48,7 +48,7 @@ class DurationToFloat(SingleColumnTransformer):
     0    3600.0
     1    120.0
     2    86400.0
-    dtype: float64
+    dtype: float32
 
     Columns that do not have ``duration`` dtype are rejected:
 
@@ -75,7 +75,7 @@ class DurationToFloat(SingleColumnTransformer):
     ]
     >>> converter.fit_transform(s)
     shape: (3,)
-    Series: '' [f64]
+    Series: '' [f32]
     [
         3600.0
         120.0
