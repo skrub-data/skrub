@@ -1,14 +1,16 @@
 """
 
+Sessions in time-based data: Predicting user purchases with the SessionEncoder
+===============================================================================
+
 .. |SessionEncoder| replace:: :class:`~skrub.SessionEncoder`
 .. |make_retail_events| replace:: :func:`~skrub.datasets.make_retail_events`
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |DummyClassifier| replace:: :class:`~sklearn.dummy.DummyClassifier`
 .. |TimeSeriesSplit| replace:: :class:`~sklearn.model_selection.TimeSeriesSplit`
-
-Sessions in time-based data: Predicting conversion with the |SessionEncoder|
-==========================================================================
+.. |BaseEstimator| replace:: :class:`~sklearn.base.BaseEstimator`
+.. |TransformerMixin| replace:: :class:`~sklearn.base.TransformerMixin`
 
 This example shows how to use |SessionEncoder| in a scikit-learn pipeline to
 create session-level features (sessionization) for conversion prediction, that is
@@ -44,15 +46,21 @@ from sklearn.model_selection import TimeSeriesSplit
 
 splitter = TimeSeriesSplit(n_splits=5)
 # %%
-# We begin by generating the data with |make_retail_events| and marking feature
-# and target data with |skrub.X| and |skrub.y| so they can be used
-# in a DataOps workflow.
-
+# We begin by generating the data with |make_retail_events| and defining out
+# features and target.
+from skrub import TableReport
 from skrub.datasets import make_retail_events
 
 events = make_retail_events(n_users=20, n_events=5000, random_state=0)
 X, y = events.X, events.y
-X
+TableReport(X)
+# %%
+# The data contains 5000 events from 20 users, where each event is timestamped.
+# Other columns include the event type, device used by the user, page category,
+# time spent on page and price of the item. The target variable indicates whether
+# a user session eventually contains a purchase event: all events in that session
+# will have a target value of 1 if a purchase happens, and 0 otherwise.
+
 # %%
 # Sanity check: evaluate a DummyClassifier on raw event data
 # ---------------------------------------------------------------
@@ -112,8 +120,11 @@ X_sessions = se.fit_transform(X)
 X_sessions.head()
 
 # %%
+# Defining a custom transformer for session-level aggregation
+# -----------------------------------------------------------
 # To avoid data leakage and maintain a clean pipeline, we can create a custom
-# transformer that computes session-level aggregates within a scikit-learn pipeline.
+# transformer that inherits from |BaseEstimator| and |TransformerMixin| and
+# computes session-level aggregates within a scikit-learn pipeline.
 # This transformer will be fitted and applied separately within each fold of
 # cross-validation, ensuring that session features are computed only on the training
 # data of each fold.
