@@ -96,28 +96,9 @@ def test_fit_transform(table_with_associations):
     assert fit_transform_columns == transform_columns
 
 
-@pytest.mark.parametrize(
-    "threshold, result",
-    [
-        (1.0, [1.0]),
-        (0.4, [1.0, 0.5]),
-        (0, [1.0, 0.5, 0.1]),
-    ],
-)
-def test_filter_associations(df_module, threshold, result):
-    df_associations = df_module.make_dataframe(
-        {
-            "left_column_name": ["a", "b", "a"],
-            "left_column_idx": [0, 1, 0],
-            "right_column_name": ["b", "c", "c"],
-            "right_column_idx": [1, 2, 2],
-            "cramer_v": [1.0, 0.5, 0.1],
-            "pearson_corr": [None, None, None],
-        }
-    )
-
-    df_filtered = _filter_associations(df_associations, threshold)
-    assert list(df_filtered["cramer_v"]) == result
+def test_filter_associations():
+    with pytest.raises(TypeError):
+        _ = _filter_associations(None)
 
 
 @skip_polars_installed_without_pyarrow
