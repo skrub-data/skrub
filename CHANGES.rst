@@ -35,6 +35,8 @@ Bugfixes
   durations to the total number of seconds (with fractional part). This is done
   by the new transformer :class:`DurationToFloat`. :pr:`2069` by
   :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed handling of NumPy arrays in ``DataOp.skb.concat``. :pr:`2096` by
+  :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 
 
 Deprecations
