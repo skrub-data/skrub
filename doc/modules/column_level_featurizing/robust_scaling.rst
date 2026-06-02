@@ -1,5 +1,109 @@
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
+.. |ToFloat| replace:: :class:`~skrub.ToFloat`
+.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
+.. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
+
+.. _user_guide_feature_engineering_numeric_to_float:
+
+Parsing and scaling numeric features with skrub
+==========================================================
+
+Converting heterogeneous numeric values to uniform float32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Many tabular datasets stored as csv files contain numeric information stored as
+strings, mixed representations, locale-specific formats, or other non-standard
+encodings.
+Common issues include:
+
+- Thousands separators (``1,234.56`` or ``1 234,56``)
+- Use of apostrophes as separators (``4'567.89``)
+- Negative numbers encoded inside parentheses (``(1,234.56)``)
+- String columns that contain mostly numeric values, but with occasional invalid entries
+
+To provide consistent numeric behavior, skrub includes the |ToFloat| transformer,
+which standardizes all numeric-like columns to ``float32`` and handles a wide
+range of real-world formatting issues automatically. |ToFloat| is used internally
+by both the |Cleaner| and the |TableVectorizer| to guarantee that downstream
+estimators receive clean and uniform numeric data.
+
+|ToFloat| requires a ``decimal`` and a ``thousand`` separator, which are ``'.'`` and
+``None`` (no thousands separator) by default.
+Each column is expected to use a single separator for decimals, and one for thousands:
+if any characters other than the provided selectors are encountered in the column, it will not
+be converted.
+
+During ``fit``, |ToFloat| attempts to convert all values in the column to
+numeric values by removing the specified thousands separators and normalizing the decimal separator.
+If any value cannot be converted, the column is rejected with a ``RejectColumn`` exception.
+
+During ``transform``, invalid or non-convertible values are replaced by ``NaN``
+instead of raising an error.
+
+Examples
+--------
+
+Parsing numeric-formatted strings:
+
+>>> import pandas as pd
+>>> from skrub import ToFloat
+>>> s = pd.Series(['1.1', None, '3.3'], name='x')
+>>> ToFloat().fit_transform(s)
+0    1.1
+1    NaN
+2    3.3
+Name: x, dtype: float32
+
+Locale-dependent decimal separators can be handled by specifying the
+``decimal`` and ``thousand`` parameter. Here we use comma as decimal separator, and
+a space as thousands separators:
+
+>>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
+>>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
+0    4567.8...
+1    12567.8...
+Name: x, dtype: float32
+
+Parentheses interpreted as negative numbers:
+
+>>> s = pd.Series(["-1,234.56", "(1,234.56)"], name="neg")
+>>> ToFloat(thousand=",", parentheses=True).fit_transform(s)
+0   -1234.5...
+1   -1234.5...
+Name: neg, dtype: float32
+
+Scientific notation:
+
+>>> s = pd.Series(["1.23e+4", "1.23E+4"])
+>>> ToFloat(decimal=".").fit_transform(s)
+0    12300.0
+1    12300.0
+dtype: float32
+
+Columns that cannot be converted are rejected during ``fit``:
+
+>>> s = pd.Series(['1.1', 'hello'], name='x')
+>>> ToFloat(decimal=".").fit_transform(s)
+Traceback (most recent call last):
+    ...
+skrub.core.RejectColumn: Could not convert column 'x' to numbers.
+
+
+During ``transform``, invalid entries become ``NaN`` instead of raising an error:
+>>> s = pd.Series(['1.1', '2.2'], name='x')
+>>> to_float = ToFloat(decimal=".")
+>>> to_float.fit_transform(s)
+0    1.1
+1    2.2
+Name: x, dtype: float32
+
+>>> to_float.transform(pd.Series(['3.3', 'invalid'], name='x'))
+0    3.3
+1    NaN
+Name: x, dtype: float32
+
+
 
 .. _user_guide_squashing_scaler:
 

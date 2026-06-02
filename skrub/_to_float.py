@@ -68,6 +68,12 @@ class ToFloat(SingleColumnTransformer):
         "(123.45)" → "-123.45". If True, parentheses around numbers are replaced
         with a leading minus sign before conversion.
 
+    Notes
+    -----
+    This transformer does not validate number formatting. It simply removes
+    thousands separators and replaces the decimal separator. As a result,
+    some malformed inputs may still be converted but yield unexpected values.
+
     Examples
     --------
     >>> import pandas as pd
@@ -226,41 +232,26 @@ class ToFloat(SingleColumnTransformer):
     1    12300.0
     Name: x, dtype: float32
 
-    It is possible to specify the thousands separator, e.g., to use " "
+    It is possible to specify the thousands separator, e.g., to use ``" "``
 
     >>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
-    >>> ToFloat(decimal=",", thousand=" ").fit_transform(s) # doctest: +ELLIPSIS
+    >>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
     0    4567.8...
     1    12567.8...
     Name: x, dtype: float32
 
+    This transformer does not do any advanced processing: it just replaces thousands
+    with ``''`` (the empty string) and replaces the decimal separator with ``'.'``,
+    then tries to parse the result as a float.
     Extra separators, mixed separators, or multiple grouping separators may lead to
-    unwanted results. Extra separators may be ignored:
+    unexpected or unwanted results:
 
-    >>> s = pd.Series(["1,,234"], name="x")
+    >>> s = pd.Series(["1,,234", "1,2,3,4.0"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
     0    1234.0
+    1    1234.0
     Name: x, dtype: float32
 
-    Mixed or inconsistent separators may lead to unwanted results:
-
-    >>> s = pd.Series(["1.23,45"], name="x")
-    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0    1.2345
-    Name: x, dtype: float32
-
-    Multiple grouping separators may be collapsed:
-
-    >>> s = pd.Series(["1.2.3.4,0"], name="x")
-    >>> ToFloat(decimal=",", thousand=".").fit_transform(s)
-    0    1234.0
-    Name: x, dtype: float32
-
-    Notes
-    -----
-    This transformer does not validate number formatting. It simply removes
-    thousands separators and replaces the decimal separator. As a result,
-    some malformed inputs may still be converted but yield unexpected values.
     """  # noqa: E501
 
     def __init__(self, decimal=".", thousand=None, parentheses=False):
@@ -298,15 +289,17 @@ class ToFloat(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
-            self._is_string = False
+            self._needs_str_replace = False
             # Default case it's directly converted to float32.
             # Regex validation and string replacement is skipped.
             # Optimization: allows us to avoid manipulation for
             # formats that Python can parse natively.
             if (
-                self.decimal != "." or self._thousand not in (None, "")
+                self.decimal != "."
+                or self._thousand not in (None, "")
+                or self.parentheses
             ) and sbd.is_string(column):
-                self._is_string = True
+                self._needs_str_replace = True
                 column = _str_replace(
                     column,
                     decimal=self.decimal,
@@ -333,7 +326,7 @@ class ToFloat(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Float32.
         """
-        if self._is_string:
+        if self._needs_str_replace:
             column = _str_replace(
                 column,
                 decimal=self.decimal,

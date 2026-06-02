@@ -1,14 +1,21 @@
+.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |ToFloat| replace:: :class:`~skrub.ToFloat`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
+.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
+.. |RejectColumn| replace:: :class:`~skrub.core.RejectColumn`
 
 .. _user_guide_feature_engineering_numeric_to_float:
 
-Converting heterogeneous numeric values to uniform float32
+Parsing and scaling numeric features
 ==========================================================
 
-Many tabular datasets contain numeric information stored as strings, mixed
-representations, locale-specific formats, or other non-standard encodings.
+Converting heterogeneous numeric values to uniform float32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Many tabular datasets stored as csv files contain numeric information stored as
+strings, mixed representations, locale-specific formats, or other non-standard
+encodings.
 Common issues include:
 
 - Thousands separators (``1,234.56`` or ``1 234,56``)
@@ -18,70 +25,11 @@ Common issues include:
 
 To provide consistent numeric behavior, skrub includes the |ToFloat| transformer,
 which standardizes all numeric-like columns to ``float32`` and handles a wide
-range of real-world formatting issues automatically.
+range of real-world formatting issues automatically. Columns that cannot be parsed
+are rejected with a |RejectColumn| exception.
 
-The |ToFloat| transformer is used internally by both the |Cleaner| and the
-|TableVectorizer| to guarantee that downstream estimators receive clean and
-uniform numeric data.
-
-What |ToFloat| does
--------------------
-
-The |ToFloat| transformer provides:
-
-- **Automatic conversion to 32-bit floating-point values (``float32``).**
-  This dtype is lightweight and fully supported by scikit-learn estimators.
-
-- **Automatic parsing of decimal and thousands separators**, regardless of locale:
-  - The decimal separator must be specified explicitly and can be either ``.`` or ``,``
-  - The thousands separator can be one of ``.``, ``,``, space (``" "``), apostrophe (``'``),
-  or ``None`` (no thousands separator)
-  - The transformer supports integers, decimals (including leading-decimal forms such as .56 or ,56), scientific notation
-  and negative numbers
-  - Numbers in parentheses can be interpreted as negative numbers (``(1,234.56)`` → ``-1234.56``)
-  by setting the ``parentheses`` parameter to ``True``. This format is more common in financial datasets.
-  - Decimal and thousands separators must be different characters
-
-- **Scientific notation parsing** (e.g. ``1.23e+4``)
-
-- **Graceful handling of invalid or non-numeric values during transform**:
-  - During ``fit``: non-convertible values raise a ``RejectColumn`` exception
-  - During ``transform``: invalid entries become ``NaN`` instead of failing
-
-- **Rejection of categorical and datetime columns**, which should not be cast to numeric.
-
-As with all skrub transformers, |ToFloat| behaves like a standard
-scikit-learn transformer and is fully compatible with pipelines.
-
-How to use |ToFloat|
---------------------
-The |ToFloat| transformer must be applied to individual columns, and it behaves
-like a standard scikit-learn transformer.
-|ToFloat| requires a ``decimal`` and a ``thousand`` separator, which are ``'.'`` and
-``None`` (no thousands separator) by default.
-Each column is expected to use a single separator for decimals, and one for thousands:
-if any characters other than the provided selectors are encountered in the column, it will not
-be converted.
-
-During ``fit``, |ToFloat| attempts to convert all values in the column to
-numeric values by removing the specified thousands separators and normalizing the decimal separator.
-If any value cannot be converted, the column is rejected with a ``RejectColumn`` exception.
-
-During ``transform``, invalid or non-convertible values are replaced by ``NaN``
-instead of raising an error.
-
-Permissive parsing behavior
---------------------------
-
-Because |ToFloat| relies on string normalization rather than strict validation,
-some loosely formatted numbers may still be parsed successfully. Be cautious
-when working with highly irregular numeric formats, as unintended
-interpretations may occur.
-
-Examples
---------
-
-Parsing numeric-formatted strings:
+Converting numbers to ``float32`` has the advantage of reducing memory pressure,
+while retaining most of the information for training models.
 
 >>> import pandas as pd
 >>> from skrub import ToFloat
@@ -90,6 +38,14 @@ Parsing numeric-formatted strings:
 0    1.1
 1    NaN
 2    3.3
+Name: x, dtype: float32
+
+If the transformer is fitted correctly, invalid values encountered at transform
+time are replaced by ``NaN``:
+
+>>> to_float.transform(pd.Series(['3.3', 'invalid'], name='x'))
+0    3.3
+1    NaN
 Name: x, dtype: float32
 
 Locale-dependent decimal separators can be handled by specifying the
@@ -102,7 +58,8 @@ a space as thousands separators:
 1    12567.8...
 Name: x, dtype: float32
 
-Parentheses interpreted as negative numbers:
+In some contexts, negative numbers may be represented with parentheses, instead of
+using ``-``. This case is handled by the ``parentheses`` boolean parameter:
 
 >>> s = pd.Series(["-1,234.56", "(1,234.56)"], name="neg")
 >>> ToFloat(thousand=",", parentheses=True).fit_transform(s)
@@ -110,32 +67,39 @@ Parentheses interpreted as negative numbers:
 1   -1234.5...
 Name: neg, dtype: float32
 
-Scientific notation:
 
->>> s = pd.Series(["1.23e+4", "1.23E+4"])
->>> ToFloat(decimal=".").fit_transform(s)
-0    12300.0
-1    12300.0
-dtype: float32
+.. _user_guide_squashing_scaler:
 
-Columns that cannot be converted are rejected during ``fit``:
+Robust scaling of numeric features using |SquashingScaler|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The |SquashingScaler| is a robust scaler for numeric features, particularly
+useful when features include outliers (such as infinite values); missing values
+are left unchanged (they are not interpolated).
+The |SquashingScaler| centers and scales the data in such a way that outliers are
+less likely to skew the final result compared to alternative methods.
 
->>> s = pd.Series(['1.1', 'hello'], name='x')
->>> ToFloat(decimal=".").fit_transform(s)
-Traceback (most recent call last):
-    ...
-skrub.core.RejectColumn: Could not convert column 'x' to numbers.
+Based on the specified ``quantile_range`` parameter, the scaler employs a scikit-learn
+|RobustScaler| to rescale the values in a way that the quantile range occupies
+interval of length two, centering the median to zero. It therefore ensures that
+inliers are spread to a reasonable range. Afterwards, it uses a smooth clipping
+function to ensure all values (including outliers and infinite values) are in the
+range ``[-max_absolute_value, max_absolute_value]``. By default,
+``max_absolute_value=3``.
 
+>>> import pandas as pd
+>>> import numpy as np
+>>> from skrub import SquashingScaler
 
-During ``transform``, invalid entries become ``NaN`` instead of raising an error:
->>> s = pd.Series(['1.1', '2.2'], name='x')
->>> to_float = ToFloat(decimal=".")
->>> to_float.fit_transform(s)
-0    1.1
-1    2.2
-Name: x, dtype: float32
+>>> X = pd.DataFrame(dict(col=[np.inf, -np.inf, 3, -1, np.nan, 2]))
+>>> SquashingScaler(max_absolute_value=3).fit_transform(X)
+array([[ 3.        ],
+        [-3.        ],
+        [ 0.49319696],
+        [-1.34164079],
+        [        nan],
+        [ 0.        ]])
 
->>> to_float.transform(pd.Series(['3.3', 'invalid'], name='x'))
-0    3.3
-1    NaN
-Name: x, dtype: float32
+More information about the theory behind the scaler is available in the
+|SquashingScaler| documentation, while this
+:ref:`working example <sphx_glr_auto_examples_0100_squashing_scaler.py>` compares
+different scalers when used on data that include outliers.
