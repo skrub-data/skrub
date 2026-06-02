@@ -3,13 +3,9 @@
 .. |SessionEncoder| replace:: :class:`~skrub.SessionEncoder`
 .. |make_retail_events| replace:: :func:`~skrub.datasets.make_retail_events`
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
-.. |skrub.X| replace:: :func:`~skrub.X`
-.. |skrub.y| replace:: :func:`~skrub.y`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |DummyClassifier| replace:: :class:`~sklearn.dummy.DummyClassifier`
 .. |TimeSeriesSplit| replace:: :class:`~sklearn.model_selection.TimeSeriesSplit`
-.. |cross_validate| replace:: :func:`~skrub.cross_validate`
-.. |apply_func| replace:: :func:`~skrub.DataOp.skb.apply_func`
 
 Sessions in time-based data: Predicting conversion with the |SessionEncoder|
 ==========================================================================
@@ -18,9 +14,7 @@ This example shows how to use |SessionEncoder| in a scikit-learn pipeline to
 create session-level features (sessionization) for conversion prediction, that is
 predicting whether a user session will eventually lead to a purchase.
 
-.. note::
-
-    **What is sessionization?**
+.. topic:: What is sessionization?
 
     Sessionization is the process of grouping a sequence of events (like user
     interactions) into meaningful sessions. A session typically starts fresh or
@@ -41,11 +35,6 @@ The data includes columns such as event type, device type, viewed price, and
 timestamp. The target is binary: whether the session eventually contains a
 purchase event or not.
 
-
-.. note::
-
-A version of this example that uses the skrub DataOps workflow instead of a
-scikit-learn pipeline is available in :ref:`examples/data_ops/1170_session_encoder`.
 """
 
 # %%
@@ -168,5 +157,4 @@ print("ROC-AUC with session encoding:", scores.mean())
 # create a custom transformer to compute session-level features. This situation
 # can be avoided by using the skrub DataOps workflow, which allows for more
 # flexible data transformations without needing to fit everything within a
-# scikit-learn pipeline. For an example of how to do this with DataOps, see
-# :ref:`examples/data_ops/1170_session_encoder`.
+# scikit-learn pipeline.
