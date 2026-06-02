@@ -10,7 +10,7 @@ should also remove their corresponding references from the list.
 All tests are skipped by default. To run them and see which docstrings
 need to be fixed, set the environment variable::
 
-    SKRUB_CHECK_DOCSTRINGS=1 pytest skrub/tests/test_docstrings.py -v
+    SKB_CHECK_DOCSTRINGS=1 pytest skrub/tests/test_docstrings.py -v
 
 Items listed in `DOCSTRING_TEMP_IGNORE_SET` are individually skipped even
 when the env variable is set, so you can focus on newly introduced issues.
@@ -24,11 +24,11 @@ from importlib import import_module
 import pytest
 from numpydoc.validate import validate
 
-# Set SKRUB_CHECK_DOCSTRINGS=1 to run the validation tests instead of skipping them.
-_CHECK_DOCSTRINGS = os.environ.get("SKRUB_CHECK_DOCSTRINGS", "0") == "1"
+# Set SKB_CHECK_DOCSTRINGS=1 to run the validation tests instead of skipping them.
+_CHECK_DOCSTRINGS = os.environ.get("SKB_CHECK_DOCSTRINGS", "0") == "1"
 skip_docstring_tests = pytest.mark.skipif(
     not _CHECK_DOCSTRINGS,
-    reason="Set SKRUB_CHECK_DOCSTRINGS=1 to run docstring validation tests",
+    reason="Set SKB_CHECK_DOCSTRINGS=1 to run docstring validation tests",
 )
 
 DOCSTRING_TEMP_IGNORE_SET = {
