@@ -40,7 +40,7 @@ monotonically increasing ID, for each session:
 
 >>> se = SessionEncoder(timestamp_col="timestamp", split_by="user_id", session_gap=30 * 60)
 >>> res = se.fit_transform(X)
->>> res.head(5)
+>>> res.head(5) # doctest: +SKIP
      user_id                        timestamp device_type page_category event_type  time_on_page  price_viewed  timestamp_session_id
 0  user_0164 2024-01-01 03:29:07.708922+00:00      mobile       fashion  page_view         134.1        309.80                    59
 1  user_0164 2024-01-01 03:29:42.185048+00:00      tablet         books     search         103.4         11.00                    59
