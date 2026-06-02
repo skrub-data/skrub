@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numbers
 import string
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -238,7 +238,7 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
 
     rng = np.random.default_rng(seed=seed)
-    now = datetime.fromisoformat("2024-01-01").timestamp()
+    now = datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()
     capitals = [
         "Amsterdam",
         "Athens",
@@ -278,14 +278,18 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
 
     # Next, the "start" and "end" datetime columns are constructed.
     s = rng.integers(0, int(now), size=size)
-    e = rng.integers(s, np.ones(size) * now)
+    e = rng.integers(s, int(now), size=size)
     v = np.vstack([s, e])
 
     df_dates = pd.DataFrame(v.T, columns=["start", "end"])
     if hasattr(df_dates, "map"):
-        df_dates = df_dates.map(datetime.fromtimestamp)
+        df_dates = df_dates.map(
+            lambda ts: datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+        )
     else:
-        df_dates = df_dates.applymap(datetime.fromtimestamp)
+        df_dates = df_dates.applymap(
+            lambda ts: datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+        )
     # As above, "end" sees some of its values set to null.
     p = rng.uniform(0, 1, size=size)
     df_dates["end"] = df_dates["end"].where(p >= nulls)
