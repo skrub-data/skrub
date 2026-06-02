@@ -219,7 +219,4 @@ def test_dataset_paths(dataset_name, dataset_path):
 def test_dataset_files(dataset_name, files):
     "Test datasets whose fetcher returns a PosixPath."
     path = getattr(_fetching, f"fetch_{dataset_name}")()
-    for file in files:
-        print(f"Checking for {file}")
-        print(file in os.listdir(path))
     assert all(file in os.listdir(path) for file in files)
