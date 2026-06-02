@@ -17,6 +17,7 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
+from ._duration_to_float import DurationToFloat
 from ._select_cols import Drop
 from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
@@ -125,6 +126,7 @@ def _get_preprocessors(
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
+    duration_to_float=False,
 ):
     cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
@@ -145,6 +147,9 @@ def _get_preprocessors(
         ),
         (ToDatetime(format=datetime_format), cols),
     ]
+
+    if duration_to_float:
+        transformers.append((DurationToFloat(), cols))
 
     match parse_numbers, cast_to_float32:
         case False, False:
@@ -1028,6 +1033,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             cast_to_float32=True,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
+            duration_to_float=True,
         )
 
         self._encoders = []
