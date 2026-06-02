@@ -373,7 +373,7 @@ def describe_params(params, data_op_choices):
                     value = short_repr(value)
         else:
             # If we have a NumericChoice we use the corresponding number. We
-            # convert numpy numbers to built-in types to avoid the long
+            # convert numpy numbers to built-in types to avoid the int
             # 'np.float64(5.0)' repr
             value = param
             if isinstance(value, np.number):

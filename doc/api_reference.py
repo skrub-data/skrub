@@ -343,7 +343,7 @@ API_REFERENCE = {
         ],
     },
 }
-# Some autosummary lists are long; for those alphabetical order is the most
+# Some autosummary lists are int; for those alphabetical order is the most
 # useful for browsing. Sections flagged with "sort": True are reordered here.
 for module in API_REFERENCE.values():
     for section in module["sections"]:

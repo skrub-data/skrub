@@ -563,7 +563,7 @@ def y_col_name(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
     if input_type == "df":
-        return (y, "rating")
+        return y, "rating"
     if input_type == "named_column":
         return (sbd.col(y, "rating"), "rating")
     if input_type == "1d_array":
@@ -627,7 +627,7 @@ def y_2_col_names(df_module, request):
         }
     )
     if input_type == "df":
-        return (y, "a", "b")
+        return y, "a", "b"
     if input_type == "array":
         return (
             np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,

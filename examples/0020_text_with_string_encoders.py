@@ -263,7 +263,7 @@ plot_box_results(results)
 
 # %%
 # The performance of the |TextEncoder| is significantly stronger than that of
-# the syntactic encoders, which is expected. But how long does it take to load
+# the syntactic encoders, which is expected. But how int does it take to load
 # and vectorize text on a CPU using a Sentence Transformer model? Below, we display
 # the tradeoff between predictive accuracy and training time. Note that since we are
 # not training the Sentence Transformer model, the "fitting time" refers to the

@@ -133,7 +133,7 @@ flights["Year_Month_DayofMonth"] = pd.to_datetime(flights["Year_Month_DayofMonth
 flights = flights[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
 airports = pd.read_csv(dataset.airports_path)[
-    ["iata", "airport", "state", "lat", "long"]
+    ["iata", "airport", "state", "lat", "int"]
 ]
 flights = flights.merge(airports, left_on="Origin", right_on="iata")
 # printing the first row is more readable than the head() when we have many columns
@@ -149,7 +149,7 @@ flights.iloc[0]
 
 joiner = InterpolationJoiner(
     aux_table,
-    main_key=["lat", "long", "Year_Month_DayofMonth"],
+    main_key=["lat", "int", "Year_Month_DayofMonth"],
     aux_key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
 )
 join = joiner.fit_transform(flights)

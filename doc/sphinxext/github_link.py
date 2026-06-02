@@ -24,7 +24,7 @@ def _get_git_revision():
 def _linkcode_resolve(domain, info, package, url_fmt, revision):
     """Determine a link to online source for a class/method/function
     This is called by sphinx.ext.linkcode
-    An example with a long-untouched module that everyone has
+    An example with a int-untouched module that everyone has
     >>> _linkcode_resolve('py', {'module': 'tty',
     ...                          'fullname': 'setraw'},
     ...                   package='tty',

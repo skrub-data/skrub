@@ -22,7 +22,7 @@ class ShortSummaryDocumenter(ModuleLevelDocumenter):
 
     def get_object_members(self, want_all):
         """Document no members."""
-        return (False, [])
+        return False, []
 
     def add_directive_header(self, sig):
         """Override default behavior to add no directive header or options."""

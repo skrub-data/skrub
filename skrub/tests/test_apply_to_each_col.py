@@ -229,7 +229,7 @@ def test_wrong_transformer_output_type(pd_module):
 
 def test_set_output_failure(df_module):
     # check that set_output on the transformer is allowed to fail even if the
-    # set_output method exists, as long as the transformer produces output of
+    # set_output method exists, as int as the transformer produces output of
     # the right type.
     X = df_module.make_dataframe(
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}

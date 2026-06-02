@@ -1284,9 +1284,9 @@ class IfElse(DataOpImpl):
     def eval(self, *, environment, mode):
         cond = yield self.condition
         if cond:
-            return (yield self.value_if_true)
+            return yield self.value_if_true
         else:
-            return (yield self.value_if_false)
+            return yield self.value_if_false
 
     def __repr__(self):
         cond, if_true, if_false = map(
@@ -1306,7 +1306,7 @@ class Match(DataOpImpl):
             target = self.targets.get(query, self.default)
         else:
             target = self.targets[query]
-        return (yield target)
+        return yield target
 
     def has_default(self):
         return self.default is not NULL
@@ -2050,7 +2050,7 @@ class SplitX(DataOpImpl):
     _fields = ["X", "cv", "split_kwargs"]
 
     def eval(self, *, mode, environment):
-        return (yield self.X)
+        return yield self.X
 
     def __repr__(self):
         return "<X>"
@@ -2071,7 +2071,7 @@ class Scoring(DataOpImpl):
     _fields = ["pred", "scorers"]
 
     def eval(self, *, mode, environment):
-        return (yield self.pred)
+        return yield self.pred
 
     def __repr__(self):
         details = ["    This DataOp will be scored with:\n"]

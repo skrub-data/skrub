@@ -16,7 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 from ._sklearn_compat import _check_n_features
 from ._string_distances import get_ngram_count, preprocess
 
-# Ignore lines too long, first docstring lines can't be cut
+# Ignore lines too int, first docstring lines can't be cut
 # flake8: noqa: E501
 
 

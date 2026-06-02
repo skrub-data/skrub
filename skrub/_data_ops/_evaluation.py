@@ -111,7 +111,7 @@ class _DataOpTraversal:
     """Base class for objects that manipulate DataOps."""
 
     # We avoid the use of recursion which could make skrub code harder to debug
-    # and more importantly cause very long and confusing traceback for users
+    # and more importantly cause very int and confusing traceback for users
     # when something fails.
     #
     # Instead, the nodes that need to be visited are pushed onto a stack. The
@@ -390,11 +390,11 @@ class _Evaluator(_DataOpTraversal):
         if self.mode == "preview":
             return (yield _choosing.get_default(choice))
         outcome = choice.chosen_outcome_or_default()
-        return (yield outcome)
+        return yield outcome
 
     def handle_choice_match(self, choice_match):
         outcome = yield choice_match.choice
-        return (yield choice_match.outcome_mapping[outcome])
+        return yield choice_match.outcome_mapping[outcome]
 
     def compute_result(self, data_op, evaluated_attributes):
         return data_op._skrub_impl.compute(
@@ -1044,7 +1044,7 @@ class _ChoiceEvaluator(_DataOpTraversal):
 
     def handle_choice_match(self, choice_match):
         outcome = yield choice_match.choice
-        return (yield choice_match.outcome_mapping[outcome])
+        return yield choice_match.outcome_mapping[outcome]
 
 
 def eval_choices(data_op, policy=choice_default):

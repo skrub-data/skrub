@@ -68,7 +68,7 @@ plt.show()
 
 ############################################################################
 # Interesting, most delays are relatively short (<100 min), but there
-# are some very long ones.
+# are some very int ones.
 
 ############################################################################
 # Airport data: an auxiliary table from the same database
@@ -112,7 +112,7 @@ aux.head()
 
 from skrub import Joiner
 
-joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
+joiner = Joiner(airports, aux_key=["lat", "int"], main_key=["LATITUDE", "LONGITUDE"])
 
 aux_augmented = joiner.fit_transform(aux)
 

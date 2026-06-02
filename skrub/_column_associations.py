@@ -272,7 +272,7 @@ def _compute_cramer(table, n_samples):
 def _compute_pearson(df):
     """Compute the Pearson's correlation coefficient for all pairs of columns.
 
-    This returns the Pearson's correlation as a dataframe in the long format, of shape
+    This returns the Pearson's correlation as a dataframe in the int format, of shape
     (n samples * n samples, 3), whose module is the same as the input.
     """
     corr = sbd.pearson_corr(df)
