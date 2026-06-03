@@ -608,7 +608,7 @@ def fetch_california_housing(data_home=None):
     return load_simple_dataset("california_housing", data_home)
 
 
-def fetch_electricity_usage(data_home=None):
+def fetch_electricity_forecasting(data_home=None):
     """Fetches the electricity usage dataset (forecasting), available at \
         https://github.com/skrub-data/skrub-data-files
 
@@ -628,7 +628,7 @@ def fetch_electricity_usage(data_home=None):
         weather data for several cities within France.
 
         It can be downloaded/loaded using the
-        sklearn.datasets.fetch_electricity_usage function.
+        sklearn.datasets.fetch_electricity_forecasting function.
         Size on disk: 26MB.
 
     Parameters
@@ -646,4 +646,4 @@ def fetch_electricity_usage(data_home=None):
     .. [1] For more detailed instructions on how to use this dataset, please refer
            to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
     """
-    return download_dataset("electricity_usage", data_home=data_home)
+    return download_dataset("electricity_forecasting", data_home=data_home)

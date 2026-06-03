@@ -50,12 +50,12 @@ DATASET_INFO = {
         ],
         "sha256": "0c3885894baf02fc787109801ec2c34cc25cd4a31e0066a16941b74157474887",
     },
-    "electricity_usage": {
+    "electricity_forecasting": {
         "urls": [
-            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_usage.zip",
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_forecasting.zip",
             "https://osf.io/download/d8ykq",
         ],
-        "sha256": "d929d73ce79e0e07a200941a476bde253ecb8fcd5d08ab276c0b5458dbf3bc7f",
+        "sha256": "15968327cb0f74150aebabae4057cfe1db6728951b37614ac7e3f2fb1456f2d5",
     },
     "employee_salaries": {
         "urls": [

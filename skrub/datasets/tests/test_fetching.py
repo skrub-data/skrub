@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -178,16 +178,11 @@ def test_cant_download(monkeypatch):
 
 
 @xfail_with_download_error
-@pytest.mark.parametrize(
-    "dataset_name, dataset_path",
-    [
-        ("electricity_usage", ("electricity_usage", "electricity_usage")),
-    ],
-)
-def test_dataset_paths(dataset_name, dataset_path):
-    "Test datasets whose fetcher returns a PosixPath."
-    path = getattr(_fetching, f"fetch_{dataset_name}")()
-    assert path.parts[-2:] == dataset_path
+def test_dataset_paths(dataset="electricity_forecasting"):
+    # Test datasets whose fetcher returns a path to a directory
+    # containing several files comprising a single dataset.
+    path = getattr(_fetching, f"fetch_{dataset}")()
+    assert path.name == dataset
 
 
 @xfail_with_download_error
@@ -195,7 +190,7 @@ def test_dataset_paths(dataset_name, dataset_path):
     "dataset_name, files",
     [
         (
-            "electricity_usage",
+            "electricity_forecasting",
             [
                 "weather_bayonne.csv",
                 "weather_brest.csv",
@@ -217,9 +212,8 @@ def test_dataset_paths(dataset_name, dataset_path):
     ],
 )
 def test_dataset_files(dataset_name, files):
-    "Test datasets whose fetcher returns a PosixPath."
+    # Test datasets whose fetcher returns a path to a directory
+    # containing multiple files with comprise the dataset.
     path = getattr(_fetching, f"fetch_{dataset_name}")()
-    for file in files:
-        print(f"Checking for {file}")
-        print(file in os.listdir(path))
-    assert all(file in os.listdir(path) for file in files)
+    files_in_dir = [f.name for f in Path(path).iterdir() if f.is_file()]
+    assert all(file in files_in_dir for file in files)
