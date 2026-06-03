@@ -45,7 +45,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    threshold : float, default=0.8
+    threshold : float, default=1
         The Cramér association score value above which to start dropping columns.
 
     Attributes
@@ -56,14 +56,14 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     all_outputs_ : list
         The names of columns that the transformer keeps
 
-    table_associations_ : dataframe
+    column_associations_ : dataframe
         A dataframe with columns `left_column_name', 'right_column_name' and 'cramer_v'
         listing association scores between every pair of columns.
 
     See Also
     --------
     DropUninformative :
-        Drops columns for which various other criteria indicate that they contain
+        Drops a single column if certain criteria indicate that it contains
         little to no information (amount of nulls, of distinct values...)
 
     Cleaner :
@@ -86,7 +86,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     >>> ds = DropSimilar(threshold=0.8)
     >>> clean_df = ds.fit_transform(df)
 
-    `ds` has now removed a column for each pair with association above 0.6.
+    `ds` has now removed a column for each pair with association above 0.8.
     These associations are stored in the `table_associations_` attribute:
 
     >>> ds.table_associations_.head() # doctest: +SKIP
@@ -116,7 +116,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     4  ubagaIBHnG   London 1982-09-13 20:54:54 2000-12-02 07:36:41
     """  # noqa: E501
 
-    def __init__(self, threshold=0.8):
+    def __init__(self, threshold=1):
         self.threshold = threshold
 
     def get_feature_names_out(self):
@@ -147,18 +147,14 @@ class DropSimilar(TransformerMixin, BaseEstimator):
                     " dataframes."
                 )
 
-        self.to_drop_ = []
-
         association_df = column_associations(X)
-        self.table_associations_ = s.select(
+        self.column_associations_ = s.select(
             association_df, ["left_column_name", "right_column_name", "cramer_v"]
         )
 
-        pairs_to_drop = _filter_associations(self.table_associations_, self.threshold)
+        pairs_to_drop = _filter_associations(self.column_associations_, self.threshold)
 
-        self.to_drop_.extend(
-            sbd.to_list(sbd.unique(pairs_to_drop["right_column_name"]))
-        )
+        self.to_drop_ = sbd.to_list(sbd.unique(pairs_to_drop["right_column_name"]))
 
         self._dropper = DropCols(self.to_drop_)
         new_X = self._dropper.fit_transform(X, y)

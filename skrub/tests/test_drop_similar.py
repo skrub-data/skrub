@@ -3,6 +3,7 @@ import sys
 
 import pytest
 
+from skrub import _dataframe as sbd
 from skrub._drop_similar import DropSimilar, _filter_associations
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -92,8 +93,8 @@ def test_fit_transform(table_with_associations):
     res_fit_transform = ds.fit_transform(table_with_associations)
     ds.fit(table_with_associations)
     res_transform = ds.transform(table_with_associations)
-    fit_transform_columns = list(res_fit_transform.columns)
-    transform_columns = list(res_transform.columns)
+    fit_transform_columns = sbd.column_names(res_fit_transform)
+    transform_columns = sbd.column_names(res_transform)
     assert fit_transform_columns == transform_columns
 
 
@@ -119,6 +120,14 @@ def test_wrong_threshold(df_module, threshold, error):
 
 
 def test_without_pyarrow(monkeypatch):
+    """
+    DropSimilar requires Pandas dataframes. If the user is working with Polars
+    but does not have the Pyarrow module to convert their dataframe to Pandas,
+    it is expected that `DropSimilar.fit_transform` should fail.
+
+    This test forces this specific import configuration using monkeypatch and
+    a custom `import` function, and checks that the method does indeed fail.
+    """
     pl = pytest.importorskip("polars")
     example_dataframe = pl.DataFrame({"a": [1, 2, 3]})
     monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
