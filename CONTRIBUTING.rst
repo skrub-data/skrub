@@ -144,9 +144,35 @@ Every PR should link to the issue it addresses.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To setup your development environment, you need to follow the steps in "From Source" tab
-present in :ref:`Installing from source<installing_from_source>` page.
-After that, you can return to this page to continue.
+To set up your development environment:
+
+1. Fork `skrub on GitHub <https://github.com/skrub-data/skrub/fork>`_.
+2. Clone your fork and add the official repository as ``upstream``:
+
+   .. code:: sh
+
+      git clone https://github.com/<YOUR_USERNAME>/skrub
+      cd skrub
+      git remote add upstream https://github.com/skrub-data/skrub.git
+
+3. Create and activate a virtual environment, then install the project in
+   editable mode with development dependencies:
+
+   .. code:: sh
+
+      python -m venv env_skrub
+      source env_skrub/bin/activate
+      pip install -e ".[dev]"
+      pre-commit install
+
+4. Run the test suite once to verify the environment:
+
+   .. code:: sh
+
+      pytest --pyargs skrub
+
+The :ref:`installation page <installing_from_source>` contains the same setup
+commands in a shorter form if you only need the install steps.
 
 Now that the development environment is ready, you may create a new branch and start working on
 the new issue.
