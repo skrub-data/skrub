@@ -282,6 +282,9 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     v = np.vstack([s, e])
 
     df_dates = pd.DataFrame(v.T, columns=["start", "end"])
+
+    # Converting df_dates into readable datetimes, using Pandas's `map` method.
+    # Backwards compatibility is ensured for older versions of Pandas using `applymap`.
     if hasattr(df_dates, "map"):
         df_dates = df_dates.map(
             lambda ts: datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
