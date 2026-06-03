@@ -872,6 +872,25 @@ def test_concat_non_str_colname():
         )
 
 
+def test_concat_numpy_arrays():
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6], [7, 8]])
+    var_a = skrub.var("a", a)
+    var_b = skrub.var("b", b)
+
+    # Test axis=0 (vertical stack)
+    result = var_a.skb.concat([var_b], axis=0)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=0)
+    np.testing.assert_array_equal(out, expected)
+
+    # Test axis=1 (horizontal stack)
+    result = var_a.skb.concat([var_b], axis=1)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=1)
+    np.testing.assert_array_equal(out, expected)
+
+
 def test_get_vars():
     a = skrub.var("a")
     b = skrub.var("b")
