@@ -37,7 +37,7 @@ jobs:
         with:
           path: |
             ~/.cache/huggingface/hub
-            ~/.cache/torch/sentence_transformers
+            ~/skrub_data
           key: hf-models-${{ matrix.environment }}-${{ hashFiles('pixi.lock') }}
       - name: Run tests
         env:
