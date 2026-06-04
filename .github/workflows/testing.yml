@@ -33,6 +33,8 @@ jobs:
           # latest version time to time.
           frozen: true
       - name: Run tests
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: pixi run -e ${{ matrix.environment }} test -n auto
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
