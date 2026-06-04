@@ -365,15 +365,17 @@ class TextEncoder(SingleColumnTransformer):
                 cache_folder=self._cache_folder,
                 token=token,
             )
-        except OSError as e:
-            raise ModelNotFound(
-                f"{self.model_name} is not a local folder and is not a valid "
-                "model identifier listed on 'https://huggingface.co/models'.\n "
-                "If this is a private repository, make sure to pass a token having "
-                "permission to this repo by setting this token as an environment "
-                "variable, and passing this variable to the TextEncoder as "
-                "`token_env_variable=<your_token_env_variable>`"
-            ) from e
+        except Exception as e:
+            raise e
+        # except OSError as e:
+        #     raise ModelNotFound(
+        #         f"{self.model_name} is not a local folder and is not a valid "
+        #         "model identifier listed on 'https://huggingface.co/models'.\n "
+        #         "If this is a private repository, make sure to pass a token having "
+        #         "permission to this repo by setting this token as an environment "
+        #         "variable, and passing this variable to the TextEncoder as "
+        #         "`token_env_variable=<your_token_env_variable>`"
+        #     ) from e
         return estimator
 
     def _check_params(self):
