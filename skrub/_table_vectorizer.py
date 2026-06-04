@@ -181,6 +181,26 @@ def _get_preprocessors(
     return steps
 
 
+def _list_transformations(estimator):
+    for step in estimator._pipeline.named_steps:
+        if step == "checkinputdataframe":
+            continue
+        transformer = estimator._pipeline.named_steps[step]
+        # "transformer" is just ApplyToEachCol, so we need to get the actual transformer
+        match transformer.transformer:
+            case DropUninformative():
+                print("DropUninformative - ")
+                dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
+                print(f"Dropped columns {dropped} - ")
+                print(f"Used inputs: {transformer.used_inputs_} - ")
+            case ToFloat():
+                print("ToFloat - ")
+                print(f"Columns transformed to float: {transformer.used_inputs_} - ")
+            case ToDatetime():
+                print("ToDatetime - ")
+                print(f"Columns transformed to datetime: {transformer.used_inputs_} - ")
+
+
 class Cleaner(TransformerMixin, BaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
