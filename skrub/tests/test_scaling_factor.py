@@ -44,7 +44,7 @@ def test_nonfinite():
         GapEncoder(n_components=2),
         pytest.param(
             skrub.TextEncoder(
-                model_name="sentence-transformers/paraphrase-albert-small-v2",
+                model_name="optimum-intel-internal-testing/tiny-random-bert",
                 n_components=2,
                 device="cpu",
             ),
