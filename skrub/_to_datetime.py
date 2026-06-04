@@ -1,5 +1,6 @@
 import warnings
 
+import pandas as pd
 from pandas._libs.tslibs.parsing import (
     guess_datetime_format as pd_guess_datetime_format,
 )
@@ -459,14 +460,18 @@ def _guess_datetime_format(column):
         month_first_formats = column.apply(
             pd_guess_datetime_format, dayfirst=False
         ).unique()
-        if len(month_first_formats) == 1 and month_first_formats[0] is not None:
-            return str(month_first_formats[0])
+        first_month = month_first_formats[0]
+        # new versions of pandas return pd.NA instead of None
+        if len(month_first_formats) == 1 and first_month not in [None, pd.NA]:
+            return str(first_month)
 
         day_first_formats = column.apply(
             pd_guess_datetime_format, dayfirst=True
         ).unique()
-        if len(day_first_formats) == 1 and day_first_formats[0] is not None:
-            return str(day_first_formats[0])
+        first_day = day_first_formats[0]
+        # new versions of pandas return pd.NA instead of None
+        if len(day_first_formats) == 1 and first_day not in [None, pd.NA]:
+            return str(first_day)
 
     return None
 
