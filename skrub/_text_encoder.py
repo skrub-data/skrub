@@ -362,7 +362,7 @@ class TextEncoder(SingleColumnTransformer):
             estimator = st.SentenceTransformer(
                 self.model_name,
                 device=self.device,
-                config_kwargs={"cache_dir": self._cache_folder},
+                cache_folder=self._cache_folder,
                 token=token,
             )
         except OSError as e:
