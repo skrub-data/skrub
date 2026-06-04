@@ -32,6 +32,13 @@ jobs:
           # we can freeze the environment and manually bump the dependencies to the
           # latest version time to time.
           frozen: true
+      - name: Cache HuggingFace models
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/huggingface/hub
+            ~/.cache/torch/sentence_transformers
+          key: hf-models-${{ matrix.environment }}-${{ hashFiles('pixi.lock') }}
       - name: Run tests
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
