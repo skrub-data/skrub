@@ -462,7 +462,11 @@ def _guess_datetime_format(column):
         ).unique()
         first_month = month_first_formats[0]
         # new versions of pandas return pd.NA instead of None
-        if len(month_first_formats) == 1 and first_month not in [None, pd.NA]:
+        if (
+            len(month_first_formats) == 1
+            and first_month is not pd.NA
+            and first_month is not None
+        ):
             return str(first_month)
 
         day_first_formats = column.apply(
@@ -470,7 +474,11 @@ def _guess_datetime_format(column):
         ).unique()
         first_day = day_first_formats[0]
         # new versions of pandas return pd.NA instead of None
-        if len(day_first_formats) == 1 and first_day not in [None, pd.NA]:
+        if (
+            len(day_first_formats) == 1
+            and first_day is not pd.NA
+            and first_day is not None
+        ):
             return str(first_day)
 
     return None
