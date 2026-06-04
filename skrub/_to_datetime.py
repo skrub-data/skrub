@@ -438,6 +438,8 @@ class ToDatetime(SingleColumnTransformer):
         if self.format is not None:
             return self.format
         not_null = sbd.drop_nulls(column)
+        if len(not_null) == 0:
+            return None
         sample = sbd.sample(
             not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]), seed=0
         )
