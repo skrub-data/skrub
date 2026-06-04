@@ -4,15 +4,16 @@ import os
 import warnings
 from pathlib import Path
 
+import polars as pl
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
-from . import _dataframe as sbd
-from ._scaling_factor import scaling_factor
-from ._single_column_transformer import SingleColumnTransformer
-from ._to_str import ToStr
-from ._utils import import_optional_dependency, unique_strings
-from .datasets._utils import get_data_dir
+from skrub import _dataframe as sbd
+from skrub._scaling_factor import scaling_factor
+from skrub._to_str import ToStr
+from skrub._utils import import_optional_dependency, unique_strings
+from skrub.core import SingleColumnTransformer
+from skrub.datasets._utils import get_data_dir
 
 
 class ModelNotFound(ValueError):
@@ -199,6 +200,7 @@ class TextEncoder(SingleColumnTransformer):
         store_weights_in_pickle=False,
         random_state=None,
         verbose=False,
+        use_caching=False,
     ):
         self.model_name = model_name
         self.n_components = n_components
@@ -209,6 +211,7 @@ class TextEncoder(SingleColumnTransformer):
         self.store_weights_in_pickle = store_weights_in_pickle
         self.random_state = random_state
         self.verbose = verbose
+        self.use_caching = use_caching
 
     def fit_transform(self, column, y=None):
         """Fit the TextEncoder from ``column``.
@@ -238,7 +241,10 @@ class TextEncoder(SingleColumnTransformer):
 
         self.input_name_ = sbd.name(column) or "text_enc"
 
-        X_out = self._vectorize(column)
+        if self.use_caching and self.cache_folder is not None:
+            X_out = self._vectorize_with_cache(column)
+        else:
+            X_out = self._vectorize(column)
 
         if self.n_components is not None:
             if (min_shape := min(X_out.shape)) >= self.n_components:
@@ -302,7 +308,10 @@ class TextEncoder(SingleColumnTransformer):
             raise ValueError("Input column does not contain strings.")
         column = self.to_str.transform(column)
 
-        X_out = self._vectorize(column)
+        if self.use_caching and self.cache_folder is not None:
+            X_out = self._vectorize_with_cache(column)
+        else:
+            X_out = self._vectorize(column)
 
         if hasattr(self, "pca_"):
             X_out = self.pca_.transform(X_out)
@@ -318,6 +327,56 @@ class TextEncoder(SingleColumnTransformer):
 
         return X_out
 
+    def _vectorize_with_cache(self, column):
+        total_values = column.to_frame().rename({column.name: "values"})
+        unique_values = column.unique().to_frame().rename({column.name: "values"})
+
+        if os.path.exists(
+            os.path.join(
+                self.cache_folder,
+                self.model_name.replace("/", "-") + "cached_outputs.parquet",
+            )
+        ):
+            cached_values = pl.read_parquet(
+                os.path.join(
+                    self.cache_folder,
+                    self.model_name.replace("/", "-") + "cached_outputs.parquet",
+                )
+            )  # !!!!POLARS DEPENDENT
+        else:
+            cached_values = pl.DataFrame(
+                schema={"values": pl.String}
+            )  #!!!!!! POLARS DEPENDENT
+
+        to_compute = unique_values.join(cached_values, on="values", how="anti")[
+            "values"
+        ]
+        print(f"Computing {to_compute.shape[0]}")
+
+        if not to_compute.is_empty():
+            V = pl.DataFrame(self._vectorize(to_compute)).with_columns(to_compute)
+            new_cache = sbd.concat(cached_values, V)
+            new_cache.write_parquet(
+                os.path.join(self.cache_folder, "temp_cache.parquet")
+            )
+            os.rename(
+                os.path.join(self.cache_folder, "temp_cache.parquet"),
+                os.path.join(
+                    self.cache_folder,
+                    self.model_name.replace("/", "-") + "cached_outputs.parquet",
+                ),
+            )
+        else:
+            new_cache = cached_values
+
+        import numpy as np
+
+        X_out = sbd.to_numpy(
+            total_values.join(new_cache, how="left", on="values", coalesce=True)
+        )[:, 1:].astype(np.float32)
+
+        return X_out
+
     def _vectorize(self, column):
         is_null = sbd.to_numpy(sbd.is_null(column))
         column = sbd.to_numpy(column)
@@ -325,6 +384,7 @@ class TextEncoder(SingleColumnTransformer):
 
         # sentence-transformers deals with converting a torch tensor
         # to a numpy array, on CPU.
+
         return self._estimator.encode(
             unique_x,
             normalize_embeddings=False,
@@ -444,3 +504,11 @@ class TextEncoder(SingleColumnTransformer):
             f"{self.input_name_}_{str(i).zfill(num_digits)}"
             for i in range(self.n_components_)
         ]
+
+    def flush_cache(self):
+        os.remove(
+            os.path.join(
+                self.cache_folder,
+                self.model_name.replace("/", "-") + "cached_outputs.parquet",
+            )
+        )

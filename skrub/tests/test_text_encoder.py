@@ -1,7 +1,9 @@
+import os
 import pickle
 import sys
 
 import pandas as pd
+import polars as pl
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import clone
@@ -199,3 +201,37 @@ def test_categorical_features(df_module, encoder):
 
     out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert len(sbd.column_names(out)) == 30
+
+
+@pytest.fixture
+def test_cache_size(df_module):
+    df = sbd.make_dataframe(
+        {
+            "id": [1, 2, 3, 4, 5],
+            "name": ["one", "two", "three", "four", "one"],
+            "answer": ["yes", "no", "yes", "yes", "perhaps"],
+        }
+    )
+    encoder = TextEncoder(
+        model_name="llm_e5-base-v2",
+        token_env_variable=None,
+        batch_size=32,
+        n_components=30,
+        use_caching=True,
+        cache_folder=".cache",
+    )
+
+    string_cols = ["name", "answer"]
+
+    for col in string_cols:
+        _ = encoder.fit_transform(df[col], [])
+
+    for col in string_cols:
+        _ = encoder.transform(df[col])
+
+    cached_values = pl.read_parquet(os.path.join(".cache", "cached_outputs.parquet"))
+    expected_cache = pl.DataFrame(
+        {"Values": ["one", "two", "three", "four", "yes", "no", "perhaps"]}
+    )
+
+    assert cached_values["values"] == expected_cache["values"]
