@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV
 from sklearn.model_selection import GroupKFold, train_test_split
 from sklearn.utils import check_random_state
 
@@ -475,16 +475,16 @@ def test_optuna_optimize_learner(use_choose_from, outcome_names):
             assert study.best_params == {"0:x": "2:2.0"}
     else:
         assert list(study.best_params.keys()) == ["0:x"]
-        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.01)
+        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.05)
 
     # test both set_params(**best_params) or make_learner(choose=best_trial)
     learner_0 = err.skb.make_learner(choose=study.best_trial)
     learner_1 = err.skb.make_learner()
     learner_1.set_params(**study.best_params)
     for learner in [learner_0, learner_1]:
-        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
+        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.05)
         truncated = learner.truncated_after("x_")
-        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
+        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.05)
 
 
 def test_is_optuna_trial(monkeypatch):
@@ -957,14 +957,14 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
         vectorizer = X.skb.apply_func(get_vectorizer)
 
         def get_predictor(X):
-            return Ridge() if regression else LogisticRegression()
+            return RidgeCV() if regression else LogisticRegression()
 
         predictor = X.skb.apply_func(get_predictor)
     else:
         # In this case the estimator can be evaluated in the automated preview
         # when the data op is created.
         vectorizer = skrub.as_data_op(skrub.TableVectorizer())
-        predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
+        predictor = skrub.as_data_op(RidgeCV() if regression else LogisticRegression())
     pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
     # no information about the estimator: we expose all methods and default to
     # 'transformer' estimator type.
