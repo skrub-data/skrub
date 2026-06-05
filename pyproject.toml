@@ -348,7 +348,7 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   # Sentence-transformers using a deprecated huggingface_hub function, nothing
   # to do with skrub.
-  'ignore:.*hf_xet\.download_files\(\) is deprecated',
+  'default::DeprecationWarning:huggingface_hub',
 ]
 log_cli_level = "INFO"
 xfail_strict = true
