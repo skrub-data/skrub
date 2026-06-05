@@ -373,10 +373,15 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         Parameters
         ----------
         params : dict
-           The key is the name of a skrub choice, and the value is the choice
-           outcome for numeric choices (:func:`choose_int`,
-           :func:`choose_bool`), or the outcome index for discrete choices
-           (:func:`choose_from`).
+           The key is the name of a skrub choice.
+
+           - For numeric choices (:func:`choose_int` and :func:`choose_bool`),
+             the value is the choice outcome i.e. the number that will be used
+             e.g. 0.05.
+           - For enumerated choices (:func:`choose_from`, :func:`choose_bool`,
+             :func:`optional`), the value is an int: the **index (position)**
+             of the outcome to select from the outcome list (or dict). The list
+             can be checked with ``choice.outcomes``.
 
         See Also
         --------
@@ -402,14 +407,13 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> from sklearn.datasets import make_regression
 
         >>> X, y = make_regression(random_state=0)
+        >>> scaler = skrub.choose_from(
+        ...     [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
+        ...     name="scaler",
+        ... )
         >>> transform = (
         ...     skrub.X(X)
-        ...     .skb.apply(
-        ...         skrub.choose_from(
-        ...             [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
-        ...             name="scaler",
-        ...         )
-        ...     )
+        ...     .skb.apply(scaler)
         ...     .skb.apply(
         ...         PCA(n_components=skrub.choose_int(10, 30, name="n_components"))
         ...     )
@@ -443,9 +447,16 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> best_learner.get_named_params()
         {'scaler': 2, 'n_components': np.int64(11)}
 
-        Note that the ridge's ``alpha`` does not appear, as it has no name, and that the
-        value for the scaler is the outcome's **index**, rather than its value (the
-        SquashingScaler is the third item in the outcome list).
+        Note that the ridge's ``alpha`` does not appear, as it has no name.
+
+        Also note that the value for the scaler is the outcome's **index**,
+        rather than its value. Here the SquashingScaler is the third item in the
+        outcome list:
+
+        >>> scaler.outcomes
+        [MinMaxScaler(), StandardScaler(), SquashingScaler()]
+
+        So we get ``'scaler': 2`` in the named params.
 
         >>> transformer.set_named_params(**best_learner.get_named_params())
         SkrubLearner(data_op=<Apply PCA>)
