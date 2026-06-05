@@ -155,6 +155,43 @@ def test_choice_in_environment():
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
 
+def test_becomes_default():
+    a = skrub.var("a", 1, becomes_default=True)
+    b = skrub.var("b", 2)
+    c = a + b
+    assert c.skb.eval() == 3
+    # When we pass a (non-empty) environment, 'a' is optional because it has a
+    # default
+    assert c.skb.eval({"b": 20}) == 21
+    # Whereas b is not
+    if sys.version_info < (3, 11):
+        err_t, err_msg = RuntimeError, "Evaluation of node <Var 'b'> failed"
+    else:
+        err_t, err_msg = KeyError, "No value has been provided for 'b'"
+    with pytest.raises(err_t, match=err_msg):
+        c.skb.eval({"a": 10})
+    d = c.skb.clone(drop_values=True)
+    assert d.skb.get_data() == {"a": 1}
+    assert d.skb.eval({"b": 20}) == 21
+    assert d.skb.eval({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        d.skb.eval({})
+    learner = c.skb.make_learner()
+    assert learner.fit_transform({"b": 20}) == 21
+    assert learner.fit_transform({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        learner.fit_transform({})
+
+
+def test_becomes_default_errors():
+    with pytest.raises(TypeError, match="becomes_default should be a Boolean"):
+        skrub.var("a", 1, becomes_default=2)
+    with pytest.raises(
+        TypeError, match="value must be provided when becomes_default is True"
+    ):
+        skrub.var("a", becomes_default=True)
+
+
 def test_if_else():
     a = skrub.var("a")
     b = skrub.var("b")
