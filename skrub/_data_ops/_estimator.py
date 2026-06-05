@@ -367,6 +367,9 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         Typically, the passed dictionary is created by
         :meth:`SkrubLearner.get_named_params`.
 
+        The choice outcomes are set in-place, i.e. the input SkrubLearner is
+        modified.
+
         Parameters
         ----------
         params : dict
@@ -448,6 +451,9 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         SkrubLearner(data_op=<Apply PCA>)
         >>> transformer.describe_params()
         {'scaler': 'SquashingScaler()', 'n_components': 11}
+
+        (note that our ``transformer`` has been modified in-place.)
+
         >>> transformer.fit_transform({"X": X}).shape
         (100, 11)
 
