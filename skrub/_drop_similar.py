@@ -87,7 +87,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     >>> clean_df = ds.fit_transform(df)
 
     ``ds`` has now removed a column for each pair with association above 0.8.
-    These associations are stored in the `table_associations_` attribute:
+    These associations are stored in the ``table_associations_`` attribute:
 
     >>> ds.table_associations_.head() # doctest: +SKIP
       left_column_name right_column_name  cramer_v
