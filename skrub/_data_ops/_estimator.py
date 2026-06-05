@@ -1,7 +1,9 @@
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
+import numbers
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import sklearn
 from sklearn import model_selection
@@ -476,11 +478,46 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         {'scaler': 'SquashingScaler()', 'n_components': 7}
         >>> transformer.fit_transform({"X": X}).shape
         (100, 7)
+
+        Here also, note that for enumerated choices we must use the index:
+
+        >>> transformer.set_named_params(scaler=1)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'StandardScaler()', 'n_components': 7}
+
+        trying to set a value directly results in an error:
+
+        >>> best_learner.set_named_params(scaler=StandardScaler())
+        Traceback (most recent call last):
+            ...
+        TypeError: For enumerated choices, the value must be a positional index (int). Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
         """  # noqa: E501
         data_op_choices = _evaluation.choices(self.data_op)
         name_to_id = {
             c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
         }
+
+        # Check that values are indices in the list of outcomes
+        for name, value in params.items():
+            c = data_op_choices[name_to_id[name]]
+            if hasattr(c, "outcomes"):
+                if not isinstance(value, numbers.Integral) or isinstance(
+                    value, (bool, np.bool_)
+                ):
+                    raise TypeError(
+                        "For enumerated choices, the value must be a positional "
+                        f"index (int) in the list of outcomes. Got value {value!r} of "
+                        f"type {value.__class__.__name__} for choice {c!r}."
+                    )
+                if not 0 <= value < len(c.outcomes):
+                    raise IndexError(
+                        "For enumerated choices, the value must be a positional "
+                        "index (int) in the list of outcomes. "
+                        f"Got index {value} out of range for choice {c!r} "
+                        f"with {len(c.outcomes)} outcomes: {c.outcomes}."
+                    )
+
         set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
         return self
 
