@@ -28,7 +28,8 @@ Changes
 - Improving the association tab error message when only one column is present
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
-  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
