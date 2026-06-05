@@ -346,6 +346,9 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  # Sentence-transformers using a deprecated huggingface_hub function, nothing
+  # to do with skrub.
+  'ignore:.*hf_xet\.download_files\(\) is deprecated',
 ]
 log_cli_level = "INFO"
 xfail_strict = true
