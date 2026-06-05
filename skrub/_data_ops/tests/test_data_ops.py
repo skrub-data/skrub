@@ -957,8 +957,6 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
         vectorizer = X.skb.apply_func(get_vectorizer)
 
         def get_predictor(X):
-            # using RidgeCV here to avoid instabilities after converting to
-            # float32 with the TableVectorizer
             return RidgeCV() if regression else LogisticRegression()
 
         predictor = X.skb.apply_func(get_predictor)
@@ -966,8 +964,6 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
         # In this case the estimator can be evaluated in the automated preview
         # when the data op is created.
         vectorizer = skrub.as_data_op(skrub.TableVectorizer())
-        # using RidgeCV here to avoid instabilities after converting to
-        # float32 with the TableVectorizer
         predictor = skrub.as_data_op(RidgeCV() if regression else LogisticRegression())
     pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
     # no information about the estimator: we expose all methods and default to
