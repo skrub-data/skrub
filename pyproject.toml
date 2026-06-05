@@ -320,8 +320,8 @@ ignore = [
 filterwarnings = [
   # Turn deprecation warnings into errors
   # TMP test
-  # "error::FutureWarning",
-  # "error::DeprecationWarning",
+  "always::FutureWarning",
+  "always::DeprecationWarning",
 
   # Ignore warning from np.in1d since the future behavior is already the desired
   # behavior. TODO remove when numpy min version >= 1.25.
