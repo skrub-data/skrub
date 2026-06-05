@@ -26,7 +26,7 @@ def encoder():
     """
     pytest.importorskip("sentence_transformers")
     return TextEncoder(
-        model_name="optimum-intel-internal-testing/tiny-random-bert",
+        model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
 
@@ -78,7 +78,7 @@ def test_missing_value(df_module, encoder):
     encoder = clone(encoder).set_params(n_components=None)
     X_out = encoder.fit_transform(X)
 
-    assert sbd.shape(X_out) == (3, 32)
+    assert sbd.shape(X_out) == (3, 768)
     X_out = X_out.to_numpy()
     assert_array_equal(X_out[0, :], X_out[1, :])
 
@@ -88,8 +88,8 @@ def test_n_components(df_module, encoder):
     encoder_all = clone(encoder).set_params(n_components=None).fit(X)
     for meth in ("fit_transform", "transform"):
         X_out = getattr(encoder_all, meth)(X)
-        assert sbd.shape(X_out)[1] == 32
-        assert encoder_all.n_components_ == 32
+        assert sbd.shape(X_out)[1] == 768
+        assert encoder_all.n_components_ == 768
 
     encoder_2 = clone(encoder).set_params(n_components=2).fit(X)
     for meth in ("fit_transform", "transform"):
