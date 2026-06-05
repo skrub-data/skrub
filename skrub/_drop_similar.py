@@ -97,10 +97,10 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     3   encoded_cities               end  0.046455
     4           cities               end  0.046455
 
-    A single pair is above the threshold, `cities` and `encoded_cities`,
+    A single pair is above the threshold, ``cities`` and ``encoded_cities``,
     with an association score of 1. Since one is an encoding of the other,
     this is to be expected.
-    Therefore, one of these two has been marked as dropped by `ds`:
+    Therefore, one of these two has been marked as dropped by ``ds``:
 
     >>> ds.to_drop_
     ['encoded_cities']
