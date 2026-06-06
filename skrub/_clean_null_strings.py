@@ -167,7 +167,7 @@ class CleanNullStrings(SingleColumnTransformer):
     In both examples above, the column can be converted to numbers by
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
-    >>> from skrub._to_float import ToFloat
+    >>> from skrub import ToFloat
     >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
