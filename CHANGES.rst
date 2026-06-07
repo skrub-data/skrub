@@ -38,7 +38,7 @@ Changes
   ``0``) instead of a ``bool``, for consistency with :class:`GapEncoder`,
   :class:`TableReport` and :func:`patch_display`. Passing a boolean still works.
   The docstring previously stated the default was ``True`` although it was
-  ``False``. :pr:`2138` by :user:`Labib Bin Salam <Labib-Bin-Salam>`.
+  ``False``. :pr:`2139` by :user:`Labib Bin Salam <Labib-Bin-Salam>`.
 Bugfixes
 --------
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
