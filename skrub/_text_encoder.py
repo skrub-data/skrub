@@ -108,8 +108,8 @@ class TextEncoder(SingleColumnTransformer):
         Used when the PCA dimension reduction mechanism is used, for reproducible
         results across multiple function calls.
 
-    verbose : bool, default=True
-        Verbose level, controls whether to show a progress bar or not during
+    verbose : int, default=0
+        Verbosity level. When greater than 0, a progress bar is shown during
         ``transform``.
 
     Attributes
@@ -198,7 +198,7 @@ class TextEncoder(SingleColumnTransformer):
         cache_folder=None,
         store_weights_in_pickle=False,
         random_state=None,
-        verbose=False,
+        verbose=0,
     ):
         self.model_name = model_name
         self.n_components = n_components
@@ -329,7 +329,7 @@ class TextEncoder(SingleColumnTransformer):
             unique_x,
             normalize_embeddings=False,
             batch_size=self.batch_size,
-            show_progress_bar=self.verbose,
+            show_progress_bar=self.verbose > 0,
         )[indices_x]
 
     @functools.cached_property
