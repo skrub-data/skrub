@@ -47,3 +47,5 @@ To report a bug or suggest enhancements, please
 If you want to contribute directly to the library, then check the
 `how to contribute <https://skrub-data.org/stable/CONTRIBUTING.html>`_ page on
 the website for more information.
+
+**Accessing fitted transformers**
