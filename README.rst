@@ -47,3 +47,8 @@ To report a bug or suggest enhancements, please
 If you want to contribute directly to the library, then check the
 `how to contribute <https://skrub-data.org/stable/CONTRIBUTING.html>`_ page on
 the website for more information.
+
+ngram_range : int 2-tuple, default=(2, 4)
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
