@@ -200,7 +200,7 @@ class TableReport:
     output.
 
     >>> report
-    <TableReport: use .open() to display>
+    <TableReport: use .open() or .markdown() to display>
 
     (Note that above we only see the string representation, not the report itself,
     because we are not in a notebook.)
@@ -209,7 +209,16 @@ class TableReport:
     full page in a separate browser tab with its ``open`` method:
     ``report.open()``.
 
-    You can also get the HTML report as a string.
+    If you want to display the report in a notebook or get a quick text summary of
+    the report, you can use the ``markdown`` method to get a Markdown string that
+    can be rendered in the notebook or used in Markdown documents. The string
+    includes the summary statistics for all columns, so it can be quite long for
+    dataframes with many columns.
+
+    >>> md = report.markdown()
+
+    You can also get the HTML report as a string with the ``html`` method or the
+    ``html_snippet`` method.
     For a full, standalone web page:
 
     >>> report.html()
@@ -219,6 +228,15 @@ class TableReport:
 
     >>> report.html_snippet()
     '\n<div id="report_...-wrapper" hidden>\n    <template id="report_...'
+
+    The report can also be obtained in JSON format with :meth:`json`, which can
+    be useful for programmatic access to the report data.
+
+    Note that the resulting JSON includes the plots in SVG format, which can be
+    quite verbose: plots can be disabled by setting ``plot_distributions=False``
+    when generating the report:
+
+    >>> j = TableReport(df, plot_distributions=False).json()
 
     Advanced configuration: you can add custom column filters that will appear
     in the report's dropdown menu.
@@ -361,7 +379,7 @@ class TableReport:
         self._summary["is_subsampled"] = True
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}: use .open() to display>"
+        return f"<{self.__class__.__name__}: use .open() or .markdown() to display>"
 
     @functools.cached_property
     def _summary(self):
