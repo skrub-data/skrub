@@ -209,14 +209,6 @@ class TableReport:
     full page in a separate browser tab with its ``open`` method:
     ``report.open()``.
 
-    If you want to display the report in a notebook or get a quick text summary of
-    the report, you can use the ``markdown`` method to get a Markdown string that
-    can be rendered in the notebook or used in Markdown documents. The string
-    includes the summary statistics for all columns, so it can be quite long for
-    dataframes with many columns.
-
-    >>> md = report.markdown()
-
     You can also get the HTML report as a string with the ``html`` method or the
     ``html_snippet`` method.
     For a full, standalone web page:
@@ -229,6 +221,16 @@ class TableReport:
     >>> report.html_snippet()
     '\n<div id="report_...-wrapper" hidden>\n    <template id="report_...'
 
+    If you want a summary of the report in plain-text format, you can use the
+    ``markdown`` method to get a Markdown string that can be rendered in the
+    notebook or used in Markdown documents. The string includes the summary
+    statistics for all columns, so it can be quite long for
+    dataframes with many columns.
+
+    >>> md = report.markdown()
+    >>> print(md])
+    # DataFrame Report...
+
     The report can also be obtained in JSON format with :meth:`json`, which can
     be useful for programmatic access to the report data.
 
@@ -237,6 +239,9 @@ class TableReport:
     when generating the report:
 
     >>> j = TableReport(df, plot_distributions=False).json()
+    >>> print(j)
+    {"dataframe_module": "pandas", "n_rows": 2, "n_columns": 3, "columns": ...
+
 
     Advanced configuration: you can add custom column filters that will appear
     in the report's dropdown menu.
