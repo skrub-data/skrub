@@ -55,6 +55,9 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+
 Bugfixes
 --------
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
