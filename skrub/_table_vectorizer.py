@@ -395,8 +395,6 @@ class Cleaner(TransformerMixin, BaseTransformer):
     [DropUninformative()]
     """
 
-    _doc_link_module = "skrub"
-
     def __init__(
         self,
         drop_null_fraction=1.0,
@@ -542,18 +540,6 @@ class Cleaner(TransformerMixin, BaseTransformer):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
-
-    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
-    # which also defines _doc_link_template as a property, and we want to be able
-    # to override it.
-    @property
-    def _doc_link_template(self):
-        return getattr(
-            self,
-            "__doc_link_template",
-            "https://skrub-data.org/stable/reference/generated/"
-            "{estimator_module}.{estimator_name}.html",
-        )
 
 
 class TableVectorizer(TransformerMixin, BaseTransformer):
@@ -899,8 +885,6 @@ class TableVectorizer(TransformerMixin, BaseTransformer):
     ValueError: Column 'A' used twice in 'specific_transformers', at indices 0 and 1.
     """  # noqa: E501
 
-    _doc_link_module = "skrub"
-
     def __init__(
         self,
         *,
@@ -1183,15 +1167,3 @@ class TableVectorizer(TransformerMixin, BaseTransformer):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
-
-    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
-    # which also defines _doc_link_template as a property, and we want to be able
-    # to override it.
-    @property
-    def _doc_link_template(self):
-        return getattr(
-            self,
-            "__doc_link_template",
-            "https://skrub-data.org/stable/reference/generated/"
-            "{estimator_module}.{estimator_name}.html",
-        )
