@@ -228,7 +228,7 @@ class TableReport:
     dataframes with many columns.
 
     >>> md = report.markdown()
-    >>> print(md])
+    >>> print(md)
     # DataFrame Report...
 
     The report can also be obtained in JSON format with :meth:`json`, which can
