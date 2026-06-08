@@ -8,7 +8,7 @@
 .. _user_guide_feature_engineering_numeric_to_float:
 
 Parsing and scaling numeric features
-==========================================================
+====================================
 
 Converting heterogeneous numeric values to uniform float32
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

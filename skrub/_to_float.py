@@ -296,7 +296,7 @@ class ToFloat(SingleColumnTransformer):
             # formats that Python can parse natively.
             if (
                 self.decimal != "."
-                or self._thousand not in (None, "")
+                or self._thousand != ""
                 or self.parentheses
             ) and sbd.is_string(column):
                 self._needs_str_replace = True
