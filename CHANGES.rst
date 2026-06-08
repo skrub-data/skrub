@@ -11,6 +11,13 @@ Ongoing development
 
 New Features
 ------------
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
 - A parameter ``becomes_default`` has been added to :func:`var`. It allows
   indicating that the provided preview ``value`` should also be treated as a
   default value for this variable in all contexts (for example in a
