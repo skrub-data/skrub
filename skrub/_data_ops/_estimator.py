@@ -502,6 +502,8 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         for name, value in params.items():
             c = data_op_choices[name_to_id[name]]
             if hasattr(c, "outcomes"):
+                # This is an enumerated choice (NumericChoices don't have `.outcomes`)
+                # In this case the value must be an index into the list of outcomes.
                 if not isinstance(value, numbers.Integral) or isinstance(
                     value, (bool, np.bool_)
                 ):
