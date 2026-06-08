@@ -295,9 +295,7 @@ class ToFloat(SingleColumnTransformer):
             # Optimization: allows us to avoid manipulation for
             # formats that Python can parse natively.
             if (
-                self.decimal != "."
-                or self._thousand != ""
-                or self.parentheses
+                self.decimal != "." or self._thousand != "" or self.parentheses
             ) and sbd.is_string(column):
                 self._needs_str_replace = True
                 column = _str_replace(
