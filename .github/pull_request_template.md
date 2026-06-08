@@ -15,9 +15,19 @@ Addresses #<!-- issue number -->
 
 ## Checklist
 
+### Before opening the PR:
 - [ ] I have read the contributing guidelines
+- [ ] I have asked the contributors before opening this PR
+
+### If this is a bugfix PR:
+- [ ] I have verified that the PR addresses the problem
 - [ ] I have added tests that verify the bug fix
+
+### Changelog:
+If this PR involves a user-facing change:
 - [ ] I have added an entry to CHANGES.rst describing the fix
+
+### Formatting and code style:
 - [ ] My code follows the code style of this project
 - [ ] I have checked my code and corrected any misspellings
 
