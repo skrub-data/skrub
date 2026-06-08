@@ -123,6 +123,11 @@ def test_repr():
     Result:
     ―――――――
     'one two'
+    >>> skrub.var('a', 1, becomes_default=True)
+    <Var 'a' int>
+    Result (also the default value):
+    ――――――――――――――――――――――――――――――――
+    1
     >>> skrub.as_data_op({'a': 0})
     <Value dict>
     Result:
@@ -233,7 +238,7 @@ def test_repr():
     >>> X.skb.concat(skrub.as_data_op([X, X]),axis=0)
     <Concat>
 
-    if we end up applying an ApplyToEachCol, seeing the inner transformer is more
+    if we end up applying an ApplyToCols, seeing the inner transformer is more
     informative.
 
     >>> from skrub._wrap_transformer import wrap_transformer

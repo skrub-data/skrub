@@ -1,7 +1,38 @@
 from . import _dataframe as sbd
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToFloat"]
+
+
+@dispatch
+def _str_replace(col, decimal, thousand, parentheses):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_replace.specialize("pandas", argument_type="Column")
+def _str_replace_pandas(col, decimal, thousand, parentheses):
+    # Replace parentheses around numbers with a leading minus sign
+    # e.g., "(123.45)" → "-123.45"
+    if parentheses:
+        col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    # Remove thousand separators
+    if thousand:
+        col = col.str.replace(thousand, "", regex=False)
+    # Replace decimal separator with '.'
+    return col.str.replace(decimal, ".", regex=False)
+
+
+@_str_replace.specialize("polars", argument_type="Column")
+def _str_replace_polars(col, decimal, thousand, parentheses):
+    # Replace parentheses around numbers with a leading minus sign
+    # e.g., "(123.45)" → "-123.45"
+    if parentheses:
+        col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
+    # Remove thousand separators
+    col = col.str.replace_all(thousand, "", literal=True)
+    # Replace decimal separator with '.'
+    return col.str.replace_all(decimal, ".", literal=True)
 
 
 class ToFloat(SingleColumnTransformer):
@@ -21,6 +52,27 @@ class ToFloat(SingleColumnTransformer):
 
     During ``transform``, entries for which conversion fails are replaced by
     null values.
+
+    Parameters
+    ----------
+    decimal : str, default='.'
+        Character to recognize as the decimal separator when converting from
+        strings to floats. Other possible decimal separators are removed from
+        the strings before conversion.
+    thousand : str or None, default=None
+        Character used as thousands separator. Supported values are ``"."``,
+        ``,``, space (``" "``), apostrophe (``"'"``), or ``None`` (no thousands
+        separator). The decimal and thousands separators must differ.
+    parentheses : bool, default=False
+        Whether to recognize negative numbers represented using parentheses, e.g.,
+        "(123.45)" → "-123.45". If True, parentheses around numbers are replaced
+        with a leading minus sign before conversion.
+
+    Notes
+    -----
+    This transformer does not validate number formatting. It simply removes
+    thousands separators and replaces the decimal separator. As a result,
+    some malformed inputs may still be converted but yield unexpected values.
 
     Examples
     --------
@@ -46,9 +98,6 @@ class ToFloat(SingleColumnTransformer):
     Name: x, dtype: float32
     >>> float_s[0]            # doctest: +SKIP
     np.float32(1.1)
-
-    Note that a column such as the example above may easily occur as the output
-    of ``CleanNullStrings``.
 
     A numeric column will also be converted to floats:
 
@@ -134,8 +183,8 @@ class ToFloat(SingleColumnTransformer):
         ...
     skrub.core.RejectColumn: Could not convert column 'x' to numbers.
 
-    Once a column has been accepted, all calls to ``transform`` will result in the
-    same output dtype. Values that fail to be converted become null values.
+    Once a column has been accepted, all calls to ``transform`` will result in
+    the same output dtype. Values that fail to be converted become null values.
 
     >>> to_float = ToFloat().fit(pd.Series([1, 2]))
     >>> to_float.transform(pd.Series(['3.3', 'hello']))
@@ -165,7 +214,50 @@ class ToFloat(SingleColumnTransformer):
     >>> s = pd.Series([1.1, None], dtype='float32')
     >>> to_float.fit_transform(s) is s
     True
+
+    If ``parentheses=True``, negative numbers represented using parentheses are converted
+
+    >>> s = pd.Series(["-1,234.56", "1,234.56", "(1,234.56)"], name='parens')
+    >>> ToFloat(decimal=".", thousand=",", parentheses=True).fit_transform(s)
+    0   -1234.5...
+    1    1234.5...
+    2   -1234.5...
+    dtype: float32
+
+    Numbers that use scientific notation are converted:
+
+    >>> s = pd.Series(["1.23e+4", "1.23E+4"], name="x")
+    >>> ToFloat(decimal=".").fit_transform(s)
+    0    12300.0
+    1    12300.0
+    Name: x, dtype: float32
+
+    It is possible to specify the thousands separator, e.g., to use ``" "``
+
+    >>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
+    >>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
+    0    4567.8...
+    1    12567.8...
+    Name: x, dtype: float32
+
+    This transformer does not do any advanced processing: it just replaces thousands
+    with ``''`` (the empty string) and replaces the decimal separator with ``'.'``,
+    then tries to parse the result as a float.
+    Extra separators, mixed separators, or multiple grouping separators may lead to
+    unexpected or unwanted results:
+
+    >>> s = pd.Series(["1,,234", "1,2,3,4.0"], name="x")
+    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    0    1234.0
+    1    1234.0
+    Name: x, dtype: float32
+
     """  # noqa: E501
+
+    def __init__(self, decimal=".", thousand=None, parentheses=False):
+        self.decimal = decimal
+        self.thousand = thousand
+        self.parentheses = parentheses
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -184,13 +276,34 @@ class ToFloat(SingleColumnTransformer):
             The input transformed to Float32.
         """
         del y
+        self._thousand = "" if self.thousand is None else self.thousand
         self.all_outputs_ = [sbd.name(column)]
+        if self.decimal is None:
+            raise ValueError("The decimal separator cannot be None.")
+        if self._thousand == self.decimal:
+            raise ValueError("The thousand and decimal separators must differ.")
+
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
+            self._needs_str_replace = False
+            # Default case it's directly converted to float32.
+            # Regex validation and string replacement is skipped.
+            # Optimization: allows us to avoid manipulation for
+            # formats that Python can parse natively.
+            if (
+                self.decimal != "." or self._thousand != "" or self.parentheses
+            ) and sbd.is_string(column):
+                self._needs_str_replace = True
+                column = _str_replace(
+                    column,
+                    decimal=self.decimal,
+                    thousand=self._thousand,
+                    parentheses=self.parentheses,
+                )
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
@@ -211,4 +324,11 @@ class ToFloat(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Float32.
         """
+        if self._needs_str_replace:
+            column = _str_replace(
+                column,
+                decimal=self.decimal,
+                thousand=self._thousand,
+                parentheses=self.parentheses,
+            )
         return sbd.to_float32(column, strict=False)

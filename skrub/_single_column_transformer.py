@@ -64,12 +64,12 @@ class RejectColumn(ValueError):
     ``RejectColumn`` exceptions can be used to indicate that a column cannot be
     handled by the current transformer: this may mean that the data is invalid,
     or that the transformer is simply not designed to handle that type of data.
-    For example, a ``ToDatetime`` transformer might raise ``RejectColumn`` when it is
-    passed a column that does not contain strings, or that contains strings but none
-    of them look like dates.
+    For example, a :class:`ToDatetime` transformer might raise ``RejectColumn``
+    when  it is passed a column that does not contain strings, or that contains
+    strings but none of them look like dates.
 
-    :class:`ApplyToCols` relies on these exceptions to decide whether a column should be
-    transformed or passed through unchanged.
+    :class:`ApplyToCols` relies on these exceptions to decide whether a column
+    should be transformed or passed through unchanged.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered
@@ -77,10 +77,11 @@ class RejectColumn(ValueError):
 
     >>> from skrub import ApplyToCols
     >>> to_datetime = ApplyToCols(ToDatetime())
-    >>> to_datetime.fit_transform(df)
+    >>> to_datetime.fit_transform(df)  # doctest: +SKIP
     Traceback (most recent call last):
         ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'...
+    skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+    Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
 
     However, setting ``allow_reject=True`` gives the transformer itself some
     control over which columns it should be applied to. For example, whether a
@@ -114,7 +115,7 @@ class RejectColumn(ValueError):
     Traceback (most recent call last):
         ...
     skrub.core.RejectColumn: Column 'b' does not contain strings.
-    """
+    """  # noqa: E501
 
     pass
 
@@ -123,11 +124,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
-    information.
+    :class:`~skrub.ApplyToCols`; see the docstring of :class:`~skrub.ApplyToCols`
+    for more information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToCols``, however doing so avoids some
+    order to work with :class:`~skrub.ApplyToCols`, however doing so avoids some
     boilerplate:
 
     - The required ``__single_column_transformer__`` attribute is set.
@@ -165,7 +166,7 @@ class SingleColumnTransformer(BaseEstimator):
         default so there is usually no need for set_output to do anything.
 
         Subclasses are of course free to redefine set_output (e.g. by
-        inheriting from TransformerMixin before SingleColumnTransformer).
+        inheriting from ``TransformerMixin`` before SingleColumnTransformer).
 
         Parameters
         ----------

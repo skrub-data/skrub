@@ -169,6 +169,7 @@ API_REFERENCE = {
                     "selectors.filter_names",
                     "selectors.float",
                     "selectors.glob",
+                    "selectors.has_dtype",
                     "selectors.has_nulls",
                     "selectors.integer",
                     "selectors.inv",
@@ -219,6 +220,7 @@ API_REFERENCE = {
                 "description": (
                     "The ``skb`` accessor exposes all DataOps methods and attributes."
                 ),
+                "sort": True,
                 "autosummary": [
                     "DataOp.skb.apply",
                     "DataOp.skb.apply_func",
@@ -234,6 +236,7 @@ API_REFERENCE = {
                     "DataOp.skb.freeze_after_fit",
                     "DataOp.skb.full_report",
                     "DataOp.skb.get_data",
+                    "DataOp.skb.set_data",
                     "DataOp.skb.get_vars",
                     "DataOp.skb.make_learner",
                     "DataOp.skb.make_grid_search",
@@ -252,16 +255,20 @@ API_REFERENCE = {
                     "DataOp.skb.subsample",
                     "DataOp.skb.train_test_split",
                     "DataOp.skb.with_scoring",
+                    "DataOp.skb.find",
+                    "DataOp.skb.find_X_y",
                 ],
                 "template": "autosummary/accessor_method.rst",
             },
             {
                 "description": "Accessor attributes.",
+                "sort": True,
                 "autosummary": [
                     "DataOp.skb.description",
                     "DataOp.skb.is_X",
                     "DataOp.skb.is_y",
                     "DataOp.skb.name",
+                    "DataOp.skb.id",
                     "DataOp.skb.applied_estimator",
                 ],
                 "template": "autosummary/accessor_attribute.rst",
@@ -336,3 +343,9 @@ API_REFERENCE = {
         ],
     },
 }
+# Some autosummary lists are long; for those alphabetical order is the most
+# useful for browsing. Sections flagged with "sort": True are reordered here.
+for module in API_REFERENCE.values():
+    for section in module["sections"]:
+        if section.pop("sort", False):
+            section["autosummary"].sort()

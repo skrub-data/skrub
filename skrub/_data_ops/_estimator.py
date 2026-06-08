@@ -1,7 +1,9 @@
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
+import numbers
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import sklearn
 from sklearn import model_selection
@@ -16,17 +18,17 @@ from .. import _dataframe as sbd
 from .. import _join_utils
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
+from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
     evaluate,
     find_first_apply,
-    find_node,
     find_node_by_name,
-    find_X,
-    find_y,
+    find_scoring_node,
+    find_X_y_and_cv,
     get_params,
     param_grid,
     set_params,
@@ -176,20 +178,14 @@ class _DataOpWrapperMixin(_CloudPickle):
         return _SklearnParamsReprHtml(html)
 
 
-def _find_scoring_node(data_op):
-    return find_node(
-        data_op,
-        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
-    )
-
-
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
-    DataOp.
+    DataOp, or by accessing the ``best_learner_`` attribute of a :class:`ParamSearch`
+    after fitting it.
     """
 
     def __init__(self, data_op):
@@ -273,6 +269,11 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> predict_results['result']  # doctest: +SKIP
         array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
+        if mode == "score" and find_scoring_node(self.data_op) is not None:
+            raise NotImplementedError(
+                "Creating the report for 'score' mode when .skb.with_scoring() "
+                "has been used is not implemented yet."
+            )
         from ._inspection import full_report
 
         if mode not in _FITTING_METHODS:
@@ -288,7 +289,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         return result
 
     def _score(self, environment):
-        score_node = _find_scoring_node(self.data_op)
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
             return self._eval_in_mode("score", environment)
         estimator = self.__skrub_to_Xy_pipeline__(environment)
@@ -309,12 +310,218 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
+    def get_named_params(self):
+        """
+        Get the outcomes that have been set for named choices in the DataOp.
+
+        The returned dictionary can be used with :meth:`SkrubLearner.set_named_params`.
+        Only choices that have been given an explicit name are included in the result.
+
+        Returns
+        -------
+        dict
+            The choices set on this SkrubLearner. The key is the choice name.
+            For discrete choices (created with :func:`skrub.choose_from`,
+            :func:`skrub.choose_bool`, ...) the value is the index of the
+            selected outcome in the outcome list (not its value).
+
+        See Also
+        --------
+        SkrubLearner.set_named_params
+            Set the choices returned by ``get_named_params`` on a learner.
+
+        SkrubLearner.describe_params
+            Get a dictionary describing all choices. It cannot be used to set
+            parameters but is more helpful for manual inspection.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        See the documentation for :meth:`SkrubLearner.set_named_params` for
+        examples.
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        return {
+            name: v
+            for k, v in get_params(self.data_op).items()
+            if (name := data_op_choices[k].name) is not None
+        }
+
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
         if not deep:
             return params
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
+
+    def set_named_params(self, **params):
+        """
+        Set the tunable parameters (choices), indexed by choice name.
+
+        Typically, the passed dictionary is created by
+        :meth:`SkrubLearner.get_named_params`.
+
+        The choice outcomes are set in-place, i.e. the input SkrubLearner is
+        modified.
+
+        Parameters
+        ----------
+        params : dict
+           The key is the name of a skrub choice.
+
+           - For numeric choices (:func:`choose_int` and :func:`choose_bool`),
+             the value is the choice outcome i.e. the number that will be used
+             e.g. 0.05.
+           - For enumerated choices (:func:`choose_from`, :func:`choose_bool`,
+             :func:`optional`), the value is an int: the **index (position)**
+             of the outcome to select from the outcome list (or dict). The list
+             can be checked with ``choice.outcomes``.
+
+        See Also
+        --------
+        SkrubLearner.get_named_params
+            Get the dictionary of choices, which can be used to set them on
+            another learner.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.decomposition import PCA
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler
+        >>> from sklearn.linear_model import Ridge
+        >>> from sklearn.datasets import make_regression
+
+        >>> X, y = make_regression(random_state=0)
+        >>> scaler = skrub.choose_from(
+        ...     [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
+        ...     name="scaler",
+        ... )
+        >>> transform = (
+        ...     skrub.X(X)
+        ...     .skb.apply(scaler)
+        ...     .skb.apply(
+        ...         PCA(n_components=skrub.choose_int(10, 30, name="n_components"))
+        ...     )
+        ... )
+        >>> pred = transform.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.1, 10.0, log=True)), y=skrub.y(y)
+        ... )
+        >>> best_learner = pred.skb.make_randomized_search(
+        ...     fitted=True, random_state=0
+        ... ).best_learner_
+
+        We can inspect the best hyperparameters found by the search:
+
+        >>> best_learner.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11, 'choose_float(0.1, 10.0, log=True)': 0.351...}
+
+        Now suppose we want to transfer them to a learner for a different DataOp, for
+        example one that only does the transformation:
+
+        >>> transformer = transform.skb.make_learner()
+
+        This transformer has no values set, it uses the default parameters:
+
+        >>> transformer.describe_params()
+        {'scaler': 'MinMaxScaler()', 'n_components': 20}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 20)
+
+        We can get the params out of our best learner:
+
+        >>> best_learner.get_named_params()
+        {'scaler': 2, 'n_components': np.int64(11)}
+
+        Note that the ridge's ``alpha`` does not appear, as it has no name.
+
+        Also note that the value for the scaler is the outcome's **index**,
+        rather than its value. Here the SquashingScaler is the third item in the
+        outcome list:
+
+        >>> scaler.outcomes
+        [MinMaxScaler(), StandardScaler(), SquashingScaler()]
+
+        So we get ``'scaler': 2`` in the named params.
+
+        >>> transformer.set_named_params(**best_learner.get_named_params())
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11}
+
+        (note that our ``transformer`` has been modified in-place.)
+
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 11)
+
+        We can also set parameters manually:
+
+        >>> transformer.set_named_params(n_components=7)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 7}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 7)
+
+        Here also, note that for enumerated choices we must use the index:
+
+        >>> transformer.set_named_params(scaler=1)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'StandardScaler()', 'n_components': 7}
+
+        trying to set a value directly results in an error:
+
+        >>> best_learner.set_named_params(scaler=StandardScaler())
+        Traceback (most recent call last):
+            ...
+        TypeError: For enumerated choices, the value must be a positional index (int). Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        name_to_id = {
+            c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
+        }
+
+        # Check that values are indices in the list of outcomes
+        for name, value in params.items():
+            c = data_op_choices[name_to_id[name]]
+            if hasattr(c, "outcomes"):
+                # This is an enumerated choice (NumericChoices don't have `.outcomes`)
+                # In this case the value must be an index into the list of outcomes.
+                if not isinstance(value, numbers.Integral) or isinstance(
+                    value, (bool, np.bool_)
+                ):
+                    raise TypeError(
+                        "For enumerated choices, the value must be a positional "
+                        f"index (int) in the list of outcomes. Got value {value!r} of "
+                        f"type {value.__class__.__name__} for choice {c!r}."
+                    )
+                if not 0 <= value < len(c.outcomes):
+                    raise IndexError(
+                        "For enumerated choices, the value must be a positional "
+                        "index (int) in the list of outcomes. "
+                        f"Got index {value} out of range for choice {c!r} "
+                        f"with {len(c.outcomes)} outcomes: {c.outcomes}."
+                    )
+
+        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
+        return self
 
     def set_params(self, **params):
         if "data_op" in params:
@@ -364,7 +571,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub._apply_to_each_col.ApplyToEachCol``
+            may be wrapped in a :class:`ApplyToCols`
             or ``skrub._apply_to_sub_frame.ApplyToSubFrame``,
             see examples below.
 
@@ -406,14 +613,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         DummyClassifier()
 
         Depending on the parameters passed to :meth:`DataOp.skb.apply`, the
-        estimator we provide can be wrapped in a skrub transformer that applies
-        it to several columns in the input, or to a subset of the columns in a
-        dataframe. In other cases it may be applied without any wrapping. We
-        provide examples for those 3 different cases below.
+        estimator we provide may or may not be wrapped in a
+        :class:`ApplyToCols` transformer.
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToEachCol` which independently fits a separate instance of the
+        :class:`ApplyToCols` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -425,13 +630,13 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToEachCol`) happens when the estimator is a skrub
+        This case happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
-        attribute), we pass ``.skb.apply(how='cols')`` or we pass
-        ``.skb.apply(allow_reject=True)``.
+        attribute), the input is a DataFrame and we pass ``no_wrap=False`` (the
+        default).
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a :class:`ApplyToSubFrame` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToCols` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
@@ -443,9 +648,9 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in :class:`ApplyToSubFrame`) happens when the estimator is a
-        scikit-learn transformer but not a single-column transformer, or we
-        pass ``.skb.apply(how='frame')``.
+        This case happens when the estimator is a scikit-learn transformer but
+        not a single-column transformer, the input is a DataFrame and we pass
+        ``no_wrap=False`` (the default).
 
         The ``DummyRegressor`` is a scikit-learn predictor. In the learner it gets
         applied directly to the input dataframe without any wrapping.
@@ -458,7 +663,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
 
         This case (no wrapping) happens when the estimator is a scikit-learn predictor
         (not a transformer), the input is not a dataframe (e.g. it is a numpy array), or
-        we pass ``.skb.apply(how='no_wrap')``.
+        we pass ``.skb.apply(no_wrap=True)``.
         """  # noqa: E501
         node = find_node_by_name(self.data_op, name)
         if node is None:
@@ -476,7 +681,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
             )
         return node._skrub_impl.estimator_
 
-    def truncated_after(self, name):
+    def truncated_after(self, what):
         """Extract the part of the learner that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -484,18 +689,37 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         task but then extract only the part of the learner that performs
         feature extraction.
 
-        The target step must have been given a name with ``.skb.set_name()``.
-
         Parameters
         ----------
-        name : str
-            The name of the intermediate step we want to extract.
+        what : str, int or callable
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the step we want to extract.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is returned.
 
         Returns
         -------
         SkrubLearner
             A skrub learner that performs all the transformations leading up to
             (and including) the required step.
+
+        See Also
+        --------
+        DataOp.skb.find
+            Search for a node directly from a DataOp rather than a SkrubLearner.
+
+        DataOp.skb.find_X_y
+            Find the nodes that have been marked with
+            :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
 
         Examples
         --------
@@ -544,9 +768,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> learner.find_fitted_estimator("vectorizer")
         ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
-        node = find_node_by_name(self.data_op, name)
+        node = self.data_op.skb.find(what)
         if node is None:
-            raise KeyError(name)
+            raise ValueError(f"No node matching {what!r} could be found.")
+        if not isinstance(node, DataOp):
+            # If the found node is a choice, wrap it in a DataOp
+            node = as_data_op(node)
         new = self.__class__(node)
         _copy_attr(self, new, ["_is_fitted"])
         return new
@@ -683,7 +910,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return [(name, scorer_output)]
 
     def _score(self, X, y=None, cast_to_float=True):
-        score_node = _find_scoring_node(self.data_op)
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
             return self._eval_in_mode("score", X, y)
         env = self._get_env(X, y)
@@ -704,31 +931,17 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return result
 
 
-def _find_X_y_and_cv(data_op):
-    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
-    x_node = find_X(data_op)
-    if x_node is None:
+def _compute_X_y_and_cv(data_op, environment):
+    """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
+    nodes = find_X_y_and_cv(data_op.skb.clone())
+    if "X" not in nodes:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
-    result = {"X": x_node}
-    if isinstance(x_node._skrub_impl, SplitX):
-        result["cv"] = x_node._skrub_impl.cv
-        result["split_kwargs"] = x_node._skrub_impl.split_kwargs
-    if (y_node := find_y(data_op)) is not None:
-        result["y"] = y_node
-    else:
+    if "y" not in nodes:
         first = find_first_apply(data_op)
-        if first is None:
-            return result
-        if getattr(first._skrub_impl, "y", None) is not None:
+        if first is not None and getattr(first._skrub_impl, "y", None) is not None:
             # the estimator requests a y so some node must have been
             # marked as y
             raise ValueError('DataOp should have a node marked with "mark_as_y()"')
-    return result
-
-
-def _compute_X_y_and_cv(data_op, environment):
-    """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-    nodes = _find_X_y_and_cv(data_op.skb.clone())
     values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
     if "y" in nodes:
         msg = (
@@ -826,8 +1039,8 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
-    DataOp with :func:`DataOp.skb.make_learner`, :func:`DataOp.skb.make_grid_search` or
-    :func:`DataOp.skb.make_randomized_search`.
+    DataOp with :func:`~DataOp.skb.make_learner`, :func:`~DataOp.skb.make_grid_search`
+    or :func:`~DataOp.skb.make_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
@@ -842,7 +1055,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`DataOp.skb.subsample`), use a subsample of the data. By
+        :meth:`~DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     cv : int, cross-validation iterator or iterable, default=None
@@ -868,13 +1081,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     :func:`sklearn.model_selection.cross_validate`:
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
-    :func:`skrub.DataOp.skb.make_learner`:
+    :func:`~skrub.DataOp.skb.make_learner`:
         Get a skrub learner for this DataOp.
 
-    :func:`skrub.DataOp.skb.make_grid_search`:
+    :func:`~skrub.DataOp.skb.make_grid_search`:
         Find the best parameters with grid search.
 
-    :func:`skrub.DataOp.skb.make_randomized_search`:
+    :func:`~skrub.DataOp.skb.make_randomized_search`:
         Find the best parameters with grid search.
 
     Examples
@@ -1171,8 +1384,8 @@ class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
-    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    objects are created by calling :meth:`~DataOp.skb.make_grid_search()` or
+    :meth:`~DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
     def __init__(self, data_op, search):

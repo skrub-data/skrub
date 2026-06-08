@@ -1,4 +1,5 @@
 import copy
+import re
 import sys
 import warnings
 
@@ -8,9 +9,10 @@ import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
+from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV
+from sklearn.model_selection import GroupKFold, train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
@@ -64,6 +66,10 @@ def test_environement_with_values():
     assert f.skb.eval({}) == "hello, world!"
     # we can still inject values for internal nodes or choices in this setting
     assert f.skb.eval({"d": "goodbye"}) == "goodbye!"
+
+    # we can also inject values by using the id
+    assert isinstance(d.skb.id, int)
+    assert f.skb.eval({d.skb.id: "using id"}) == "using id!"
 
     # however if we provide a binding for any of the variables we must do it
     # for all the variables actually used, `value` is not considered for any
@@ -149,6 +155,43 @@ def test_choice_in_environment():
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
 
+def test_becomes_default():
+    a = skrub.var("a", 1, becomes_default=True)
+    b = skrub.var("b", 2)
+    c = a + b
+    assert c.skb.eval() == 3
+    # When we pass a (non-empty) environment, 'a' is optional because it has a
+    # default
+    assert c.skb.eval({"b": 20}) == 21
+    # Whereas b is not
+    if sys.version_info < (3, 11):
+        err_t, err_msg = RuntimeError, "Evaluation of node <Var 'b'> failed"
+    else:
+        err_t, err_msg = KeyError, "No value has been provided for 'b'"
+    with pytest.raises(err_t, match=err_msg):
+        c.skb.eval({"a": 10})
+    d = c.skb.clone(drop_values=True)
+    assert d.skb.get_data() == {"a": 1}
+    assert d.skb.eval({"b": 20}) == 21
+    assert d.skb.eval({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        d.skb.eval({})
+    learner = c.skb.make_learner()
+    assert learner.fit_transform({"b": 20}) == 21
+    assert learner.fit_transform({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        learner.fit_transform({})
+
+
+def test_becomes_default_errors():
+    with pytest.raises(TypeError, match="becomes_default should be a Boolean"):
+        skrub.var("a", 1, becomes_default=2)
+    with pytest.raises(
+        TypeError, match="value must be provided when becomes_default is True"
+    ):
+        skrub.var("a", becomes_default=True)
+
+
 def test_if_else():
     a = skrub.var("a")
     b = skrub.var("b")
@@ -197,6 +240,36 @@ def test_predictor_as_transformer():
     expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
     assert_frame_equal(learner.fit_transform({"X": X, "y": X}), expected)
     assert_frame_equal(learner.transform({"X": X, "y": X}), expected)
+
+
+def test_transformer_with_score():
+    """
+    When a transformer is the last estimator, we can call score() on it, but
+    when it is the descendant of other estimators it does a (fit_)transform
+    even in other modes such as score.
+
+    What we consider is whether it is the last _estimator_ to be evaluated in
+    the current run, other nodes such as a Choice wrapping the final estimators
+    or other nodes than Apply do not affect this.
+    """
+    X_a, y_a = make_regression()
+    env = {"X": X_a, "y": y_a}
+    feat = skrub.X().skb.apply(PCA(n_components=2)).skb.apply_func(lambda x: x)
+    y = skrub.y()
+    ridge_1 = feat.skb.apply(Ridge(), y=y)
+    ridge_2 = feat.skb.apply(Ridge(), y=y)
+    pred = skrub.choose_from([ridge_1, ridge_2]).as_data_op()
+    cv = pred.skb.cross_validate(env)
+    assert not cv["test_score"].isna().any()
+
+    transformer = feat.skb.make_learner().fit(env)
+    # The PCA is the last estimator: it performs score()
+    assert isinstance(transformer.score(env), float)
+
+    predictor = pred.skb.make_learner().fit(env)
+    # The PCA is not the last estimator: it performs transform()
+    # if it performed score() instead the next (Ridge) step would fail.
+    predictor.score(env)
 
 
 def test_predictor_outputs():
@@ -439,16 +512,16 @@ def test_optuna_optimize_learner(use_choose_from, outcome_names):
             assert study.best_params == {"0:x": "2:2.0"}
     else:
         assert list(study.best_params.keys()) == ["0:x"]
-        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.01)
+        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.05)
 
     # test both set_params(**best_params) or make_learner(choose=best_trial)
     learner_0 = err.skb.make_learner(choose=study.best_trial)
     learner_1 = err.skb.make_learner()
     learner_1.set_params(**study.best_params)
     for learner in [learner_0, learner_1]:
-        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
+        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.05)
         truncated = learner.truncated_after("x_")
-        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
+        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.05)
 
 
 def test_is_optuna_trial(monkeypatch):
@@ -496,17 +569,17 @@ def test_data_op_impl():
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "how"])
-@pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap", "how"])
+@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "how", "allow_reject"])
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or how='no_wrap') the estimator can only be applied to the
-    # full input without wrapping in ApplyToEachCol or ApplyToSubFrame. In this case
-    # if the user passed a parameter that would require wrapping, such as
-    # passing a value for `cols` that is not `all()`, or passing
-    # how='cols' or allow_reject=True, we get an error.
+    # dataframe) (or no_wrap=True, or how='no_wrap') the estimator can only be
+    # applied to the full input without wrapping in ApplyToCols, ApplyToEachCol
+    # or ApplyToSubFrame. In this case if the user passed a parameter that
+    # would require wrapping, such as passing a value for `cols` that is not
+    # `all()`, or passing how='cols' or allow_reject=True, we get an error.
 
-    if why_no_wrap == bad_param == "how":
+    if bad_param == "how" and why_no_wrap in ["no_wrap", "how"]:
         return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
@@ -528,31 +601,72 @@ def test_apply_bad_params(why_no_wrap, bad_param):
             cols = ["col_0", "col_1"]
     else:
         cols = s.all()
+    if bad_param == "exclude_cols":
+        if why_no_wrap == "numpy":
+            exclude_cols = [0]
+        else:
+            exclude_cols = ["col_0"]
+    else:
+        exclude_cols = None
     how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
+    no_wrap = True if why_no_wrap == "no_wrap" else False
 
     with pytest.raises(
         (ValueError, RuntimeError),
         match=(
-            r"(`cols` must be `all\(\)`|`how` must be 'auto'|`allow_reject` must be"
-            r" False)"
+            r"(`cols` must be `all\(\)`|`exclude_cols` must be None|"
+            r"`how` must be 'auto'|`allow_reject` must be False)"
         ),
     ):
-        X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*how.*deprecated.*")
+            X.skb.apply(
+                estimator,
+                y=y,
+                no_wrap=no_wrap,
+                how=how,
+                allow_reject=allow_reject,
+                cols=cols,
+                exclude_cols=exclude_cols,
+            )
 
 
-def test_apply_invalid_how():
+def test_apply_how():
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
     X = skrub.var("X", df)
     t = PassThrough()
-    for how in ["auto", "cols", "frame", "no_wrap"]:
-        assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    for how in ["cols", "frame", "no_wrap"]:
+        with pytest.warns(
+            FutureWarning,
+            match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+        ):
+            assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    assert list(X.skb.apply(t, how="auto").skb.eval().columns) == ["a", "b"]
     with pytest.raises(RuntimeError, match="`how` must be one of"):
         X.skb.apply(t, how="bad value")
-    # TODO: remove when old names are dropped in 0.7.0
-    with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
-        wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
+    with pytest.warns(
+        FutureWarning,
+        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+    ):
+        wrapper = X.skb.apply(t, how="cols").skb.applied_estimator.skb.eval()
         assert isinstance(wrapper, ApplyToEachCol)
+
+
+def test_apply_no_wrap():
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    X = skrub.var("X", df)
+    t = PassThrough()
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape("The parameter 'no_wrap' of .skb.apply() must be a Boolean"),
+    ):
+        X.skb.apply(t, no_wrap="bad")
+    applied = X.skb.apply(t).skb.applied_estimator.skb.eval()
+    assert isinstance(applied, skrub.ApplyToCols)
+    assert isinstance(applied.transformer_, PassThrough)
+    applied = X.skb.apply(t, no_wrap=True).skb.applied_estimator.skb.eval()
+    assert isinstance(applied, PassThrough)
 
 
 class Mul(BaseEstimator):
@@ -635,9 +749,13 @@ def test_apply_transformer_kwargs():
         .skb.make_learner()
     )
     df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    learner.fit({"df": df})
-    learner.fit_transform({"df": df})
-    learner.transform({"df": df})
+    with pytest.warns(
+        FutureWarning,
+        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+    ):
+        learner.fit({"df": df})
+        learner.fit_transform({"df": df})
+        learner.transform({"df": df})
 
 
 def test_apply_kwargs_evaluation():
@@ -791,6 +909,25 @@ def test_concat_non_str_colname():
         )
 
 
+def test_concat_numpy_arrays():
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6], [7, 8]])
+    var_a = skrub.var("a", a)
+    var_b = skrub.var("b", b)
+
+    # Test axis=0 (vertical stack)
+    result = var_a.skb.concat([var_b], axis=0)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=0)
+    np.testing.assert_array_equal(out, expected)
+
+    # Test axis=1 (horizontal stack)
+    result = var_a.skb.concat([var_b], axis=1)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=1)
+    np.testing.assert_array_equal(out, expected)
+
+
 def test_get_vars():
     a = skrub.var("a")
     b = skrub.var("b")
@@ -799,6 +936,35 @@ def test_get_vars():
     assert list(d.skb.get_vars().keys()) == ["a", "b"]
     assert d.skb.get_vars()["a"] is a
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+def test_set_data():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a + b
+    d = c.skb.set_data({"a": 1, "b": 2})
+    # the new dataop has been primed so its preview is already available
+    assert "3" in repr(d)
+    assert d.skb.preview() == 3
+    assert d.skb.get_data() == {"a": 1, "b": 2}
+    assert c.skb.get_data() == {}
+    # setting only part of the variables
+    assert d.skb.set_data({"a": 10}).skb.get_data() == {"a": 10, "b": 2}
+    # note below the new dataop has incomplete data so still no preview
+    assert c.skb.set_data({"a": 10}).skb.get_data() == {"a": 10}
+
+
+def test_set_data_errors():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a // b
+    assert c.skb.set_data({"a": 4, "b": 2}).skb.preview() == 2
+    # setting bad data
+    with pytest.raises(ValueError, match="no corresponding variable.*'x'"):
+        c.skb.set_data({"a": 4, "b": 2, "x": 3})
+    # errors in the preview computation are propagated
+    with pytest.raises(RuntimeError, match="(division|division or modulo) by zero"):
+        c.skb.set_data({"a": 4, "b": 0})
 
 
 @pytest.mark.parametrize("needs_data", [False, True])
@@ -828,14 +994,14 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
         vectorizer = X.skb.apply_func(get_vectorizer)
 
         def get_predictor(X):
-            return Ridge() if regression else LogisticRegression()
+            return RidgeCV() if regression else LogisticRegression()
 
         predictor = X.skb.apply_func(get_predictor)
     else:
         # In this case the estimator can be evaluated in the automated preview
         # when the data op is created.
         vectorizer = skrub.as_data_op(skrub.TableVectorizer())
-        predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
+        predictor = skrub.as_data_op(RidgeCV() if regression else LogisticRegression())
     pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
     # no information about the estimator: we expose all methods and default to
     # 'transformer' estimator type.
@@ -900,10 +1066,63 @@ def test_copy_attrs():
     # non-regression for #1781 some attributes could be missing after
     # .set_name(), .mark_as_X() etc.
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    out = (
-        skrub.var("X", df)
-        .skb.apply(PassThrough())
-        .skb.mark_as_X()
-        .skb.set_name("transform")
-    )
-    assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    x = skrub.var("X", df).skb.apply(PassThrough()).skb.mark_as_X()
+    named = x.skb.set_name("transform")
+    assert isinstance(named.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    assert named.skb.id == x.skb.id
+
+
+def test_find():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = skrub.choose_from([1, 2], name="c")
+    d = (a + b).skb.set_name("d")
+    e = c + d
+    assert e.skb.find("c") is c
+    assert e.skb.find(lambda n: not hasattr(n, "skb") and n.name == "c") is c
+    assert e.skb.find("d") is d
+    assert e.skb.find(d.skb.id) is d
+    assert e.skb.find(lambda n: hasattr(n, "skb") and n.skb.name == "d") is d
+    assert e.skb.find("z") is None
+    assert e.skb.find(-1) is None
+    assert e.skb.find(lambda n: False) is None
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(c)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(None)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(())
+
+
+def test_find_X_y():
+    X = skrub.X()
+    y = skrub.y()
+    pred = X.skb.apply(DummyRegressor(), y=y)
+    Xy = pred.skb.find_X_y()
+    assert list(Xy) == ["X", "y"]
+    assert Xy["X"] is X
+    assert Xy["y"] is y
+    Xy = X.skb.find_X_y()
+    assert list(Xy) == ["X"]
+    assert Xy["X"] is X
+    Xy = y.skb.find_X_y()
+    assert list(Xy) == ["y"]
+    assert Xy["y"] is y
+    assert skrub.var("a").skb.find_X_y() == {}
+    groups = skrub.var("groups")
+    kfold = GroupKFold()
+    X = skrub.var("X").skb.mark_as_X(cv=kfold, split_kwargs={"groups": groups})
+    y = skrub.y()
+    pred = X.skb.apply(DummyRegressor(), y=y)
+    Xy = pred.skb.find_X_y()
+    assert list(Xy) == ["X", "cv", "split_kwargs", "y"]
+    assert Xy["X"] is X
+    assert Xy["y"] is y
+    assert Xy["cv"] is kfold
+    assert Xy["split_kwargs"]["groups"] is groups

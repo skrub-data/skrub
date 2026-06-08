@@ -1,4 +1,5 @@
 import numbers
+import warnings
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -20,21 +21,31 @@ class DropUninformative(SingleColumnTransformer):
         If True, drop the column if it contains only one unique value. Missing values
         count as one additional distinct value.
 
-    drop_if_unique : bool, default=False
-        If True, drop the column if all values are distinct. Missing values count as
-        one additional distinct value. Numeric columns are never dropped. This may
-        lead to dropping columns that contain free-flowing text.
-
     drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
+
+    drop_if_unique : bool, default=False
+        If True, drop the column if all values are unique (i.e. the
+        number of unique values is equal to the number of rows). Missing values
+        do not count as unique values for this criterion.
+
+        .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
 
     See Also
     --------
     Cleaner :
         A full-frame transformer (as opposed to single column) that can
         drop columns with missing values.
-    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+
+    DropCols :
+        Dropping cols by name, dtypes, or general skrub selectors.
+
+    DropSimilar :
+        Drops columns too closely correlated to the dataframe's other columns.
 
     Notes
     -----
@@ -45,10 +56,6 @@ class DropUninformative(SingleColumnTransformer):
       all values must be null for the column to be dropped).
     - The column includes only one unique value (the column is constant). Missing
       values are considered a separate value.
-    - The number of unique values in the column is equal to the length of the
-      column, i.e., all values are unique. This is only considered for non-numeric
-      columns. Missing values are considered a separate value. Note that this
-      may lead to dropping columns that contain free-flowing text.
 
     Examples
     --------
@@ -71,14 +78,6 @@ class DropUninformative(SingleColumnTransformer):
     []
     >>> du.fit_transform(df["col2"])
     []
-
-    Finally, it is possible to set ``drop_if_unique`` to ``True`` in order to drop
-    string columns that contain all distinct values:
-
-    >>> df = pd.DataFrame({"col1": ["A", "B", "C"]})
-    >>> du = DropUninformative(drop_if_unique=True)
-    >>> du.fit_transform(df["col1"])
-    []
     """
 
     def __init__(
@@ -95,6 +94,13 @@ class DropUninformative(SingleColumnTransformer):
         if not isinstance(self.drop_if_constant, bool):
             raise TypeError(
                 f"drop_if_constant must be boolean, found {self.drop_if_constant}."
+            )
+        if self.drop_if_unique is not False:
+            warnings.warn(
+                "The `drop_if_unique` parameter of `DropUninformative` is deprecated"
+                " and will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=3,
             )
         if not isinstance(self.drop_if_unique, bool):
             raise TypeError(

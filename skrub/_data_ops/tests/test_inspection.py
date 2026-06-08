@@ -11,10 +11,10 @@ from sklearn.feature_selection import SelectKBest
 
 import skrub
 from skrub import datasets
-from skrub._data_ops import _inspection
+from skrub._data_ops import _inspection, _utils
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_output_dir(tmp_path):
     e = skrub.X()
     assert e.skb.full_report(open=False)["report_path"].is_relative_to(
@@ -34,7 +34,7 @@ def test_output_dir(tmp_path):
     )
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_full_report():
     # smoke test for the full report
     # TODO we should have a private function that returns the JSON data so we
@@ -60,7 +60,7 @@ def test_full_report():
     assert "This step did not run" in (out / "node_4.html").read_text("utf-8")
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_full_report_title():
     # TODO we should have a private function that returns the JSON data so we
     #      can check the content before rendering with jinja
@@ -71,14 +71,14 @@ def test_full_report_title():
     assert title in report["report_path"].read_text("utf-8")
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_preview_subsample():
     X = datasets.fetch_employee_salaries().X
     preview = skrub.X(X).skb.subsample(n=3)._repr_html_()
     assert "subsample" in preview
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_full_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
@@ -96,7 +96,7 @@ def test_full_report_failed_apply():
     assert report["error"] is not None
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_report_fit_mode():
     # non-regression: in fit mode the individual node pages used to show the
     # dataop itself as the output instead of the result of fit_transform for
@@ -115,7 +115,24 @@ def test_report_fit_mode():
     assert "olleh" in node_1_report
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_report_score_mode_with_scoring():
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.make_learner()
+    )
+    with pytest.raises(
+        NotImplementedError,
+        match=re.escape(
+            "Creating the report for 'score' mode when .skb.with_scoring() "
+            "has been used is not implemented yet."
+        ),
+    ):
+        learner.report(environment={}, mode="score")
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_full_report_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(webbrowser, "open", mock)
@@ -123,17 +140,21 @@ def test_full_report_open(monkeypatch):
     mock.assert_called_once()
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_draw_graph():
-    g = skrub.as_data_op(0).skb.draw_graph()
+    data_op = skrub.as_data_op(0)
+    g = data_op.skb.draw_graph()
     assert repr(g) == "<GraphDrawing: use .open() to display>"
     assert b"<svg" in g.svg
+    uuid = str(data_op.skb.id).encode("utf-8")
+    assert uuid not in g.svg
+    assert uuid in data_op.skb.draw_graph(show_ids=True).svg
     assert "<svg" in g._repr_html_()
     assert g.png.startswith(b"\x89PNG")
     assert g._repr_png_().startswith(b"\x89PNG")
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_svg_anchor_google_colab(monkeypatch):
     """non-regression test for #1589"""
     monkeypatch.setitem(sys.modules, "google.colab", None)
@@ -151,18 +172,18 @@ def test_no_pydot(monkeypatch):
         return builtin_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _import)
-    with pytest.raises(ImportError, match="Please install pydot"):
+    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
 
 
 def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
-    with pytest.raises(ImportError, match="Please install pydot and graphviz"):
+    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_draw_graph_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(_inspection, "open_in_browser", mock)

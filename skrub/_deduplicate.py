@@ -231,6 +231,7 @@ def deduplicate(
 
     It is possible to use the deduplication function to replace values in a DataFrame
     column:
+
     >>> import pandas as pd
     >>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
     >>> df

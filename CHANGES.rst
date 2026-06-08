@@ -6,8 +6,70 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing Development
+Ongoing development
 ===================
+
+New Features
+------------
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
+- A parameter ``becomes_default`` has been added to :func:`var`. It allows
+  indicating that the provided preview ``value`` should also be treated as a
+  default value for this variable in all contexts (for example in a
+  SkrubLearner's method like ``fit`` or ``predict``).
+  :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
+  provides an alternative for referring to a node, in the environment passed to
+  :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
+  :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
+
+Changes
+-------
+- An unnecessary warning that was raised when passing a numpy array to the
+  TableVectorizer has been removed. :pr:`1908` by
+  :user:`Sandrine Henry <sandrineh>`.
+- Improving the association tab error message when only one column is present
+  :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
+- Added support for numpy arrays in :meth:`DataOp.skb.concat`.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+Bugfixes
+--------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). This is done
+  by the new transformer :class:`DurationToFloat`. :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+
+
+Deprecations
+------------
+
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`
+  :pr:`2101` by :user:`Heidi Koivisto <uniheko>`.
+
+
+Release 0.9.0
+=============
 
 New Features
 ------------
@@ -20,23 +82,73 @@ New Features
   :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
   display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
+- A new dataframe generator, :func:`datasets.toy_cities`, has been added for
+  use cases on dataframes with variable sizes and variable correlation between
+  columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
+- :class:`TableReport` now accepts ``plot_distributions`` and
+  ``compute_associations`` parameters (``True``, ``False``, or ``"auto"``)
+  to explicitly control whether distribution plots and pairwise associations
+  are computed. The threshold parameters controlling the maximum number of
+  columns for which these are computed have been renamed to
+  ``plots_threshold`` and ``associations_threshold`` for clarity.
+  :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_numbers`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
+  columns to ``float32``.
+  :pr:`1910` by :user:`Varshith-yadaV <Varshith-yadaV>`.
+- :func:`~datasets.fetch_toxicity` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now accepts an ``exclude_cols`` parameter, making it
+  possible to transform the columns selected by ``cols`` except for an
+  explicit subset, mirroring :meth:`DataOp.skb.apply`.
+  :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
+- In python versions >= 3.11, :class:`ApplyToCols` now produces better error
+  tracebacks when the wrapped transformer fails, . :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+- The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
+  Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
+  :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
 - Skrub estimators now correctly show links to the documentation in the HTML
   representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
   Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
-
+- An error that could arise when calling ``score`` on a ``SkrubLearner`` that
+  contains an inner transformer that has a ``score`` method has been fixed.
+  :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
-
+- The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
+  favor of ``cast_to_float`` in :pr:`1910`.
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The parameters ``max_plot_columns`` and ``max_association_columns`` of the
+  :class:`TableReport` have been deprecated in favor of ``plot_distributions``
+  and ``compute_associations``. :pr:`1907`.
 
 Release 0.8.0
 =============
@@ -68,6 +180,7 @@ New Features
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+
 
 Changes
 -------
@@ -140,11 +253,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------
