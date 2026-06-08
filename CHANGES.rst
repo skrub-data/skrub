@@ -11,6 +11,11 @@ Ongoing development
 
 New Features
 ------------
+- A parameter ``becomes_default`` has been added to :func:`var`. It allows
+  indicating that the provided preview ``value`` should also be treated as a
+  default value for this variable in all contexts (for example in a
+  SkrubLearner's method like ``fit`` or ``predict``).
+  :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to attach new preview values to the variables in a DataOp
   with :meth:`DataOp.skb.set_data`. :pr:`2081` by
   :user:`Jérôme Dockès <jeromedockes>`.
@@ -22,6 +27,12 @@ New Features
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
@@ -30,12 +41,24 @@ Changes
   :user:`Sandrine Henry <sandrineh>`.
 - Improving the association tab error message when only one column is present
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
-
+- Added support for numpy arrays in :meth:`DataOp.skb.concat`.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 Bugfixes
 --------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). This is done
+  by the new transformer :class:`DurationToFloat`. :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+
 
 Deprecations
 ------------
+
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`
+  :pr:`2101` by :user:`Heidi Koivisto <uniheko>`.
 
 
 Release 0.9.0
