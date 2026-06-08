@@ -42,6 +42,8 @@ purchase event or not.
 # %%
 # Since this is temporal data, we use a time-aware CV strategy with
 # |TimeSeriesSplit| to avoid leakage. We reuse the same splitter for all evaluations.
+# The dataset is sorted by timestamp, so the training set will always contain only
+# past data relative to the test set.
 from sklearn.model_selection import TimeSeriesSplit
 
 splitter = TimeSeriesSplit(n_splits=5)
@@ -111,6 +113,7 @@ print(f"ROC-AUC without session encoding: {scores.mean():.3f}")
 # pipeline, we can achieve this by using |SessionEncoder| followed by a custom
 # transformer that computes session aggregates, and ensuring that the pipeline is
 # properly fitted within each fold of cross-validation.
+
 # %%
 from skrub import SessionEncoder, tabular_pipeline
 

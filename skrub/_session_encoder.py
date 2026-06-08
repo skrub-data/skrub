@@ -1,13 +1,16 @@
 """
 The SessionEncoder is a transformer that takes as input:
 - a "timestamp" column, which identifies the time of an event
-- a "by" column or list of columns, which identifies a user
+- a "split_by" column or list of columns, which identifies a user
 - a "session_gap" value, which identifies the maximum allowed gap in seconds
   between events in a session
 
-It returns a dataframe with the same number of rows as the input, but with the
-column "session_id": a unique identifier for each session, which is a combination
-of the "by" column(s) and a session number
+It returns a dataframe with the same number of rows as the input, but with an
+additional column that identifies the session to which each event belongs.
+The name of the session column is "{timestamp}_{suffix}", where "timestamp" is the name
+of the timestamp column, and "suffix" is a string that can be set via the "suffix"
+parameter (default is "session_id"). The session column contains a unique identifier for
+each session, which is a combination of the "split_by" column(s) and a session number
 """
 
 import numbers
@@ -38,12 +41,7 @@ def _add_session_column(X, split_by, timestamp_col, session_gap, session_column_
 def _add_session_column_pandas(
     X, split_by, timestamp_col, session_gap, session_column_name
 ):
-    # astype(int64) is needed (rather than just int) because on windows this converts
-    # to int32
     # check if the time difference between events exceeds the session gap
-    # dividing by 10**9 because int64 is in ms, while session_gap is in seconds
-    # as_unit("ns") is because the timestamp might be in a different unit (e.g. ms),
-    # and we want to make sure it's in ns for the diff to work correctly
     time_diff = X[timestamp_col].diff().dt.total_seconds().fillna(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
@@ -54,8 +52,7 @@ def _add_session_column_pandas(
     else:
         is_new_session = time_diff
     # Compute cumulative sum of is_new_session to create session IDs
-    X[session_column_name] = is_new_session.cumsum()
-    return X
+    return X.assign(**{session_column_name: is_new_session.cumsum()})
 
 
 @_add_session_column.specialize("polars")
@@ -63,10 +60,6 @@ def _add_session_column_polars(
     X, split_by, timestamp_col, session_gap, session_column_name
 ):
     # check if the time difference between events exceeds the session gap
-    # setting the time unit to "ns" (nanoseconds), and dividing by 10**9 because
-    # session_gap is in seconds
-    # using ns for consistency with pandas, which uses ns for timestamps, and
-    # to avoid issues with timestamps in different units
     time_diff = X[timestamp_col].diff().dt.total_seconds().fill_null(0) > session_gap
     if split_by:
         # check if the "split_by" column changes
@@ -421,7 +414,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             for _ in self.all_inputs_
             if _ not in self._split_by_columns + [self.timestamp_col]
         ]:
-            X_selected = sbd.drop_columns(X, s.cols(*cols_to_remove).expand(X))
+            X_selected = sbd.drop_columns(X, cols_to_remove)
         else:
             X_selected = X
 
