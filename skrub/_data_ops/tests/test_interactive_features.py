@@ -123,6 +123,11 @@ def test_repr():
     Result:
     ―――――――
     'one two'
+    >>> skrub.var('a', 1, becomes_default=True)
+    <Var 'a' int>
+    Result (also the default value):
+    ――――――――――――――――――――――――――――――――
+    1
     >>> skrub.as_data_op({'a': 0})
     <Value dict>
     Result:
