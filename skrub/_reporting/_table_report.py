@@ -425,9 +425,6 @@ class TableReport:
         str :
             The Markdown report.
         """
-
-        if self._summary["dataframe_is_empty"]:
-            return "The dataframe is empty.\n"
         return to_markdown(self._summary)
 
     def _repr_mimebundle_(self, include=None, exclude=None):

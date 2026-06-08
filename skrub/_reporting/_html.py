@@ -210,6 +210,8 @@ def to_markdown(summary):
     str
         The report as a Markdown string.
     """
+    if summary["dataframe_is_empty"]:
+        return "The dataframe is empty.\n"
     jinja_env = _get_jinja_env_markdown()
     template = jinja_env.get_template("report.md")
     return template.render({"summary": summary})
