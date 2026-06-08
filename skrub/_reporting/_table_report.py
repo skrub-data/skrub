@@ -420,6 +420,17 @@ class TableReport:
     def markdown(self):
         """Get the report as a Markdown string.
 
+        This can be useful for displaying the report in environments that support
+        Markdown for formatted text, to include the report in Markdown documents,
+        or to get a quick text summary of the report.
+
+        .. warning::
+
+            The Markdown output can be provided to AI agents, but it does **not**
+            perform any truncation or sanitization of the data. Therefore, it should
+            not be used with untrusted data or in contexts where the data may be too
+            large, as it could lead to performance issues or security risks.
+
         Returns
         -------
         str :
