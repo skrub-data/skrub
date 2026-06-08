@@ -4,12 +4,12 @@ import functools
 import re
 import textwrap
 
-from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _utils
+from ._base import BaseTransformer
 
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
@@ -120,7 +120,7 @@ class RejectColumn(ValueError):
     pass
 
 
-class SingleColumnTransformer(BaseEstimator):
+class SingleColumnTransformer(BaseTransformer):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
@@ -144,19 +144,6 @@ class SingleColumnTransformer(BaseEstimator):
     """
 
     __single_column_transformer__ = True
-    _doc_link_module = "skrub"
-
-    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
-    # which also defines _doc_link_template as a property, and we want to be able
-    # to override it.
-    @property
-    def _doc_link_template(self):
-        return getattr(
-            self,
-            "__doc_link_template",
-            "https://skrub-data.org/stable/reference/generated/"
-            "{estimator_module}.{estimator_name}.html",
-        )
 
     def set_output(self, *, transform=None):
         """

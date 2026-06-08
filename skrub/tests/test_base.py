@@ -17,7 +17,7 @@ def test_doc_link_apply_to_cols():
     html = estimator_html_repr(ApplyToCols(StringEncoder()))
     links = set(re.findall(r'href="(https?://[^#"]+)"', html))
     assert (
-        "https://skrub-data.org/stable/reference/generated/skrub.StringEncoder.html"
+        "https://skrub-data.org/stable/reference/generated/skrub.ApplyToCols.html"
         in links
     )
 
