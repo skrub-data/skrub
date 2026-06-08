@@ -36,6 +36,9 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 Bugfixes
 --------
+- Fixed :class:`TableReport` generation for string values containing dollar
+  signs that matplotlib could otherwise parse as invalid math. :issue:`2097`
+  by :user:`Matt Van Horn <mvanhorn>`.
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
   duration columns in pandas and polars has been fixed. Now, both classes convert
   durations to the total number of seconds (with fractional part). This is done

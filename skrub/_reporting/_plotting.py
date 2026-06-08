@@ -71,6 +71,8 @@ _MATPLOTLIB_RC_PARAMS = {
     "boxplot.whiskerprops.color": _TEXT_COLOR_PLACEHOLDER,
 }
 
+_MATPLOTLIB_PARSE_MATH_RC_PARAM = "text.parse_math"
+
 
 def _plot(plotting_fun):
     """Set the maptlotib config & silence some warnings for all report plots.
@@ -97,6 +99,8 @@ def _plot(plotting_fun):
         # fonttype: none causes matplotlib to insert labels etc as text in the
         # svg rather than drawing the glyphs.
         params = {"svg.fonttype": "none", **_MATPLOTLIB_RC_PARAMS}
+        if _MATPLOTLIB_PARSE_MATH_RC_PARAM in plt.rcParams:
+            params[_MATPLOTLIB_PARSE_MATH_RC_PARAM] = False
         original_params = {k: plt.rcParams[k] for k in params}
         try:
             for k, v in params.items():
