@@ -24,6 +24,9 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
 - :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
   separators to parse numerical columns that use formatting different from the default
   formatting used in Python, such as ``1'234,5``.
