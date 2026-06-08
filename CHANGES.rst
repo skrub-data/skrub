@@ -24,6 +24,12 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
