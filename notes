@@ -1,0 +1,27 @@
+cd D:\skrub-women-in-tech
+
+python -m venv env_skrub
+.\env_skrub\Scripts\Activate.ps1 or source env_skrub/bin/activatepip install -e ".[dev]"
+
+
+cd skrub (package)
+
+cd D:\skrub-women-in-tech
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+
+
+pip install pre-commit (install)
+pre-commit install (run)
+
+
+Configure git blame
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+(env_skrub) PS D:\skrub-women-in-tech> git config --get blame.ignoreRevsFile
+.git-blame-ignore-revs
+
+
+====
+Run the test suite
+
+pytest --pyargs skrub
