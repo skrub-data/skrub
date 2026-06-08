@@ -86,6 +86,7 @@ def _factorize_column(X, column_name):
 def _factorize_column_pandas(X, column_name):
     if sbd.is_numeric(X[column_name]):
         return X[column_name]
+    # TODO: convert datetimes/durations to numeric
     codes, _ = pd.factorize(X[column_name])
     return codes
 
@@ -96,6 +97,7 @@ def _factorize_column_polars(X, column_name):
 
     if sbd.is_numeric(X[column_name]):
         return X[column_name]
+    # TODO: convert datetimes/durations to numeric
     return X[column_name].cast(pl.Categorical).to_physical()
 
 
@@ -379,6 +381,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
         # Checking that all the needed columns are there
         self._check_input_dataframe()
+
         # check the correctness of the values of session_gap
         if not isinstance(self.session_gap, numbers.Number):
             raise TypeError(f"Expected a number, got {type(self.session_gap)}")
@@ -389,18 +392,27 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if not isinstance(self.suffix, str) or self.suffix is None:
             raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
 
-        self._session_id_name = f"{self.timestamp_col}_{self.suffix}"
+        # check that the timestamp column is of datetime type
+        if not sbd.is_empty_frame(X) and not sbd.is_any_date(
+            sbd.col(X, self.timestamp_col)
+        ):
+            raise TypeError(
+                "Expected a datetime column for timestamp_col,"
+                f" got {self.timestamp_col!r}"
+            )
+
+        self.session_id_name_ = f"{self.timestamp_col}_{self.suffix}"
 
         # If the generated session id column name already exists in the input dataframe,
         # we add a random suffix to avoid overwriting it
-        if self._session_id_name in self.all_inputs_:
-            self._session_id_name += f"_skrub_{random_string()}"
+        if self.session_id_name_ in self.all_inputs_:
+            self.session_id_name_ += f"_skrub_{random_string()}"
 
         # if the input dataframe is empty, we can skip all the processing and
         # return an empty dataframe with the session_id column added
         if sbd.is_empty_frame(X):
             X = sbd.with_columns(
-                X, **{self._session_id_name: np.array([], dtype=np.float32)}
+                X, **{self.session_id_name_: np.array([], dtype=np.float32)}
             )
             return X
 
@@ -428,9 +440,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
 
-        X_with_session_id = self._add_session_id(
+        X_with_session_id = _add_session_column(
             X_factorized,
             factorized_by,
+            self.timestamp_col,
+            self.session_gap,
+            self.session_id_name_,
         )
         # Reordering rows back to the original order
         X_result = sbd.sort(X_with_session_id, by=row_order_col)
@@ -446,7 +461,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             X_result = sbd.concat(X_result, s.select(X, cols_to_remove), axis=1)
 
         # Reordering columns so that the session_id is added as the last column
-        X_result = s.select(X_result, self.all_inputs_ + [self._session_id_name])
+        X_result = s.select(X_result, self.all_inputs_ + [self.session_id_name_])
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
@@ -471,26 +486,26 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         """
         Check that the input columns are present and correct
         """
-
+        # TODO: move here all the error checking on the input dataframe
+        # and the parameters
         # Check that the timestamp column is present
         if self.timestamp_col not in self.all_inputs_:
             raise ValueError(
                 f"Column '{self.timestamp_col}' not found in input dataframe"
             )
         # check that the required columns are present in the input dataframe
-        self._split_by_columns = []
-        if self.split_by is not None:
-            if isinstance(self.split_by, str):
-                self._split_by_columns = [self.split_by]
-            elif isinstance(self.split_by, Iterable) and not isinstance(
-                self.split_by, str
-            ):
-                self._split_by_columns = list(self.split_by)
-            else:
-                raise TypeError("split_by must be a string, a list of strings, or None")
-            for col in self._split_by_columns:
-                if col not in self.all_inputs_:
-                    raise ValueError(f"Column '{col}' not found in input dataframe")
+        if self.split_by is None:
+            self._split_by_columns = []
+            return
+        if isinstance(self.split_by, str):
+            self._split_by_columns = [self.split_by]
+        elif isinstance(self.split_by, Iterable):
+            self._split_by_columns = list(self.split_by)
+        else:
+            raise TypeError("split_by must be a string, a list of strings, or None")
+        for col in self._split_by_columns:
+            if col not in self.all_inputs_:
+                raise ValueError(f"Column '{col}' not found in input dataframe")
 
     def _factorize_columns(self, X):
         """
@@ -510,16 +525,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         X_factorized = sbd.with_columns(X, **factorized_columns)
 
         return X_factorized, list(factorized_columns.keys())
-
-    def _add_session_id(self, X_factorized, factorized_by):
-        X_with_session_id = _add_session_column(
-            X_factorized,
-            factorized_by,
-            self.timestamp_col,
-            self.session_gap,
-            self._session_id_name,
-        )
-        return X_with_session_id
 
     def get_feature_names_out(self, input_features=None):
         """Return the column names of the output of ``transform`` as a list of strings.
