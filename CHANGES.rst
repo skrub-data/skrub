@@ -43,6 +43,8 @@ New Features
 
 Changes
 -------
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is another type of sequence. :pr:`2100` by
+  :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
