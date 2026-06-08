@@ -109,7 +109,7 @@ def example_session_data_multi_by(df_module):
         ("username", 6, {"alice": 3, "bob": 2, "charlie": 1}),
     ],
 )
-def test_session_encoder_basic(
+def test_basic_functionality(
     example_session_data, by_column, expected_sessions, split_key_to_sessions
 ):
     """Test basic sessionization grouping by user_id or username."""
@@ -152,7 +152,7 @@ def test_session_encoder_basic(
         ("username", ["alice", "bob", "charlie"]),
     ],
 )
-def test_session_encoder_different_users_different_sessions(
+def test_different_users_different_sessions(
     example_session_data, by_column, group_keys
 ):
     """Test that different users/groups have different session IDs."""
@@ -181,7 +181,7 @@ def test_session_encoder_different_users_different_sessions(
             assert len(sessions1.intersection(sessions2)) == 0
 
 
-def test_session_encoder_multi_by_columns(example_session_data_multi_by):
+def test_multi_by_columns(example_session_data_multi_by):
     """Test sessionization when a user is identified by a combination of columns.
 
     The fixture has user_id=1 on two devices ("mobile" and "desktop").  When
@@ -231,7 +231,7 @@ def test_session_encoder_multi_by_columns(example_session_data_multi_by):
             assert group_sessions[k1].isdisjoint(group_sessions[k2])
 
 
-def test_session_encoder_multiple_users(df_module):
+def test_multiple_users(df_module):
     """Test sessionization with multiple users interleaved."""
     timestamps = []
     user_ids = []
@@ -264,7 +264,7 @@ def test_session_encoder_multiple_users(df_module):
     assert len(set(session_ids)) == 2
 
 
-def test_session_encoder_time_gap_threshold(df_module):
+def test_time_gap_threshold(df_module):
     """Test that session_gap parameter correctly determines sessionization."""
     timestamps = [
         datetime.datetime(2024, 1, 1, 10, 0),
@@ -298,7 +298,7 @@ def test_session_encoder_time_gap_threshold(df_module):
     assert len(set(session_ids_40)) == 1
 
 
-def test_session_encoder_no_user_column(df_module):
+def test_no_user_column(df_module):
     """Test sessionization without a user identifier column.
 
     When ``split_by`` is None, all events are treated as from the same "user", and
@@ -333,7 +333,7 @@ def test_session_encoder_no_user_column(df_module):
     assert session_ids[0] != session_ids[3]  # Sessions are different
 
 
-def test_session_encoder_single_event(df_module):
+def test_single_event(df_module):
     """Test sessionization with single event per user."""
     df = df_module.make_dataframe(
         {
@@ -349,22 +349,6 @@ def test_session_encoder_single_event(df_module):
     assert len(session_ids) == 1
     # Single event should create one session
     assert session_ids[0] == 0
-
-
-def test_session_encoder_empty_dataframe(df_module):
-    """Test sessionization with empty dataframe."""
-    df = df_module.make_dataframe(
-        {
-            "timestamp": [],
-            "user_id": [],
-        }
-    )
-
-    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
-    result = se.fit_transform(df)
-
-    assert sbd.shape(result)[0] == 0
-    assert "timestamp_session_id" in sbd.column_names(result)
 
 
 @pytest.mark.parametrize(
@@ -396,7 +380,7 @@ def test_session_encoder_empty_dataframe(df_module):
         ),
     ],
 )
-def test_session_encoder_missing_column_error(
+def test_missing_column_error(
     df_module,
     group_by_param,
     timestamp_col_param,
@@ -420,7 +404,7 @@ def test_session_encoder_missing_column_error(
         se.fit_transform(df)
 
 
-def test_session_encoder_invalid_parameters(df_module):
+def test_invalid_parameters(df_module):
     """Test that invalid parameters raise appropriate errors."""
     df = df_module.make_dataframe(
         {
@@ -457,8 +441,21 @@ def test_session_encoder_invalid_parameters(df_module):
     with pytest.raises(ValueError, match="Expected a string as suffix"):
         se_invalid_suffix.fit_transform(df)
 
+    # Test timestamp column with non-datetime type
+    df_invalid_timestamp = df_module.make_dataframe(
+        {
+            "timestamp": ["2024-01-01 10:00:00"],  # string instead of datetime
+            "user_id": [101],
+        }
+    )
+    se_invalid_timestamp = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30
+    )
+    with pytest.raises(TypeError, match="Expected a datetime column for timestamp_col"):
+        se_invalid_timestamp.fit_transform(df_invalid_timestamp)
 
-def test_session_encoder_preserves_columns(df_module):
+
+def test_preserves_columns(df_module):
     """Test that original columns are preserved in output."""
     df = df_module.make_dataframe(
         {
@@ -481,7 +478,7 @@ def test_session_encoder_preserves_columns(df_module):
     assert "timestamp_session_id" in result_cols
 
 
-def test_session_encoder_fit_and_transform(df_module):
+def test_fit_and_transform(df_module):
     """Test that fit() and transform() work separately."""
     df = df_module.make_dataframe(
         {
@@ -664,7 +661,7 @@ def test_proper_suffix(timestamp, suffix, df_module):
         assert expected_name in sbd.column_names(result)
 
 
-def test_session_encoder_preserves_input_order(df_module):
+def test_preserves_input_order(df_module):
     """Test that the output rows are in the same order as the input rows.
 
     The encoder sorts internally to detect sessions correctly, but the result
@@ -708,12 +705,21 @@ def test_error_dispatch(func):
         func(np.array([1]))
 
 
-def test_empty_frame(df_module):
-    empty_df = df_module.make_dataframe({"timestamp": []})
-    encoder = SessionEncoder("timestamp")
-    result = encoder.fit_transform(empty_df)
+def test_empty_dataframe(df_module):
+    """Test sessionization with empty dataframe."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [],
+            "user_id": [],
+        }
+    )
 
-    assert sbd.column_names(result) == ["timestamp", "timestamp_session_id"]
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    assert sbd.shape(result)[0] == 0
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.column_names(result) == ["timestamp", "user_id", "timestamp_session_id"]
 
 
 def test_not_overwriting_columns(df_module):
