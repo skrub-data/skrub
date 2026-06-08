@@ -33,7 +33,7 @@ def test_bad_name(name):
         skrub.choose_int(0, 10, n_steps=5, name=name)
 
 
-def test_when_isinstance_false():
+def test_choose_from_numpy_array():
     outcomes = np.array([10, 20])
     c = skrub.choose_from(outcomes, name="c")
     assert c.outcomes == list(outcomes)
