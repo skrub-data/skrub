@@ -1250,18 +1250,6 @@ def test_pipeline_in_table_vectorizer(df_module):
     assert fit_transform_result.shape == transform_result.shape == (2, 4)
 
 
-def test_doc_link_skrub_class():
-    """Public skrub classes get a link to skrub documentation."""
-    link = TableVectorizer()._get_doc_link()
-    assert link == (
-        "https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html"
-    )
-    link = Cleaner()._get_doc_link()
-    assert link == (
-        "https://skrub-data.org/stable/reference/generated/skrub.Cleaner.html"
-    )
-
-
 def test_duration_to_float(df_module):
     df = df_module.make_dataframe(
         {

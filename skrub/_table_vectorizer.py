@@ -4,7 +4,7 @@ from collections import UserDict
 from collections.abc import Iterable
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._base import BaseTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
@@ -183,7 +184,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, BaseEstimator):
+class Cleaner(TransformerMixin, BaseTransformer):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -555,7 +556,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         )
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator):
+class TableVectorizer(TransformerMixin, BaseTransformer):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
