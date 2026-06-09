@@ -144,18 +144,22 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         All column names in the input dataframe plus the new column that identifies
         the session, with name "{timestamp}_{suffix}".
 
+    session_id_name_ : str
+        The name of the session ID column that is added to the dataframe. This is
+        generated as "{timestamp_col}_{suffix}", but if this name already exists in
+        the input dataframe, a random suffix is added to avoid overwriting it.
+
     Examples
     --------
     Consider this example where we have a dataframe with user events, and we want
     to identify sessions based on a 30-minute gap between events for each user.
     Users are identified by the value of the column ``user_id``.
+    Note that the order of the events in the input dataframe does not matter:
+    the ``SessionEncoder`` will sort the events by user and timestamp before
+    identifying sessions (and sort them back to the original order at the end).
 
     >>> import pandas as pd
-    >>> from skrub import SessionEncoder
     >>> from datetime import datetime, timedelta
-    >>> encoder = SessionEncoder(
-    ...     split_by='user_id', timestamp_col='timestamp'
-    ... )
     >>> data = {
     ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
     ...     'timestamp': [
@@ -176,6 +180,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     3      bob 2024-01-01 10:00:00    login
     4      bob 2024-01-01 10:20:00 purchase
 
+    We use the ``SessionEncoder`` with default ``session_gap`` of 30 minutes:
+
+    >>> from skrub import SessionEncoder
+    >>> encoder = SessionEncoder(
+    ...     split_by='user_id', timestamp_col='timestamp'
+    ... )
     >>> result = encoder.fit_transform(df)
     >>> result
        user_id           timestamp   action  timestamp_session_id
