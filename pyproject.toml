@@ -346,6 +346,10 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  # Sentence-transformers using a deprecated huggingface_hub function.
+  # We avoid turning huggingface_hub warnings into errors, because they get
+  # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
+  'default::DeprecationWarning:huggingface_hub',
 ]
 log_cli_level = "INFO"
 xfail_strict = true
