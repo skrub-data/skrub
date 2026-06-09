@@ -241,6 +241,7 @@ class Drop(SingleColumnTransformer):
     0       0.0         1.0         0.0
     1       0.0         0.0         1.0
     2       1.0         0.0         0.0
+
     Here, only the "text" column is vectorized, and the "num" column is dropped
     entirely.
 
