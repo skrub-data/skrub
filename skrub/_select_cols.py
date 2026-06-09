@@ -197,10 +197,13 @@ class DropCols(TransformerMixin, BaseEstimator):
 
 
 class Drop(SingleColumnTransformer):
-    """Drop the selected DataFrame's column.
+    """Drop the selected DataFrame's column unconditionally.
 
     The other columns are kept in their original order. A ``ValueError`` is raised if
     any of the provided column names are not in the dataframe.
+    This transformer is different from :class:`DropCols` in that it is designed
+    to be used with other transformers, for example to remove all columns with a
+    given type from a transformation.
 
 
     Parameters
@@ -218,28 +221,30 @@ class Drop(SingleColumnTransformer):
 
     Examples
     --------
+    ``Drop`` is meant to be used with other transformers to drop columns with a
+    given type or other property.
+
+    For example, if we want to vectorize a dataframe but drop the numeric columns,
+    we can do:
+
     >>> import pandas as pd
-    >>> from skrub import ApplyToCols, Drop
+    >>> from skrub import Drop
     >>> df = pd.DataFrame({"num": [1,2,3], "text": ["hello", "world", "foo"]})
     >>> df
        num  text
-       1    hello
-       2    world
-       3    foo
-    >>> drop_text = ApplyToCols(Drop(), cols="text")
-    >>> drop_text.fit_transform(df)
-        num
-        1
-        2
-        3
+    0    1  hello
+    1    2  world
+    2    3    foo
     >>> from skrub import TableVectorizer
     >>> TableVectorizer(numeric=Drop()).fit_transform(df)
         text_foo  text_hello  text_world
     0       0.0         1.0         0.0
     1       0.0         0.0         1.0
     2       1.0         0.0         0.0
-    
-    """  
+    Here, only the "text" column is vectorized, and the "num" column is dropped
+    entirely.
+
+    """
 
     def fit_transform(self, column, y=None):
         self.all_outputs_ = []
