@@ -80,6 +80,15 @@ def test_report(air_quality):
 
 
 @skip_polars_installed_without_pyarrow
+def test_report_dict(air_quality):
+    report = TableReport(air_quality, title="dict title")
+    result = report.dict()
+    assert isinstance(result, dict)
+    assert result == json.loads(report.json())
+    assert result["title"] == "dict title"
+
+
+@skip_polars_installed_without_pyarrow
 def test_few_columns(df_module, check_polars_numpy2):
     report = TableReport(df_module.example_dataframe)
     assert "First 10 columns" not in report.html()
