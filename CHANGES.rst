@@ -36,7 +36,8 @@ New Features
   Additionally, it is possible to provide a ``by`` column or list of columns
   (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
   value. A new synthetic dataset generator has also been added.
-  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
 - :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
