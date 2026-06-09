@@ -178,42 +178,26 @@ def test_cant_download(monkeypatch):
 
 
 @xfail_with_download_error
-def test_dataset_paths(dataset="electricity_forecasting"):
-    # Test datasets whose fetcher returns a path to a directory
-    # containing several files comprising a single dataset.
-    path = getattr(_fetching, f"fetch_{dataset}")()
-    assert path.name == dataset
-
-
-@xfail_with_download_error
-@pytest.mark.parametrize(
-    "dataset_name, files",
-    [
-        (
-            "electricity_forecasting",
-            [
-                "weather_bayonne.csv",
-                "weather_brest.csv",
-                "weather_lille.csv",
-                "weather_limoges.csv",
-                "weather_lyon.csv",
-                "weather_marseille.csv",
-                "weather_nantes.csv",
-                "weather_paris.csv",
-                "weather_strasbourg.csv",
-                "weather_toulouse.csv",
-                "Total Load - Day Ahead _ Actual_202501010000-202601010000.csv",
-                "Total Load - Day Ahead _ Actual_202401010000-202501010000.csv",
-                "Total Load - Day Ahead _ Actual_202301010000-202401010000.csv",
-                "Total Load - Day Ahead _ Actual_202201010000-202301010000.csv",
-                "Total Load - Day Ahead _ Actual_202101010000-202201010000.csv",
-            ],
-        ),
-    ],
-)
-def test_dataset_files(dataset_name, files):
-    # Test datasets whose fetcher returns a path to a directory
-    # containing multiple files with comprise the dataset.
-    path = getattr(_fetching, f"fetch_{dataset_name}")()
-    files_in_dir = [f.name for f in Path(path).iterdir() if f.is_file()]
-    assert all(file in files_in_dir for file in files)
+def test_electricity_forecasting():
+    files = set(
+        [
+            "weather_bayonne.csv",
+            "weather_brest.csv",
+            "weather_lille.csv",
+            "weather_limoges.csv",
+            "weather_lyon.csv",
+            "weather_marseille.csv",
+            "weather_nantes.csv",
+            "weather_paris.csv",
+            "weather_strasbourg.csv",
+            "weather_toulouse.csv",
+            "Total Load - Day Ahead _ Actual_202501010000-202601010000.csv",
+            "Total Load - Day Ahead _ Actual_202401010000-202501010000.csv",
+            "Total Load - Day Ahead _ Actual_202301010000-202401010000.csv",
+            "Total Load - Day Ahead _ Actual_202201010000-202301010000.csv",
+            "Total Load - Day Ahead _ Actual_202101010000-202201010000.csv",
+        ]
+    )
+    path = _fetching.fetch_electricity_forecasting()
+    downloaded = [f.name for f in Path(path).iterdir() if f.is_file()]
+    assert files == set(downloaded)
