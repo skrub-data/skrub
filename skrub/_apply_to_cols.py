@@ -214,7 +214,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     skrub.core.RejectColumn: Column 'A' does not have Date or Datetime dtype.
     Transformer DatetimeEncoder.fit_transform failed on column 'A'. See above for the full traceback.
 
-    ** Accessing fitted transformers **
+    **Accessing fitted transformers**
 
     Depending on the transformer, the fitted transformers
     are stored in different attributes. For single-column transformers, the fitted
