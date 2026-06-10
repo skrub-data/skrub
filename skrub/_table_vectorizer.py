@@ -182,23 +182,37 @@ def _get_preprocessors(
 
 
 def _list_transformations(estimator):
+    message = ""
     for step in estimator._pipeline.named_steps:
         if step == "checkinputdataframe":
             continue
         transformer = estimator._pipeline.named_steps[step]
-        # "transformer" is just ApplyToEachCol, so we need to get the actual transformer
         match transformer.transformer:
             case DropUninformative():
-                print("DropUninformative - ")
                 dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
-                print(f"Dropped columns {dropped} - ")
-                print(f"Used inputs: {transformer.used_inputs_} - ")
+                if dropped != set():
+                    message += "DropUninformative - " + "\n"
+                    message += f"Dropped columns {dropped}" + "\n"
+                    message += f"Used inputs: {transformer.used_inputs_} - " + "\n"
             case ToFloat():
-                print("ToFloat - ")
-                print(f"Columns transformed to float: {transformer.used_inputs_} - ")
+                message += "ToFloat - " + "\n"
+                message += (
+                    f"Columns transformed to float: {transformer.used_inputs_} - "
+                    + "\n"
+                )
             case ToDatetime():
-                print("ToDatetime - ")
-                print(f"Columns transformed to datetime: {transformer.used_inputs_} - ")
+                message += "ToDatetime - " + "\n"
+                message += (
+                    f"Columns transformed to datetime: {transformer.used_inputs_} - "
+                    + "\n"
+                )
+            case CleanNullStrings():
+                message += "CleanNullStrings - " + "\n"
+                message += (
+                    f"Columns with standardized nulls: {transformer.used_inputs_} - "
+                    + "\n"
+                )
+    return message
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
@@ -557,6 +571,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
+
+    def list_transformations(self):
+        print(_list_transformations(self))
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
@@ -1184,3 +1201,61 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
+
+    def list_transformations(self):
+        preprocessing_transformations = _list_transformations(self)
+        vectorize_transformations = ""
+        specific_transformations = "Specific transformations: " + "\n"
+
+        for step in self._pipeline.named_steps:
+            if step == "checkinputdataframe":
+                continue
+            transformer = self._pipeline.named_steps[step]
+            match transformer.transformer:
+                case type(self.numeric):
+                    vectorize_transformations += (
+                        f"Numeric transformer: {self.numeric}" + "\n"
+                    )
+                    vectorize_transformations += (
+                        f"Numerical columns transformed: {transformer.used_inputs}"
+                        + "\n"
+                    )
+                case type(self.datetime):
+                    vectorize_transformations += (
+                        f"Datetime transformer: {self.datetime}" + "\n"
+                    )
+                    vectorize_transformations += (
+                        f"Datetime columns transformed: {transformer.used_inputs}"
+                        + "\n"
+                    )
+                case type(self.low_cardinality):
+                    vectorize_transformations += (
+                        f"Low-cardinality transformer: {self.low_cardinality}" + "\n"
+                    )
+                    vectorize_transformations += (
+                        f"Low-cardinality columns transformed: \
+                            {transformer.used_inputs}"
+                        + "\n"
+                    )
+                case type(self.high_cardinality):
+                    vectorize_transformations += (
+                        f"High-cardinality transformer: {self.high_cardinality}" + "\n"
+                    )
+                    vectorize_transformations += (
+                        f"High-cardinality columns transformed: \
+                            {self.high_cardinality.used_inputs}"
+                        + "\n"
+                    )
+            if transformer.transformer in self.specific_transformers:
+                specific_transformations += (
+                    f"{transformer.transformer} applied to: {transformer.used_inputs}"
+                    + "\n"
+                )
+
+        return (
+            preprocessing_transformations
+            + "\n\n"
+            + vectorize_transformations
+            + "\n\n"
+            + specific_transformations
+        )
