@@ -134,12 +134,12 @@ the default table preprocessing:
 
 >>> from sklearn.decomposition import PCA
 >>> from sklearn.linear_model import Ridge
->>> from sklearn.pipeline import make_pipeline
+>>> from sklearn.pipeline import Pipeline
 >>> from skrub import tabular_pipeline
->>> model_pipeline = make_pipeline(PCA(n_components=20), Ridge())
+>>> model_pipeline = Pipeline([("pca", PCA(n_components=20)), ("ridge", Ridge())])
 >>> full_pipeline = tabular_pipeline(model_pipeline)
 >>> [name for name, _ in full_pipeline.steps]
-['tablevectorizer', 'simpleimputer', 'squashingscaler', 'pipeline']
+['tablevectorizer', 'simpleimputer', 'squashingscaler', 'pca', 'ridge']
 
 The user-provided estimator pipeline is appended as a single final step. This
 means that ``tabular_pipeline`` can still decide which preprocessing steps to
