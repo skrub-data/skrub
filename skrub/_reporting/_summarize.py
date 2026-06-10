@@ -113,9 +113,9 @@ def summarize_dataframe(
     }
     if title is not None:
         summary["title"] = title
-        # detect complex objects that make memory estimates unreliable
-        # try:
-        summary["memory_estimate_unreliable"] = _has_complex_objects(df)
+    # detect complex objects that make memory estimates unreliable
+    # try:
+    summary["memory_estimate_unreliable"] = _has_complex_objects(df)
     # except Exception:
     #     summary["memory_estimate_unreliable"] = False
     if order_by is not None:
