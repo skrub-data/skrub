@@ -130,9 +130,7 @@ def drop_if_constant_table(df_module):
                 "const",
                 None,
             ],
-            "low_variance": [
-                0.01,0.02,0.05
-            ]
+            "low_variance": [0.01, 0.02, 0.05],
         }
     )
 
@@ -144,7 +142,7 @@ def drop_if_constant_table(df_module):
         (dict(drop_if_constant=True), "constant_float", []),
         (dict(drop_if_constant=True), "constant_float_with_nulls", [2.5, 2.5, np.nan]),
         (dict(drop_if_constant=True), "constant_str", []),
-        (dict(drop_if_constant=True,threshold=0.5), "low_variance", []),
+        (dict(drop_if_constant=True, threshold=0.5), "low_variance", []),
         (
             dict(drop_if_constant=True),
             "constant_str_with_nulls",
