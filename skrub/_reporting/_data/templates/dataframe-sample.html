@@ -87,7 +87,7 @@ data-spans__{{ i }}__{{ j }}
         <strong data-manager="ColumnFilterMatchCount"
             data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns
         {%- if summary.get("memory_usage_kb") is not none -%}
-            <span data-test="memory-usage-display"> (memory usage: {{ "%.1f" | format(summary.get("memory_usage_kb")) }} KB)
+            <span data-test="memory-usage-display"> (estimated memory usage: {{ "%.1f" | format(summary.get("memory_usage_kb")) }} KB)
                 {%- if summary.get("memory_estimate_unreliable") -%}
                 <em class="memory-warning">— estimate may be inaccurate for complex objects</em>
                 {%- endif -%}

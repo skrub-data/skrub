@@ -37,6 +37,7 @@ def test_markdown_report_structure_and_titles(df_module):
     assert "# " in markdown_default  # Header should exist
     # Shape info should be present
     assert "**shape** 3 rows × 3 columns" in markdown
+    assert "**memory usage**" in markdown
     # Unique values should be present (default value)
     assert "40 unique values." in markdown
 

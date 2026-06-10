@@ -41,6 +41,7 @@ New Features
   regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
   Gómez Jiménez <gabrielapgomezji>`.
 
+
 Changes
 -------
 - :meth:`choose_from` now transparently converts `outcomes` to a list when it is another type of sequence. :pr:`2100` by
@@ -54,6 +55,8 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The :class:`TableReport` can now be exported the estimated memory usage in TableReport when display data.
+  :pr:`` by :user:`Salam AlKaissi <salam-alkaissi> Sanae Janati Idrissi <sana-22>`.
 
 Bugfixes
 --------
