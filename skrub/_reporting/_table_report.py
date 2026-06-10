@@ -240,7 +240,7 @@ class TableReport:
 
     >>> j = TableReport(df, plot_distributions=False).json()
     >>> print(j)
-    {"dataframe_module": "pandas", "n_rows": 2, "n_columns": 3 ...
+    {"dataframe_module": "pandas", "n_rows": 2, "n_columns": 3, ...}
 
 
     Advanced configuration: you can add custom column filters that will appear
