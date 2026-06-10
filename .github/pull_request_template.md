@@ -25,7 +25,8 @@ Addresses #<!-- issue number -->
 - [ ] I have added an entry in the changelog that describes the fix.
 
 ### If this is a feature PR:
-- [ ] The feature and all its public methods have a docstring.
+- [ ] All new publics methods, functions or modules have a docstring. 
+- [ ] The docstrings of existing and modified methods, functions or modules modified have been modified accordingly.
 - [ ] The feature has been added to `doc/api_reference.py`.
 - [ ] Tests that cover the feature have been added.
 - [ ] I have added an entry in the changelog that describes the feature.
