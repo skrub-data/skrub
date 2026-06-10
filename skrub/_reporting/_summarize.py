@@ -2,6 +2,9 @@
 
 import sys
 
+from skrub._dataframe._common import raise_dispatch_unregistered_type
+from skrub._dispatch import dispatch
+
 from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
@@ -18,14 +21,20 @@ _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 1000
 
 
-def _memory_usage_kb(df):
-    if sbd.dataframe_module_name(df) == "pandas":
-        memory_usage_bytes = df.memory_usage(deep=False).sum()
-    else:
-        estimated_size = getattr(df, "estimated_size", None)
-        if estimated_size is None:
-            return None
-        memory_usage_bytes = estimated_size()
+@dispatch
+def _memory_usage_kb(obj):
+    raise_dispatch_unregistered_type(obj)
+
+
+@_memory_usage_kb.specialize("pandas")
+def _memory_usage_pandas(obj):
+    memory_usage_bytes = obj.memory_usage(deep=False).sum()
+    return memory_usage_bytes / 1024
+
+
+@_memory_usage_kb.specialize("polars")
+def _memory_usage_polars(obj):
+    memory_usage_bytes = obj.estimated_size()
     return memory_usage_bytes / 1024
 
 
