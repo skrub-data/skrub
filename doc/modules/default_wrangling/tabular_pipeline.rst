@@ -134,9 +134,9 @@ the default table preprocessing:
 
 >>> from sklearn.decomposition import PCA
 >>> from sklearn.linear_model import Ridge
->>> from sklearn.pipeline import Pipeline
+>>> from sklearn.pipeline import make_pipeline
 >>> from skrub import tabular_pipeline
->>> model_pipeline = Pipeline([("pca", PCA(n_components=20)), ("ridge", Ridge())])
+>>> model_pipeline = make_pipeline(PCA(n_components=20), Ridge())
 >>> full_pipeline = tabular_pipeline(model_pipeline)
 >>> [name for name, _ in full_pipeline.steps]
 ['tablevectorizer', 'simpleimputer', 'squashingscaler', 'pca', 'ridge']

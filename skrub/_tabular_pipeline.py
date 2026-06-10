@@ -284,7 +284,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not isinstance(estimator_, _TREE_ENSEMBLE_CLASSES):
         steps.append(SquashingScaler(max_absolute_value=5))
     if isinstance(estimator, Pipeline):
-        steps_pipeline = estimator.steps.copy()
+        steps_pipeline = [sp for _, sp in estimator.steps]
         steps.extend(steps_pipeline)
     else:
         steps.append(estimator_)

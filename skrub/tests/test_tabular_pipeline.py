@@ -90,5 +90,5 @@ def test_skpipeline_learner():
     tab_pipeline = tabular_pipeline(sk_pipeline)
     assert len([e for _, e in tab_pipeline.steps]) == 5
     tv, imputer, scaler, pca, learner = (e for _, e in tab_pipeline.steps)
-    assert learner[-1] is original_learner
-    assert isinstance(pca[-1], PCA)
+    assert learner is original_learner
+    assert isinstance(pca, PCA)
