@@ -1,8 +1,7 @@
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline as skpipeline
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
 from ._datetime_encoder import DatetimeEncoder
@@ -227,19 +226,18 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     cat_feat_kwargs = {"categorical_features": "from_dtype"}
+    if isinstance(estimator, Pipeline):
+        estimator_ = estimator[-1]
+    else:
+        estimator_ = estimator
 
-    if isinstance(estimator, skpipeline):
-        return tabular_pipeline(
-            estimator.steps[-1][-1],
-            n_jobs=n_jobs,
-        )
-    if isinstance(estimator, str):
-        if estimator in ("classifier", "classification"):
+    if isinstance(estimator_, str):
+        if estimator_ in ("classifier", "classification"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        if estimator in ("regressor", "regression"):
+        if estimator_ in ("regressor", "regression"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
@@ -248,20 +246,20 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             "If ``estimator`` is a string it should be 'regressor', 'regression',"
             " 'classifier' or 'classification'."
         )
-    if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
+    if isinstance(estimator_, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
             "tabular_pipeline expects a scikit-learn estimator as its first"
-            f" argument. Pass an instance of {estimator.__name__} rather than the class"
-            " itself."
+            f" argument. Pass an instance of {estimator_.__name__} rather than"
+            " the class itself."
         )
-    if not isinstance(estimator, BaseEstimator):
+    if not isinstance(estimator_, BaseEstimator):
         raise TypeError(
             "tabular_pipeline expects a scikit-learn estimator, 'regressor',"
             " or 'classifier' as its first argument."
         )
 
     if (
-        isinstance(estimator, _HGBT_CLASSES)
+        isinstance(estimator_, _HGBT_CLASSES)
         and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
@@ -278,10 +276,15 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
+
     steps = [vectorizer]
-    if not get_tags(estimator).input_tags.allow_nan:
+    if not get_tags(estimator_).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
-    if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+    if not isinstance(estimator_, _TREE_ENSEMBLE_CLASSES):
         steps.append(SquashingScaler(max_absolute_value=5))
-    steps.append(estimator)
+    if isinstance(estimator, Pipeline):
+        steps_pipeline = estimator.steps.copy()
+        steps.extend(steps_pipeline)
+    else:
+        steps.append(estimator_)
     return make_pipeline(*steps)

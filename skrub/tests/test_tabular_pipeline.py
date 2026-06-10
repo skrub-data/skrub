@@ -1,8 +1,9 @@
 import pytest
 from sklearn import ensemble
+from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.pipeline import Pipeline as skpipeline
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 from skrub import (
@@ -85,12 +86,14 @@ def test_from_dtype():
 
 def test_skpipeline_learner():
     original_learner = LogisticRegression()
-    sk_pipeline = skpipeline([("imputer", SimpleImputer()), ("clf", original_learner)])
+    sk_pipeline = Pipeline([("pca", PCA()), ("clf", original_learner)])
     p = tabular_pipeline(sk_pipeline)
-    tv, imputer, scaler, learner = (e for _, e in p.steps)
-    assert learner is original_learner
+    assert len([e for _, e in p.steps]) == 5
+    tv, imputer, scaler, pca, learner = (e for _, e in p.steps)
+    assert learner[-1] is original_learner
     assert isinstance(tv.high_cardinality, StringEncoder)
     assert isinstance(tv.low_cardinality, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
     assert isinstance(scaler, SquashingScaler)
+    assert isinstance(pca[-1], PCA)
     assert tv.datetime.periodic_encoding == "spline"
