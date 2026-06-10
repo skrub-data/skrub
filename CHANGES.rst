@@ -54,8 +54,8 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
-- The :class:`DropUninformative` was improved so that `drop_if_constant` becomes a variance 
-  threshold and it acts similarly to the VarianceThreshold transformer. 
+- The :class:`DropUninformative` was improved so that `drop_if_constant` becomes a variance
+  threshold and it acts similarly to the VarianceThreshold transformer.
   :pr:`2155` by :user:`Janne de Melo Santana <jannesantana>`, :user:`Xixi Khamsane<XIXI1234-creator>`, :user:`Rim El Khader<Rim-e>`
 
 Bugfixes
