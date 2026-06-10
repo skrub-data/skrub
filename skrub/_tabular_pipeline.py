@@ -1,6 +1,7 @@
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline as skpipeline
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -48,6 +49,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or sklearn.base.BaseEstimator
+        or sklearn.pipeline.Pipeline
         The estimator to use as the final step in the pipeline. Based on the type of
         estimator, the previous preprocessing steps and their respective parameters are
         chosen. The possible values are:
@@ -59,6 +61,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
         - a scikit-learn estimator: the provided estimator is used as the final step.
+        - a scikit-learn pipeline : the last step of the pipeline is the estimator used as the final step.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
@@ -225,6 +228,11 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     cat_feat_kwargs = {"categorical_features": "from_dtype"}
 
+    if isinstance(estimator, skpipeline):
+        return tabular_pipeline(
+            estimator.steps[-1][-1],
+            n_jobs=n_jobs,
+        )
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
             return tabular_pipeline(
