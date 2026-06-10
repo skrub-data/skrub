@@ -18,6 +18,28 @@ _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 1000
 
 
+def _memory_usage_kb(df):
+    if sbd.dataframe_module_name(df) == "pandas":
+        memory_usage_bytes = df.memory_usage(deep=False).sum()
+    else:
+        estimated_size = getattr(df, "estimated_size", None)
+        if estimated_size is None:
+            return None
+        memory_usage_bytes = estimated_size()
+    return memory_usage_bytes / 1024
+
+
+def _has_complex_objects(df):
+    """Return True when pandas has object-dtype columns.
+
+    The memory estimate is less reliable for object-dtype columns, so we warn
+    as soon as any are present.
+    """
+    if sbd.dataframe_module_name(df) != "pandas":
+        return False
+    return any(dtype == object for dtype in df.dtypes)
+
+
 def summarize_dataframe(
     df,
     *,
@@ -77,6 +99,7 @@ def summarize_dataframe(
         "dataframe_module": sbd.dataframe_module_name(df),
         "n_rows": n_rows,
         "n_columns": n_columns,
+        "memory_usage_kb": _memory_usage_kb(df),
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
         "plots_skipped": not with_plots,
@@ -90,6 +113,11 @@ def summarize_dataframe(
     }
     if title is not None:
         summary["title"] = title
+    # detect complex objects that make memory estimates unreliable
+    try:
+        summary["memory_estimate_unreliable"] = _has_complex_objects(df)
+    except Exception:
+        summary["memory_estimate_unreliable"] = False
     if order_by is not None:
         df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
