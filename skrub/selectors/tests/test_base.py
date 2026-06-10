@@ -13,29 +13,29 @@ def test_import_selectors():
 
 def test_repr():
     """
-     >>> from skrub import selectors as s
-     >>> s.all()
-     all()
-     >>> s.all() - ["ID", "Name"]
-     (all() - cols('ID', 'Name'))
-     >>> s.cols("ID", "Name") & "ID"
-     (cols('ID', 'Name') & cols('ID'))
-     >>> s.filter_names(lambda n: 'a' in n) ^ s.filter(lambda c: c[2] == 3)
-     (filter_names(<lambda>) ^ filter(<lambda>))
-     >>> ~s.all()
-     (~all())
-     >>> s.Filter(lambda c, x: c[2] == x, args=(3,), name='my_filter')
-     my_filter(3)
-     >>> s.Filter(lambda c, x: c[2] == x, args=(3,), selector_repr='my_filter()')
-     my_filter()
-     >>> s.NameFilter(lambda c_n, n: c_n.lower() == n,
-     ...              args=('col',),
-     ...              selector_repr='lower_check()')
-     lower_check()
-     >>> import pandas as pd
-    >>> (s.cols("ID","Name")).drop(pd.DataFrame({"ID":[1],"Name":["A"],"Age":[1]}))
-        Age
-     0    1
+    >>> from skrub import selectors as s
+    >>> s.all()
+    all()
+    >>> s.all() - ["ID", "Name"]
+    (all() - cols('ID', 'Name'))
+    >>> s.cols("ID", "Name") & "ID"
+    (cols('ID', 'Name') & cols('ID'))
+    >>> s.filter_names(lambda n: 'a' in n) ^ s.filter(lambda c: c[2] == 3)
+    (filter_names(<lambda>) ^ filter(<lambda>))
+    >>> ~s.all()
+    (~all())
+    >>> s.Filter(lambda c, x: c[2] == x, args=(3,), name='my_filter')
+    my_filter(3)
+    >>> s.Filter(lambda c, x: c[2] == x, args=(3,), selector_repr='my_filter()')
+    my_filter()
+    >>> s.NameFilter(lambda c_n, n: c_n.lower() == n,
+    ... args=('col',),
+    ... selector_repr='lower_check()')
+    lower_check()
+    >>> import pandas as pd
+    >>> s.drop(pd.DataFrame({"ID":[1],"Name":["A"],"Age":[1]}), s.cols("ID","Name"))
+       Age
+    0    1
     """
 
 
@@ -57,7 +57,7 @@ def test_select(df_module):
 def test_drop(df_module):
     df = df_module.example_dataframe
     df_module.assert_frame_equal(
-        s.cols("float-col", "str-col").drop(df),
+        s.drop(df, s.cols("float-col", "str-col")),
         df[
             [col for col in sbd.column_names(df) if col not in ["float-col", "str-col"]]
         ],
