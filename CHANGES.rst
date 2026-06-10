@@ -40,6 +40,9 @@ New Features
   Additionally, negative numbers indicated with parentheses can be converted to the
   regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
   Gómez Jiménez <gabrielapgomezji>`.
+- Added usual parameters when scikit-learn pipeline is passed to tabular_pipeline
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+
 
 Changes
 -------
@@ -54,8 +57,6 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
-- Added usual parameters when sklearn pipeline is passed to tabular_pipeline
-  :pr:`7805` by :user:`Khaoula Riad and Marine Michaut`.
 
 Bugfixes
 --------
