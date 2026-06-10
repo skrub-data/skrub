@@ -88,7 +88,7 @@ def test_skpipeline_learner():
     original_learner = LogisticRegression()
     sk_pipeline = Pipeline([("pca", PCA()), ("clf", original_learner)])
     tab_pipeline = tabular_pipeline(sk_pipeline)
-    assert len([e for _, e in tab_pipeline.steps]) == 5
-    tv, imputer, scaler, pca, learner = (e for _, e in tab_pipeline.steps)
+    assert len([element for _, element in tab_pipeline.steps]) == 5
+    tv, imputer, scaler, pca, learner = (element for _, element in tab_pipeline.steps)
     assert learner is original_learner
     assert isinstance(pca, PCA)
