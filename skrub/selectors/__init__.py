@@ -85,6 +85,7 @@ from ._base import (
     Selector,
     all,
     cols,
+    drop,
     filter,
     filter_names,
     inv,
@@ -104,6 +105,7 @@ __all__ = [
     "inv",
     "make_selector",
     "select",
+    "drop",
 ]
 __all__ += _selectors.__all__
 
