@@ -55,7 +55,7 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
-- The :class:`TableReport` can now be exported the estimated memory usage in TableReport when display data.
+- The :class:`TableReport` can now display the estimated memory usage of the data it is applied to.
   :pr:`2153` by :user:`Salam AlKaissi <salam-alkaissi> Sanae Janati Idrissi <sana-22>`.
 
 Bugfixes
