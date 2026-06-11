@@ -173,8 +173,7 @@ pydot = "*"
 requests = "==2.27.1"
 # pinning pyparsing because it raises deprecation warnings in matplotlib
 # TODO: unpin when it gets fixed
-pyparsing = "*"
-# pyparsing = "<3.3"
+pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
