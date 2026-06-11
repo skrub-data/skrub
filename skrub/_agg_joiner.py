@@ -182,8 +182,15 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     .. warning::
         The auxiliary table is stored in memory as part of the state of the transformer,
         which can lead to high memory usage if the auxiliary table is large.
-        Consider using the skrub Data Ops and a standard dataframe library (Pandas
-        or Polars) to perform the aggregation instead.
+
+        Additionally, the auxiliary table is frozen in memory after fitting, which
+        means that if the auxiliary table is modified after fitting, the changes will
+        not be reflected in the transformed output. If you need to update the
+        auxiliary table, you will need to refit the transformer.
+
+        Consider using the :ref:`skrub Data Ops <_user_guide_data_ops_index>`
+        and a standard dataframe library (Pandas or Polars) to perform the
+        aggregation instead.
 
 
     Parameters
