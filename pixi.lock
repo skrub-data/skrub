@@ -913,6 +913,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/certifi-2026.5.20-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.3.2-py310h3788b33_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/coverage-7.14.1-py310h3406613_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cyrus-sasl-2.1.28-hac629b4_1.conda
@@ -1020,8 +1021,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.15.3-h49c6c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.3.2-h25fd6f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/markupsafe-3.0.3-py310h3406613_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.5.2-py310hff52083_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.5.2-py310h5701ce4_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.6.1-py310hff52083_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.6.1-py310h8d5ebf3_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/mpg123-1.32.9-hc50e24c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.6-hdb14827_0.conda
@@ -1044,7 +1045,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pulseaudio-client-17.0-h9a6aba3_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyqt-5.15.11-py310h046fae5_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyqt5-sip-12.17.0-py310hea6c23e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
@@ -1124,6 +1125,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/certifi-2026.5.20-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.3.2-py310hf166250_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/coverage-7.14.1-py310h399bfa0_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -1190,8 +1192,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libzlib-1.3.2-hbb4bfdb_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-22.1.7-h0d3cbff_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/markupsafe-3.0.3-py310h399bfa0_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.5.2-py310h2ec42d9_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.5.2-py310h4510841_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.6.1-py310h2ec42d9_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.6.1-py310he725631_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.6-hcc0dc9a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/numpy-1.23.5-py310h1b7c290_0.conda
@@ -1208,7 +1210,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pthread-stubs-0.4-h00291cd_1002.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-9.0.3-pyhc364b38_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-7.1.0-pyhcf101f3_0.conda
@@ -1260,6 +1262,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/certifi-2026.5.20-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/contourpy-1.3.2-py310h7f4e7e6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/coverage-7.14.1-py310hb46c203_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -1326,8 +1329,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libzlib-1.3.2-h8088a28_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/llvm-openmp-22.1.7-hc7d1edf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/markupsafe-3.0.3-py310hb46c203_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.5.2-py310hb6292c7_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.5.2-py310hbeb1b0d_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.6.1-py310hb6292c7_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.6.1-py310h78c5c2f_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.6-h1d4f5a5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-1.23.5-py310h5d7c261_0.conda
@@ -1344,7 +1347,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pthread-stubs-0.4-hd74edd7_1002.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-9.0.3-pyhc364b38_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-7.1.0-pyhcf101f3_0.conda
@@ -1393,6 +1396,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/certifi-2026.5.20-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.3.2-py310hc19bc0b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/coverage-7.14.1-py310hdb0e946_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -1464,8 +1468,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/m2w64-gmp-6.1.0-2.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/m2w64-libwinpthread-git-5.0.0.4634.697f757-2.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/markupsafe-3.0.3-py310hdb0e946_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.5.2-py310h5588dad_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.5.2-py310h79a7439_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.6.1-py310h5588dad_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.6.1-py310h51140c5_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/mkl-2024.2.2-h57928b3_16.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/msys2-conda-epoch-20160418-1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
@@ -1485,7 +1489,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/pthreads-win32-2.9.1-h2466b09_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyqt-5.15.11-py310hdf200a9_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyqt5-sip-12.17.0-py310h73ae2b4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyh09c184e_7.conda
@@ -1585,6 +1589,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorlog-6.10.1-pyh707e725_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.3.2-py310h3788b33_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/coverage-7.14.1-py310h3406613_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cyrus-sasl-2.1.28-hd9c7081_0.conda
@@ -1721,8 +1726,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/lz4-c-1.10.0-h5888daf_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.12-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/markupsafe-3.0.3-py310h3406613_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.5.2-py310hff52083_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.5.2-py310h5701ce4_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.6.1-py310hff52083_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.6.1-py310h8d5ebf3_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/mpg123-1.32.9-hc50e24c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/narwhals-2.22.1-pyhcf101f3_0.conda
@@ -1751,7 +1756,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-15.0.2-py310h08f37a1_55_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyqt-5.15.11-py310h046fae5_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyqt5-sip-12.17.0-py310hea6c23e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
@@ -1857,6 +1862,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorlog-6.10.1-pyh707e725_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.3.2-py310hf166250_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/coverage-7.14.1-py310h399bfa0_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -1953,8 +1959,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/lz4-c-1.10.0-h240833e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.12-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/markupsafe-3.0.3-py310h399bfa0_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.5.2-py310h2ec42d9_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.5.2-py310h4510841_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.6.1-py310h2ec42d9_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.6.1-py310he725631_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/narwhals-2.22.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.6-hcc0dc9a_0.conda
@@ -1977,7 +1983,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-15.0.2-py310h9f36e1e_55_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-9.0.3-pyhc364b38_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-7.1.0-pyhcf101f3_0.conda
@@ -2052,6 +2058,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorlog-6.10.1-pyh707e725_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/contourpy-1.3.2-py310h7f4e7e6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/coverage-7.14.1-py310hb46c203_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -2148,8 +2155,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/lz4-c-1.10.0-h286801f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.12-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/markupsafe-3.0.3-py310hb46c203_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.5.2-py310hb6292c7_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.5.2-py310hbeb1b0d_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.6.1-py310hb6292c7_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.6.1-py310h78c5c2f_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/narwhals-2.22.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.6-h1d4f5a5_0.conda
@@ -2172,7 +2179,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-15.0.2-py310ha6daeed_55_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-9.0.3-pyhc364b38_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-7.1.0-pyhcf101f3_0.conda
@@ -2244,6 +2251,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.0.12-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorlog-6.10.1-pyh7428d3b_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.3.2-py310hc19bc0b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/coverage-7.14.1-py310hdb0e946_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docutils-0.21.2-pyhd8ed1ab_1.conda
@@ -2338,8 +2346,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/m2w64-libwinpthread-git-5.0.0.4634.697f757-2.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.12-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/markupsafe-3.0.3-py310hdb0e946_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.5.2-py310h5588dad_1.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.5.2-py310h79a7439_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.6.1-py310h5588dad_1.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.6.1-py310h51140c5_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/mkl-2024.2.2-h57928b3_16.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/msys2-conda-epoch-20160418-1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyhd8ed1ab_1.conda
@@ -2365,7 +2373,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyarrow-15.0.2-py310h554eb4d_55_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydot-4.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.20.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyqt-5.15.11-py310hdf200a9_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyqt5-sip-12.17.0-py310h73ae2b4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyh09c184e_7.conda
@@ -14085,6 +14093,22 @@ packages:
   - pytest-xdist ; extra == 'test-no-images'
   - wurlitzer ; extra == 'test-no-images'
   requires_python: '>=3.11'
+- conda: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.3.2-py310h3788b33_0.conda
+  sha256: 5231c1b68e01a9bc9debabc077a6fb48c4395206d59f40a4598d1d5e353e11d8
+  md5: b6420d29123c7c823de168f49ccdfe6a
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=13
+  - libstdcxx >=13
+  - numpy >=1.23
+  - python >=3.10,<3.11.0a0
+  - python_abi 3.10.* *_cp310
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/contourpy?source=hash-mapping
+  size: 261280
+  timestamp: 1744743236964
 - conda: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.3.3-py311h724c32c_4.conda
   sha256: fd7aca059253cff3d8b0aec71f0c1bf2904823b13f1997bf222aea00a76f3cce
   md5: d04e508f5a03162c8bab4586a65d00bf
@@ -14133,6 +14157,21 @@ packages:
   - pkg:pypi/contourpy?source=hash-mapping
   size: 324013
   timestamp: 1769155968691
+- conda: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.3.2-py310hf166250_0.conda
+  sha256: dd53a103826d4ee455bf1c1996724a6ab551f6532473fe84b3a78402741248ff
+  md5: 7465ff776ecb1a44f3e293a938c05df5
+  depends:
+  - __osx >=10.13
+  - libcxx >=18
+  - numpy >=1.23
+  - python >=3.10,<3.11.0a0
+  - python_abi 3.10.* *_cp310
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/contourpy?source=hash-mapping
+  size: 239967
+  timestamp: 1744743388239
 - conda: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.3.3-py314h22a2ed9_4.conda
   sha256: 3ddca2f889e37e4b26c2e86d245fc56769b00334bfaf1caf612140eec77ce71d
   md5: 511f02f632e1fb0555da3cb4261851d9
@@ -14148,6 +14187,22 @@ packages:
   - pkg:pypi/contourpy?source=hash-mapping
   size: 301747
   timestamp: 1769156235399
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/contourpy-1.3.2-py310h7f4e7e6_0.conda
+  sha256: 758a7a858d8a5dca265e0754c73659690a99226e7e8d530666fece3b38e44558
+  md5: 18ad60675af8d74a6e49bf40055419d0
+  depends:
+  - __osx >=11.0
+  - libcxx >=18
+  - numpy >=1.23
+  - python >=3.10,<3.11.0a0
+  - python >=3.10,<3.11.0a0 *_cpython
+  - python_abi 3.10.* *_cp310
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/contourpy?source=hash-mapping
+  size: 231970
+  timestamp: 1744743542215
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/contourpy-1.3.3-py311h7d85929_4.conda
   sha256: 57b2c28cbb45e7dacb565541483d802a15c6beff5ccdabba19784a526191f4d3
   md5: bd91dd35d73638e5c0f520a18850f6ba
@@ -14196,6 +14251,22 @@ packages:
   - pkg:pypi/contourpy?source=hash-mapping
   size: 290405
   timestamp: 1769156069514
+- conda: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.3.2-py310hc19bc0b_0.conda
+  sha256: 096a7cf6bf77faf3e093936d831118151781ddbd2ab514355ee2f0104b490b1e
+  md5: 039416813b5290e7d100a05bb4326110
+  depends:
+  - numpy >=1.23
+  - python >=3.10,<3.11.0a0
+  - python_abi 3.10.* *_cp310
+  - ucrt >=10.0.20348.0
+  - vc >=14.2,<15
+  - vc14_runtime >=14.29.30139
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/contourpy?source=hash-mapping
+  size: 201075
+  timestamp: 1744743764641
 - conda: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.3.3-py311h275cad7_4.conda
   sha256: a903bff178a45cfb89e77a59b33ce54c6cdc7b0e05d2f5355f32e2b8e97ecce1
   md5: 9fb1f375c704c5287c97c60f6a88d137
@@ -24675,20 +24746,20 @@ packages:
   purls: []
   size: 17876
   timestamp: 1777000591578
-- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.5.2-py310hff52083_1.tar.bz2
-  sha256: cb157e9049865ac49d1ba14cc357a780b49bdc9a41dd4361c7e749997d4936b3
-  md5: ac5726cced21482d6b817921a441d6a2
+- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.6.1-py310hff52083_1.tar.bz2
+  sha256: e8c2dd2d0490bae87e908cd85d1c8ad478e7a9c269968a17840d2d2fc66b3607
+  md5: 51fbce233e5680a4258db5a16e2c1832
   depends:
-  - matplotlib-base >=3.5.2,<3.5.3.0a0
+  - matplotlib-base >=3.6.1,<3.6.2.0a0
   - pyqt
   - python >=3.10,<3.11.0a0
   - python_abi 3.10.* *_cp310
   - tornado
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls: []
-  size: 7153
-  timestamp: 1659031744070
+  size: 7264
+  timestamp: 1666979282487
 - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.10.9-py314hee6578b_0.conda
   sha256: c94458d2f08eb98c21f79c34220258d0d983e9ac5f7dbe28bff77bd2c0e6cd81
   md5: 4cfadc239dd7d8ca653048e041f70cd0
@@ -24702,19 +24773,19 @@ packages:
   purls: []
   size: 17743
   timestamp: 1777001089520
-- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.5.2-py310h2ec42d9_1.tar.bz2
-  sha256: 4fae747098f36d0e0bfc1eb2ec4ef8ee17aa2285a597a0581888586f649e4aba
-  md5: 5667b31bbc5f5e38f288b91ef92cee9b
+- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.6.1-py310h2ec42d9_1.tar.bz2
+  sha256: cd6abbac7c96e3ada0f50d108f234b52cf305abe427c5d32be0654bad6688f64
+  md5: eb9853c8f13486e58d3d60d091055a5c
   depends:
-  - matplotlib-base >=3.5.2,<3.5.3.0a0
+  - matplotlib-base >=3.6.1,<3.6.2.0a0
   - python >=3.10,<3.11.0a0
   - python_abi 3.10.* *_cp310
   - tornado
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls: []
-  size: 7202
-  timestamp: 1659031870008
+  size: 7310
+  timestamp: 1666979578470
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.10.9-py311ha1ab1f8_0.conda
   sha256: 7a293da53a795407f5e23fe419c16cadb440d563f36df4df24f5c41d0d5cd4ca
   md5: 52c7ae2ec68b705441982df15189b8d1
@@ -24754,19 +24825,19 @@ packages:
   purls: []
   size: 17814
   timestamp: 1777001592449
-- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.5.2-py310hb6292c7_1.tar.bz2
-  sha256: 6891a0d0bdf4664b92552580561d18a241db87894c77f242b5f474538af53083
-  md5: 27c380825dcffdf9e9d44879f340d701
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.6.1-py310hb6292c7_1.tar.bz2
+  sha256: a5e8e43826af78fbce4b98c381aabb200c68ec22fbf75698967a9195ce7eeae2
+  md5: 4ff93cc682ae9fc22c655f461cb05e59
   depends:
-  - matplotlib-base >=3.5.2,<3.5.3.0a0
+  - matplotlib-base >=3.6.1,<3.6.2.0a0
   - python >=3.10,<3.11.0a0
   - python_abi 3.10.* *_cp310
   - tornado
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls: []
-  size: 7240
-  timestamp: 1659031908411
+  size: 7357
+  timestamp: 1666979696078
 - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.10.9-py311h1ea47a8_0.conda
   sha256: 722e6350d587819fbe647bf897a4d64b906219fefdebc790bf4b8a65053297c2
   md5: 007ed4b4117621a19e545d62f47339c4
@@ -24809,20 +24880,20 @@ packages:
   purls: []
   size: 18161
   timestamp: 1777000845679
-- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.5.2-py310h5588dad_1.tar.bz2
-  sha256: 8bb5dbf777a8972fb373dcfb9ed08721be027041ace2c8f10812b0c9d579fad5
-  md5: 2383a6e6ce2bab6bd4615c7ba4b70c1f
+- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.6.1-py310h5588dad_1.tar.bz2
+  sha256: f458c4936f1b7dafa747c5db99322ad615b791337c1585f68a049bb43b86668c
+  md5: aed3e716423522f8645074d00986704d
   depends:
-  - matplotlib-base >=3.5.2,<3.5.3.0a0
+  - matplotlib-base >=3.6.1,<3.6.2.0a0
   - pyqt
   - python >=3.10,<3.11.0a0
   - python_abi 3.10.* *_cp310
   - tornado
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls: []
-  size: 7518
-  timestamp: 1659032260539
+  size: 7689
+  timestamp: 1666980066387
 - conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.10.9-py311h0f3be63_0.conda
   sha256: 3e122e4aacab6f07e046d87ddd2ad5896fb3bf344748ca784be3274891a4db8d
   md5: cc259645be458c9222ffcf321ff5fc1e
@@ -24913,18 +24984,19 @@ packages:
   - pkg:pypi/matplotlib?source=hash-mapping
   size: 8545652
   timestamp: 1777000575998
-- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.5.2-py310h5701ce4_1.tar.bz2
-  sha256: 00139fe873b42852310d7c3e248d042cd73592a2f329c18dd9a8888580f9c236
-  md5: 30705ca3f166305e268ae10d2d703879
+- conda: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.6.1-py310h8d5ebf3_1.tar.bz2
+  sha256: 9e0a0de339385807957939d690ebedbf674c7f34df465f0c512be3887f92141e
+  md5: bc8d8dcad6b921b0996df46f0e7f120d
   depends:
   - certifi >=2020.06.20
+  - contourpy >=1.0.1
   - cycler >=0.10
   - fonttools >=4.22.0
-  - freetype >=2.10.4,<3.0a0
+  - freetype >=2.12.1,<3.0a0
   - kiwisolver >=1.0.1
   - libgcc-ng >=12
   - libstdcxx-ng >=12
-  - numpy >=1.17
+  - numpy >=1.19
   - numpy >=1.21.6,<2.0a0
   - packaging >=20.0
   - pillow >=6.2.0
@@ -24933,12 +25005,12 @@ packages:
   - python-dateutil >=2.7
   - python_abi 3.10.* *_cp310
   - tk >=8.6.12,<8.7.0a0
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls:
   - pkg:pypi/matplotlib?source=hash-mapping
-  size: 7792149
-  timestamp: 1659031729704
+  size: 7840899
+  timestamp: 1666979269641
 - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.10.9-py314h7c1ad30_0.conda
   sha256: a0981d28f4483049015bef219ddf4dfaf5485682dadba48924f29091ca77174d
   md5: 9ab3835bd11afa0a9571ade6a875b5ce
@@ -24967,17 +25039,19 @@ packages:
   - pkg:pypi/matplotlib?source=hash-mapping
   size: 8252575
   timestamp: 1777001056414
-- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.5.2-py310h4510841_1.tar.bz2
-  sha256: 73b048736831004942abef931fd69ef70fde1a3711781c7ac079fa8b5c467d4e
-  md5: 214c87573ed10b56fdf7ac1fb649052d
+- conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.6.1-py310he725631_1.tar.bz2
+  sha256: ff3dadacca61206535ac6b4843c29ee1e78b55ff878f20489a3080c432d32b2f
+  md5: dda371b6edd9ed02082eb5c708bace4c
   depends:
+  - __osx >=10.12
   - certifi >=2020.06.20
+  - contourpy >=1.0.1
   - cycler >=0.10
   - fonttools >=4.22.0
-  - freetype >=2.10.4,<3.0a0
+  - freetype >=2.12.1,<3.0a0
   - kiwisolver >=1.0.1
-  - libcxx >=13.0.1
-  - numpy >=1.17
+  - libcxx >=14.0.4
+  - numpy >=1.19
   - numpy >=1.21.6,<2.0a0
   - packaging >=20.0
   - pillow >=6.2.0
@@ -24985,12 +25059,12 @@ packages:
   - python >=3.10,<3.11.0a0
   - python-dateutil >=2.7
   - python_abi 3.10.* *_cp310
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls:
   - pkg:pypi/matplotlib?source=hash-mapping
-  size: 7757274
-  timestamp: 1659031849379
+  size: 7923348
+  timestamp: 1666979557656
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.10.9-py311h68bafec_0.conda
   sha256: 5d005eec8908fd10a6a2cf9aa157e96b4544b8705ba4136339c7bc750296d40d
   md5: bbf824cfa16d55856fb12f04026030c6
@@ -25078,17 +25152,18 @@ packages:
   - pkg:pypi/matplotlib?source=hash-mapping
   size: 8315491
   timestamp: 1777001530326
-- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.5.2-py310hbeb1b0d_1.tar.bz2
-  sha256: fe98f0d448dfc017dcdc702d7f857d58727440130adcbed8981e8aff79fb3e19
-  md5: 3fcdf4583ddb9ef7134b09e8307b1f7f
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.6.1-py310h78c5c2f_1.tar.bz2
+  sha256: 4e517cec0ae9bfe53040925ab5a42f35e1a64c683bbbb6342620cf7a8e6b1409
+  md5: 28e04be1e2909172835f2892ae2b95b8
   depends:
   - certifi >=2020.06.20
+  - contourpy >=1.0.1
   - cycler >=0.10
   - fonttools >=4.22.0
-  - freetype >=2.10.4,<3.0a0
+  - freetype >=2.12.1,<3.0a0
   - kiwisolver >=1.0.1
-  - libcxx >=13.0.1
-  - numpy >=1.17
+  - libcxx >=14.0.4
+  - numpy >=1.19
   - numpy >=1.21.6,<2.0a0
   - packaging >=20.0
   - pillow >=6.2.0
@@ -25097,12 +25172,12 @@ packages:
   - python >=3.10,<3.11.0a0 *_cpython
   - python-dateutil >=2.7
   - python_abi 3.10.* *_cp310
-  license: LicenseRef-PSF-based
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls:
   - pkg:pypi/matplotlib?source=hash-mapping
-  size: 7751996
-  timestamp: 1659031885416
+  size: 7810800
+  timestamp: 1666979667348
 - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.10.9-py311h1675fdf_0.conda
   sha256: c3b25bf43b3790988cc4f3ea653366520b9ebc90e40722f648b4e3c5dd7a1843
   md5: 0579f9b8de16d67c61c265cfbd283cf0
@@ -25190,16 +25265,17 @@ packages:
   - pkg:pypi/matplotlib?source=hash-mapping
   size: 8263442
   timestamp: 1777000826825
-- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.5.2-py310h79a7439_1.tar.bz2
-  sha256: dd1944a169e3661512ca7bed60be56b902863ebdabae7cd97d205801340997c0
-  md5: a6dbb9e0613f70e60f662f6899138dc8
+- conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.6.1-py310h51140c5_1.tar.bz2
+  sha256: b0807ce7f07e8c304a7ef27c3ecb7d0f9393e03090405ec7e9d8390015ed5deb
+  md5: 7eeb6a319e6b2cd4a6ea5e6ee1aec713
   depends:
   - certifi >=2020.06.20
+  - contourpy >=1.0.1
   - cycler >=0.10
   - fonttools >=4.22.0
-  - freetype >=2.10.4,<3.0a0
+  - freetype >=2.12.1,<3.0a0
   - kiwisolver >=1.0.1
-  - numpy >=1.17
+  - numpy >=1.19
   - numpy >=1.21.6,<2.0a0
   - packaging >=20.0
   - pillow >=6.2.0
@@ -25207,14 +25283,15 @@ packages:
   - python >=3.10,<3.11.0a0
   - python-dateutil >=2.7
   - python_abi 3.10.* *_cp310
-  - vc >=14.1,<15
-  - vs2015_runtime >=14.16.27033
-  license: LicenseRef-PSF-based
+  - ucrt >=10.0.20348.0
+  - vc >=14.2,<15
+  - vs2015_runtime >=14.29.30139
+  license: LicenseRef-PSF-2.0 and CC0-1.0
   license_family: PSF
   purls:
   - pkg:pypi/matplotlib?source=hash-mapping
-  size: 7739919
-  timestamp: 1659032225401
+  size: 7891839
+  timestamp: 1666980035604
 - conda: https://conda.anaconda.org/conda-forge/noarch/matplotlib-inline-0.2.2-pyhd8ed1ab_0.conda
   sha256: 35b43d7343f74452307fd018a1cca92b8f68961ff8e2ab6a81ce0a703c9a3764
   md5: 9acc1c385be401d533ff70ef5b50dae6
@@ -29679,18 +29756,6 @@ packages:
   - railroad-diagrams ; extra == 'diagrams'
   - jinja2 ; extra == 'diagrams'
   requires_python: '>=3.9'
-- conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.2.5-pyhcf101f3_0.conda
-  sha256: 6814b61b94e95ffc45ec539a6424d8447895fef75b0fec7e1be31f5beee883fb
-  md5: 6c8979be6d7a17692793114fa26916e8
-  depends:
-  - python >=3.10
-  - python
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/pyparsing?source=hash-mapping
-  size: 104044
-  timestamp: 1758436411254
 - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
   sha256: 417fba4783e528ee732afa82999300859b065dc59927344b4859c64aae7182de
   md5: 3687cc0b82a8b4c17e1f0eb7e47163d5
@@ -33261,14 +33326,14 @@ packages:
 - pypi: ./
   name: skrub
   version: 0.10.dev0
-  sha256: bd4fc18e0e1b8eae91fd28596107c88002e640ba42f7885145be8a7e1805b307
+  sha256: 73debfcbc9ce4e32509442add5b59cc886f36278107e9980b6ec30789ec637b1
   requires_dist:
   - numpy>=1.23.5
   - pandas>=1.5.3
   - scikit-learn>=1.4.2
   - scipy>=1.9.3
   - jinja2>=3.1.2
-  - matplotlib>=3.5.2
+  - matplotlib>=3.6.1
   - requests>=2.27.1
   - pydot
   - ipykernel ; extra == 'dev'
