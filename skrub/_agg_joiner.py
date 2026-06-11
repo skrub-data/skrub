@@ -177,7 +177,14 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     If `cols` is not provided, `cols` are all columns from `aux_table`,
     except `aux_key`.
 
-    Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
+    Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
+
+    .. warning::
+        The auxiliary table is stored in memory as part of the state of the transformer,
+        which can lead to high memory usage if the auxiliary table is large.
+        Consider using the skrub Data Ops and a standard dataframe library (Pandas
+        or Polars) to perform the aggregation instead.
+
 
     Parameters
     ----------

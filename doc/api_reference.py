@@ -129,24 +129,6 @@ API_REFERENCE = {
             },
         ],
     },
-    "joining": {
-        "title": "Joining dataframes",
-        "short_summary": None,
-        "description": None,
-        "sections": [
-            {
-                "description": None,
-                "autosummary": [
-                    "Joiner",
-                    "AggJoiner",
-                    "MultiAggJoiner",
-                    "AggTarget",
-                    "InterpolationJoiner",
-                    "fuzzy_join",
-                ],
-            },
-        ],
-    },
     "selectors": {
         "title": "Selectors",
         "short_summary": None,
@@ -312,6 +294,24 @@ API_REFERENCE = {
                     "config_context",
                 ],
             }
+        ],
+    },
+    "joining": {
+        "title": "Joining dataframes",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "Joiner",
+                    "AggJoiner",
+                    "MultiAggJoiner",
+                    "AggTarget",
+                    "InterpolationJoiner",
+                    "fuzzy_join",
+                ],
+            },
         ],
     },
     "datasets": {
