@@ -17,17 +17,17 @@ authors = [
 license = "BSD-3-Clause"
 license-files = ["LICENSE.txt"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Console",
-    "Intended Audience :: Science/Research",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Software Development :: Libraries",
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Libraries",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -36,7 +36,7 @@ dependencies = [
   "scikit-learn>=1.4.2",
   "scipy>=1.9.3",
   "jinja2>=3.1.2",
-  "matplotlib>=3.5.2",
+  "matplotlib>=3.6.1",
   "requests>=2.27.1",
   "pydot",
 ]
@@ -100,7 +100,7 @@ pandas = ">=1.5.3"
 scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
-matplotlib = ">=3.5.2"
+matplotlib = ">=3.6.1"
 pydot = "*"
 requests = ">=2.27.1"
 
@@ -114,8 +114,8 @@ pydata-sphinx-theme = "*"
 plotly = "*"
 memory_profiler = "*"
 seaborn = "*"
-  # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
-  # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
+# TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
+# https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
 sphinx = "<9"
 sphinx-copybutton = "*"
 sphinx-gallery = "*"
@@ -168,12 +168,9 @@ pandas = "==1.5.3"
 scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
-matplotlib = "==3.5.2"
+matplotlib = "==3.6.1"
 pydot = "*"
 requests = "==2.27.1"
-# pinning pyparsing because it raises deprecation warnings in matplotlib
-# TODO: unpin when it gets fixed
-pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
@@ -265,7 +262,11 @@ ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
 ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ] }
+ci-nightly-deps = { no-default-feature = true, features = [
+  "py314",
+  "nightly-dependencies",
+  "test",
+] }
 
 [tool.ruff]
 line-length = 88
@@ -276,7 +277,7 @@ exclude = [
   "doc/_build",
   "doc/auto_examples",
   "build",
-  "pixi.lock"
+  "pixi.lock",
 ]
 
 [tool.ruff.lint]
@@ -321,7 +322,9 @@ filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
   "error::DeprecationWarning",
-
+  # Ignore pyparsing deprecation warnings from old matplotlib
+  # TODO: remove when matplotlib stops using deprecated functions (later than 3.10)
+  "ignore::pyparsing.warnings.PyparsingDeprecationWarning",
   # Ignore warning from np.in1d since the future behavior is already the desired
   # behavior. TODO remove when numpy min version >= 1.25.
   'ignore:elementwise\ comparison\ failed:FutureWarning',
@@ -343,7 +346,6 @@ filterwarnings = [
   'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
   'ignore:.*distutils Version classes are deprecated.*',
   'ignore:.*`resume_download` is deprecated.*',
-  'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   # Sentence-transformers using a deprecated huggingface_hub function.
@@ -353,11 +355,7 @@ filterwarnings = [
 ]
 log_cli_level = "INFO"
 xfail_strict = true
-addopts = [
-  "--doctest-modules",
-  "--strict-config",
-  "--strict-markers",
-]
+addopts = ["--doctest-modules", "--strict-config", "--strict-markers"]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
