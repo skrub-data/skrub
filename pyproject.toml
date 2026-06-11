@@ -36,7 +36,7 @@ dependencies = [
   "scikit-learn>=1.4.2",
   "scipy>=1.9.3",
   "jinja2>=3.1.2",
-  "matplotlib>=3.4.3",
+  "matplotlib>=3.5.2",
   "requests>=2.27.1",
   "pydot",
 ]
@@ -44,7 +44,7 @@ dependencies = [
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
   "ipykernel",
   "ipython",
@@ -100,7 +100,7 @@ pandas = ">=1.5.3"
 scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
-matplotlib = ">=3.4.3"
+matplotlib = ">=3.5.2"
 pydot = "*"
 requests = ">=2.27.1"
 
@@ -168,12 +168,13 @@ pandas = "==1.5.3"
 scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
-matplotlib = "==3.4.3"
+matplotlib = "==3.5.2"
 pydot = "*"
 requests = "==2.27.1"
 # pinning pyparsing because it raises deprecation warnings in matplotlib
 # TODO: unpin when it gets fixed
-pyparsing = "<3.3"
+pyparsing = "*"
+# pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
