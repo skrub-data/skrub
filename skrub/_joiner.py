@@ -85,42 +85,22 @@ class Joiner(TransformerMixin, BaseEstimator):
     the main table (i.e. as the argument passed to `transform`), but each row
     is augmented with values from the best match in the auxiliary table.
 
-    To identify the best match for each row, values from the matching columns
-    (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
-    continuous values. Then, the distances between these vectors are computed
-    (using the specified metric) to find, for each main table row, its
-    nearest neighbor within the auxiliary table.
+    Fuzzy joining is performed by finding the nearest neighbor in the auxiliary
+    table for each row in the main table according to a specified distance metric.
 
-    Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
-    between vectors that are separated by a distance (strictly) greater than
-    `max_dist` will be rejected. We will consider that main table rows that
-    are farther than `max_dist` from their nearest neighbor do not have a
-    matching row in the auxiliary table, and the output will contain nulls for
-    the entries that would normally have come from the auxiliary table (as in a
-    traditional left join).
+    .. warning::
+        This method can be computationally expensive for large datasets, as it
+        requires vectorizing the matching columns and performing nearest neighbor
+        search.
 
-    To make it easier to set a `max_dist` threshold, the distances are
-    rescaled by dividing them by a reference distance, which can be chosen with
-    `ref_dist`. The default is `'random_pairs'`. The possible choices are:
+        Additionally, the auxiliary table is stored in memory as part of the state
+        of the transformer, which can lead to high memory usage if the auxiliary
+        table is large.
+        Moreover, it is frozen in memory after fitting, which means that if the
+        auxiliary table is modified after fitting, the changes will not be reflected
+        in the transformed output. If you need to update the auxiliary table, you
+        will need to refit the transformer.
 
-    'random_pairs'
-        Pairs of rows are sampled randomly from the auxiliary table and their
-        distance is computed. The reference distance is the first quartile of
-        those distances.
-
-    'second_neighbor'
-        The reference distance is the distance to the *second* nearest neighbor
-        in the auxiliary table.
-
-    'self_join_neighbor'
-        Once the match candidate (i.e. the nearest neighbor from the auxiliary
-        table) has been found, we find its nearest neighbor in the auxiliary
-        table (excluding itself). The reference distance is the distance that
-        separates those 2 auxiliary rows.
-
-    'no_rescaling'
-        The reference distance is 1.0, i.e. no rescaling of the distances is
-        applied.
 
     Parameters
     ----------
@@ -191,6 +171,51 @@ class Joiner(TransformerMixin, BaseEstimator):
         Join two tables (dataframes) based on approximate column matching. This
         is the same functionality as provided by the `Joiner` but exposed as
         a function rather than a transformer.
+
+    Notes
+    -----
+    This transformer is initialized with an auxiliary table `aux_table`. It
+    transforms a main table by joining it, with approximate ("fuzzy") matching,
+    to the auxiliary table. The output of `transform` has the same rows as
+    the main table (i.e. as the argument passed to `transform`), but each row
+    is augmented with values from the best match in the auxiliary table.
+
+    To identify the best match for each row, values from the matching columns
+    (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
+    continuous values. Then, the distances between these vectors are computed
+    (using the specified metric) to find, for each main table row, its
+    nearest neighbor within the auxiliary table.
+
+    Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    `max_dist` will be rejected. We will consider that main table rows that
+    are farther than `max_dist` from their nearest neighbor do not have a
+    matching row in the auxiliary table, and the output will contain nulls for
+    the entries that would normally have come from the auxiliary table (as in a
+    traditional left join).
+
+    To make it easier to set a `max_dist` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    `ref_dist`. The default is `'random_pairs'`. The possible choices are:
+
+    'random_pairs'
+        Pairs of rows are sampled randomly from the auxiliary table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
+
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the auxiliary table.
+
+    'self_join_neighbor'
+        Once the match candidate (i.e. the nearest neighbor from the auxiliary
+        table) has been found, we find its nearest neighbor in the auxiliary
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 auxiliary rows.
+
+    'no_rescaling'
+        The reference distance is 1.0, i.e. no rescaling of the distances is
+        applied.
 
     Examples
     --------
