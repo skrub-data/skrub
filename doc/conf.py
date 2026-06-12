@@ -70,6 +70,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
     # contrib
+    "sphinx_design",
     "numpydoc",
     "sphinx_issues",
     "sphinx_copybutton",

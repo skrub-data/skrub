@@ -55,6 +55,7 @@ dev = [
   "jupyterlite-pyodide-kernel",
   "numpydoc",
   "pydata-sphinx-theme",
+  "sphinx-design>=0.6.0",
   "seaborn",
   # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
   # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
