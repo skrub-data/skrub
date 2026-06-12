@@ -1226,6 +1226,43 @@ def test_set_data_op_in_params():
     assert learner.fit_transform(data) == -10
 
 
+def test_get_set_named_params():
+    a = skrub.as_data_op("")
+    b = skrub.choose_from(["A", "B", "C"], name="b")
+    c = skrub.choose_from(["U", "V", "W"])
+    d = a + b + "_" + c
+    learner = d.skb.make_learner()
+    assert learner.fit_transform({}) == "A_U"
+    assert learner.get_named_params() == {"b": None}
+    learner.set_named_params(b=1)
+    assert learner.fit_transform({}) == "B_U"
+    assert learner.get_named_params() == {"b": 1}
+
+
+def test_set_named_params_value_or_index():
+    a = skrub.as_data_op(
+        [
+            skrub.choose_from(["A", "B", "C"], name="b"),
+            skrub.choose_bool(name="c"),
+            skrub.choose_int(100, 110, name="d"),
+        ]
+    )
+    learner = a.skb.make_learner()
+    assert learner.get_named_params() == {"b": None, "c": None, "d": None}
+    assert learner.describe_params() == {"b": "A", "c": True, "d": 105}
+    learner.set_named_params(b=1, c=1, d=107)
+    assert learner.get_named_params() == {"b": 1, "c": 1, "d": 107}
+    assert learner.describe_params() == {"b": "B", "c": False, "d": 107}
+    with pytest.raises(TypeError, match="must be a positional index.*'C'.*name='b'"):
+        learner.set_named_params(b="C")
+    with pytest.raises(TypeError, match="must be a positional index.*True.*name='c'"):
+        learner.set_named_params(c=True)
+    with pytest.raises(
+        IndexError, match="must be a positional index.*out of range.*3 outcomes"
+    ):
+        learner.set_named_params(b=7)
+
+
 def test_find_fitted_estimator():
     learner = (
         (skrub.X() * 1.0)

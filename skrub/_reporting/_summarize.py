@@ -86,6 +86,7 @@ def summarize_dataframe(
             max_top_slice_size=max_top_slice_size,
             max_bottom_slice_size=max_bottom_slice_size,
         ),
+        "cardinality_threshold": _config.get_config()["cardinality_threshold"],
     }
     if title is not None:
         summary["title"] = title

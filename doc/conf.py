@@ -162,6 +162,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+default_role = "literal"
+
 # -- Options for autodoc / autosummary ----------------------------------------
 # generate autosummary even if no references
 autosummary_generate = True
