@@ -120,8 +120,9 @@ Bugfixes
 - An error that could arise when calling ``score`` on a ``SkrubLearner`` that
   contains an inner transformer that has a ``score`` method has been fixed.
   :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
-  An error that could arise when generating the frame with reports may fail when text is containing $$ has been fixed.
-  :pr:`2097` by :user:`Katerina Michenina <Michenina-Lab>`, :user: `<CecilyTS>`, :user: `Eve Rabin <eve2705>`.
+- An error that could arise when running `TableReport` on dataframes containing
+  double dollar (`$$`) signs has been fixed.
+  :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`, :user: `<CecilyTS>`, :user: `Eve Rabin <eve2705>`.
 
 Deprecations
 ------------
