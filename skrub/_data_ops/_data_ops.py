@@ -39,6 +39,7 @@ import traceback
 import types
 import uuid
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -1962,38 +1963,45 @@ class Concat(DataOpImpl):
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
-        arrays = [e.first, *e.others]
-        if all(isinstance(a, np.ndarray) for a in arrays):
-            return np.concatenate(arrays, axis=e.axis)
-        if not sbd.is_dataframe(e.first):
-            raise TypeError(
-                "`concat` can only be used with dataframes. "
-                "`.skb.concat` was accessed on an object of type "
-                f"{e.first.__class__.__name__!r}"
-            )
-        if sbd.is_dataframe(e.others):
-            raise TypeError(
-                "`concat` should be passed a list of dataframes. "
-                "If you have a single dataframe, wrap it in a list: "
-                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
-            )
-        idx, non_df = next(
-            ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
-            (None, None),
-        )
-        if non_df is not None:
-            raise TypeError(
-                "`concat` should be passed a list of dataframes: "
-                "`table_0.skb.concat([table_1, ...], axis=...)`. "
-                f"An object of type {non_df.__class__.__name__!r} "
-                f"was found at index {idx}."
-            )
-
         if e.axis not in (0, 1):
             raise ValueError(
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
-
+        if isinstance(e.others, np.ndarray) or sbd.is_dataframe(e.others):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes. "
+                "If you have a single array or dataframe, wrap it in a list: "
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
+            )
+        if not isinstance(e.others, Iterable):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes."
+                f"Got object of type {e.others.__class__.__name__!r}"
+            )
+        if not (isinstance(e.first, np.ndarray) or sbd.is_dataframe(e.first)):
+            raise TypeError(
+                "`concat` can only be used on a numpy array or a dataframe. "
+                "`.skb.concat` was accessed on an object of type "
+                f"{e.first.__class__.__name__!r}"
+            )
+        if isinstance(e.first, np.ndarray):
+            for idx, obj in enumerate(e.others):
+                if not isinstance(obj, np.ndarray):
+                    raise TypeError(
+                        "When accessed on a numpy array, `concat` should be passed a "
+                        "list of arrays: `array_0.skb.concat([array_1, ...], "
+                        f"axis=...)`. An object of type {obj.__class__.__name__!r} "
+                        f"was found at index {idx}."
+                    )
+            return np.concatenate([e.first, *e.others], axis=e.axis)
+        for idx, obj in enumerate(e.others):
+            if not sbd.is_dataframe(obj):
+                raise TypeError(
+                    "When accessed on a dataframe, `concat` should be passed a list "
+                    "of dataframes: `table_0.skb.concat([table_1, ...], axis=...)`. "
+                    f"An object of type {obj.__class__.__name__!r} "
+                    f"was found at index {idx}."
+                )
         if e.axis == 1:
             first = _check_column_names(e.first)
             others = list(map(_check_column_names, e.others))
@@ -2013,7 +2021,7 @@ class Concat(DataOpImpl):
 
     def __repr__(self):
         try:
-            detail = f": {len(self.others) + 1} dataframes"
+            detail = f": {len(self.others) + 1} tables"
         except Exception:
             detail = ""
         return f"<{self.__class__.__name__}{detail}>"
