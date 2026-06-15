@@ -173,12 +173,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... }
     >>> df = pd.DataFrame(data)
     >>> df
-        user_id           timestamp   action
-    0    alice 2024-01-01 10:00:00     view
-    1    alice 2024-01-01 10:05:00     view
-    2    alice 2024-01-01 11:00:00 purchase
-    3      bob 2024-01-01 10:00:00     view
-    4      bob 2024-01-01 10:20:00 purchase
+    user_id           timestamp    action
+    0   alice 2024-01-01 10:00:00     login
+    1   alice 2024-01-01 10:05:00      view
+    2   alice 2024-01-01 11:00:00  purchase
+    3     bob 2024-01-01 10:00:00     login
+    4     bob 2024-01-01 10:20:00  purchase
 
     We use the ``SessionEncoder`` with default ``session_gap`` of 30 minutes:
 
@@ -188,12 +188,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... )
     >>> result = encoder.fit_transform(df)
     >>> result
-       user_id           timestamp   action  timestamp_session_id
-    0    alice 2024-01-01 10:00:00     view                     0
-    1    alice 2024-01-01 10:05:00     view                     0
-    2    alice 2024-01-01 11:00:00 purchase                     1
-    3      bob 2024-01-01 10:00:00     view                     2
-    4      bob 2024-01-01 10:20:00 purchase                     2
+    user_id           timestamp    action  timestamp_session_id
+    0   alice 2024-01-01 10:00:00     login                     0
+    1   alice 2024-01-01 10:05:00      view                     0
+    2   alice 2024-01-01 11:00:00  purchase                     1
+    3     bob 2024-01-01 10:00:00     login                     2
+    4     bob 2024-01-01 10:20:00  purchase                     2
 
     In this example:
 
