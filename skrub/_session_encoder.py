@@ -109,8 +109,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     by at most ``session_gap`` seconds. Additionally, it is possible to provide a column
     or list of columns that can be used to distinguish between sessions, such
     as user identifiers (specified by the ``split_by`` column).
-    When the time gap between consecutive events exceeds ``session_gap``, or
-    when what identifies a user changes, a new session begins.
+    Sessions change when either the time gap between events exceeds ``session_gap``,
+    or the identifiers in ``split_by`` column(s) change.
+
     The encoder takes care of sorting the data by the timestamp and ``split_by`` columns
     before identifying sessions, and sorting it back to the original order at the end,
     so the original order of events in the input dataframe does not matter.
