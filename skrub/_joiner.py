@@ -97,8 +97,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         of the transformer, which can lead to high memory usage if the auxiliary
         table is large.
         Moreover, the auxiliary table is frozen in memory after fitting, which means
-        that if the auxiliary table is modified after fitting, the changes will
-        not be reflected
+        that if it is modified after fitting, the changes will not be reflected
         in the transformed output. If you need to update the auxiliary table, you
         will need to refit the transformer.
 
