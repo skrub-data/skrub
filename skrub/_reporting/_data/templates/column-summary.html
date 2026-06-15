@@ -4,10 +4,10 @@
     data-name-repr="{{ column.name.__repr__() }}"
     data-column-name="{{ column.name }}"
     data-column-idx="{{ column.idx }}"
-     {% if column['n_low_outliers'] %}
+     {% if column['histogram_data']['n_low_outliers'] %}
      data-has-low-outliers
      {% endif %}
-     {% if column['n_high_outliers'] %}
+     {% if column['histogram_data']['n_high_outliers'] %}
      data-has-high-outliers
      {% endif %}
     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"

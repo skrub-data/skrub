@@ -192,15 +192,27 @@ def _get_range(values, frac=0.2, factor=3.0):
     return low, high
 
 
-def _robust_hist(values, ax, color):
+def _robust_hist(col, ax=None, color=None):
+    col = sbd.drop_nulls(col)
+    if sbd.is_float(col):
+        # avoid any issues with pandas nullable dtypes
+        # (to_numpy can yield a numpy array with object dtype in old pandas
+        # version if there are inf or nan)
+        col = sbd.to_float32(col)
+    values = sbd.to_numpy(col)
+
     low, high = _get_range(values)
     inliers = values[(low <= values) & (values <= high)]
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
+    result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
+    result["bin_counts"], result["bin_edges"] = np.histogram(inliers)
+    if ax is None:
+        return result
     n, bins, patches = ax.hist(inliers)
     n_out = n_low_outliers + n_high_outliers
     if not n_out:
-        return 0, 0
+        return result
     width = bins[1] - bins[0]
     start, stop = bins[0], bins[-1]
     line_params = dict(color=_RED, linestyle="--", ymax=0.95)
@@ -229,28 +241,25 @@ def _robust_hist(values, ax, color):
         color=_RED,
     )
     ax.set_xlim(start, stop)
-    return n_low_outliers, n_high_outliers
+    return result
+
+
+def histogram_data(col):
+    return _robust_hist(col, ax=None, color=None)
 
 
 @_plot
 def histogram(col, duration_unit=None, color=COLOR_0):
     """Histogram for a numeric column."""
-    col = sbd.drop_nulls(col)
-    if sbd.is_float(col):
-        # avoid any issues with pandas nullable dtypes
-        # (to_numpy can yield a numpy array with object dtype in old pandas
-        # version if there are inf or nan)
-        col = sbd.to_float32(col)
-    values = sbd.to_numpy(col)
     fig, ax = plt.subplots()
     _despine(ax)
-    n_low_outliers, n_high_outliers = _robust_hist(values, ax, color=color)
+    histogram_data = _robust_hist(col, ax=ax, color=color)
     if duration_unit is not None:
         ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
-    return _serialize(fig), n_low_outliers, n_high_outliers
+    return _serialize(fig), histogram_data
 
 
 @_plot
