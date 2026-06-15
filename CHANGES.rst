@@ -43,6 +43,8 @@ New Features
 
 Changes
 -------
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is another type of sequence. :pr:`2100` by
+  :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
@@ -52,6 +54,8 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
+  :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -97,6 +101,9 @@ New Features
 - A new dataframe generator, :func:`datasets.toy_cities`, has been added for
   use cases on dataframes with variable sizes and variable correlation between
   columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
+- A new selector function, :func:`selectors.drop`, has been added to drop columns
+  from a dataframe using a selector. It mirrors the behavior of :func:`selectors.select`.
+  :pr:`2108` by :user:`Mary Njoroge <Maryahcee>`.
 
 Changes
 -------
