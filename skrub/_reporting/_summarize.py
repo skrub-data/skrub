@@ -255,9 +255,10 @@ def _add_datetime_summary(summary, column, with_plots):
     if with_plots:
         (
             summary["histogram_plot"],
-            summary["n_low_outliers"],
-            summary["n_high_outliers"],
+            summary["histogram_data"],
         ) = _plotting.histogram(column, color=_plotting.COLORS[0])
+    else:
+        summary["histogram_data"] = _plotting.histogram_data(column)
 
 
 def _add_numeric_summary(
