@@ -420,30 +420,21 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # return an empty dataframe with the session_id column added
         if sbd.is_empty_frame(X):
             X = sbd.with_columns(
-                X, **{self.session_id_column_: np.array([], dtype=np.float32)}
+                X, **{self.session_id_column_: np.array([], dtype=np.int64)}
             )
             return X
 
         # Adding a row order column to sort lines back
         row_order_col = f"_row_order_skrub_{random_string()}"
-        X = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
-
-        # Dropping unneeded columns to reduce the sorting overhead
-        if cols_to_remove := [
-            _
-            for _ in self.all_inputs_
-            if _ not in self._split_by_columns + [self.timestamp_col]
-        ]:
-            X_selected = sbd.drop_columns(X, cols_to_remove)
-        else:
-            X_selected = X
+        X_with_order = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
 
         # sort the input dataframe by the "split_by" and "timestamp" columns
-        sort_by = (
-            self._split_by_columns + [self.timestamp_col]
-            if self.split_by is not None
-            else [self.timestamp_col]
-        )
+        # _split_by_columns can be empty if self.split_by is None
+        sort_by = self._split_by_columns + [self.timestamp_col]
+
+        # Selecting only the columns needed for sessionization and sorting them
+        # to ensure that the sessionization is done correctly
+        X_selected = s.select(X_with_order, sort_by + [row_order_col])
         X_sorted = sbd.sort(X_selected, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
@@ -458,18 +449,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # Reordering rows back to the original order
         X_result = sbd.sort(X_with_session_id, by=row_order_col)
 
-        # drop the factorized "split_by" columns if the original "split_by"
-        # columns were not numeric, and the column used to reorder
-        to_drop = [col for col in factorized_by if col not in self._split_by_columns]
-        to_drop += [row_order_col]
-        X_result = sbd.drop_columns(X_result, to_drop)
-
-        # If unrelated columns were removed earlier, bring them back here
-        if cols_to_remove:
-            X_result = sbd.concat(X_result, s.select(X, cols_to_remove), axis=1)
-
-        # Reordering columns so that the session_id is added as the last column
-        X_result = s.select(X_result, self.all_inputs_ + [self.session_id_column_])
+        # Concatenating the session_id column to the original dataframe, so that
+        # all unrelated columns are passed through unchanged.
+        # Doing this has the added benefit of adding the session_id column at the
+        # end of the dataframe.
+        X_result = sbd.concat(X, s.select(X_result, self.session_id_column_), axis=1)
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
