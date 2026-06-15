@@ -38,7 +38,9 @@ def _add_session_column(
 def _add_session_column_pandas(
     X, split_by_columns, timestamp_col, session_gap, session_id_column_
 ):
-    groups = X.groupby(split_by_columns) if len(split_by_columns) > 0 else [("", X)]
+    # needed to avoid a warning with min deps
+    grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
+    groups = X.groupby(grouper) if len(split_by_columns) > 0 else [("", X)]
     rolling_session_id = 0
 
     groups_with_session_ids = []
