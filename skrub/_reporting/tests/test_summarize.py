@@ -84,6 +84,9 @@ def test_summarize(
         0.75: 33.6,
         1.0: 78.3,
     }
+    if order_by is None:
+        assert len(summary["columns"][5]["histogram_data"]["bin_counts"]) == 10
+        assert len(summary["columns"][5]["histogram_data"]["bin_edges"]) == 11
     assert summary["columns"][7]["null_count"] == 9
     assert summary["columns"][7]["nulls_level"] == "warning"
     assert summary["columns"][8]["null_count"] == 17

@@ -11,8 +11,8 @@ import warnings
 import numpy as np
 from matplotlib import pyplot as plt
 
-from skrub import _dataframe as sbd
-
+from .. import _dataframe as sbd
+from .. import _datetime_encoder
 from . import _utils
 
 __all__ = ["COLORS", "COLOR_0", "histogram", "line", "value_counts"]
@@ -200,21 +200,24 @@ def _robust_hist(col, ax=None, color=None):
         # version if there are inf or nan)
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
-
+    if sbd.is_any_date(col):
+        # numpy histogram does not handle datetimes but matplotlib does
+        np_histogram_values = sbd.to_numpy(
+            _datetime_encoder.DatetimeEncoder(resolution=None).fit_transform(col)
+        ).ravel()
+    else:
+        np_histogram_values = values
     low, high = _get_range(values)
-    inliers = values[(low <= values) & (values <= high)]
+    inlier_mask = (low <= values) & (values <= high)
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
     result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
-    if sbd.is_any_date(col):
-        # numpy histogram does not handle datetimes
-        np_inliers = inliers.astype("datetime64[s]").astype("float")
-    else:
-        np_inliers = inliers
-    result["bin_counts"], result["bin_edges"] = np.histogram(np_inliers)
+    result["bin_counts"], result["bin_edges"] = np.histogram(
+        np_histogram_values[inlier_mask]
+    )
     if ax is None:
         return result
-    n, bins, patches = ax.hist(inliers)
+    n, bins, patches = ax.hist(values[inlier_mask])
     n_out = n_low_outliers + n_high_outliers
     if not n_out:
         return result
