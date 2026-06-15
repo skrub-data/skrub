@@ -206,7 +206,12 @@ def _robust_hist(col, ax=None, color=None):
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
     result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
-    result["bin_counts"], result["bin_edges"] = np.histogram(inliers)
+    if sbd.is_any_date(col):
+        # numpy histogram does not handle datetimes
+        np_inliers = inliers.astype("datetime64[s]").astype("float")
+    else:
+        np_inliers = inliers
+    result["bin_counts"], result["bin_edges"] = np.histogram(np_inliers)
     if ax is None:
         return result
     n, bins, patches = ax.hist(inliers)
