@@ -22,7 +22,7 @@ New Features
 
 Changes
 -------
-- Grouped Examples into three sections. :pr:`690` by
+- Grouped Examples into three sections. :pr:`2102` by
   :user:`Maureen Githaiga <maureen-githaiga>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
