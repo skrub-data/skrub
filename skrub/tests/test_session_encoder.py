@@ -546,6 +546,49 @@ def test_factorize_column_numeric(df_module):
     df_module.assert_column_equal(codes, df["user_id"])
 
 
+def test_factorize_column_date(df_module):
+    """_factorize_column on a datetime column should return int64 codes."""
+    df = df_module.make_dataframe(
+        {
+            "ts": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),
+                datetime.datetime(2024, 1, 1, 10, 0),  # same as first
+                datetime.datetime(2024, 1, 1, 11, 0),
+            ]
+        }
+    )
+    codes = _factorize_column(df, "ts")
+    # First and third row have the same timestamp -> same code
+    assert codes[0] == codes[2]
+    # Different timestamps -> different codes
+    assert codes[0] != codes[1]
+    assert codes[1] != codes[3]
+    assert codes[0] != codes[3]
+
+
+def test_factorize_column_duration(df_module):
+    """_factorize_column on a duration column should return int64 codes
+    representing total seconds."""
+    df = df_module.make_dataframe(
+        {
+            "dur": [
+                datetime.timedelta(minutes=30),
+                datetime.timedelta(hours=1),
+                datetime.timedelta(minutes=30),  # same as first
+                datetime.timedelta(minutes=90),
+            ]
+        }
+    )
+    codes = _factorize_column(df, "dur")
+    # First and third row have the same duration -> same code
+    assert codes[0] == codes[2]
+    # Different durations -> different codes
+    assert codes[0] != codes[1]
+    assert codes[1] != codes[3]
+    assert codes[0] != codes[3]
+
+
 def test_check_is_new_session_no_by(df_module):
     """_check_is_new_session with an empty group_by-list uses only the time gap."""
     df = df_module.make_dataframe(
@@ -765,3 +808,31 @@ def test_not_overwriting_columns(df_module):
     # The original "timestamp_custom_name" column should not be overwritten
     # The new column has name "timestamp_custom_name_skrub_RANDOM_SUFFIX"
     assert col_names[2].removeprefix("timestamp_custom_name").startswith("_skrub_")
+
+
+def test_empty_column_name(df_module):
+    """Test that an empty string as column name is a valid split by column name."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "": [1, 1, 1, 2],
+        }
+    )
+    encoder = SessionEncoder(timestamp_col="timestamp", split_by="")
+    result = encoder.fit_transform(df)
+    assert sbd.shape(result)[0] == 4
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "timestamp_session_id")) == [0, 0, 1, 2]
+
+    # Check that not passing the split_by parameter (default None) also works
+    # and returns the proper result
+    encoder = SessionEncoder(timestamp_col="timestamp")
+    result = encoder.fit_transform(df)
+    assert sbd.shape(result)[0] == 4
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "timestamp_session_id")) == [0, 0, 1, 1]

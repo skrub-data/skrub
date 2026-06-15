@@ -86,7 +86,10 @@ def _factorize_column(X, column_name):
 def _factorize_column_pandas(X, column_name):
     if sbd.is_numeric(X[column_name]):
         return X[column_name]
-    # TODO: convert datetimes/durations to numeric
+    if sbd.is_any_date(X[column_name]):
+        return X[column_name].astype(np.int64)
+    if sbd.is_duration(X[column_name]):
+        return X[column_name].dt.total_seconds().astype(np.int64)
     codes, _ = pd.factorize(X[column_name])
     return codes
 
@@ -97,7 +100,10 @@ def _factorize_column_polars(X, column_name):
 
     if sbd.is_numeric(X[column_name]):
         return X[column_name]
-    # TODO: convert datetimes/durations to numeric
+    if sbd.is_any_date(X[column_name]):
+        return X[column_name].cast(pl.Int64)
+    if sbd.is_duration(X[column_name]):
+        return X[column_name].dt.total_seconds().cast(pl.Int64)
     return X[column_name].cast(pl.Categorical).to_physical()
 
 
@@ -416,6 +422,28 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if self.session_id_column_ in self.all_inputs_:
             self.session_id_column_ += f"_skrub_{random_string()}"
 
+        X_result = self.transform(X, y)
+
+        return X_result
+
+    def transform(self, X, y=None):
+        """Transform the data by encoding sessions.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame or polars.DataFrame
+            The input dataframe.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        pandas.DataFrame or polars.DataFrame
+            The transformed dataframe with session information.
+        """
+        check_is_fitted(self)
+
         # if the input dataframe is empty, we can skip all the processing and
         # return an empty dataframe with the session_id column added
         if sbd.is_empty_frame(X):
@@ -457,22 +485,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
-
-    def transform(self, X):
-        """Transform the data by encoding sessions.
-
-        Parameters
-        ----------
-        X : pandas.DataFrame or polars.DataFrame
-            The input dataframe.
-
-        Returns
-        -------
-        pandas.DataFrame or polars.DataFrame
-            The transformed dataframe with session information.
-        """
-        check_is_fitted(self)
-        return self.fit_transform(X)
 
     def _check_input_dataframe(self, X):
         """
@@ -523,12 +535,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         ensure that the diff operation works correctly
         """
 
-        if not self.split_by:
+        if self.split_by is None:
             return X, []
         factorized_columns = {
             f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
-            if not sbd.is_numeric(X[col])
-            else X[col]
             for col in self._split_by_columns
         }
 
