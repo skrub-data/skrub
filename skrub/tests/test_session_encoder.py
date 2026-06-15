@@ -1,5 +1,4 @@
 import datetime
-from functools import partial
 
 import numpy as np
 import pandas as pd
@@ -10,7 +9,6 @@ from skrub import SessionEncoder
 from skrub import _dataframe as sbd
 from skrub._session_encoder import (
     _add_session_column,
-    _factorize_column,
 )
 
 
@@ -520,75 +518,6 @@ def test_get_feature_names(df_module):
     assert set(feature_names) == {"timestamp", "user_id", "timestamp_session_id"}
 
 
-# ---------------------------------------------------------------------------
-# Tests for the internal dispatched helper functions
-# ---------------------------------------------------------------------------
-
-
-def test_factorize_column_string(df_module):
-    """_factorize_column should map string values to consecutive integer codes."""
-    df = df_module.make_dataframe({"user": ["alice", "bob", "alice", "charlie"]})
-    codes = _factorize_column(df, "user")
-
-    # alice appears first, so it should get code 0
-    assert codes[0] == codes[2]  # both "alice" → same code
-    assert codes[1] != codes[0]  # "bob" differs from "alice"
-    assert codes[3] != codes[0]  # "charlie" differs from "alice"
-    assert codes[1] != codes[3]  # "bob" differs from "charlie"
-    assert all(int(c) == expected for c, expected in zip(codes, [0, 1, 0, 2]))
-
-
-def test_factorize_column_numeric(df_module):
-    """_factorize_column on a numeric column should return the column unchanged."""
-    df = df_module.make_dataframe({"user_id": [10, 20, 10, 30]})
-    codes = _factorize_column(df, "user_id")
-
-    df_module.assert_column_equal(codes, df["user_id"])
-
-
-def test_factorize_column_date(df_module):
-    """_factorize_column on a datetime column should return int64 codes."""
-    df = df_module.make_dataframe(
-        {
-            "ts": [
-                datetime.datetime(2024, 1, 1, 10, 0),
-                datetime.datetime(2024, 1, 1, 10, 5),
-                datetime.datetime(2024, 1, 1, 10, 0),  # same as first
-                datetime.datetime(2024, 1, 1, 11, 0),
-            ]
-        }
-    )
-    codes = _factorize_column(df, "ts")
-    # First and third row have the same timestamp -> same code
-    assert codes[0] == codes[2]
-    # Different timestamps -> different codes
-    assert codes[0] != codes[1]
-    assert codes[1] != codes[3]
-    assert codes[0] != codes[3]
-
-
-def test_factorize_column_duration(df_module):
-    """_factorize_column on a duration column should return int64 codes
-    representing total seconds."""
-    df = df_module.make_dataframe(
-        {
-            "dur": [
-                datetime.timedelta(minutes=30),
-                datetime.timedelta(hours=1),
-                datetime.timedelta(minutes=30),  # same as first
-                datetime.timedelta(minutes=90),
-            ]
-        }
-    )
-    codes = _factorize_column(df, "dur")
-    # First and third row have the same duration -> same code
-    assert codes[0] == codes[2]
-    # Different durations -> different codes
-    assert codes[0] != codes[1]
-    assert codes[1] != codes[3]
-    assert codes[0] != codes[3]
-
-
 def test_check_is_new_session_no_by(df_module):
     """_check_is_new_session with an empty group_by-list uses only the time gap."""
     df = df_module.make_dataframe(
@@ -604,7 +533,7 @@ def test_check_is_new_session_no_by(df_module):
     session_id = sbd.to_list(
         sbd.col(
             _add_session_column(
-                df, [], "timestamp", 30 * 60, session_column_name="timestamp_session_id"
+                df, [], "timestamp", 30 * 60, session_id_column_="timestamp_session_id"
             ),
             "timestamp_session_id",
         )
@@ -628,7 +557,9 @@ def test_add_session_column_old_pandas(df_module):
     )
     session_id = sbd.to_list(
         sbd.col(
-            _add_session_column(df, [], "timestamp", 30 * 60, "timestamp_session_id"),
+            _add_session_column(
+                df, [], "timestamp", 30 * 60, session_id_column_="timestamp_session_id"
+            ),
             "timestamp_session_id",
         )
     )
@@ -730,22 +661,15 @@ def test_preserves_input_order(df_module):
     assert sbd.to_list(sbd.col(result, "timestamp")) == timestamps
 
 
-@pytest.mark.parametrize(
-    "func",
-    (
-        partial(
-            _add_session_column,
-            split_by=[],
+def test_error_dispatch():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
+        _add_session_column(
+            np.array([1]),
+            split_by_columns=[],
             timestamp_col="timestamp",
             session_gap=30,
-            session_column_name="timestamp_session_id",
-        ),
-        partial(_factorize_column, column_name="user_id"),
-    ),
-)
-def test_error_dispatch(func):
-    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
-        func(np.array([1]))
+            session_id_column_="timestamp_session_id",
+        )
 
 
 def test_empty_dataframe(df_module):

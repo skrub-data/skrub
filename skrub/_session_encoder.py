@@ -26,85 +26,80 @@ from . import selectors as s
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._utils import random_string
 
-try:
-    import polars as pl
-except ImportError:
-    pass
-
 
 @dispatch
-def _add_session_column(X, split_by, timestamp_col, session_gap, session_column_name):
+def _add_session_column(
+    X, split_by_columns, timestamp_col, session_gap, session_id_column_
+):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
 @_add_session_column.specialize("pandas")
 def _add_session_column_pandas(
-    X, split_by, timestamp_col, session_gap, session_column_name
+    X, split_by_columns, timestamp_col, session_gap, session_id_column_
 ):
-    # check if the time difference between events exceeds the session gap
-    time_diff = X[timestamp_col].diff().dt.total_seconds().fillna(0) > session_gap
-    if split_by:
-        # check if the "split_by" column changes
-        has_split_change = (X[split_by].diff().fillna(0) != 0).any(axis=1)
-        # a new session starts if either the "split_by" column changes or the time
-        # gap is exceeded
-        is_new_session = has_split_change | time_diff
-    else:
-        is_new_session = time_diff
-    # Compute cumulative sum of is_new_session to create session IDs
-    return X.assign(**{session_column_name: is_new_session.cumsum()})
+    groups = X.groupby(split_by_columns) if len(split_by_columns) > 0 else [("", X)]
+    rolling_session_id = 0
+
+    groups_with_session_ids = []
+
+    for group_key, group_df in groups:
+        # Sort the group by timestamp
+        group_df_sorted = group_df.sort_values(by=timestamp_col)
+        # Compute time differences between consecutive events
+        time_diffs = group_df_sorted[timestamp_col].diff().dt.total_seconds()
+        # Identify session boundaries based on time gaps
+        session_boundaries = (time_diffs > session_gap) | (time_diffs.isna())
+        # Assign session IDs based on cumulative sum of session boundaries
+        session_ids = session_boundaries.cumsum() - 1 + rolling_session_id
+        # Update rolling_session_id for the next group
+        rolling_session_id = session_ids.max() + 1
+        # Add the session IDs to the original dataframe
+        group_df_sorted = group_df_sorted.assign(
+            **{
+                session_id_column_: pd.Series(
+                    session_ids.values, index=group_df_sorted.index
+                )
+            }
+        )
+        groups_with_session_ids.append((group_key, group_df_sorted))
+    res = sbd.concat(*[group_df for _, group_df in groups_with_session_ids], axis=0)
+    return res
 
 
 @_add_session_column.specialize("polars")
 def _add_session_column_polars(
-    X, split_by, timestamp_col, session_gap, session_column_name
+    X, split_by_columns, timestamp_col, session_gap, session_id_column_
 ):
-    # check if the time difference between events exceeds the session gap
-    time_diff = X[timestamp_col].diff().dt.total_seconds().fill_null(0) > session_gap
-    if split_by:
-        # check if the "split_by" column changes
-        has_split_change = X.select(
-            pl.any_horizontal(pl.col(split_by).diff().fill_null(0) != 0)
-        ).to_series()
-        # a new session starts if either the "split_by" column changes or the time
-        # gap is exceeded
-        is_new_session = has_split_change | time_diff
-    else:
-        is_new_session = time_diff
-    # Add session_id by computing cumulative sum of is_new_session
-    return X.with_columns(is_new_session.cum_sum().alias(session_column_name))
+    groups = (
+        X.group_by(split_by_columns, maintain_order=True)
+        if len(split_by_columns) > 0
+        else [("", X)]
+    )
+    rolling_session_id = 0
 
+    groups_with_session_ids = []
 
-@dispatch
-def _factorize_column(X, column_name):
-    # Factorization is done so different groups can be found by doing a simple
-    # numeric difference
-    raise_dispatch_unregistered_type(X, kind="Dataframe")
-
-
-@_factorize_column.specialize("pandas")
-def _factorize_column_pandas(X, column_name):
-    if sbd.is_numeric(X[column_name]):
-        return X[column_name]
-    if sbd.is_any_date(X[column_name]):
-        return X[column_name].astype(np.int64)
-    if sbd.is_duration(X[column_name]):
-        return X[column_name].dt.total_seconds().astype(np.int64)
-    codes, _ = pd.factorize(X[column_name])
-    return codes
-
-
-@_factorize_column.specialize("polars")
-def _factorize_column_polars(X, column_name):
-    import polars as pl
-
-    if sbd.is_numeric(X[column_name]):
-        return X[column_name]
-    if sbd.is_any_date(X[column_name]):
-        return X[column_name].cast(pl.Int64)
-    if sbd.is_duration(X[column_name]):
-        return X[column_name].dt.total_seconds().cast(pl.Int64)
-    return X[column_name].cast(pl.Categorical).to_physical()
+    for group_key, group_df in groups:
+        # Sort the group by timestamp
+        group_df_sorted = group_df.sort(by=timestamp_col)
+        # Compute time differences between consecutive events
+        time_diffs = group_df_sorted[timestamp_col].diff().dt.total_seconds()
+        # Identify session boundaries based on time gaps
+        session_boundaries = (time_diffs > session_gap) | (
+            time_diffs.is_nan()
+        ).fill_null(True)
+        # Assign session IDs based on cumulative sum of session boundaries
+        session_ids = session_boundaries.cum_sum() - 1 + rolling_session_id
+        # Update rolling_session_id for the next group
+        rolling_session_id = session_ids.max() + 1
+        # Add the session IDs to the original dataframe
+        group_df_sorted = group_df_sorted.with_columns(
+            [session_ids.alias(session_id_column_)]
+        )
+        groups_with_session_ids.append(group_df_sorted)
+    res = sbd.concat(*groups_with_session_ids, axis=0)
+    return res
 
 
 class SessionEncoder(TransformerMixin, BaseEstimator):
@@ -463,13 +458,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # Selecting only the columns needed for sessionization and sorting them
         # to ensure that the sessionization is done correctly
         X_selected = s.select(X_with_order, sort_by + [row_order_col])
-        X_sorted = sbd.sort(X_selected, by=sort_by)
-
-        X_factorized, factorized_by = self._factorize_columns(X_sorted)
-
         X_with_session_id = _add_session_column(
-            X_factorized,
-            factorized_by,
+            X_selected,
+            self._split_by_columns,
             self.timestamp_col,
             self.session_gap,
             self.session_id_column_,
@@ -528,23 +519,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         for col in self._split_by_columns:
             if col not in self.all_inputs_:
                 raise ValueError(f"Column '{col}' not found in input dataframe")
-
-    def _factorize_columns(self, X):
-        """
-        convert split_by columns to numerical columns if they're not already, to
-        ensure that the diff operation works correctly
-        """
-
-        if self.split_by is None:
-            return X, []
-        factorized_columns = {
-            f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
-            for col in self._split_by_columns
-        }
-
-        X_factorized = sbd.with_columns(X, **factorized_columns)
-
-        return X_factorized, list(factorized_columns.keys())
 
     def get_feature_names_out(self, input_features=None):
         """Return the column names of the output of ``transform`` as a list of strings.
