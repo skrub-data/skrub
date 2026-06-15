@@ -31,11 +31,12 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
-- The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
-  a timestamp column and computes sessions based on the given session duration.
-  Additionally, it is possible to provide a ``by`` column or list of columns
+- The :class:`SessionEncoder` is now available. This encoder adds a `session_id`
+  column, which groups together events that occur within the given session gap.
+  Additionally, it is possible to provide a ``split_by`` column or list of columns
   (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
-  value. A new synthetic dataset generator has also been added.
+  value. A new synthetic dataset generator (:meth:`~skrub.datasets.make_retail_events`)
+  has also been added.
   :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by

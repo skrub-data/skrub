@@ -228,6 +228,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     6        2    mobile 2024-01-01 10:15:00      view                     2
 
     In this example, grouping by `user_id` results in three separate sessions:
+
     - User 1 has two sessions (session 0 and session 1) because there is a gap of
       60 minutes between their events at 10:20 and 11:20, which exceeds the 30-minute
       threshold. The first four events of user 1 belong to session 0, while the
