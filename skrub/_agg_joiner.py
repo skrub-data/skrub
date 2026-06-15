@@ -188,7 +188,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         not be reflected in the transformed output. If you need to update the
         auxiliary table, you will need to refit the transformer.
 
-        Consider using the :ref:`skrub Data Ops <_user_guide_data_ops_index>`
+        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`
         and a standard dataframe library (Pandas or Polars) to perform the
         aggregation instead.
 

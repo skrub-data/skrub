@@ -96,10 +96,14 @@ class Joiner(TransformerMixin, BaseEstimator):
         Additionally, the auxiliary table is stored in memory as part of the state
         of the transformer, which can lead to high memory usage if the auxiliary
         table is large.
-        Moreover, it is frozen in memory after fitting, which means that if the
-        auxiliary table is modified after fitting, the changes will not be reflected
+        Moreover, the auxiliary table is frozen in memory after fitting, which means
+        that if the auxiliary table is modified after fitting, the changes will
+        not be reflected
         in the transformed output. If you need to update the auxiliary table, you
         will need to refit the transformer.
+
+        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`
+        framework instead.
 
 
     Parameters
