@@ -102,10 +102,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         in the transformed output. If you need to update the auxiliary table, you
         will need to refit the transformer.
 
-        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`
-        framework instead.
-
-
     Parameters
     ----------
     aux_table : dataframe
