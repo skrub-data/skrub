@@ -40,7 +40,12 @@ class DropUninformative(SingleColumnTransformer):
     Cleaner :
         A full-frame transformer (as opposed to single column) that can
         drop columns with missing values.
-    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+
+    DropCols :
+        Dropping cols by name, dtypes, or general skrub selectors.
+
+    DropSimilar :
+        Drops columns too closely correlated to the dataframe's other columns.
 
     Notes
     -----

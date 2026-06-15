@@ -67,6 +67,7 @@ API_REFERENCE = {
                     "ApplyToCols",
                     "SelectCols",
                     "DropCols",
+                    "Drop",
                 ],
             }
         ],
@@ -124,24 +125,6 @@ API_REFERENCE = {
                     "Cleaner",
                     "DropUninformative",
                     "to_datetime",
-                ],
-            },
-        ],
-    },
-    "joining": {
-        "title": "Joining dataframes",
-        "short_summary": None,
-        "description": None,
-        "sections": [
-            {
-                "description": None,
-                "autosummary": [
-                    "Joiner",
-                    "AggJoiner",
-                    "MultiAggJoiner",
-                    "AggTarget",
-                    "InterpolationJoiner",
-                    "fuzzy_join",
                 ],
             },
         ],
@@ -311,6 +294,24 @@ API_REFERENCE = {
                     "config_context",
                 ],
             }
+        ],
+    },
+    "joining": {
+        "title": "Joining dataframes",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "Joiner",
+                    "AggJoiner",
+                    "MultiAggJoiner",
+                    "AggTarget",
+                    "InterpolationJoiner",
+                    "fuzzy_join",
+                ],
+            },
         ],
     },
     "datasets": {

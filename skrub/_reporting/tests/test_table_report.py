@@ -86,43 +86,53 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
-def test_deprecated_max_plot_columns(df_module):
+@pytest.mark.parametrize(
+    "max_plot_columns, plot_distributions",
+    [
+        (3, False),
+        (10, True),
+        ("all", True),
+    ],
+)
+def test_deprecated_max_plot_columns(df_module, max_plot_columns, plot_distributions):
     """max_plot_columns warns and is converted to plot_distributions."""
     df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
 
     with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns=3)
-    assert report.plot_distributions is False
-
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns=10)
-    assert report.plot_distributions is True
-
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns="all")
-    assert report.plot_distributions is True
+        report = TableReport(df, max_plot_columns=max_plot_columns)
+    assert report.plot_distributions is plot_distributions
 
 
 @skip_polars_installed_without_pyarrow
-def test_deprecated_max_association_columns(df_module):
+@pytest.mark.parametrize(
+    "max_association_columns, compute_associations",
+    [
+        (3, False),
+        (10, True),
+        ("all", True),
+    ],
+)
+def test_deprecated_max_association_columns(
+    df_module, max_association_columns, compute_associations
+):
     """max_association_columns warns and is converted to compute_associations."""
     df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
 
     with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns=3)
-    assert report.compute_associations is False
-
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns=10)
-    assert report.compute_associations is True
-
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns="all")
-    assert report.compute_associations is True
+        report = TableReport(df, max_association_columns=max_association_columns)
+    assert report.compute_associations is compute_associations
 
 
 @skip_polars_installed_without_pyarrow
-def test_few_rows(df_module, check_polars_numpy2):
+def test_deprecated_order_by(df_module):
+    """`order_by` parameter should emit a DeprecationWarning."""
+    df = df_module.make_dataframe({"a": [1, 2, 3]})
+    with pytest.warns(DeprecationWarning, match="order_by"):
+        TableReport(df, order_by="a")
+
+
+@skip_polars_installed_without_pyarrow
+def test_few_rows(df_module):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
 
@@ -486,19 +496,7 @@ def test_array_dim_check():
 
 
 numpy_test_cases = [
-    (
-        np.array(
-            [
-                [1, 2, 3],
-                [
-                    4,
-                    5,
-                    6,
-                ],
-            ]
-        ),
-        3,
-    ),
+    (np.array([[1, 2, 3], [4, 5, 6]]), 3),
     (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
 ]
 
@@ -550,8 +548,17 @@ def test_polars_df_no_pyarrow():
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_parameter(df_module):
-    """Test the open_tab parameter functionality"""
+@pytest.mark.parametrize(
+    "open_tab, html_snippet",
+    [
+        (None, "dataframe-sample"),
+        ("table", "dataframe-sample"),
+        ("stats", "summary_statistics"),
+        ("distributions", "column-summaries"),
+        ("associations", "column_associations"),
+    ],
+)
+def test_open_tab_parameter(df_module, open_tab, html_snippet):
     df = df_module.make_dataframe(
         {
             "A": [1, 2, 3, 4, 5],
@@ -559,26 +566,13 @@ def test_open_tab_parameter(df_module):
         }
     )
 
-    # Test open behavior (should be 'table')
-    report1 = TableReport(df)
-    assert report1.open_tab == "table"
-
-    # Test explicitly set to 'stats'
-    report2 = TableReport(df, open_tab="stats")
-    assert report2.open_tab == "stats"
-
-    # Test set to 'distributions'
-    report3 = TableReport(df, open_tab="distributions")
-    assert report3.open_tab == "distributions"
-
-    # Test set to 'associations'
-    report4 = TableReport(df, open_tab="associations")
-    assert report4.open_tab == "associations"
-
-    # Test HTML generation includes correct attributes
-    html_snippet = report2.html_snippet()
-    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
-    assert "data-is-selected" in html_snippet
+    if open_tab is None:
+        report = TableReport(df)
+        assert report.open_tab == "table"
+    else:
+        report = TableReport(df, open_tab=open_tab)
+        # additional tests covered by _reporting/js_tests/cypress/e2e/open-tab.cy.js
+        assert report.open_tab == open_tab
 
 
 @skip_polars_installed_without_pyarrow
@@ -599,7 +593,8 @@ def test_open_tab_wrong_names(df_module):
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_minimal_mode(df_module):
+@pytest.mark.parametrize("open_tab", ["distributions", "associations"])
+def test_open_tab_minimal_mode(df_module, open_tab):
     """Test that default_tab falls back to 'table' in minimal mode when needed"""
     df = df_module.make_dataframe(
         {
@@ -609,14 +604,9 @@ def test_open_tab_minimal_mode(df_module):
     )
 
     # Test minimal mode with open_tab set to 'distributions'
-    report1 = TableReport(df, open_tab="distributions")
-    report1._set_minimal_mode()
-    assert report1.open_tab == "table"
-
-    # Test minimal mode with open_tab set to 'associations'
-    report2 = TableReport(df, open_tab="associations")
-    report2._set_minimal_mode()
-    assert report2.open_tab == "table"
+    report = TableReport(df, open_tab=open_tab)
+    report._set_minimal_mode()
+    assert report.open_tab == "table"
 
 
 @pytest.mark.parametrize(
