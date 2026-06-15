@@ -64,7 +64,7 @@ Bugfixes
   and as already done by ``hashing="murmur"``). Previously the largest size was
   dropped, so the default ``ngram_range=(2, 4)`` ignored 4-grams and a
   single-size range such as ``(3, 3)`` produced the same constant encoding for
-  every string. :pr:`XXXX` by :user:`José Maia <glitch-ux>`.
+  every string. :pr:`2168` by :user:`José Maia <glitch-ux>`.
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
   duration columns in pandas and polars has been fixed. Now, both classes convert
   durations to the total number of seconds (with fractional part). This is done
