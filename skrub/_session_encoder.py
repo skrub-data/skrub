@@ -102,26 +102,36 @@ def _factorize_column_polars(X, column_name):
 
 
 class SessionEncoder(TransformerMixin, BaseEstimator):
-    """Encode sessions from a dataframe.
+    """Add a session ID column to a dataframe based on time gaps and other columns.
 
     A session is defined as a sequence of events  where consecutive events are separated
     by at most ``session_gap`` seconds. Additionally, it is possible to provide a column
     or list of columns that can be used to distinguish between sessions, such
     as user identifiers (specified by the ``split_by`` column).
     When the time gap between consecutive events exceeds ``session_gap``, or
-    when what identifies a user changes, a new session begins. All unrelated columns
-    are passed through unchanged.
+    when what identifies a user changes, a new session begins.
+    The encoder takes care of sorting the data by the timestamp and ``split_by`` columns
+    before identifying sessions, and sorting it back to the original order at the end,
+    so the original order of events in the input dataframe does not matter.
+    All unrelated columns are passed through unchanged.
 
     Parameters
     ----------
     timestamp_col : str
         The name of the column that identifies the time of an event. This column
-        is used to determine the start and end of a session.
+        is used to determine the start and end of a session. ``timestamp_col`` must
+        be a datetime, and will be rejected otherwise.
+        The dataframe is sorted by ``timestamp_col`` and ``split_by`` (if provided)
+        before  identifying sessions, and sorted back to the original order at
+        the end, so the order of events in the input dataframe does not matter.
 
     split_by : optional[str, list[str]], default=None
         The name of the column, or list of columns, to use to define sessions.
         A session boundary is created when the value in any of these columns
         changes, or when the time gap between events exceeds ``session_gap``.
+        The dataframe is sorted by ``split_by`` and ``timestamp_col`` before
+        identifying sessions, and sorted back to the original order at the end,
+        so the order of events in the input dataframe does not matter.
         This is typically a user identifier column, but it can also be used to define
         sessions by other groupings (e.g. user and device type).
         If not provided, sessions are detected based on the time gap between events,
@@ -397,26 +407,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         self.all_inputs_ = sbd.column_names(X)
 
         # Checking that all the needed columns are there
-        self._check_input_dataframe()
-
-        # check the correctness of the values of session_gap
-        if not isinstance(self.session_gap, numbers.Number):
-            raise TypeError(f"Expected a number, got {type(self.session_gap)}")
-        if self.session_gap <= 0:
-            raise ValueError(
-                f"session_gap must be a positive number, got {self.session_gap}"
-            )
-        if not isinstance(self.suffix, str) or self.suffix is None:
-            raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
-
-        # check that the timestamp column is of datetime type
-        if not sbd.is_empty_frame(X) and not sbd.is_any_date(
-            sbd.col(X, self.timestamp_col)
-        ):
-            raise TypeError(
-                "Expected a datetime column for timestamp_col,"
-                f" got {self.timestamp_col!r}"
-            )
+        self._check_input_dataframe(X)
 
         self.session_id_column_ = f"{self.timestamp_col}_{self.suffix}"
 
@@ -499,17 +490,35 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
         return self.fit_transform(X)
 
-    def _check_input_dataframe(self):
+    def _check_input_dataframe(self, X):
         """
         Check that the input columns are present and correct
         """
-        # TODO: move here all the error checking on the input dataframe
-        # and the parameters
+        # check the correctness of the values of session_gap
+        if not isinstance(self.session_gap, numbers.Number):
+            raise TypeError(f"Expected a number, got {type(self.session_gap)}")
+        if self.session_gap <= 0:
+            raise ValueError(
+                f"session_gap must be a positive number, got {self.session_gap}"
+            )
+        # check that the suffix is a string
+        if not isinstance(self.suffix, str) or self.suffix is None:
+            raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
+
         # Check that the timestamp column is present
         if self.timestamp_col not in self.all_inputs_:
             raise ValueError(
                 f"Column '{self.timestamp_col}' not found in input dataframe"
             )
+        # check that the timestamp column is of datetime type
+        if not sbd.is_empty_frame(X) and not sbd.is_any_date(
+            sbd.col(X, self.timestamp_col)
+        ):
+            raise TypeError(
+                "Expected a datetime column for timestamp_col,"
+                f" got {self.timestamp_col!r}"
+            )
+
         # check that the required columns are present in the input dataframe
         if self.split_by is None:
             self._split_by_columns = []
