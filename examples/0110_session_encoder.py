@@ -48,7 +48,7 @@ from sklearn.model_selection import TimeSeriesSplit
 
 splitter = TimeSeriesSplit(n_splits=5)
 # %%
-# We begin by generating the data with |make_retail_events| and defining out
+# We begin by generating the data with |make_retail_events| and defining our
 # features and target.
 from skrub import TableReport
 from skrub.datasets import make_retail_events
@@ -111,7 +111,7 @@ print(f"ROC-AUC without session encoding: {scores.mean():.3f}")
 # Note that session-based features involve aggregations, which must be performed
 # only on the training data within each fold to avoid leakage. In a scikit-learn
 # pipeline, we can achieve this by using |SessionEncoder| followed by a custom
-# transformer that computes session aggregates, and ensuring that the pipeline is
+# transformer that computes session aggregates, and ensures that the pipeline is
 # properly fitted within each fold of cross-validation.
 
 # %%
@@ -163,12 +163,12 @@ scores = cross_val_score(model, X, y, cv=splitter, scoring="roc_auc")
 print("ROC-AUC with session encoding:", scores.mean())
 
 # %%
-# As expected, the model with session encoding performs much better than the baseline
+# As expected the model with session encoding performs much better than the baseline
 # without session features, demonstrating the value of sessionization for conversion
 # prediction.
 #
 # The fact that we are working with aggregation means that it was necessary to
-# create a custom transformer to compute session-level features. This situation
-# can be avoided by using the skrub DataOps workflow, which allows for more
+# create a custom transformer to compute session-level features. However, this situation
+# can be avoided entirely by using the skrub DataOps workflow, which allows for more
 # flexible data transformations without needing to fit everything within a
 # scikit-learn pipeline.

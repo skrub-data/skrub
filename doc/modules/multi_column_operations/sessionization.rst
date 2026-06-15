@@ -54,17 +54,17 @@ composed of a monotonically increasing integer ID for each session:
 4  user_0149 2024-01-04 10:00:15.882835+00:00     desktop   electronics  page_view         108.5          4.44                    49
 
 With the session ID, it becomes possible to compute aggregations on
-each session, for example to find the duration of a session, or the number of sessions
+each session, for example to find the duration or number of sessions
 by a user.
 
 .. warning::
 
-Aggregation can introduce data leakage! Records should only be aggregated from
-within the training set at training time and the test set at predict time. To
+Caution! Aggregation can introduce data leakage. Records should only be aggregated from
+within the training set at training time, and the test set at predict time. To
 ensure this is the case, any code that performs aggregation can be wrapped in a
 scikit-learn |BaseEstimator| (as shown in the
-:ref:`SessionEncoder example <sphx_glr_auto_examples_0110_session_encoder.py>`,
-or the pipeline should use the skrub :ref:`Data Ops framework<user_guide_data_ops_plan>`.
+:ref:`SessionEncoder example <sphx_glr_auto_examples_0110_session_encoder.py>`),
+otherwise the pipeline should use the skrub :ref:`Data Ops framework<user_guide_data_ops_plan>`.
 
 The |SessionEncoder| includes the ``suffix`` parameter (by default
 ``suffix="session_id"``) to specify what the name of the new column should be.
