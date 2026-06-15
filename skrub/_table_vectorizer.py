@@ -1210,48 +1210,46 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         for step in self._pipeline.named_steps:
             if step == "checkinputdataframe":
                 continue
+
             transformer = self._pipeline.named_steps[step]
-            match transformer.transformer:
-                case type(self.numeric):
-                    vectorize_transformations += (
-                        f"Numeric transformer: {self.numeric}" + "\n"
-                    )
-                    vectorize_transformations += (
-                        f"Numerical columns transformed: {transformer.used_inputs}"
-                        + "\n"
-                    )
-                case type(self.datetime):
-                    vectorize_transformations += (
-                        f"Datetime transformer: {self.datetime}" + "\n"
-                    )
-                    vectorize_transformations += (
-                        f"Datetime columns transformed: {transformer.used_inputs}"
-                        + "\n"
-                    )
-                case type(self.low_cardinality):
-                    vectorize_transformations += (
-                        f"Low-cardinality transformer: {self.low_cardinality}" + "\n"
-                    )
-                    vectorize_transformations += (
-                        f"Low-cardinality columns transformed: \
-                            {transformer.used_inputs}"
-                        + "\n"
-                    )
-                case type(self.high_cardinality):
-                    vectorize_transformations += (
-                        f"High-cardinality transformer: {self.high_cardinality}" + "\n"
-                    )
-                    vectorize_transformations += (
-                        f"High-cardinality columns transformed: \
-                            {self.high_cardinality.used_inputs}"
-                        + "\n"
-                    )
-            if transformer.transformer in self.specific_transformers:
-                specific_transformations += (
-                    f"{transformer.transformer} applied to: {transformer.used_inputs}"
+            trans_type = type(transformer.transformer)
+
+            if trans_type == type(self.numeric):
+                vectorize_transformations += (
+                    f"Numeric transformer: {self.numeric}" + "\n"
+                )
+                vectorize_transformations += (
+                    f"applied to numerical columns {transformer.used_inputs_}" + "\n"
+                )
+            elif trans_type == type(self.datetime):
+                vectorize_transformations += (
+                    f"Datetime transformer: {self.datetime}" + "\n"
+                )
+                vectorize_transformations += (
+                    f"applied to datetime columns {transformer.used_inputs_}" + "\n"
+                )
+            elif trans_type == type(self.low_cardinality):
+                vectorize_transformations += (
+                    f"Low-cardinality transformer: {self.low_cardinality}" + "\n"
+                )
+                vectorize_transformations += (
+                    f"applied to low-cardinality columns \
+                        {transformer.used_inputs_}"
                     + "\n"
                 )
-
+            elif trans_type == type(self.high_cardinality):
+                vectorize_transformations += (
+                    f"High-cardinality transformer: {self.high_cardinality}" + "\n"
+                )
+                vectorize_transformations += (
+                    f"applied to high-cardinality columns \
+                        {transformer.used_inputs_}"
+                    + "\n"
+                )
+            if transformer.transformer in self.specific_transformers:
+                specific_transformations += (
+                    f"{transformer} applied to: {transformer.used_inputs_}" + "\n"
+                )
         return (
             preprocessing_transformations
             + "\n\n"
