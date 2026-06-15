@@ -40,6 +40,10 @@ New Features
   Additionally, negative numbers indicated with parentheses can be converted to the
   regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
   Gómez Jiménez <gabrielapgomezji>`.
+- :meth:`TableReport.json` now includes histogram data for numeric and datetime
+  columns (the bin count and edges, and numbers of low and high outliers). Now
+  ``json()`` contains all the information shown in the report html rendering,
+  including the plots. :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
