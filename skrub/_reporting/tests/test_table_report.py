@@ -46,6 +46,7 @@ def test_report(air_quality):
     assert "With nulls" in html
     assert "First 10" in html
     assert "First 2" in html
+    assert "memory usage:" in html
     for col_name in sbd.column_names(air_quality):
         assert col_name in html
     report_id = get_report_id(html)

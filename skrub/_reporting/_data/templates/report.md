@@ -2,6 +2,12 @@
 
 The provided dataframe uses the {{ summary.dataframe_module }} library. It has
 **shape** {{ summary.n_rows }} rows × {{ summary.n_columns }} columns.
+{% if summary.get("memory_usage_kb") is not none %}
+**memory usage** {{ "%.1f" | format(summary.get("memory_usage_kb")) }} KB.
+{% if summary.get("memory_estimate_unreliable") %}
+_Note: memory estimate may be inaccurate for complex object columns._
+{% endif %}
+{% endif %}
 
 Columns are marked as "high cardinality" if they contain more than
 {{ summary.cardinality_threshold }} unique values.

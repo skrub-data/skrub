@@ -2,6 +2,9 @@
 
 import sys
 
+from skrub._dataframe._common import raise_dispatch_unregistered_type
+from skrub._dispatch import dispatch
+
 from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
@@ -16,6 +19,34 @@ except ImportError:
 
 _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 1000
+
+
+@dispatch
+def _memory_usage_kb(obj):
+    raise_dispatch_unregistered_type(obj)
+
+
+@_memory_usage_kb.specialize("pandas")
+def _memory_usage_pandas(obj):
+    memory_usage_bytes = obj.memory_usage(deep=False).sum()
+    return memory_usage_bytes / 1024
+
+
+@_memory_usage_kb.specialize("polars")
+def _memory_usage_polars(obj):
+    memory_usage_bytes = obj.estimated_size()
+    return memory_usage_bytes / 1024
+
+
+def _has_complex_objects(df):
+    """Return True when pandas has object-dtype columns.
+
+    The memory estimate is less reliable for object-dtype columns, so we warn
+    as soon as any are present.
+    """
+    if sbd.dataframe_module_name(df) != "pandas":
+        return False
+    return any(dtype == object for dtype in df.dtypes)
 
 
 def summarize_dataframe(
@@ -77,6 +108,7 @@ def summarize_dataframe(
         "dataframe_module": sbd.dataframe_module_name(df),
         "n_rows": n_rows,
         "n_columns": n_columns,
+        "memory_usage_kb": _memory_usage_kb(df),
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
         "plots_skipped": not with_plots,
@@ -90,6 +122,11 @@ def summarize_dataframe(
     }
     if title is not None:
         summary["title"] = title
+    # detect complex objects that make memory estimates unreliable
+    # try:
+    summary["memory_estimate_unreliable"] = _has_complex_objects(df)
+    # except Exception:
+    #     summary["memory_estimate_unreliable"] = False
     if order_by is not None:
         df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
