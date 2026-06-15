@@ -144,7 +144,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         All column names in the input dataframe plus the new column that identifies
         the session, with name "{timestamp}_{suffix}".
 
-    session_id_name_ : str
+    session_id_column_ : str
         The name of the session ID column that is added to the dataframe. This is
         generated as "{timestamp_col}_{suffix}", but if this name already exists in
         the input dataframe, a random suffix is added to avoid overwriting it.
@@ -158,27 +158,45 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     the ``SessionEncoder`` will sort the events by user and timestamp before
     identifying sessions (and sort them back to the original order at the end).
 
+    Sessions are defined by sorting over the ``split_by``columns (if provided)
+    and then by the timestamp.
+
     >>> import pandas as pd
     >>> from datetime import datetime, timedelta
     >>> data = {
-    ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
-    ...     'timestamp': [
-    ...         pd.Timestamp('2024-01-01 10:00:00'),
-    ...         pd.Timestamp('2024-01-01 10:05:00'),  # 5 min later, same session
-    ...         pd.Timestamp('2024-01-01 11:00:00'),  # 55 min later, new session
-    ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
-    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 20 min later, same session
+    ...     "user_id": [1, 1, 1, 1, 1, 2, 2],
+    ...     "device_id": [
+    ...         "mobile",
+    ...         "mobile",
+    ...         "desktop",
+    ...         "desktop",
+    ...         "mobile",
+    ...         "mobile",
+    ...         "mobile",
     ...     ],
-    ...     'action': ['login', 'view', 'purchase', 'login', 'purchase']
+    ...     "timestamp": [
+    ...         pd.Timestamp("2024-01-01 10:00:00"),
+    ...         pd.Timestamp("2024-01-01 10:10:00"),  # 10 min later, same session
+    ...         pd.Timestamp("2024-01-01 10:05:00"),  # Different device (sorted),
+    ...                                                 # different session
+    ...     pd.Timestamp("2024-01-01 10:20:00"),  # 15 min later, same session
+    ...                                                 # different session
+    ...     pd.Timestamp("2024-01-01 11:20:00"),  # 60 min later, new session
+    ...     pd.Timestamp("2024-01-01 10:00:00"),  # Different user
+    ...     pd.Timestamp("2024-01-01 10:15:00"),  # 15 min later, same session
+    ... ],
+    ... "action": ["view", "purchase", "view", "checkout", "view", "login", "view"],
     ... }
     >>> df = pd.DataFrame(data)
-    >>> df
-    user_id           timestamp    action
-    0   alice 2024-01-01 10:00:00     login
-    1   alice 2024-01-01 10:05:00      view
-    2   alice 2024-01-01 11:00:00  purchase
-    3     bob 2024-01-01 10:00:00     login
-    4     bob 2024-01-01 10:20:00  purchase
+    >>> print(df)
+    user_id device_id           timestamp    action
+    0        1    mobile 2024-01-01 10:00:00      view
+    1        1    mobile 2024-01-01 10:10:00  purchase
+    2        1   desktop 2024-01-01 10:05:00      view
+    3        1   desktop 2024-01-01 10:20:00  checkout
+    4        1    mobile 2024-01-01 11:20:00      view
+    5        2    mobile 2024-01-01 10:00:00     login
+    6        2    mobile 2024-01-01 10:15:00      view
 
     We use the ``SessionEncoder`` with default ``session_gap`` of 30 minutes:
 
@@ -188,20 +206,21 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... )
     >>> result = encoder.fit_transform(df)
     >>> result
-    user_id           timestamp    action  timestamp_session_id
-    0   alice 2024-01-01 10:00:00     login                     0
-    1   alice 2024-01-01 10:05:00      view                     0
-    2   alice 2024-01-01 11:00:00  purchase                     1
-    3     bob 2024-01-01 10:00:00     login                     2
-    4     bob 2024-01-01 10:20:00  purchase                     2
+    user_id device_id           timestamp    action  timestamp_session_id
+    0        1    mobile 2024-01-01 10:00:00      view                     0
+    1        1    mobile 2024-01-01 10:10:00  purchase                     0
+    2        1   desktop 2024-01-01 10:05:00      view                     0
+    3        1   desktop 2024-01-01 10:20:00  checkout                     0
+    4        1    mobile 2024-01-01 11:20:00      view                     1
+    5        2    mobile 2024-01-01 10:00:00     login                     2
+    6        2    mobile 2024-01-01 10:15:00      view                     2
 
-    In this example:
-
-    - Alice's first two events (10:00 and 10:05) are 5 minutes apart, so they form
-      session 0.
-    - Alice's third event (11:00) is 55 minutes after the previous one, exceeding
-      the 30-minute gap, so it forms a new session (session 1).
-    - Bob's events form session 2 (different user), with both events within the
+    In this example, grouping by `user_id` results in three separate sessions:
+    - User 1 has two sessions (session 0 and session 1) because there is a gap of
+      60 minutes between their events at 10:20 and 11:20, which exceeds the 30-minute
+      threshold. The first four events of user 1 belong to session 0, while the
+      last event belongs to session 1.
+    - User 2 has one session (session 2) because their events are within the
       30-minute window.
 
     You can also identify users by multiple columns. For instance, the same user
@@ -211,41 +230,29 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     split_by=['user_id', 'device_id'],
     ...     timestamp_col='timestamp',
     ... )
-    >>> data_multi = {
-    ...     'user_id': [1, 1, 1, 1, 2, 2],
-    ...     'device_id': ['mobile', 'mobile', 'desktop', 'desktop', 'mobile', 'mobile'],
-    ...     'timestamp': [
-    ...         pd.Timestamp('2024-01-01 10:00:00'),
-    ...         pd.Timestamp('2024-01-01 10:10:00'),  # 10 min later, same session
-    ...         pd.Timestamp('2024-01-01 10:05:00'),  # Different device (sorted),
-    ...                                                 # different session
-    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 15 min later, same session
-    ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
-    ...         pd.Timestamp('2024-01-01 10:15:00'),  # 15 min later, same session
-    ...     ],
-    ...     'action': ['view', 'purchase', 'view', 'checkout', 'login', 'view']
-    ... }
-    >>> df_multi = pd.DataFrame(data_multi)
-    >>> result_multi = encoder_multi.fit_transform(df_multi)
-    >>> result_multi
+    >>> result_multi = encoder_multi.fit_transform(df)
+    >>> print(result_multi)
     user_id device_id           timestamp    action  timestamp_session_id
     0        1    mobile 2024-01-01 10:00:00      view                     1
     1        1    mobile 2024-01-01 10:10:00  purchase                     1
     2        1   desktop 2024-01-01 10:05:00      view                     0
     3        1   desktop 2024-01-01 10:20:00  checkout                     0
-    4        2    mobile 2024-01-01 10:00:00     login                     2
-    5        2    mobile 2024-01-01 10:15:00      view                     2
+    4        1    mobile 2024-01-01 11:20:00      view                     2
+    5        2    mobile 2024-01-01 10:00:00     login                     3
+    6        2    mobile 2024-01-01 10:15:00      view                     3
 
     In this example:
 
     - User 1 on "desktop" has session 0.
-    - User 1 on "mobile" has session 1 (different device, so separate session).
-    - User 2 on "mobile" has session 2 (different user).
+    - User 1 on "mobile" has two sessions, session 1 and session 2, because there
+      is a gap of 60 minutes between their events at 10:10 and 11:20, which exceeds
+      the 30-minute threshold.
+    - User 2 on "mobile" has session 3 (different user).
 
-    Note that sessions are defined by sorting over the ``split_by`` columns and then
-    by the timestamp: this is why, while the "desktop"
-    session of User 1 starts after their "mobile" session, it has session id ``0``
-    since in alphabetical ordering "desktop" is first.
+    Note again that sessions are defined by sorting over the ``split_by`` columns
+    and then by the timestamp: this is why the "desktop" session of User 1 is
+    session 0, even though it starts after the "mobile" session in the original
+    dataframe.
 
     You can also use ``SessionEncoder`` without a user identifier column. In this case,
     sessions are separated only by time gaps. This is useful for analyzing a single
@@ -411,18 +418,18 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
                 f" got {self.timestamp_col!r}"
             )
 
-        self.session_id_name_ = f"{self.timestamp_col}_{self.suffix}"
+        self.session_id_column_ = f"{self.timestamp_col}_{self.suffix}"
 
         # If the generated session id column name already exists in the input dataframe,
         # we add a random suffix to avoid overwriting it
-        if self.session_id_name_ in self.all_inputs_:
-            self.session_id_name_ += f"_skrub_{random_string()}"
+        if self.session_id_column_ in self.all_inputs_:
+            self.session_id_column_ += f"_skrub_{random_string()}"
 
         # if the input dataframe is empty, we can skip all the processing and
         # return an empty dataframe with the session_id column added
         if sbd.is_empty_frame(X):
             X = sbd.with_columns(
-                X, **{self.session_id_name_: np.array([], dtype=np.float32)}
+                X, **{self.session_id_column_: np.array([], dtype=np.float32)}
             )
             return X
 
@@ -455,7 +462,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             factorized_by,
             self.timestamp_col,
             self.session_gap,
-            self.session_id_name_,
+            self.session_id_column_,
         )
         # Reordering rows back to the original order
         X_result = sbd.sort(X_with_session_id, by=row_order_col)
@@ -471,7 +478,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             X_result = sbd.concat(X_result, s.select(X, cols_to_remove), axis=1)
 
         # Reordering columns so that the session_id is added as the last column
-        X_result = s.select(X_result, self.all_inputs_ + [self.session_id_name_])
+        X_result = s.select(X_result, self.all_inputs_ + [self.session_id_column_])
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
