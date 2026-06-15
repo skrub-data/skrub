@@ -85,10 +85,12 @@ class DropUninformative(SingleColumnTransformer):
         drop_if_constant=False,
         drop_if_unique=False,
         drop_null_fraction=1.0,
+        threshold=0.0,
     ):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.drop_null_fraction = drop_null_fraction
+        self.threshold = threshold
 
     def _check_params(self):
         if not isinstance(self.drop_if_constant, bool):
@@ -127,8 +129,19 @@ class DropUninformative(SingleColumnTransformer):
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
-            if (sbd.n_unique(column) == 1) and (self._null_count == 0):
+            if sbd.is_numeric(column) == 1 and (
+                self._null_count == 0
+            ):  # if numeric or boolean
+                if (
+                    sbd.std(column) ** 2 <= self.threshold
+                ):  # check if passes the threshold
+                    return True
+                else:
+                    return False
+            elif (sbd.n_unique(column) == 1) and (self._null_count == 0):
+                # use the original logic to deal with the other cases
                 return True
+
         return False
 
     def _drop_if_unique(self, column):
