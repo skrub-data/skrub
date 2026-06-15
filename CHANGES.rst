@@ -105,6 +105,9 @@ New Features
 - A new dataframe generator, :func:`datasets.toy_cities`, has been added for
   use cases on dataframes with variable sizes and variable correlation between
   columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
+- A new selector function, :func:`selectors.drop`, has been added to drop columns
+  from a dataframe using a selector. It mirrors the behavior of :func:`selectors.select`.
+  :pr:`2108` by :user:`Mary Njoroge <Maryahcee>`.
 
 Changes
 -------
