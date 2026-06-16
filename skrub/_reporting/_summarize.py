@@ -258,6 +258,8 @@ def _add_datetime_summary(summary, column, with_plots):
             summary["histogram_data"],
         ) = _plotting.histogram(column, color=_plotting.COLORS[0])
     else:
+        # besides the plots, the bin counts and edges are always stored and
+        # available in the json output.
         summary["histogram_data"] = _plotting.histogram_data(column)
 
 
@@ -290,6 +292,8 @@ def _add_numeric_summary(
     summary["value_is_constant"] = False
     summary["quantiles"] = quantiles
     if not with_plots:
+        # besides the plots, the bin counts and edges are always stored and
+        # available in the json output.
         summary["histogram_data"] = _plotting.histogram_data(column)
         return
     if order_by_column is None:

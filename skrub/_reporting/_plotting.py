@@ -201,7 +201,8 @@ def _robust_hist(col, ax=None, color=None):
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
     if sbd.is_any_date(col):
-        # numpy histogram does not handle datetimes but matplotlib does
+        # numpy histogram does not handle datetimes but matplotlib does, so we
+        # convert to the total number of seconds since epoch (a float)
         np_histogram_values = sbd.to_numpy(
             _datetime_encoder.DatetimeEncoder(resolution=None).fit_transform(col)
         ).ravel()
