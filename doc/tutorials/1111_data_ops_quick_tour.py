@@ -82,6 +82,36 @@ test_dataset = skrub.datasets.fetch_employee_salaries(split="test")
 learner.predict({"employee_data": test_dataset.X, "salary": test_dataset.y})
 
 # %%
+# We can generate a complete report for the execution of our DataOp by calling:
+#
+# .. code:: python
+#
+#    pred.skb.full_report({"employee_data": test_dataset.X, "salary": test_dataset.y})
+#
+# As the output is usually quite large, it does not display inline in a
+# notebook but is instead opened in a separate browser tab. However here we
+# insert it in the page for convenience. By clicking a node in the graph you
+# can see its result, how long it took, and the scikit-learn estimator that was
+# fitted (if any).
+#
+# .. raw:: html
+#
+#   <iframe
+#     id="inlineFrameExample"
+#     title="Inline Frame Example"
+#     width="130%"
+#     height="800"
+#     style="transform: scale(0.75); transform-origin: 0 0; border: 2px solid black; margin-bottom: -190px;" # noqa: E501
+#     src="../_static/employee_salaries_report/index.html">
+#   </iframe>
+#
+# You can also visit the report
+# `here <../_static/employee_salaries_report/index.html>`_.
+#
+# It is also possible to create report about the execution of specific methods
+# of the learner like "fit" and "predict" with :meth:`SkrubLearner.report`.
+
+# %%
 # Cross-validation
 # ----------------
 #
