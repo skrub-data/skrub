@@ -4,7 +4,7 @@ from collections import UserDict
 from collections.abc import Iterable
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -12,6 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._base import SkrubBaseTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
@@ -31,6 +32,8 @@ __all__ = ["TableVectorizer"]
 
 
 class PassThrough(SingleColumnTransformer):
+    _doc_link_module = ""
+
     def fit_transform(self, column, y=None):
         return column
 
@@ -181,7 +184,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, BaseEstimator):
+class Cleaner(TransformerMixin, SkrubBaseTransformer):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -539,7 +542,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         return np.asarray(self.all_outputs_)
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator):
+class TableVectorizer(TransformerMixin, SkrubBaseTransformer):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
@@ -679,12 +682,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
-    ApplyToEachCol :
-        Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
-
-    ApplyToSubFrame :
-        Apply a given transformer jointly to all columns in a selection of columns.
+    ApplyToCols :
+        Apply a given transformer to each column in a selection of columns. Combine
+        this transformer with the skrub selectors to select columns based on
+        advanced rules.
         Useful to complement the default heuristics of the ``TableVectorizer``.
 
     DropUninformative :
