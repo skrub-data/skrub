@@ -11,15 +11,72 @@ Ongoing development
 
 New Features
 ------------
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
+- A parameter ``becomes_default`` has been added to :func:`var`. It allows
+  indicating that the provided preview ``value`` should also be treated as a
+  default value for this variable in all contexts (for example in a
+  SkrubLearner's method like ``fit`` or ``predict``).
+  :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to attach new preview values to the variables in a DataOp
+  with :meth:`DataOp.skb.set_data`. :pr:`2081` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
+  provides an alternative for referring to a node, in the environment passed to
+  :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
+  :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
+- Grouped Examples into subject-specific sections. :pr:`2102` by
+  :user:`Maureen Githaiga <maureen-githaiga>`.
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is
+  another type of sequence. :pr:`2100` by :user:`aidbar <aidbar>`.
+- An unnecessary warning that was raised when passing a numpy array to the
+  TableVectorizer has been removed. :pr:`1908` by
+  :user:`Sandrine Henry <sandrineh>`.
+- Improving the association tab error message when only one column is present
+  :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
+- Added support for numpy arrays in :meth:`DataOp.skb.concat`.
+  :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
+  :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
+- A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
+  duration columns in pandas and polars has been fixed. Now, both classes convert
+  durations to the total number of seconds (with fractional part). This is done
+  by the new transformer :class:`DurationToFloat`. :pr:`2069` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- An error that could arise when running ``TableReport`` on dataframes containing
+  double dollar (``$$``) signs has been fixed.
+  :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
+  :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
 
 Deprecations
 ------------
+
+- The parameter ``order_by`` of :class:`TableReport` is deprecated. Passing
+  ``order_by`` now emits a :class:`DeprecationWarning`
+  :pr:`2101` by :user:`Heidi Koivisto <uniheko>`.
 
 
 Release 0.9.0
@@ -42,6 +99,15 @@ New Features
   the ``cv`` splitter and ``split_kwargs`` passed to
   :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
   by :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
+- A new dataframe generator, :func:`datasets.toy_cities`, has been added for
+  use cases on dataframes with variable sizes and variable correlation between
+  columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
+- A new selector function, :func:`selectors.drop`, has been added to drop columns
+  from a dataframe using a selector. It mirrors the behavior of :func:`selectors.select`.
+  :pr:`2108` by :user:`Mary Njoroge <Maryahcee>`.
 
 Changes
 -------
@@ -59,9 +125,9 @@ Changes
   control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
   to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
   columns to ``float32``.
-  :pr:`1910` by :user:`<Varshith-yadaV>`.
-- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
-  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
+  :pr:`1910` by :user:`Varshith-yadaV <Varshith-yadaV>`.
+- :func:`~datasets.fetch_toxicity` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by :user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -78,6 +144,9 @@ Changes
   <jeromedockes>`.
 - The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
   :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
+- Skrub estimators now correctly show links to the documentation in the HTML
+  representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
+  Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -126,9 +195,6 @@ New Features
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
-- :func:`selectors.has_dtype` has been added, allowing users to select columns
-  by passing the dtype objects they want to match. :pr:`2027` by
-  :user:`kudos07 <kudos07>`.
 
 Changes
 -------

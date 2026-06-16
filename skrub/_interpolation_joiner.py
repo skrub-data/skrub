@@ -2,7 +2,7 @@ import warnings
 
 import joblib
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
@@ -11,6 +11,7 @@ from sklearn.ensemble import (
 from . import _dataframe as sbd
 from . import _join_utils, _utils
 from . import selectors as s
+from ._base import SkrubBaseEstimator
 from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
@@ -20,27 +21,13 @@ DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 
 
-class InterpolationJoiner(TransformerMixin, BaseEstimator):
+class InterpolationJoiner(TransformerMixin, SkrubBaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
     This is similar to a usual equi-join, but instead of looking for actual
     rows in the right table that satisfy the join condition, we estimate what
     those rows would contain if they existed in the table.
 
-    Suppose we want to join a table ``buildings(latitude, longitude, n_stories)``
-    with a table ``annual_avg_temp(latitude, longitude, avg_temp)``. Our annual
-    average temperature table may not contain data for the exact latitude and
-    longitude of our buildings. However, we can interpolate what we need from
-    the data points it does contain. Using ``annual_avg_temp``, we train a
-    model to predict the temperature, given the latitude and longitude. Then,
-    we use this model to estimate the values we want to add to our
-    ``buildings`` table. In a way we are joining ``buildings`` to a virtual
-    table, in which rows for any (latitude, longitude) location are inferred,
-    rather than retrieved, when requested. This is done with::
-
-        InterpolationJoiner(
-            annual_avg_temp, on=["latitude", "longitude"]
-        ).fit_transform(buildings)
 
     Parameters
     ----------
@@ -135,6 +122,24 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     Joiner :
         Works in a similar way but instead of inferring values, picks the
         closest row from the auxiliary table.
+
+    Notes
+    -----
+
+    Suppose we want to join a table ``buildings(latitude, longitude, n_stories)``
+    with a table ``annual_avg_temp(latitude, longitude, avg_temp)``. Our annual
+    average temperature table may not contain data for the exact latitude and
+    longitude of our buildings. However, we can interpolate what we need from
+    the data points it does contain. Using ``annual_avg_temp``, we train a
+    model to predict the temperature, given the latitude and longitude. Then,
+    we use this model to estimate the values we want to add to our
+    ``buildings`` table. In a way we are joining ``buildings`` to a virtual
+    table, in which rows for any (latitude, longitude) location are inferred,
+    rather than retrieved, when requested. This is done with::
+
+        InterpolationJoiner(
+            annual_avg_temp, on=["latitude", "longitude"]
+        ).fit_transform(buildings)
 
     Examples
     --------

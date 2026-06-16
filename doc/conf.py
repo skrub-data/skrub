@@ -162,6 +162,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+default_role = "literal"
+
 # -- Options for autodoc / autosummary ----------------------------------------
 # generate autosummary even if no references
 autosummary_generate = True
@@ -234,6 +238,7 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     "footer_start": ["funding_footer.html"],
+    "footer_end": ["scikit-learn-central-footer.html"],
     # When specified as a dictionary, the keys should follow glob-style patterns, as in
     # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-exclude_patterns
     # In particular, "**" specifies the default for all pages

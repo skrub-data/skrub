@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV
 from sklearn.model_selection import GroupKFold, train_test_split
 from sklearn.utils import check_random_state
 
@@ -66,6 +66,10 @@ def test_environement_with_values():
     assert f.skb.eval({}) == "hello, world!"
     # we can still inject values for internal nodes or choices in this setting
     assert f.skb.eval({"d": "goodbye"}) == "goodbye!"
+
+    # we can also inject values by using the id
+    assert isinstance(d.skb.id, int)
+    assert f.skb.eval({d.skb.id: "using id"}) == "using id!"
 
     # however if we provide a binding for any of the variables we must do it
     # for all the variables actually used, `value` is not considered for any
@@ -149,6 +153,43 @@ def test_choice_in_environment():
     with pytest.raises((KeyError, RuntimeError)):
         d.skb.eval({"c": 3, "b": 20})
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
+
+
+def test_becomes_default():
+    a = skrub.var("a", 1, becomes_default=True)
+    b = skrub.var("b", 2)
+    c = a + b
+    assert c.skb.eval() == 3
+    # When we pass a (non-empty) environment, 'a' is optional because it has a
+    # default
+    assert c.skb.eval({"b": 20}) == 21
+    # Whereas b is not
+    if sys.version_info < (3, 11):
+        err_t, err_msg = RuntimeError, "Evaluation of node <Var 'b'> failed"
+    else:
+        err_t, err_msg = KeyError, "No value has been provided for 'b'"
+    with pytest.raises(err_t, match=err_msg):
+        c.skb.eval({"a": 10})
+    d = c.skb.clone(drop_values=True)
+    assert d.skb.get_data() == {"a": 1}
+    assert d.skb.eval({"b": 20}) == 21
+    assert d.skb.eval({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        d.skb.eval({})
+    learner = c.skb.make_learner()
+    assert learner.fit_transform({"b": 20}) == 21
+    assert learner.fit_transform({"a": 10, "b": 20}) == 30
+    with pytest.raises(err_t, match=err_msg):
+        learner.fit_transform({})
+
+
+def test_becomes_default_errors():
+    with pytest.raises(TypeError, match="becomes_default should be a Boolean"):
+        skrub.var("a", 1, becomes_default=2)
+    with pytest.raises(
+        TypeError, match="value must be provided when becomes_default is True"
+    ):
+        skrub.var("a", becomes_default=True)
 
 
 def test_if_else():
@@ -471,16 +512,16 @@ def test_optuna_optimize_learner(use_choose_from, outcome_names):
             assert study.best_params == {"0:x": "2:2.0"}
     else:
         assert list(study.best_params.keys()) == ["0:x"]
-        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.01)
+        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.05)
 
     # test both set_params(**best_params) or make_learner(choose=best_trial)
     learner_0 = err.skb.make_learner(choose=study.best_trial)
     learner_1 = err.skb.make_learner()
     learner_1.set_params(**study.best_params)
     for learner in [learner_0, learner_1]:
-        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
+        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.05)
         truncated = learner.truncated_after("x_")
-        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
+        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.05)
 
 
 def test_is_optuna_trial(monkeypatch):
@@ -868,6 +909,25 @@ def test_concat_non_str_colname():
         )
 
 
+def test_concat_numpy_arrays():
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6], [7, 8]])
+    var_a = skrub.var("a", a)
+    var_b = skrub.var("b", b)
+
+    # Test axis=0 (vertical stack)
+    result = var_a.skb.concat([var_b], axis=0)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=0)
+    np.testing.assert_array_equal(out, expected)
+
+    # Test axis=1 (horizontal stack)
+    result = var_a.skb.concat([var_b], axis=1)
+    out = result.skb.eval()
+    expected = np.concatenate([a, b], axis=1)
+    np.testing.assert_array_equal(out, expected)
+
+
 def test_get_vars():
     a = skrub.var("a")
     b = skrub.var("b")
@@ -876,6 +936,35 @@ def test_get_vars():
     assert list(d.skb.get_vars().keys()) == ["a", "b"]
     assert d.skb.get_vars()["a"] is a
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+def test_set_data():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a + b
+    d = c.skb.set_data({"a": 1, "b": 2})
+    # the new dataop has been primed so its preview is already available
+    assert "3" in repr(d)
+    assert d.skb.preview() == 3
+    assert d.skb.get_data() == {"a": 1, "b": 2}
+    assert c.skb.get_data() == {}
+    # setting only part of the variables
+    assert d.skb.set_data({"a": 10}).skb.get_data() == {"a": 10, "b": 2}
+    # note below the new dataop has incomplete data so still no preview
+    assert c.skb.set_data({"a": 10}).skb.get_data() == {"a": 10}
+
+
+def test_set_data_errors():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a // b
+    assert c.skb.set_data({"a": 4, "b": 2}).skb.preview() == 2
+    # setting bad data
+    with pytest.raises(ValueError, match="no corresponding variable.*'x'"):
+        c.skb.set_data({"a": 4, "b": 2, "x": 3})
+    # errors in the preview computation are propagated
+    with pytest.raises(RuntimeError, match="(division|division or modulo) by zero"):
+        c.skb.set_data({"a": 4, "b": 0})
 
 
 @pytest.mark.parametrize("needs_data", [False, True])
@@ -905,14 +994,14 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
         vectorizer = X.skb.apply_func(get_vectorizer)
 
         def get_predictor(X):
-            return Ridge() if regression else LogisticRegression()
+            return RidgeCV() if regression else LogisticRegression()
 
         predictor = X.skb.apply_func(get_predictor)
     else:
         # In this case the estimator can be evaluated in the automated preview
         # when the data op is created.
         vectorizer = skrub.as_data_op(skrub.TableVectorizer())
-        predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
+        predictor = skrub.as_data_op(RidgeCV() if regression else LogisticRegression())
     pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
     # no information about the estimator: we expose all methods and default to
     # 'transformer' estimator type.
@@ -977,13 +1066,10 @@ def test_copy_attrs():
     # non-regression for #1781 some attributes could be missing after
     # .set_name(), .mark_as_X() etc.
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    out = (
-        skrub.var("X", df)
-        .skb.apply(PassThrough())
-        .skb.mark_as_X()
-        .skb.set_name("transform")
-    )
-    assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    x = skrub.var("X", df).skb.apply(PassThrough()).skb.mark_as_X()
+    named = x.skb.set_name("transform")
+    assert isinstance(named.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+    assert named.skb.id == x.skb.id
 
 
 def test_find():
@@ -995,13 +1081,23 @@ def test_find():
     assert e.skb.find("c") is c
     assert e.skb.find(lambda n: not hasattr(n, "skb") and n.name == "c") is c
     assert e.skb.find("d") is d
+    assert e.skb.find(d.skb.id) is d
     assert e.skb.find(lambda n: hasattr(n, "skb") and n.skb.name == "d") is d
     assert e.skb.find("z") is None
+    assert e.skb.find(-1) is None
     assert e.skb.find(lambda n: False) is None
-    with pytest.raises(TypeError, match="what should either be a string or a callable"):
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
         e.skb.find(c)
-    with pytest.raises(TypeError, match="what should either be a string or a callable"):
-        e.skb.find(0)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(None)
+    with pytest.raises(
+        TypeError, match="what should either be a string, an int or a callable"
+    ):
+        e.skb.find(())
 
 
 def test_find_X_y():

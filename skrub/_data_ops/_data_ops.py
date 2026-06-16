@@ -37,7 +37,9 @@ import re
 import textwrap
 import traceback
 import types
+import uuid
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -252,6 +254,14 @@ class DataOpImpl:
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
+            # The uuid is like an auto-generated name. It behaves like the name
+            # (must be unique within a dataop, is preserved by clone, ...) and
+            # is used for the same things (find a node, inject a value for its
+            # output in the environment). It is less explicit / reliable but
+            # always available.
+            # It is not used internally for example to discover the graph
+            # topology: we rely on actual Python object ids for this.
+            self.uuid = uuid.uuid4().int
             self.description = None
             self.checked = False
 
@@ -264,6 +274,7 @@ class DataOpImpl:
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
+        new.uuid = self.uuid
         new.description = self.description
         new.checked = False
         return new
@@ -395,12 +406,12 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         if allow_skipping and not _config.get_config().get("eager_data_ops", True):
             return data_op
 
-        if not data_op._skrub_impl.checked:
-            try:
-                func_name = data_op._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
+        try:
+            func_name = data_op._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
 
+        if not data_op._skrub_impl.checked:
             conflicts = find_conflicts(data_op)
             if conflicts is not None:
                 raise ValueError(conflicts["message"])
@@ -733,9 +744,7 @@ class DataOp:
             graph = strip_xml_declaration(graph)
             has_graph = True
         except Exception:
-            graph = (
-                "Please install Pydot and GraphViz to display the computation graph."
-            )
+            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
             has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
@@ -946,7 +955,7 @@ def _check_var_value(value):
 class Var(DataOpImpl):
     "A `skrub.var()` DataOp."
 
-    _fields = ["name", "value"]
+    _fields = ["name", "value", "becomes_default"]
 
     def compute(self, e, mode, environment):
         if mode == "preview":
@@ -958,7 +967,9 @@ class Var(DataOpImpl):
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if environment.get("_skrub_use_var_values", False) and e.value is not NULL:
+        if (
+            e.becomes_default or environment.get("_skrub_use_var_values", False)
+        ) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(f"No value has been provided for {e.name!r}")
 
@@ -966,10 +977,16 @@ class Var(DataOpImpl):
         return self.value
 
     def __repr__(self):
-        return f"<Var {self.name!r}>"
+        default_type = (
+            "" if not self.becomes_default else f" {self.value.__class__.__name__}"
+        )
+        return f"<{self.__class__.__name__} {self.name!r}{default_type}>"
+
+    def __skrub_preview_heading__(self):
+        return "Result (also the default value)" if self.becomes_default else "Result"
 
 
-def var(name, value=NULL):
+def var(name, value=NULL, *, becomes_default=False):
     """Create a skrub variable.
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
@@ -990,6 +1007,11 @@ def var(name, value=NULL):
         available, it is used to provide a preview of the learner's results,
         to detect errors in the learner early, and to provide better help and
         tab-completion in interactive Python shells.
+    becomes_default : bool, default = False
+        If True, the provided ``value`` is not only used for previews but also
+        becomes the default value for this variable when creating a learner
+        (for example with :meth:`DataOp.skb.make_learner`). Thus passing this
+        variable in the environment is always optional.
 
     Returns
     -------
@@ -1053,7 +1075,7 @@ def var(name, value=NULL):
     ―――――――
     5
 
-    The values are also used as defaults for ``eval()``:
+    The values are also used for ``eval()`` when no environment is provided:
 
     >>> c.skb.eval()
     5
@@ -1064,12 +1086,38 @@ def var(name, value=NULL):
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
 
+    When passing ``becomes_default=True``, the preview value is treated as a
+    default value for that variable. It is kept when cloning the DataOp or
+    creating a Learner, and is always optional (does not need to be present) in
+    the provided environment.
+
+    >>> c = skrub.var('a', 0, becomes_default=True) + skrub.var('b', 1)
+    >>> c.skb.get_data()
+    {'a': 0, 'b': 1}
+    >>> c.skb.clone().skb.get_data()
+    {'a': 0}
+
+    For the learner 'b' is mandatory but 'a' is optional and has default value
+    0.
+
+    >>> c.skb.make_learner().fit_transform({'b': 10})
+    10
+    >>> c.skb.make_learner().fit_transform({'b': 10, 'a': 100})
+    110
+
     Much more information about skrub variables is provided in the examples
     gallery.
     """
     check_name(name, is_var=True)
     _check_var_value(value)
-    return DataOp(Var(name, value=value))
+    if not isinstance(becomes_default, bool):
+        raise TypeError(
+            "becomes_default should be a Boolean, "
+            f"got object of type {type(becomes_default)}: {becomes_default!r}"
+        )
+    if becomes_default and value is NULL:
+        raise TypeError("value must be provided when becomes_default is True.")
+    return DataOp(Var(name, value=value, becomes_default=becomes_default))
 
 
 def X(value=NULL):
@@ -1130,7 +1178,7 @@ def X(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("X", value=value)).skb.mark_as_X()
+    return DataOp(Var("X", value=value, becomes_default=False)).skb.mark_as_X()
 
 
 def y(value=NULL):
@@ -1192,7 +1240,7 @@ def y(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("y", value=value)).skb.mark_as_y()
+    return DataOp(Var("y", value=value, becomes_default=False)).skb.mark_as_y()
 
 
 class Value(DataOpImpl):
@@ -1915,35 +1963,45 @@ class Concat(DataOpImpl):
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
-        if not sbd.is_dataframe(e.first):
-            raise TypeError(
-                "`concat` can only be used with dataframes. "
-                "`.skb.concat` was accessed on an object of type "
-                f"{e.first.__class__.__name__!r}"
-            )
-        if sbd.is_dataframe(e.others):
-            raise TypeError(
-                "`concat` should be passed a list of dataframes. "
-                "If you have a single dataframe, wrap it in a list: "
-                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
-            )
-        idx, non_df = next(
-            ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
-            (None, None),
-        )
-        if non_df is not None:
-            raise TypeError(
-                "`concat` should be passed a list of dataframes: "
-                "`table_0.skb.concat([table_1, ...], axis=...)`. "
-                f"An object of type {non_df.__class__.__name__!r} "
-                f"was found at index {idx}."
-            )
-
         if e.axis not in (0, 1):
             raise ValueError(
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
-
+        if isinstance(e.others, np.ndarray) or sbd.is_dataframe(e.others):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes. "
+                "If you have a single array or dataframe, wrap it in a list: "
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
+            )
+        if not isinstance(e.others, Iterable):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes."
+                f"Got object of type {e.others.__class__.__name__!r}"
+            )
+        if not (isinstance(e.first, np.ndarray) or sbd.is_dataframe(e.first)):
+            raise TypeError(
+                "`concat` can only be used on a numpy array or a dataframe. "
+                "`.skb.concat` was accessed on an object of type "
+                f"{e.first.__class__.__name__!r}"
+            )
+        if isinstance(e.first, np.ndarray):
+            for idx, obj in enumerate(e.others):
+                if not isinstance(obj, np.ndarray):
+                    raise TypeError(
+                        "When accessed on a numpy array, `concat` should be passed a "
+                        "list of arrays: `array_0.skb.concat([array_1, ...], "
+                        f"axis=...)`. An object of type {obj.__class__.__name__!r} "
+                        f"was found at index {idx}."
+                    )
+            return np.concatenate([e.first, *e.others], axis=e.axis)
+        for idx, obj in enumerate(e.others):
+            if not sbd.is_dataframe(obj):
+                raise TypeError(
+                    "When accessed on a dataframe, `concat` should be passed a list "
+                    "of dataframes: `table_0.skb.concat([table_1, ...], axis=...)`. "
+                    f"An object of type {obj.__class__.__name__!r} "
+                    f"was found at index {idx}."
+                )
         if e.axis == 1:
             first = _check_column_names(e.first)
             others = list(map(_check_column_names, e.others))
@@ -1963,7 +2021,7 @@ class Concat(DataOpImpl):
 
     def __repr__(self):
         try:
-            detail = f": {len(self.others) + 1} dataframes"
+            detail = f": {len(self.others) + 1} tables"
         except Exception:
             detail = ""
         return f"<{self.__class__.__name__}{detail}>"

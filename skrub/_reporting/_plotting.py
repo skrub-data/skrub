@@ -69,6 +69,7 @@ _MATPLOTLIB_RC_PARAMS = {
     "boxplot.flierprops.color": _TEXT_COLOR_PLACEHOLDER,
     "boxplot.flierprops.markeredgecolor": _TEXT_COLOR_PLACEHOLDER,
     "boxplot.whiskerprops.color": _TEXT_COLOR_PLACEHOLDER,
+    "text.parse_math": False,
 }
 
 

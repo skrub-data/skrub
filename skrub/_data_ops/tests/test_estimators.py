@@ -36,8 +36,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
+from skrub._data_ops import _utils
 from skrub._data_ops._estimator import _SharedDict
-from skrub._data_ops._inspection import _has_graphviz
 
 #
 # testing utils
@@ -1157,7 +1157,7 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
@@ -1224,6 +1224,43 @@ def test_set_data_op_in_params():
     assert learner.fit_transform(data) == 30
     learner.set_params(data_op=e2)
     assert learner.fit_transform(data) == -10
+
+
+def test_get_set_named_params():
+    a = skrub.as_data_op("")
+    b = skrub.choose_from(["A", "B", "C"], name="b")
+    c = skrub.choose_from(["U", "V", "W"])
+    d = a + b + "_" + c
+    learner = d.skb.make_learner()
+    assert learner.fit_transform({}) == "A_U"
+    assert learner.get_named_params() == {"b": None}
+    learner.set_named_params(b=1)
+    assert learner.fit_transform({}) == "B_U"
+    assert learner.get_named_params() == {"b": 1}
+
+
+def test_set_named_params_value_or_index():
+    a = skrub.as_data_op(
+        [
+            skrub.choose_from(["A", "B", "C"], name="b"),
+            skrub.choose_bool(name="c"),
+            skrub.choose_int(100, 110, name="d"),
+        ]
+    )
+    learner = a.skb.make_learner()
+    assert learner.get_named_params() == {"b": None, "c": None, "d": None}
+    assert learner.describe_params() == {"b": "A", "c": True, "d": 105}
+    learner.set_named_params(b=1, c=1, d=107)
+    assert learner.get_named_params() == {"b": 1, "c": 1, "d": 107}
+    assert learner.describe_params() == {"b": "B", "c": False, "d": 107}
+    with pytest.raises(TypeError, match="must be a positional index.*'C'.*name='b'"):
+        learner.set_named_params(b="C")
+    with pytest.raises(TypeError, match="must be a positional index.*True.*name='c'"):
+        learner.set_named_params(c=True)
+    with pytest.raises(
+        IndexError, match="must be a positional index.*out of range.*3 outcomes"
+    ):
+        learner.set_named_params(b=7)
 
 
 def test_find_fitted_estimator():
@@ -1423,3 +1460,13 @@ def test_random_search_no_vars():
     pred = X.skb.apply(DummyClassifier(), y=y)
     search = pred.skb.make_grid_search(scoring="roc_auc").fit({})
     assert search.results_.shape[0] == 1
+
+
+def test_learner_docstring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    link = learner._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.SkrubLearner.html"
+    )

@@ -1,7 +1,9 @@
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
+import numbers
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import sklearn
 from sklearn import model_selection
@@ -14,8 +16,10 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
+from .._base import SkrubBaseEstimator
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
+from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
@@ -176,7 +180,7 @@ class _DataOpWrapperMixin(_CloudPickle):
 
 
 @set_module("skrub")
-class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
+class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
@@ -307,12 +311,218 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
+    def get_named_params(self):
+        """
+        Get the outcomes that have been set for named choices in the DataOp.
+
+        The returned dictionary can be used with :meth:`SkrubLearner.set_named_params`.
+        Only choices that have been given an explicit name are included in the result.
+
+        Returns
+        -------
+        dict
+            The choices set on this SkrubLearner. The key is the choice name.
+            For discrete choices (created with :func:`skrub.choose_from`,
+            :func:`skrub.choose_bool`, ...) the value is the index of the
+            selected outcome in the outcome list (not its value).
+
+        See Also
+        --------
+        SkrubLearner.set_named_params
+            Set the choices returned by ``get_named_params`` on a learner.
+
+        SkrubLearner.describe_params
+            Get a dictionary describing all choices. It cannot be used to set
+            parameters but is more helpful for manual inspection.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        See the documentation for :meth:`SkrubLearner.set_named_params` for
+        examples.
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        return {
+            name: v
+            for k, v in get_params(self.data_op).items()
+            if (name := data_op_choices[k].name) is not None
+        }
+
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
         if not deep:
             return params
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
+
+    def set_named_params(self, **params):
+        """
+        Set the tunable parameters (choices), indexed by choice name.
+
+        Typically, the passed dictionary is created by
+        :meth:`SkrubLearner.get_named_params`.
+
+        The choice outcomes are set in-place, i.e. the input SkrubLearner is
+        modified.
+
+        Parameters
+        ----------
+        params : dict
+           The key is the name of a skrub choice.
+
+           - For numeric choices (:func:`choose_int` and :func:`choose_bool`),
+             the value is the choice outcome i.e. the number that will be used
+             e.g. 0.05.
+           - For enumerated choices (:func:`choose_from`, :func:`choose_bool`,
+             :func:`optional`), the value is an int: the **index (position)**
+             of the outcome to select from the outcome list (or dict). The list
+             can be checked with ``choice.outcomes``.
+
+        See Also
+        --------
+        SkrubLearner.get_named_params
+            Get the dictionary of choices, which can be used to set them on
+            another learner.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.decomposition import PCA
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler
+        >>> from sklearn.linear_model import Ridge
+        >>> from sklearn.datasets import make_regression
+
+        >>> X, y = make_regression(random_state=0)
+        >>> scaler = skrub.choose_from(
+        ...     [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
+        ...     name="scaler",
+        ... )
+        >>> transform = (
+        ...     skrub.X(X)
+        ...     .skb.apply(scaler)
+        ...     .skb.apply(
+        ...         PCA(n_components=skrub.choose_int(10, 30, name="n_components"))
+        ...     )
+        ... )
+        >>> pred = transform.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.1, 10.0, log=True)), y=skrub.y(y)
+        ... )
+        >>> best_learner = pred.skb.make_randomized_search(
+        ...     fitted=True, random_state=0
+        ... ).best_learner_
+
+        We can inspect the best hyperparameters found by the search:
+
+        >>> best_learner.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11, 'choose_float(0.1, 10.0, log=True)': 0.351...}
+
+        Now suppose we want to transfer them to a learner for a different DataOp, for
+        example one that only does the transformation:
+
+        >>> transformer = transform.skb.make_learner()
+
+        This transformer has no values set, it uses the default parameters:
+
+        >>> transformer.describe_params()
+        {'scaler': 'MinMaxScaler()', 'n_components': 20}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 20)
+
+        We can get the params out of our best learner:
+
+        >>> best_learner.get_named_params()
+        {'scaler': 2, 'n_components': np.int64(11)}
+
+        Note that the ridge's ``alpha`` does not appear, as it has no name.
+
+        Also note that the value for the scaler is the outcome's **index**,
+        rather than its value. Here the SquashingScaler is the third item in the
+        outcome list:
+
+        >>> scaler.outcomes
+        [MinMaxScaler(), StandardScaler(), SquashingScaler()]
+
+        So we get ``'scaler': 2`` in the named params.
+
+        >>> transformer.set_named_params(**best_learner.get_named_params())
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11}
+
+        (note that our ``transformer`` has been modified in-place.)
+
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 11)
+
+        We can also set parameters manually:
+
+        >>> transformer.set_named_params(n_components=7)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 7}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 7)
+
+        Here also, note that for enumerated choices we must use the index:
+
+        >>> transformer.set_named_params(scaler=1)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'StandardScaler()', 'n_components': 7}
+
+        trying to set a value directly results in an error:
+
+        >>> best_learner.set_named_params(scaler=StandardScaler())
+        Traceback (most recent call last):
+            ...
+        TypeError: For enumerated choices, the value must be a positional index (int). Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        name_to_id = {
+            c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
+        }
+
+        # Check that values are indices in the list of outcomes
+        for name, value in params.items():
+            c = data_op_choices[name_to_id[name]]
+            if hasattr(c, "outcomes"):
+                # This is an enumerated choice (NumericChoices don't have `.outcomes`)
+                # In this case the value must be an index into the list of outcomes.
+                if not isinstance(value, numbers.Integral) or isinstance(
+                    value, (bool, np.bool_)
+                ):
+                    raise TypeError(
+                        "For enumerated choices, the value must be a positional "
+                        f"index (int) in the list of outcomes. Got value {value!r} of "
+                        f"type {value.__class__.__name__} for choice {c!r}."
+                    )
+                if not 0 <= value < len(c.outcomes):
+                    raise IndexError(
+                        "For enumerated choices, the value must be a positional "
+                        "index (int) in the list of outcomes. "
+                        f"Got index {value} out of range for choice {c!r} "
+                        f"with {len(c.outcomes)} outcomes: {c.outcomes}."
+                    )
+
+        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
+        return self
 
     def set_params(self, **params):
         if "data_op" in params:
@@ -482,9 +692,11 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
 
         Parameters
         ----------
-        what : str or callable
+        what : str, int or callable
             - If a string, it is the name (set with
               :meth:`DataOp.skb.set_name`) of the step we want to extract.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
             - If a callable, it is the search predicate: it accepts a DataOp
               and returns a Boolean. The first node for which it returns True
               is returned.
@@ -503,6 +715,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         DataOp.skb.find_X_y
             Find the nodes that have been marked with
             :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
 
         Examples
         --------
@@ -979,7 +1197,7 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
         yield split_info
 
 
-class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
+class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Base class for hyperparameter search objects.
 
     It defines some default implementations for getting results, plotting, and

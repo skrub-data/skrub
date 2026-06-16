@@ -4,7 +4,7 @@ from collections import UserDict
 from collections.abc import Iterable
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -12,11 +12,13 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._base import SkrubBaseEstimator
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
+from ._duration_to_float import DurationToFloat
 from ._select_cols import Drop
 from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
@@ -30,6 +32,8 @@ __all__ = ["TableVectorizer"]
 
 
 class PassThrough(SingleColumnTransformer):
+    _doc_link_module = ""
+
     def fit_transform(self, column, y=None):
         return column
 
@@ -125,6 +129,7 @@ def _get_preprocessors(
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
+    duration_to_float=False,
 ):
     cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
@@ -145,6 +150,9 @@ def _get_preprocessors(
         ),
         (ToDatetime(format=datetime_format), cols),
     ]
+
+    if duration_to_float:
+        transformers.append((DurationToFloat(), cols))
 
     match parse_numbers, cast_to_float32:
         case False, False:
@@ -176,7 +184,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, BaseEstimator):
+class Cleaner(TransformerMixin, SkrubBaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -292,6 +300,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
       it is forwarded to :class:`ToDatetime`. Otherwise, the format is inferred.
 
     - :class:`ToFloat`:
+
       - if ``parse_numbers=True``, apply :class:`ToFloat` on string columns,
         converting strings whose non-missing values can all be parsed as numbers
         to ``float32``;
@@ -302,12 +311,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings unless they are numerical,
-    categorical, or datetime. This step is controlled by the ``cast_to_str``
-    parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
-    When ``cast_to_str=True``, string conversion is applied.
+      categorical, or datetime. This step is controlled by the ``cast_to_str``
+      parameter. When ``cast_to_str=False`` (default), string conversion is
+      skipped. When ``cast_to_str=True``, string conversion is applied.
 
-    Example:
 
+
+    Examples
+    --------
+    >>> from skrub import Cleaner
     >>> import pandas as pd
     >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
     >>> Cleaner(parse_numbers=False).fit_transform(df).dtypes  # doctest: +SKIP
@@ -321,11 +333,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     num        ...
     f          float32
     dtype: object
-
-    Examples
-    --------
-    >>> from skrub import Cleaner
-    >>> import pandas as pd
     >>> df = pd.DataFrame({
     ...     'A': ['one', 'two', 'two', 'three'],
     ...     'B': ['02/02/2024', '23/02/2024', '12/03/2024', '13/03/2024'],
@@ -364,7 +371,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     dtype: object
 
     Columns can be excluded from processing by combining the ``Cleaner`` with
-    `:class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
+    :class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
     processing and keep it as a string, we can do:
 
     >>> from skrub import ApplyToCols
@@ -535,7 +542,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         return np.asarray(self.all_outputs_)
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator):
+class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
@@ -675,13 +682,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
-    ApplyToEachCol :
-        Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
-
-    ApplyToSubFrame :
-        Apply a given transformer jointly to all columns in a selection of columns.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
+    ApplyToCols :
+        Apply a given transformer to each column in a selection of columns. Combine
+        this transformer with the skrub selectors to select columns based on
+        advanced rules.
 
     DropUninformative :
         Drop columns that are considered uninformative, e.g., containing only
@@ -1029,6 +1033,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             cast_to_float32=True,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
+            duration_to_float=True,
         )
 
         self._encoders = []
