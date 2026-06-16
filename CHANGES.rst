@@ -11,6 +11,18 @@ Ongoing development
 
 New Features
 ------------
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
+- A parameter ``becomes_default`` has been added to :func:`var`. It allows
+  indicating that the provided preview ``value`` should also be treated as a
+  default value for this variable in all contexts (for example in a
+  SkrubLearner's method like ``fit`` or ``predict``).
+  :pr:`2082` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to attach new preview values to the variables in a DataOp
   with :meth:`DataOp.skb.set_data`. :pr:`2081` by
   :user:`Jérôme Dockès <jeromedockes>`.
@@ -19,9 +31,20 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is another type of sequence. :pr:`2100` by
+  :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
@@ -29,6 +52,11 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
+  :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+
 Bugfixes
 --------
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
@@ -73,6 +101,9 @@ New Features
 - A new dataframe generator, :func:`datasets.toy_cities`, has been added for
   use cases on dataframes with variable sizes and variable correlation between
   columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
+- A new selector function, :func:`selectors.drop`, has been added to drop columns
+  from a dataframe using a selector. It mirrors the behavior of :func:`selectors.select`.
+  :pr:`2108` by :user:`Mary Njoroge <Maryahcee>`.
 
 Changes
 -------

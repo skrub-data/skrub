@@ -123,6 +123,11 @@ def test_repr():
     Result:
     ―――――――
     'one two'
+    >>> skrub.var('a', 1, becomes_default=True)
+    <Var 'a' int>
+    Result (also the default value):
+    ――――――――――――――――――――――――――――――――
+    1
     >>> skrub.as_data_op({'a': 0})
     <Value dict>
     Result:
@@ -224,9 +229,9 @@ def test_repr():
 
     >>> X = skrub.X()
     >>> X.skb.concat([X, X],axis=1)
-    <Concat: 3 dataframes>
+    <Concat: 3 tables>
     >>> X.skb.concat([X, X],axis=0)
-    <Concat: 3 dataframes>
+    <Concat: 3 tables>
 
     When we do not know the length of the list of dataframes to concatenate
 

@@ -220,6 +220,62 @@ def select(df, selector):
     return _select_col_names(df, make_selector(selector).expand(df))
 
 
+def drop(df, selector):
+    """Apply a selector to a dataframe and return a dataframe without the \
+    selected columns.
+
+    ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
+    column name or list of column names.
+
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe to process.
+    selector : selector, str, or list
+        A selector object, column name, or list of column names indicating which
+        columns to drop.
+
+    Returns
+    -------
+    dataframe
+        The dataframe without the columns matched by the selector.
+
+    Examples
+    --------
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [210.0, 297.0],
+    ...         "width_mm": [188.5, 210.0],
+    ...         "kind": ["A5", "A4"],
+    ...         "ID": [5, 4],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      210.0     188.5   A5   5
+    1      297.0     210.0   A4   4
+
+    >>> s.drop(df, s.glob("*_mm"))
+      kind  ID
+    0   A5   5
+    1   A4   4
+
+    We can also pass column names directly:
+
+    >>> s.drop(df, ['height_mm', 'width_mm'])
+      kind  ID
+    0   A5   5
+    1   A4   4
+
+    """
+    all_cols = sbd.column_names(df)
+    matched_cols = make_selector(selector).expand(df)
+    remaining_cols = [col for col in all_cols if col not in matched_cols]
+    return _select_col_names(df, remaining_cols)
+
+
 class Selector:
     """Generic selector type, that returns set columns when applied.
 
