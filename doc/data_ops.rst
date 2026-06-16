@@ -9,6 +9,10 @@ A skrub DataOp is a complete machine learning pipeline —from data loading and
 wrangling to the final prediction— in a single object that can be fitted, tuned,
 cross-validated, and saved in a file like any scikit-learn estimator.
 
+By integrating the whole data processing, DataOps help to validate pipelines
+while **avoiding data leakage**, to **tune complex modelling choices**, and to keep
+track of important **fitted (learned) state**.
+
 To solve a machine-learning task we often need to combine multiple operations
 such as loading and filtering data, joining tables and computing aggregations,
 extracting numerical features, and fitting a classifier or regressor.
