@@ -679,13 +679,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
-    ApplyToEachCol :
-        Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
-
-    ApplyToSubFrame :
-        Apply a given transformer jointly to all columns in a selection of columns.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
+    ApplyToCols :
+        Apply a given transformer to each column in a selection of columns. Combine
+        this transformer with the skrub selectors to select columns based on
+        advanced rules.
 
     DropUninformative :
         Drop columns that are considered uninformative, e.g., containing only
