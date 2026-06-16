@@ -75,10 +75,28 @@ def test_dtype_selectors(df_module):
     assert s.categorical().expand(df) == ["cat-col"]
     if df_module.name == "polars":
         assert s.any_date().expand(df) == ["datetime-col", "date-col"]
+        assert s.object().expand(df) == []
     else:
         # pandas doesn't have a 'date' dtype, only datetime
         assert df_module.name == "pandas"
         assert s.any_date().expand(df) == ["datetime-col"]
+        object_cols = s.object().expand(df)
+        # `date-col` holds Python `datetime.date` instances and always falls
+        # back to `object`.
+        assert "date-col" in object_cols
+        assert "int-col" not in object_cols
+        assert "float-col" not in object_cols
+        assert "cat-col" not in object_cols
+        if df_module.description == "pandas-numpy-dtypes":
+            assert "bool-col" in object_cols
+            pandas_major = int(pd.__version__.split(".")[0])
+            if pandas_major < 3:
+                assert "str-col" in object_cols
+            else:
+                assert "str-col" not in object_cols
+        else:
+            assert "bool-col" not in object_cols
+            assert "str-col" not in object_cols
 
 
 def test_has_dtype(df_module):
@@ -101,10 +119,40 @@ def test_has_dtype(df_module):
 
 
 def test_dtype_pandas_object():
-    # Testing for behavior with object and string columns
+    # Behaviour of `string()` and `object()` on object and string columns.
     df = pd.DataFrame({"string-object": ["foo", "bar"], "object-object": ["baz", 42]})
 
     assert s.string().expand(df) == ["string-object"]
+    object_cols = s.object().expand(df)
+    assert "object-object" in object_cols
+    # The all-string column only carries the `object` dtype on pandas < 3.0.
+    pandas_major = int(pd.__version__.split(".")[0])
+    if pandas_major < 3:
+        assert "string-object" in object_cols
+    else:
+        assert "string-object" not in object_cols
+
+
+def test_object_selector_pandas_string_extension():
+    # Pandas extension-dtype string columns are not `object`.
+    df = pd.DataFrame(
+        {
+            "ext-string": pd.Series(["a", "b"]).convert_dtypes(),
+            "mixed": pd.Series(["a", 1]),
+        }
+    )
+    assert s.object().expand(df) == ["mixed"]
+
+
+def test_object_selector_polars():
+    pl = pytest.importorskip("polars")
+    df = pl.DataFrame(
+        {
+            "str-col": pl.Series(["a", "b"], dtype=pl.String),
+            "obj-col": pl.Series([object(), object()], dtype=pl.Object),
+        }
+    )
+    assert s.object().expand(df) == ["obj-col"]
 
 
 def test_cardinality_below(df_module, monkeypatch):

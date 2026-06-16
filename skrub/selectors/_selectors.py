@@ -15,6 +15,7 @@ __all__ = [
     "any_date",
     "categorical",
     "string",
+    "object",
     "boolean",
     "cardinality_below",
     "has_nulls",
@@ -518,6 +519,49 @@ def string():
 
     """
     return Filter(sbd.is_string, name="string")
+
+
+def object():
+    """
+    Select columns whose dtype is ``object`` (pandas) or ``pl.Object`` (polars).
+
+    Notes
+    -----
+    Before pandas 3.0, columns containing only strings have the ``object``
+    dtype and are selected. From pandas 3.0 onwards they have the ``string``
+    dtype and are not. Use :func:`~skrub.selectors.string` for a
+    version-independent selector.
+
+    See Also
+    --------
+    string :
+        Select columns that have a String data type.
+    has_dtype :
+        Select columns whose dtype matches one of the provided dtypes.
+
+    Examples
+    --------
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     dict(
+    ...         mixed=pd.Series(['A', 10]),
+    ...         numeric=pd.Series([1, 2]),
+    ...         string=pd.Series(['A', 'B']).convert_dtypes(),
+    ...     )
+    ... )
+    >>> df.dtypes
+    mixed       object
+    numeric      int64
+    string         ...
+    dtype: object
+
+    >>> s.select(df, s.object())
+      mixed
+    0     A
+    1    10
+    """
+    return Filter(sbd.is_object, name="object")
 
 
 def boolean():
