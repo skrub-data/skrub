@@ -56,6 +56,8 @@ Changes
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
 - The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
+  :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
