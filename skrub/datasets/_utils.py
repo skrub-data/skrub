@@ -55,7 +55,7 @@ DATASET_INFO = {
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_forecasting.zip",
             "https://osf.io/download/d8ykq",
         ],
-        "sha256": "15968327cb0f74150aebabae4057cfe1db6728951b37614ac7e3f2fb1456f2d5",
+        "sha256": "55d565f02298cb5006eb697775775170370f3b3ca96bfadd3447f1afa57b87b0",
     },
     "employee_salaries": {
         "urls": [

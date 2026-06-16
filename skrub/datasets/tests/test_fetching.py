@@ -200,4 +200,4 @@ def test_electricity_forecasting():
     )
     path = _fetching.fetch_electricity_forecasting()
     downloaded = [f.name for f in Path(path).iterdir() if f.is_file()]
-    assert files == set(downloaded)
+    assert set(downloaded) == files
