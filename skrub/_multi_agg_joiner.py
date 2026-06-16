@@ -6,9 +6,10 @@ from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub._agg_joiner import AggJoiner
-from skrub._base import SkrubBaseTransformer
 from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
+
+from ._base import SkrubBaseTransformer
 
 
 def _is_iterable_of_iterable_of_str(x):

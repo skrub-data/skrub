@@ -8,11 +8,10 @@ from sklearn.ensemble import (
     HistGradientBoostingRegressor,
 )
 
-from skrub._base import SkrubBaseTransformer
-
 from . import _dataframe as sbd
 from . import _join_utils, _utils
 from . import selectors as s
+from ._base import SkrubBaseTransformer
 from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer

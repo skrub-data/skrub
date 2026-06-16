@@ -3,7 +3,7 @@ from scipy import sparse
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state
 
-from skrub._base import SkrubBaseTransformer
+from ._base import SkrubBaseTransformer
 
 
 class Matching(SkrubBaseTransformer):

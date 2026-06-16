@@ -12,11 +12,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from skrub._base import SkrubBaseTransformer
-
 from . import _dataframe as sbd
 from . import _join_utils, _matching, _utils
 from . import selectors as s
+from ._base import SkrubBaseTransformer
 from ._check_input import CheckInputDataFrame
 from ._datetime_encoder import DatetimeEncoder
 from ._table_vectorizer import TableVectorizer

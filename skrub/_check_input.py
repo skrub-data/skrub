@@ -5,10 +5,9 @@ import pandas as pd
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from skrub._base import SkrubBaseTransformer
-
 from . import _dataframe as sbd
 from . import _join_utils, _utils
+from ._base import SkrubBaseTransformer
 from ._dispatch import dispatch
 
 __all__ = ["CheckInputDataFrame", "cast_column_names_to_strings"]

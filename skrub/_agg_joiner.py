@@ -16,9 +16,9 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _dataframe as sbd
 from skrub import _join_utils, _utils
 from skrub import selectors as s
-from skrub._base import SkrubBaseTransformer
 from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
+from ._base import SkrubBaseTransformer
 from ._check_input import CheckInputDataFrame
 
 try:

@@ -5,8 +5,9 @@ from sklearn.base import OneToOneFeatureMixin, TransformerMixin
 from sklearn.preprocessing import RobustScaler
 from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
-from skrub._base import SkrubBaseTransformer
 from skrub._sklearn_compat import validate_data
+
+from ._base import SkrubBaseTransformer
 
 
 def _mask_inf(X):
