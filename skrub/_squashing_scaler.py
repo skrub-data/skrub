@@ -5,7 +5,7 @@ from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.preprocessing import RobustScaler
 from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
-from skrub._base import BaseTransformer
+from skrub._base import SkrubBaseTransformer
 from skrub._sklearn_compat import validate_data
 
 
@@ -83,7 +83,7 @@ class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         return self.scale_ * (X - self.median_)
 
 
-class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseTransformer):
+class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseTransformer):
     r"""Perform robust centering and scaling followed by soft clipping.
 
     When features have large outliers, smooth clipping prevents the outliers from

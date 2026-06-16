@@ -1,11 +1,11 @@
 from sklearn.base import TransformerMixin, check_is_fitted
 
 from . import selectors as s
-from ._base import BaseTransformer
+from ._base import SkrubBaseTransformer
 from ._single_column_transformer import SingleColumnTransformer
 
 
-class SelectCols(TransformerMixin, BaseTransformer):
+class SelectCols(TransformerMixin, SkrubBaseTransformer):
     """Select a subset of a DataFrame's columns.
 
     A ``ValueError`` is raised if any of the provided column names are not in the
@@ -100,7 +100,7 @@ class SelectCols(TransformerMixin, BaseTransformer):
         return self.columns_
 
 
-class DropCols(TransformerMixin, BaseTransformer):
+class DropCols(TransformerMixin, SkrubBaseTransformer):
     """Drop a subset of a DataFrame's columns.
 
     The other columns are kept in their original order. A ``ValueError`` is raised if

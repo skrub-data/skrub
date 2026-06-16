@@ -16,6 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
+from .._base import SkrubBaseTransformer
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
 from . import _evaluation
@@ -179,7 +180,7 @@ class _DataOpWrapperMixin(_CloudPickle):
 
 
 @set_module("skrub")
-class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
+class SkrubLearner(_DataOpWrapperMixin, SkrubBaseTransformer):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
@@ -786,17 +787,6 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         DataOp).
         """
         return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
-
-    _doc_link_module = "skrub"
-
-    @property
-    def _doc_link_template(self):
-        return getattr(
-            self,
-            "__doc_link_template",
-            "https://skrub-data.org/stable/reference/generated/"
-            "{estimator_module}.{estimator_name}.html",
-        )
 
 
 def _to_Xy_pipeline(learner, environment):

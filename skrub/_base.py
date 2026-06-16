@@ -1,7 +1,14 @@
 from sklearn.base import BaseEstimator
 
 
-class BaseTransformer(BaseEstimator):
+class SkrubBaseTransformer(BaseEstimator):
+    """Base class for all skrub transformers.
+
+    This is a class that all skrub transformers inherit from.
+    For the moment, it's only used for the documentation url, but eventually
+    it will be used for other things as well.
+    """
+
     _doc_link_module = "skrub"
 
     # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
