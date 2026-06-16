@@ -4,7 +4,7 @@ from collections import UserDict
 from collections.abc import Iterable
 
 import numpy as np
-from sklearn.base import TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
@@ -12,7 +12,6 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._base import SkrubBaseTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
@@ -32,8 +31,6 @@ __all__ = ["TableVectorizer"]
 
 
 class PassThrough(SingleColumnTransformer):
-    _doc_link_module = ""
-
     def fit_transform(self, column, y=None):
         return column
 
@@ -184,7 +181,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, SkrubBaseTransformer):
+class Cleaner(TransformerMixin, BaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -542,7 +539,7 @@ class Cleaner(TransformerMixin, SkrubBaseTransformer):
         return np.asarray(self.all_outputs_)
 
 
-class TableVectorizer(TransformerMixin, SkrubBaseTransformer):
+class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
@@ -686,7 +683,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseTransformer):
         Apply a given transformer to each column in a selection of columns. Combine
         this transformer with the skrub selectors to select columns based on
         advanced rules.
-        Useful to complement the default heuristics of the ``TableVectorizer``.
 
     DropUninformative :
         Drop columns that are considered uninformative, e.g., containing only
