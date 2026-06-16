@@ -53,6 +53,7 @@ def _add_session_column_pandas(
         # Identify session boundaries based on time gaps
         session_boundaries = (time_diffs > session_gap) | (time_diffs.isna())
         # Assign session IDs based on cumulative sum of session boundaries
+        # cumsum - 1 to start session IDs at 0
         session_ids = session_boundaries.cumsum() - 1 + rolling_session_id
         # Update rolling_session_id for the next group
         rolling_session_id = session_ids.max() + 1
@@ -93,6 +94,7 @@ def _add_session_column_polars(
             time_diffs.is_nan() | time_diffs.is_null()
         ).fill_null(True)
         # Assign session IDs based on cumulative sum of session boundaries
+        # cumsum - 1 to start session IDs at 0
         session_ids = session_boundaries.cum_sum() - 1 + rolling_session_id
         # Update rolling_session_id for the next group
         rolling_session_id = session_ids.max() + 1
