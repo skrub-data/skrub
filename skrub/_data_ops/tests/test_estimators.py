@@ -1460,3 +1460,13 @@ def test_random_search_no_vars():
     pred = X.skb.apply(DummyClassifier(), y=y)
     search = pred.skb.make_grid_search(scoring="roc_auc").fit({})
     assert search.results_.shape[0] == 1
+
+
+def test_learner_docstring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    link = learner._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.SkrubLearner.html"
+    )

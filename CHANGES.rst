@@ -140,6 +140,9 @@ Changes
   <jeromedockes>`.
 - The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
   :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
+- Skrub estimators now correctly show links to the documentation in the HTML
+  representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
+  Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
