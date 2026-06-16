@@ -309,3 +309,17 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
             "Computing summary with different seeds should produce different "
             "associations."
         )
+
+
+def test_dollar_sign(df_module):
+    """
+    non-regression test for
+
+    https://github.com/skrub-data/skrub/issues/2097
+
+    without the right rcparams matplotlib interprets the $ as latex and crashes.
+    """
+    df = df_module.make_dataframe(
+        {"c": ["something with $$", "something else so column is not constant"]}
+    )
+    summarize_dataframe(df, with_plots=True, verbose=0)

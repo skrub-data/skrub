@@ -43,8 +43,10 @@ New Features
 
 Changes
 -------
-- :meth:`choose_from` now transparently converts `outcomes` to a list when it is another type of sequence. :pr:`2100` by
-  :user:`aidbar <aidbar>`.
+- Grouped Examples into subject-specific sections. :pr:`2102` by
+  :user:`Maureen Githaiga <maureen-githaiga>`.
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is
+  another type of sequence. :pr:`2100` by :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
@@ -64,8 +66,10 @@ Bugfixes
   durations to the total number of seconds (with fractional part). This is done
   by the new transformer :class:`DurationToFloat`. :pr:`2069` by
   :user:`Riccardo Cappuzzo <rcap107>`.
-
-
+- An error that could arise when running ``TableReport`` on dataframes containing
+  double dollar (``$$``) signs has been fixed.
+  :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
+  :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
 
 Deprecations
 ------------
@@ -140,6 +144,9 @@ Changes
   <jeromedockes>`.
 - The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
   :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
+- Skrub estimators now correctly show links to the documentation in the HTML
+  representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
+  Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
