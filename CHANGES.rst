@@ -35,8 +35,10 @@ New Features
   column, which groups together events that occur within the given session gap.
   Additionally, it is possible to provide a ``split_by`` column or list of columns
   (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
-  value. A new synthetic dataset generator (:meth:`~skrub.datasets.make_retail_events`)
-  has also been added.
+  value.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+-  A new synthetic dataset generator for timestamped data and session-based
+  operations has been added: :meth:`~skrub.datasets.make_retail_events`.
   :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
