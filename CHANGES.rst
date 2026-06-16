@@ -66,8 +66,10 @@ Bugfixes
   durations to the total number of seconds (with fractional part). This is done
   by the new transformer :class:`DurationToFloat`. :pr:`2069` by
   :user:`Riccardo Cappuzzo <rcap107>`.
-
-
+- An error that could arise when running ``TableReport`` on dataframes containing
+  double dollar (``$$``) signs has been fixed.
+  :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
+  :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
 
 Deprecations
 ------------
