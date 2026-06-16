@@ -12,7 +12,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
@@ -184,7 +184,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, SkrubBaseTransformer):
+class Cleaner(TransformerMixin, SkrubBaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -542,7 +542,7 @@ class Cleaner(TransformerMixin, SkrubBaseTransformer):
         return np.asarray(self.all_outputs_)
 
 
-class TableVectorizer(TransformerMixin, SkrubBaseTransformer):
+class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data

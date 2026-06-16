@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _utils
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
@@ -120,7 +120,7 @@ class RejectColumn(ValueError):
     pass
 
 
-class SingleColumnTransformer(SkrubBaseTransformer):
+class SingleColumnTransformer(SkrubBaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by

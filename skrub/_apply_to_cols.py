@@ -8,14 +8,14 @@ from sklearn.base import TransformerMixin, check_is_fitted
 from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 from ._sklearn_compat import _VisualBlock
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToCols(TransformerMixin, SkrubBaseTransformer):
+class ApplyToCols(TransformerMixin, SkrubBaseEstimator):
     """
     Apply a transformer to selected columns in a dataframe.
 

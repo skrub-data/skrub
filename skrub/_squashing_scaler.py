@@ -7,7 +7,7 @@ from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
 from skrub._sklearn_compat import validate_data
 
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 
 
 def _mask_inf(X):
@@ -53,7 +53,7 @@ def _soft_clip(X, max_absolute_value, mask_inf):
     return X
 
 
-class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseTransformer):
+class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseEstimator):
     """A variation of scikit-learn MinMaxScaler.
 
     A simple min-max scaler that centers the median to zero and scales
@@ -84,7 +84,7 @@ class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseTransformer
         return self.scale_ * (X - self.median_)
 
 
-class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseTransformer):
+class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseEstimator):
     r"""Perform robust centering and scaling followed by soft clipping.
 
     When features have large outliers, smooth clipping prevents the outliers from

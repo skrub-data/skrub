@@ -14,7 +14,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import selectors as s
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 from ._column_associations import column_associations
 from ._dataframe._common import raise_dispatch_unregistered_type
 from ._dispatch import dispatch
@@ -36,7 +36,7 @@ def _filter_associations_polars(obj, threshold):
     return obj.filter(pl.col("cramer_v") >= threshold)
 
 
-class DropSimilar(TransformerMixin, SkrubBaseTransformer):
+class DropSimilar(TransformerMixin, SkrubBaseEstimator):
     """Drop columns found too redundant to the rest of the dataframe,
     according to association defined by Cramér's V.
 

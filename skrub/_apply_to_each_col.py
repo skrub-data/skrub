@@ -6,7 +6,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _utils, selectors
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 from ._join_utils import pick_column_names
 from ._single_column_transformer import RejectColumn, is_single_column_transformer
 
@@ -16,7 +16,7 @@ __all__ = ["ApplyToEachCol"]
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToEachCol(SkrubBaseTransformer, TransformerMixin):
+class ApplyToEachCol(TransformerMixin, SkrubBaseEstimator):
     """
     Map a transformer to columns in a dataframe.
 

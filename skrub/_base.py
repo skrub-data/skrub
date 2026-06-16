@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator
 
 
-class SkrubBaseTransformer(BaseEstimator):
+class SkrubBaseEstimator(BaseEstimator):
     """Base class for all skrub transformers.
 
     This is a class that all skrub transformers inherit from.

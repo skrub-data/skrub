@@ -3,7 +3,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _utils, selectors
-from ._base import SkrubBaseTransformer
+from ._base import SkrubBaseEstimator
 from ._join_utils import pick_column_names
 
 __all__ = ["ApplyToSubFrame"]
@@ -12,7 +12,7 @@ __all__ = ["ApplyToSubFrame"]
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToSubFrame(TransformerMixin, SkrubBaseTransformer):
+class ApplyToSubFrame(TransformerMixin, SkrubBaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
