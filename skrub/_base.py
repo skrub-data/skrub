@@ -2,11 +2,14 @@ from sklearn.base import BaseEstimator
 
 
 class SkrubBaseEstimator(BaseEstimator):
-    """Base class for all skrub transformers.
+    """Base class for all skrub estimators.
 
     This is a class that all skrub transformers inherit from.
-    For the moment, it's only used for the documentation url, but eventually
-    it will be used for other things as well.
+    For the moment, it's only used to set the documentation url for estimator diagrams.
+
+    Think twice before adding anything to this class: it is a base class of *all*
+    skrub estimators, including meta-estimators like ApplyToCols,
+    the SingleColumnTransformer base class, and the SkrubLearners created by DataOps.
     """
 
     _doc_link_module = "skrub"
