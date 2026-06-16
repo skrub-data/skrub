@@ -2,11 +2,13 @@ import warnings
 
 import joblib
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
+
+from skrub._base import SkrubBaseTransformer
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
@@ -20,7 +22,7 @@ DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 
 
-class InterpolationJoiner(TransformerMixin, BaseEstimator):
+class InterpolationJoiner(TransformerMixin, SkrubBaseTransformer):
     """Join with a table augmented by machine-learning predictions.
 
     This is similar to a usual equi-join, but instead of looking for actual

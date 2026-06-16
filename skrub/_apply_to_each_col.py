@@ -1,8 +1,10 @@
 import itertools
 
 from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
+
+from skrub._base import SkrubBaseTransformer
 
 from . import _dataframe as sbd
 from . import _utils, selectors
@@ -15,7 +17,7 @@ __all__ = ["ApplyToEachCol"]
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToEachCol(BaseEstimator, TransformerMixin):
+class ApplyToEachCol(SkrubBaseTransformer, TransformerMixin):
     """
     Map a transformer to columns in a dataframe.
 

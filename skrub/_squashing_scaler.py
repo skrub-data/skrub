@@ -1,7 +1,7 @@
 import numbers
 
 import numpy as np
-from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
+from sklearn.base import OneToOneFeatureMixin, TransformerMixin
 from sklearn.preprocessing import RobustScaler
 from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
@@ -52,7 +52,7 @@ def _soft_clip(X, max_absolute_value, mask_inf):
     return X
 
 
-class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
+class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseTransformer):
     """A variation of scikit-learn MinMaxScaler.
 
     A simple min-max scaler that centers the median to zero and scales

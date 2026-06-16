@@ -10,12 +10,13 @@ from itertools import product
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils, _utils
 from skrub import selectors as s
+from skrub._base import SkrubBaseTransformer
 from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 from ._check_input import CheckInputDataFrame
@@ -168,7 +169,7 @@ def check_other_inputs(operations, suffix):
     return operations, suffix
 
 
-class AggJoiner(TransformerMixin, BaseEstimator):
+class AggJoiner(TransformerMixin, SkrubBaseTransformer):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
@@ -407,7 +408,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         return self.all_outputs_
 
 
-class AggTarget(TransformerMixin, BaseEstimator):
+class AggTarget(TransformerMixin, SkrubBaseTransformer):
     """Aggregate a target `y` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.

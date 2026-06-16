@@ -1,11 +1,12 @@
 import numpy as np
 from scipy import sparse
-from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state
 
+from skrub._base import SkrubBaseTransformer
 
-class Matching(BaseEstimator):
+
+class Matching(SkrubBaseTransformer):
     """Base class for fuzzy-join matching & distance rescaling.
 
     This class is a helper for the ``Joiner`` and ``fuzzy_join``. It is
