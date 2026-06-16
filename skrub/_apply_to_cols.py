@@ -9,6 +9,7 @@ from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
 from ._base import SkrubBaseTransformer
+from ._sklearn_compat import _VisualBlock
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
@@ -431,6 +432,20 @@ class ApplyToCols(TransformerMixin, SkrubBaseTransformer):
         check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
+
+    def _sk_visual_block_(self):
+        # This is needed because cases like ApplyToCols(TableVectorizer())
+        # would show the TableVectorizer as a parallel block, which would not
+        # add the documentation link. With this override the problem is fixed.
+        # The same problem happens for ApplyToCols(ApplyToCols(...)) (not that
+        # someone should do that, but it is possible)
+
+        return _VisualBlock(
+            "serial",
+            [self.transformer],
+            names=[self.transformer.__class__.__name__],
+            name_details=[str(self.transformer)],
+        )
 
     def __getattr__(self, name):
         if name == "transformers_" and isinstance(
