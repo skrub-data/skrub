@@ -89,7 +89,8 @@ def _add_session_column_polars(
         time_diffs = group_df_sorted[timestamp_col].diff().dt.total_seconds()
         # Identify session boundaries based on time gaps
         session_boundaries = (time_diffs > session_gap) | (
-            time_diffs.is_nan()
+            # need both is_nan and is_null to handle older versions of polars
+            time_diffs.is_nan() | time_diffs.is_null()
         ).fill_null(True)
         # Assign session IDs based on cumulative sum of session boundaries
         session_ids = session_boundaries.cum_sum() - 1 + rolling_session_id
