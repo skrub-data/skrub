@@ -5,7 +5,7 @@ How to define custom filters for the TableReport
 ================================================
 
 It is possible to define custom filters for the |TableReport| using either column
-names, or :ref:`skrub selectors< user_guide_selectors>`.
+names, or :ref:`skrub selectors <user_guide_selectors>`.
 
 By defining a custom filter, it becomes easier to show and work directly on a given
 subset of columns.
@@ -22,8 +22,8 @@ pattern (here, starting with "metric"):
 
 Custom filters should be defined as a dictionary where the key is the name of the
 filter that should be displayed in the generated report, and the value is either
-a list of columns, the index of the columns (first column has index 0 etc.), or
-a skrub selector like in this case:
+a list of columns, the indices of the columns (first column has index 0 etc.), or
+a skrub selector, as shown in this example:
 
 >>> filters = {"only_metrics": s.glob("metric*")}
 >>> report = TableReport(df, column_filters=filters)

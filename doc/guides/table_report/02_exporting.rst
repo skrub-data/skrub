@@ -56,6 +56,6 @@ insight about a given table.
 .. warning::
 
   No sanitization of the input data is performed, and the report includes raw data
-  (column names and cell values). Therefore, it should not used on untrusted data,
+  (column names and cell values). Therefore, it should not be used on untrusted data,
   or when the resulting summary may be too large as it could lead to security risks
   or performance problems.

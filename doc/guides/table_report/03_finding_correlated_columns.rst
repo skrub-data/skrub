@@ -14,7 +14,7 @@ associations.
 Reported metrics include `Cramer’s V statistic <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
 and `Pearson’s Correlation Coefficient <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_.
 The result is returned as a dataframe that contains the column name and idx for the
-left and right table and both associations; results are sorted in descending order
+left and the right table, and both associations; results are sorted in descending order
 by Cramer’s V association.
 
 This can be useful to have access to the information used in the |TableReport|
