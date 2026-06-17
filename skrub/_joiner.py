@@ -5,7 +5,7 @@ The Joiner provides fuzzy joining as a scikit-learn transformer.
 from functools import partial
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
@@ -15,6 +15,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _join_utils, _matching, _utils
 from . import selectors as s
+from ._base import SkrubBaseEstimator
 from ._check_input import CheckInputDataFrame
 from ._datetime_encoder import DatetimeEncoder
 from ._table_vectorizer import TableVectorizer
@@ -76,7 +77,7 @@ def _make_vectorizer(table, string_encoder, rescale):
     return make_pipeline(skrubber, make_column_transformer(*transformers))
 
 
-class Joiner(TransformerMixin, BaseEstimator):
+class Joiner(TransformerMixin, SkrubBaseEstimator):
     """Augment features in a main table by fuzzy-joining an auxiliary table to it.
 
     This transformer is initialized with an auxiliary table `aux_table`. It
