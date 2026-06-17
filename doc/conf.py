@@ -24,6 +24,13 @@ from pathlib import Path
 
 import jinja2
 
+# Allow skipping jupyterlite to speed up builds (e.g. html-noplot)
+_SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
+    "1",
+    "true",
+    "yes",
+)
+
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
 from data_ops_report import create_data_ops_report
@@ -76,6 +83,8 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
     "autoshortsummary",
+    "sphinx_llm.txt",
+    "sphinx_markdown_builder",
 ]
 
 try:
@@ -85,18 +94,21 @@ try:
 except ImportError:
     print("ERROR: sphinxext.opengraph import failed")
 
-try:
-    import jupyterlite_sphinx  # noqa: F401
+if not _SKIP_JUPYTERLITE:
+    try:
+        import jupyterlite_sphinx  # noqa: F401
 
-    extensions.append("jupyterlite_sphinx")
-    with_jupyterlite = True
-except ImportError:
-    # In some cases we don't want to require jupyterlite_sphinx to be installed,
-    # e.g. the doc-min-dependencies build
-    warnings.warn(
-        "jupyterlite_sphinx is not installed, you need to install it "
-        "if you want JupyterLite links to appear in each example"
-    )
+        extensions.append("jupyterlite_sphinx")
+        with_jupyterlite = True
+    except ImportError:
+        # In some cases we don't want to require jupyterlite_sphinx to be installed,
+        # e.g. the doc-min-dependencies build
+        warnings.warn(
+            "jupyterlite_sphinx is not installed, you need to install it "
+            "if you want JupyterLite links to appear in each example"
+        )
+        with_jupyterlite = False
+else:
     with_jupyterlite = False
 
 import sphinx_autosummary_accessors

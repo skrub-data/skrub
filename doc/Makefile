@@ -33,17 +33,17 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 html-noplot:
-	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D markdown_uri_doc_suffix="html.md" -D llms_txt_enabled=1 -D llms_txt_full_build=0 -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 linkcheck:
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Linkcheck finished. Results are in $(BUILDDIR)/linkcheck."
 
 linkcheck-noplot:
-	$(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -D llms_txt_enabled=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
 	@echo
 	@echo "Linkcheck (no plot) finished. Results are in $(BUILDDIR)/linkcheck-noplot."
 
