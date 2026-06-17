@@ -40,6 +40,9 @@ New Features
   Additionally, negative numbers indicated with parentheses can be converted to the
   regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
   Gómez Jiménez <gabrielapgomezji>`.
+- TabularPipeline now uses the estimator when given a pipeline to determine the parameters of the TableVectorizer
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+
 
 Changes
 -------
