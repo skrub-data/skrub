@@ -1,4 +1,5 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
+.. |DropSimilar| replace:: :class:`~skrub.DropSimilar`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_associations:
@@ -17,7 +18,8 @@ left and right table and both associations; results are sorted in descending ord
 by Cramer’s V association.
 
 This can be useful to have access to the information used in the |TableReport|
-for later use (e.g., to select which columns to drop).
+for later use (e.g., to select which columns to drop). These associations are
+also used by the |DropSimilar| transformer to select which columns should be dropped.
 
 .. code-block::
 
