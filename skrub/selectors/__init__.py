@@ -2,7 +2,29 @@
 Helpers for selecting columns in a dataframe.
 =============================================
 
-See the User Guide selectors page for the public-facing part of the selector API.
+``skrub.selectors`` provides a composable API for selecting columns by
+datatype, name, cardinality, null ratio, and more.  Typical usage:
+
+>>> from skrub import selectors as s
+>>> sel = s.numeric() | s.boolean()  # all numeric or boolean columns
+>>> sel(df)  # returns the matching subset of `df`
+
+See the User Guide selectors page for the public-facing API.
+
+Available selectors
+-------------------
+:func:`all`, :func:`numeric`, :func:`float`, :func:`integer`,
+:func:`boolean`, :func:`string`, :func:`categorical`,
+:func:`any_date`, :func:`has_nulls`, :func:`cardinality_below`,
+:func:`has_dtype`, :func:`cols`, :func:`glob`, :func:`regex`,
+:func:`filter`, :func:`filter_names`, :func:`make_selector`,
+:func:`inv`, :func:`select`
+:class:`Selector`
+
+Privacy note
+------------
+Anything not documented in the User Guide or not re-exported from the
+top-level ``skrub`` package is private and should not be used directly.
 
 Defining new selectors
 ----------------------
