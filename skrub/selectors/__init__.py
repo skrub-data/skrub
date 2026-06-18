@@ -5,9 +5,9 @@ Helpers for selecting columns in a dataframe.
 ``skrub.selectors`` provides a composable API for selecting columns by
 datatype, name, cardinality, null ratio, and more.  Typical usage:
 
->>> from skrub import selectors as s
->>> sel = s.numeric() | s.boolean()  # all numeric or boolean columns
->>> sel(df)  # returns the matching subset of `df`
+from skrub import selectors as s
+sel = s.numeric() | s.boolean()  # all numeric or boolean columns
+sel(df)  # returns the matching subset of `df`
 """
 
 from . import _selectors
