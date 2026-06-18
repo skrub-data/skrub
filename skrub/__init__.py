@@ -13,7 +13,7 @@ Examples: https://skrub-data.org/stable/auto_examples/index.html
 
 Privacy note
 ------------
-Any module or function that is not in the __all__ list of this and the other
+Any module or function that is not imported in this or any of the other
 ``__init__.py`` files is considered **private** and should not be used directly.
 """
 
