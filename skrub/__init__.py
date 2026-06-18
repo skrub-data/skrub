@@ -9,7 +9,7 @@ from pathlib import Path as _Path
 
 #: Path to the Markdown documentation bundled with the package.
 #: Use ``skrub.__docs_dir__`` to access it programmatically.
-__docs_dir__ = _Path(__file__).parent / "data" / "docs"
+__docs_dir__ = _Path(__file__).parent / "_docs"
 
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
