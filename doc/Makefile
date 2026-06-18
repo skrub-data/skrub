@@ -67,10 +67,14 @@ markdown-noplot:
 # get bundled with the wheel. Run after html, html-noplot, markdown, or
 # markdown-noplot.
 install-docs:
-	rm -rf ../skrub/data/docs
-	mkdir -p ../skrub/data/docs
-	cp -r $(BUILDDIR)/markdown/. ../skrub/data/docs/
-	find ../skrub/data/docs -name "*.md" | wc -l | xargs echo "Number of markdown files installed:"
+	rm -rf ../skrub/_docs
+	mkdir -p ../skrub/_docs
+	cp -r $(BUILDDIR)/markdown/auto_examples/. ../skrub/_docs/
+	cp -r $(BUILDDIR)/markdown/auto_tutorials/. ../skrub/_docs/
+	cp -r $(BUILDDIR)/markdown/guides/. ../skrub/_docs/
+	cp -r $(BUILDDIR)/markdown/modules/. ../skrub/_docs/
+	cp -r $(BUILDDIR)/markdown/*.md ../skrub/_docs/
+	find ../skrub/_docs -name "*.md" | wc -l | xargs echo "Number of markdown files installed:"
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

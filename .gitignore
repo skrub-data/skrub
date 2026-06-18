@@ -71,7 +71,7 @@ doc/sg_execution_times.rst
 doc/_templates/demo_table_report_generated.html
 doc/reference/*.rst
 doc/benchmark_indications.rst
-skrub/data/*
+skrub/_docs/*
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
