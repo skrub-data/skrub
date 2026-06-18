@@ -69,11 +69,15 @@ markdown-noplot:
 install-docs:
 	rm -rf ../skrub/_docs
 	mkdir -p ../skrub/_docs
-	cp -r $(BUILDDIR)/markdown/auto_examples/. ../skrub/_docs/
-	cp -r $(BUILDDIR)/markdown/auto_tutorials/. ../skrub/_docs/
-	cp -r $(BUILDDIR)/markdown/guides/. ../skrub/_docs/
-	cp -r $(BUILDDIR)/markdown/modules/. ../skrub/_docs/
+	mkdir -p ../skrub/_docs/examples
+	mkdir -p ../skrub/_docs/tutorials
+	mkdir -p ../skrub/_docs/guides
+	cp -r ../examples/* ../skrub/_docs/examples/
+	cp -r ../doc/tutorials/* ../skrub/_docs/tutorials/
+	cp -r $(BUILDDIR)/markdown/guides/* ../skrub/_docs/guides
+	cp -r $(BUILDDIR)/markdown/modules/* ../skrub/_docs/guides
 	cp -r $(BUILDDIR)/markdown/*.md ../skrub/_docs/
+	cp -r $(BUILDDIR)/html/llms.txt ../skrub/_docs/
 	find ../skrub/_docs -name "*.md" | wc -l | xargs echo "Number of markdown files installed:"
 
 # Catch-all target: route all unknown targets to Sphinx using the new
