@@ -49,7 +49,7 @@ linkcheck:
 	@echo "Linkcheck finished. Results are in $(BUILDDIR)/linkcheck."
 
 linkcheck-noplot:
-	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -D llms_txt_enabled=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
 	@echo
 	@echo "Linkcheck (no plot) finished. Results are in $(BUILDDIR)/linkcheck-noplot."
 

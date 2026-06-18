@@ -6,13 +6,9 @@ skrub: Machine learning with dataframes.
 data.  It helps clean, encode, and transform dataframes into features
 ready for scikit-learn or other ML frameworks.
 
-Docs: https://skrub-data.org/stable/reference/index.html
-User Guide: https://skrub-data.org/stable/documentation.html
+Bundled docs: ``skrub.__docs_dir__``
+Online docs: https://skrub-data.org/stable/reference/index.html
 Source: https://github.com/skrub-data/skrub/
-Examples: https://skrub-data.org/stable/auto_examples/index.html
-
-The Markdown documentation is bundled with the package and can be accessed
-via ``skrub.__docs_dir__``.
 """
 
 from pathlib import Path as _Path

@@ -227,8 +227,8 @@ python = "~=3.11.0"
 python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
-build-doc = { cmd = "make html", cwd = "doc" }
-build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+build-doc = { cmd = "make html && make install-docs", cwd = "doc" }
+build-doc-quick = { cmd = "make html-noplot && make install-docs", cwd = "doc" }
 clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
