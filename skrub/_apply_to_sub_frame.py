@@ -265,7 +265,7 @@ class ApplyToSubFrame(TransformerMixin, SkrubBaseEstimator):
 
     # set_output api compatibility
 
-    def get_feature_names_out(self):
+    def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
 
         Returns

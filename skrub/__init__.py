@@ -1,5 +1,15 @@
 """
-skrub: Prepping tables for machine learning.
+skrub: Machine learning with dataframes.
+=============================================
+
+``skrub`` facilitates machine learning with tabular
+data.  It helps clean, encode, and transform dataframes into features
+ready for scikit-learn or other ML frameworks.
+
+Docs: https://skrub-data.org/stable/reference/index.html
+User Guide: https://skrub-data.org/stable/documentation.html
+Source: https://github.com/skrub-data/skrub/
+Examples: https://skrub-data.org/stable/auto_examples/index.html
 
 The Markdown documentation is bundled with the package and can be accessed
 via ``skrub.__docs_dir__``.
@@ -73,25 +83,20 @@ __all__ = [
     "eval_mode",
     "TableReport",
     "tabular_pipeline",
+    "ApplyToCols",
     "DatetimeEncoder",
     "DurationToFloat",
     "ToDatetime",
-    "Joiner",
-    "fuzzy_join",
-    "GapEncoder",
-    "InterpolationJoiner",
-    "MinHashEncoder",
-    "SimilarityEncoder",
+    "ToFloat",
+    "ToCategorical",
     "TableVectorizer",
+    "TextEncoder",
+    "StringEncoder",
     "Cleaner",
     "DropSimilar",
     "DropUninformative",
     "deduplicate",
-    "ToCategorical",
     "to_datetime",
-    "AggJoiner",
-    "MultiAggJoiner",
-    "AggTarget",
     "SelectCols",
     "DropCols",
     "Drop",
@@ -102,17 +107,22 @@ __all__ = [
     "choose_int",
     "choose_bool",
     "selectors",
-    "TextEncoder",
-    "StringEncoder",
     "column_associations",
     "SquashingScaler",
     "patch_display",
     "unpatch_display",
     "get_config",
     "set_config",
+    "GapEncoder",
+    "MinHashEncoder",
+    "SimilarityEncoder",
+    "AggJoiner",
+    "MultiAggJoiner",
+    "AggTarget",
+    "Joiner",
+    "fuzzy_join",
+    "InterpolationJoiner",
     "config_context",
-    "ApplyToCols",
-    "ToFloat",
     "core",
     "__docs_dir__",
 ]
