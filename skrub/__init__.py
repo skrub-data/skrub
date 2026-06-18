@@ -89,7 +89,6 @@ __all__ = [
     "DropSimilar",
     "DropUninformative",
     "deduplicate",
-    "deduplicate",
     "to_datetime",
     "SelectCols",
     "DropCols",
