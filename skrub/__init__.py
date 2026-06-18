@@ -1,5 +1,5 @@
 """
-skrub: Prepping tables for machine learning.
+skrub: Machine learning with dataframes.
 =============================================
 
 ``skrub`` facilitates machine learning with tabular
