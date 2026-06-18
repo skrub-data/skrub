@@ -63,6 +63,15 @@ markdown-noplot:
 	@echo
 	@echo "Markdown build (no plot) finished. The markdown files are in $(BUILDDIR)/markdown."
 
+# Copy the generated markdown docs into the skrub/ package tree so they
+# get bundled with the wheel. Run after html, html-noplot, markdown, or
+# markdown-noplot.
+install-docs:
+	rm -rf ../skrub/data/docs
+	mkdir -p ../skrub/data/docs
+	cp -r $(BUILDDIR)/markdown/. ../skrub/data/docs/
+	find ../skrub/data/docs -name "*.md" | wc -l | xargs echo "Number of markdown files installed:"
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile

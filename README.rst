@@ -28,6 +28,14 @@ Website: https://skrub-data.org/
 See our `examples <https://skrub-data.org/stable/auto_examples>`_, or check out
 the `learning materials <https://skrub-data.org/skrub-materials/index.html>`_.
 
+The documentation (in Markdown format) is also bundled with the package itself.
+After installing, you can find it at:
+
+.. code-block:: python
+
+    import skrub
+    print(skrub.__docs_dir__)
+
 Installation
 ------------
 

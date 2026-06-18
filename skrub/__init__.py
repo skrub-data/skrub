@@ -1,8 +1,15 @@
 """
 skrub: Prepping tables for machine learning.
+
+The Markdown documentation is bundled with the package and can be accessed
+via ``skrub.__docs_dir__``.
 """
 
 from pathlib import Path as _Path
+
+#: Path to the Markdown documentation bundled with the package.
+#: Use ``skrub.__docs_dir__`` to access it programmatically.
+__docs_dir__ = _Path(__file__).parent / "data" / "docs"
 
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
@@ -80,7 +87,6 @@ __all__ = [
     "DropSimilar",
     "DropUninformative",
     "deduplicate",
-    "deduplicate",
     "ToCategorical",
     "to_datetime",
     "AggJoiner",
@@ -108,4 +114,5 @@ __all__ = [
     "ApplyToCols",
     "ToFloat",
     "core",
+    "__docs_dir__",
 ]
