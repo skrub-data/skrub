@@ -10,11 +10,6 @@ Docs: https://skrub-data.org/stable/reference/index.html
 User Guide: https://skrub-data.org/stable/documentation.html
 Source: https://github.com/skrub-data/skrub/
 Examples: https://skrub-data.org/stable/auto_examples/index.html
-
-Privacy note
-------------
-Any module or function that is not imported in this or any of the other
-``__init__.py`` files is considered **private** and should not be used directly.
 """
 
 from pathlib import Path as _Path
