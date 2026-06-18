@@ -223,16 +223,32 @@ salary = full_data["current_annual_salary"].skb.mark_as_y()
 #
 # We simply replace the value by the special "choice" object produced by skrub
 # in our pipeline, and it becomes a tunable hyperparameter of our skrub
-# learner. Here we want to tune the choice of encoder applied to
-# high-cardinality categorical columns (:class:`StringEncoder` or
-# :class:`MinHashEncoder`), and the learning rate of the
-# :class:`sklearn.ensemble.HistGradientBoostingRegressor`.
+# learner. Here we want to tune:
+#
+# - the choice of encoder applied to high-cardinality categorical columns
+#   (:class:`StringEncoder` or :class:`~sklearn.preprocessing.TargetEncoder`)
+# - for the StringEncoder, the number of components
+# - the learning rate of
+#   the :class:`~sklearn.ensemble.HistGradientBoostingRegressor`.
+#
+# **Note:** choices are not restricted to estimators or their hyperparameters,
+# we can tune any value used anywhere in a pipeline, or the choice between
+# different pipelines; more details :ref:`here <user_guide_data_ops_nesting_choices>`.
 
-encoder = skrub.choose_from(
-    {"lse": skrub.StringEncoder(), "minhash": skrub.MinHashEncoder()}, name="encoder"
+from sklearn.preprocessing import TargetEncoder
+
+n_components = skrub.choose_int(10, 80, name="n_components")  # choose int in [10, 80[
+
+encoder = skrub.choose_from(  # choosing between 2 different estimators
+    {
+        "lse": skrub.StringEncoder(n_components=n_components),  # nesting choices
+        "target": TargetEncoder(),
+    },
+    name="encoder",
 )
+
 pred = employee_data.skb.apply(
-    skrub.TableVectorizer(high_cardinality=encoder)
+    skrub.TableVectorizer(high_cardinality=encoder), y=salary
 ).skb.apply(
     HistGradientBoostingRegressor(
         learning_rate=skrub.choose_float(0.01, 0.7, log=True, name="learning_rate")
@@ -249,7 +265,9 @@ print(pred.skb.describe_param_grid())
 # hyperparameter samplers, live interactive visualization of the search with
 # ``optuna-dashboard``, stopping and resuming searches, etc.
 
-search = pred.skb.make_randomized_search(backend="optuna", fitted=True)
+search = pred.skb.make_randomized_search(
+    backend="optuna", fitted=True, n_iter=16, random_state=0
+)
 search.results_
 
 # %%
