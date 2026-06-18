@@ -63,6 +63,8 @@ dev = [
   "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxext-opengraph",
+  "sphinx-llms-txt",
+  "sphinx-markdown-builder",
   "sphinx-autosummary-accessors",
   "statsmodels",
 
@@ -124,7 +126,7 @@ sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
-sphinx-llm = "*"
+sphinx-llms-txt = "*"
 sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
