@@ -2,6 +2,7 @@
 
 .. |ApplyToCols| replace:: :class:`ApplyToCols`
 .. |TableVectorizer| replace:: :class:`TableVectorizer`
+.. |selectors| replace:: :mod:`skrub.selectors`
 .. |s.string| replace:: :meth:`~skrub.selectors.string`
 .. |s.numeric| replace:: :meth:`~skrub.selectors.numeric`
 .. |RejectColumn| replace:: :class:`core.RejectColumn`
@@ -14,7 +15,7 @@
 
 .. _user_guide_multiple_columns:
 
-Transforming selected columns with |ApplyToCols|
+Transforming only some columns with |ApplyToCols|
 ===========================================================
 
 Very often and for various reasons, transformers must be applied only to some of the
@@ -22,22 +23,22 @@ columns in a dataframe. For example, all numeric columns in a dataframe may need
 to be scaled at the same time, while string columns should be left alone.
 While the heuristics used by the :class:`TableVectorizer` are usually good enough
 to apply the proper transformers to different datatypes, using it may not be an
-option in all cases. In scikit-learn pipelines, the column selection operation can
-be done with the :class:`~sklearn.compose.ColumnTransformer`.
+option in all cases.
 
-Skrub provides the |ApplyToCols| transformer to achieve the same results with
-a larger degree of control over which columns are being transformed.
-|ApplyToCols| maps a transformer to columns in a dataframe, so that all
-columns that satisfy a certain condition are transformed, while the others are
-left untouched.
+|ApplyToCols| (optionally paired with the |selectors|) allows to transform specific
+columns with a large degree of control: |ApplyToCols| maps a transformer to columns
+in a dataframe, so that all columns that satisfy a certain condition are transformed,
+while the others are left untouched. |ApplyToCols| and the |selectors| are similar
+to scikit-learn's :class:`~sklearn.compose.ColumnTransformer`.
 
-.. tip::
 
-    If a skrub transformer has a ``cols`` parameter to specify a column list,
-    that can be a selector as well. Selectors give more control over which columns
-    are being transformed: they are discussed at length in the
-    :ref:`selectors user guide<user_guide_selectors>`.
+Using selectors to choose or exclude columns
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If a skrub transformer has a ``cols`` parameter to specify a column list,
+that can be a selector as well. Selectors give more control over which columns
+are being transformed: they are discussed at length in the
+:ref:`selectors user guide<user_guide_selectors>`.
 
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
 leaving the non-selected columns unchanged. In this example, we want to apply
@@ -110,7 +111,7 @@ id  city_Madrid  city_Paris  city_Rome  date_year  date_month  date_day  date_to
 
 Note that the column "id" was not encoded and was instead left as-is.
 
-Dealing with columns that cannot be handled by a transformer
+Rejecting columns that cannot be handled by a transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 |ApplyToCols| can allow the underlying encoder to decide which columns it can be applied to.
