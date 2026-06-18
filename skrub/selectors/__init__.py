@@ -7,7 +7,7 @@ datatype, name, cardinality, null ratio, and more.  Typical usage:
 
 from skrub import selectors as s
 sel = s.numeric() | s.boolean()  # all numeric or boolean columns
-sel(df)  # returns the matching subset of `df`
+s.select(df, sel)  # returns the matching subset of `df`
 """
 
 from . import _selectors
