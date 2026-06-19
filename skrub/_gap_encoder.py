@@ -87,8 +87,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         n-grams counts.
     max_iter : int, default=5
         Maximum number of iterations on the input data.
-    ngram_range : int 2-tuple, default=(2, 4)
-       The lower and upper boundaries of the range of n-values for different
+    ngram_range : int 2-tuple (min_n, max_n), default=(2, 4)
+        The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
