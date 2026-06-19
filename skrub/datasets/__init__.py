@@ -1,3 +1,19 @@
+"""
+Datasets: fetching real-world data and generating synthetic data.
+=================================================================
+
+Skrub bundles ready-to-use datasets (fetched from the web on first use)
+and synthetic generators for examples and experimentation.
+
+Downloaded datasets are cached in the SKB_DATA_DIRECTORY environment variable
+(default: ``~/.skrub_data``).
+
+**Fetching** functions are defined in _fetching.py and start with `fetch_`.
+They download real-world datasets for regression or classification.
+**Generating** helpers are defined in _generating.py and start with `make_` or `toy_`.
+They create small synthetic dataframes for quick demos.
+"""
+
 from ._fetching import (
     fetch_bike_sharing,
     fetch_california_housing,
