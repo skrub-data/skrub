@@ -134,7 +134,7 @@ def _stack_symmetric_associations(associations, df):
         right_indices[order],
         associations[order],
     )
-    col_names = np.asarray(list(map(str, sbd.column_names(df))))
+    col_names = np.asarray(sbd.column_names(df))
     left_column_names, right_column_names = (
         col_names[left_indices],
         col_names[right_indices],
