@@ -1,6 +1,0 @@
-prune doc/
-prune examples/
-prune .github/
-prune .binder/
-prune build_tools/
-prune htmlcov/
