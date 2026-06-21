@@ -529,7 +529,7 @@ def object():
     -----
     Before pandas 3.0, columns containing only strings have the ``object``
     dtype and are selected. From pandas 3.0 onwards they have the ``string``
-    dtype and are not. Use :func:`~skrub.selectors.string` for 
+    dtype and are not. Use :func:`~skrub.selectors.string` for
     selecting strings.
 
     See Also
