@@ -80,23 +80,7 @@ def test_dtype_selectors(df_module):
         # pandas doesn't have a 'date' dtype, only datetime
         assert df_module.name == "pandas"
         assert s.any_date().expand(df) == ["datetime-col"]
-        object_cols = s.object().expand(df)
-        # `date-col` holds Python `datetime.date` instances and always falls
-        # back to `object`.
-        assert "date-col" in object_cols
-        assert "int-col" not in object_cols
-        assert "float-col" not in object_cols
-        assert "cat-col" not in object_cols
-        if df_module.description == "pandas-numpy-dtypes":
-            assert "bool-col" in object_cols
-            pandas_major = int(pd.__version__.split(".")[0])
-            if pandas_major < 3:
-                assert "str-col" in object_cols
-            else:
-                assert "str-col" not in object_cols
-        else:
-            assert "bool-col" not in object_cols
-            assert "str-col" not in object_cols
+        assert s.object().expand(df) == df.dtypes[df.dtypes == object].index.tolist()
 
 
 def test_has_dtype(df_module):
@@ -123,14 +107,7 @@ def test_dtype_pandas_object():
     df = pd.DataFrame({"string-object": ["foo", "bar"], "object-object": ["baz", 42]})
 
     assert s.string().expand(df) == ["string-object"]
-    object_cols = s.object().expand(df)
-    assert "object-object" in object_cols
-    # The all-string column only carries the `object` dtype on pandas < 3.0.
-    pandas_major = int(pd.__version__.split(".")[0])
-    if pandas_major < 3:
-        assert "string-object" in object_cols
-    else:
-        assert "string-object" not in object_cols
+    assert s.object().expand(df) == df.dtypes[df.dtypes == object].index.tolist()
 
 
 def test_object_selector_pandas_string_extension():
