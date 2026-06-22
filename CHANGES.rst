@@ -62,8 +62,9 @@ Changes
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
-- The package wheel has been updated so that it includes the User Guide and examples
-  in Markdown format.
+- The package build has been updated and improved to reduce its size and include the
+  user guide and examples with the package, so that it is now possible to access
+  it directly from the wheel rather than having to rely on the online docs.
   :pr:`2173` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
