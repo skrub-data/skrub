@@ -7,6 +7,10 @@ data.  It helps clean, encode, and transform dataframes into features
 ready for scikit-learn or other ML frameworks.
 
 Bundled docs: ``skrub.__docs_dir__``
+Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
+Bundled user guide: ``skrub.__docs_dir__ / "guides"``
+Bundled examples: ``skrub.__docs_dir__ / "examples"``
+
 Online docs: https://skrub-data.org/stable/reference/index.html
 Source: https://github.com/skrub-data/skrub/
 """

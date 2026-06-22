@@ -94,13 +94,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.setuptools.package-data]
-skrub = [
-  "_docs/**/*.md",
-  "_docs/**/*.py",
-  "_docs/**/*.css",
-  "_docs/**/*.js",
-  "_docs/**/*.txt",
-]
+skrub = ["_docs/**/*.md", "_docs/**/*.py", "_docs/**/*.txt"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
@@ -372,6 +366,10 @@ log_cli_level = "INFO"
 xfail_strict = true
 addopts = ["--doctest-modules", "--strict-config", "--strict-markers"]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+# Docs include examples in py format, this prevents them from running when pytest
+# the tests
+norecursedirs = ["skrub/_docs"]
+
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
