@@ -591,9 +591,10 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         the TableVectorizer; the columns are passed to the transformer without
         any modification. A column is not allowed to appear twice in
         ``specific_transformers``.
-        Consider using :class:`~skrub.ApplyToCols` to apply a transformer to multiple
-        columns at once, or the :ref:`skrub Data Ops <user_guide_data_ops>` for
-        more complex pre-processing.
+        Consider wrapping the ``TableVectorizer`` in  :class:`~skrub.ApplyToCols`
+        to select or exclude specific columns from the processing. Alternatively,
+        the :ref:`skrub Data Ops <user_guide_data_ops>` allow for more complex
+        pre-processing.
 
     drop_null_fraction : float or None, default=1.0
         Fraction of null above which the column is dropped. If `drop_null_fraction` is
