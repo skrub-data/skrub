@@ -63,7 +63,7 @@ This tutorial walks through the main components of the DataOps on a simple
 example:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    auto_tutorials/1111_data_ops_quick_tour
 
