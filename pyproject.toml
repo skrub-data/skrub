@@ -94,7 +94,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.setuptools.package-data]
-skrub = ["_docs/**/*.md", "_docs/**/*.py", "_docs/**/*.txt"]
+skrub = ["_docs/**/*.rst", "_docs/**/*.txt"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
