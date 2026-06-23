@@ -134,7 +134,7 @@ def _stack_symmetric_associations(associations, df):
         right_indices[order],
         associations[order],
     )
-    col_names = np.asarray(sbd.column_names(df))
+    col_names = np.asarray(list(map(str, sbd.column_names(df))))
     left_column_names, right_column_names = (
         col_names[left_indices],
         col_names[right_indices],
@@ -302,9 +302,11 @@ def _melt(df, left_col, right_col, val):
 def _melt_pandas(df, left_col, right_col, val):
     # Deal with multi-level index and columns
     if df.index.nlevels > 1:
-        df.index = df.index.to_flat_index().astype("string")
+        df.index = df.index.to_flat_index()
+    df.index = df.index.astype("string")
     if df.columns.nlevels > 1:
-        df.columns = df.columns.to_flat_index().astype("string")
+        df.columns = df.columns.to_flat_index()
+    df.columns = df.columns.astype("string")
     return df.melt(ignore_index=False, var_name=right_col, value_name=val).reset_index(
         names=left_col
     )
