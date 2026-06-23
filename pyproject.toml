@@ -94,7 +94,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.setuptools.package-data]
-skrub = ["_docs/**/*.rst", "_docs/**/*.txt"]
+skrub = ["_docs/**/*.rst", "_docs/**/*.py"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
@@ -285,6 +285,7 @@ exclude = [
   "dist",
   "doc/_build",
   "doc/auto_examples",
+  "skrub/_docs/*.py",
   "build",
   "pixi.lock",
 ]
