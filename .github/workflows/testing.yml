@@ -24,7 +24,7 @@ jobs:
           - ci-py314-polars-without-pyarrow
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.68.0
@@ -47,7 +47,7 @@ jobs:
     outputs:
       run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Test against nightly dependencies
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.68.0
