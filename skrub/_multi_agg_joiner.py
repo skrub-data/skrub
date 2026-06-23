@@ -2,12 +2,14 @@
 The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 """
 
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
+
+from ._base import SkrubBaseEstimator
 
 
 def _is_iterable_of_iterable_of_str(x):
@@ -17,7 +19,7 @@ def _is_iterable_of_iterable_of_str(x):
     )
 
 
-class MultiAggJoiner(TransformerMixin, BaseEstimator):
+class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
     """Extension of the :class:`AggJoiner` to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the `cols`
@@ -29,8 +31,9 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     .. warning::
         The auxiliary table is stored in memory as part of the state of the transformer,
         which can lead to high memory usage if the auxiliary table is large.
-        Consider using the skrub Data Ops and a standard dataframe library (Pandas
-        or Polars) to perform the aggregation instead.
+        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>` and
+        a standard dataframe library (Pandas or Polars) to perform the aggregation
+        instead.
 
     Parameters
     ----------
