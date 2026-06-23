@@ -34,6 +34,9 @@ def _example_data_dict():
     }
 
 
+collect_ignore_glob = ["_docs/**/*.py"]
+
+
 _DATAFRAME_MODULES_INFO = {}
 _DATAFRAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
     **{
