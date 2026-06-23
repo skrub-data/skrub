@@ -94,17 +94,3 @@ def _tested_estimators():
         TableVectorizer,
     ]:
         yield Estimator()
-
-
-# TODO: remove the skip when the scikit-learn common test will be more lenient towards
-# the string categorical data:
-# xref: https://github.com/scikit-learn/scikit-learn/pull/26860
-# TODO: this test fails because pytest v10 deprecates generators in parametrize
-# and this is a sklearn built-in, so it has to be fixed in scikit-learn before
-# we can remove the skip and run this test again.
-# @pytest.mark.skip(
-#     "Common tests in scikit-learn are not allowing for categorical string data."
-# )
-# @parametrize_with_checks(list(_tested_estimators()))
-# def test_estimators_compatibility_sklearn(estimator, check, request):
-#     check(estimator)

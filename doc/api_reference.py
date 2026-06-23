@@ -327,6 +327,7 @@ API_REFERENCE = {
                     "datasets.fetch_country_happiness",
                     "datasets.fetch_credit_fraud",
                     "datasets.fetch_drug_directory",
+                    "datasets.fetch_electricity_forecasting",
                     "datasets.fetch_employee_salaries",
                     "datasets.fetch_flight_delays",
                     "datasets.fetch_medical_charge",
