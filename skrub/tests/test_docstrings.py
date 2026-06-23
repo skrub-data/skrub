@@ -183,7 +183,7 @@ def filter_errors(errors, method, estimator_cls=None):
 @skip_docstring_tests
 @pytest.mark.parametrize(
     ["estimator_cls", "method"],
-    get_methods_to_validate(),
+    list(get_methods_to_validate()),
 )
 def test_estimator_docstrings(estimator_cls, method, request):
     base_import_path = estimator_cls.__module__
@@ -216,7 +216,7 @@ def test_estimator_docstrings(estimator_cls, method, request):
 @skip_docstring_tests
 @pytest.mark.parametrize(
     ["func", "name"],
-    get_functions_to_validate(),
+    list(get_functions_to_validate()),
 )
 def test_function_docstrings(func, name, request):
     import_path = ".".join([func.__module__, name])

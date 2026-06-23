@@ -16,6 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
+from .._base import SkrubBaseEstimator
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
 from . import _evaluation
@@ -179,7 +180,7 @@ class _DataOpWrapperMixin(_CloudPickle):
 
 
 @set_module("skrub")
-class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
+class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
@@ -1196,7 +1197,7 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
         yield split_info
 
 
-class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
+class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Base class for hyperparameter search objects.
 
     It defines some default implementations for getting results, plotting, and
