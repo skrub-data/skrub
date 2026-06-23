@@ -74,6 +74,9 @@ Bugfixes
   double dollar (``$$``) signs has been fixed.
   :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
   :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
+- An error that happened when running ``TableReport`` or ``column_associations``
+  on some dataframes with non-string column names has been fixed in :pr:`2179`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
