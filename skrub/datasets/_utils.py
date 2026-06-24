@@ -50,6 +50,13 @@ DATASET_INFO = {
         ],
         "sha256": "0c3885894baf02fc787109801ec2c34cc25cd4a31e0066a16941b74157474887",
     },
+    "electricity_forecasting": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_forecasting.zip",
+            "https://osf.io/download/d8ykq",
+        ],
+        "sha256": "6ad239a828a5280deb4943c0f91be248483105fdd15f4544b878918671ca6113",
+    },
     "employee_salaries": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/employee_salaries.zip",
@@ -245,7 +252,7 @@ def load_simple_dataset(dataset_name, data_home=None):
     return bunch
 
 
-def load_dataset_files(dataset_name, data_home):
+def download_dataset(dataset_name, data_home):
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name
@@ -270,7 +277,11 @@ def load_dataset_files(dataset_name, data_home):
 
     if not datafiles_dir.exists():
         _extract_archive(dataset_dir, archive_path)
+    return datafiles_dir
 
+
+def load_dataset_files(dataset_name, data_home):
+    datafiles_dir = download_dataset(dataset_name, data_home)
     bunch = Bunch()
 
     # If there is a file named <dataset_name>.csv, we load the path as the main
