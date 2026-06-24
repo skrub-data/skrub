@@ -44,6 +44,9 @@ New Features
   columns (the bin count and edges, and numbers of low and high outliers). Now
   ``json()`` contains all the information shown in the report html rendering,
   including the plots. :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
+- Added :func:`skrub.selectors.object` to select columns with the ``object``
+  (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
+  <omkar-334>`.
 
 Changes
 -------

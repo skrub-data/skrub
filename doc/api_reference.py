@@ -158,6 +158,7 @@ API_REFERENCE = {
                     "selectors.inv",
                     "selectors.make_selector",
                     "selectors.numeric",
+                    "selectors.object",
                     "selectors.regex",
                     "selectors.select",
                     "selectors.string",
