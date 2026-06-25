@@ -29,23 +29,39 @@ html:
 	rm -rf $(BUILDDIR)/html/_images
 	#rm -rf _build/doctrees/
 	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	# Build markdown sources so llms.txt links point to .md files
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	cp -r $(BUILDDIR)/markdown/. $(BUILDDIR)/html/_sources/
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 html-noplot:
-	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D markdown_uri_doc_suffix="html.md" -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	# Build markdown sources so llms.txt links point to .md files
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	cp -r $(BUILDDIR)/markdown/. $(BUILDDIR)/html/_sources/
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 linkcheck:
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Linkcheck finished. Results are in $(BUILDDIR)/linkcheck."
 
 linkcheck-noplot:
-	$(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
 	@echo
 	@echo "Linkcheck (no plot) finished. Results are in $(BUILDDIR)/linkcheck-noplot."
+
+markdown:
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	@echo
+	@echo "Markdown build finished. The markdown files are in $(BUILDDIR)/markdown."
+
+markdown-noplot:
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	@echo
+	@echo "Markdown build (no plot) finished. The markdown files are in $(BUILDDIR)/markdown."
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

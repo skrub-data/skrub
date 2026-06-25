@@ -65,6 +65,11 @@ Changes
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The package build has been updated to include the user guide and examples with
+  the package, so that it is now possible to access it directly from the wheel
+  rather than having to rely on the online docs. Docs and examples are now stored
+  in ``skrub/_docs``, rather than in the root of the repository.
+  :pr:`2173` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
