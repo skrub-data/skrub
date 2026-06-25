@@ -29,8 +29,8 @@ Skrub provides the |ApplyToCols| transformer and the
 :ref:`selectors<user_guide_selectors>` to achieve the same results with a larger
 degree of control over which columns are being transformed.
 |ApplyToCols| maps a transformer to columns in a dataframe, so that all
-columns that satisfy a certain condition are transformed, while the others are
-left untouched.
+columns that satisfy the condition given by the user are transformed, while the
+others are left untouched.
 
 .. tip::
 

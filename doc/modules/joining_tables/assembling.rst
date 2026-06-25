@@ -11,6 +11,8 @@ datetime) with imprecise correspondence.
 
 .. warning::
 
+    To be considered when using one of the joiners:
+
     **Joiners are designed for small-to-medium datasets.**
 
     - **Memory**: The auxiliary table is stored in the transformer state.
