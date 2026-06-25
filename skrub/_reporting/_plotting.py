@@ -195,6 +195,11 @@ def _get_range(values, frac=0.2, factor=3.0):
 
 def _get_safe_hist_range(values):
     # make sure numpy can find bin edges between the range low and high bounds
+    if not (
+        np.issubdtype(values.dtype, np.floating)
+        or np.issubdtype(values.dtype, np.integer)
+    ):
+        return None
     vmin, vmax = values.min(), values.max()
     delta = max(np.spacing(vmin), np.spacing(vmax))
     if vmax - vmin > 12 * delta:
