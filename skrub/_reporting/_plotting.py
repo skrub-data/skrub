@@ -173,7 +173,10 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 def _get_range(values, frac=0.2, factor=3.0):
-    finite_values = values[np.isfinite(values)]
+    if np.issubdtype(values.dtype, np.floating):
+        finite_values = values[np.isfinite(values)]
+    else:
+        finite_values = values
     if not len(finite_values):
         return 0, 0
     min_value, low_p, high_p, max_value = np.quantile(
