@@ -173,8 +173,11 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 def _get_range(values, frac=0.2, factor=3.0):
+    finite_values = values[np.isfinite(values)]
+    if not len(finite_values):
+        return 0, 0
     min_value, low_p, high_p, max_value = np.quantile(
-        values, [0.0, frac, 1.0 - frac, 1.0]
+        finite_values, [0.0, frac, 1.0 - frac, 1.0]
     )
     delta = high_p - low_p
     if not delta:
@@ -195,7 +198,7 @@ def _get_range(values, frac=0.2, factor=3.0):
 
 def _get_safe_hist_range(values):
     # make sure numpy can find bin edges between the range low and high bounds
-    if not (
+    if not len(values) or not (
         np.issubdtype(values.dtype, np.floating)
         or np.issubdtype(values.dtype, np.integer)
     ):
