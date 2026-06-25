@@ -7,8 +7,8 @@ data.  It helps clean, encode, and transform dataframes into features
 ready for scikit-learn or other ML frameworks.
 
 Bundled docs: ``skrub.__docs_dir__``
-Bundled getting started: ``skrub.__docs_dir__ / "auto_tutorials"``
-Bundled examples: ``skrub.__docs_dir__ / "auto_examples"``
+Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
+Bundled examples: ``skrub.__docs_dir__ / "examples"``
 
 Online docs: https://skrub-data.org/stable/reference/index.html
 Source: https://github.com/skrub-data/skrub/
@@ -16,7 +16,7 @@ Source: https://github.com/skrub-data/skrub/
 
 from pathlib import Path as _Path
 
-#: Path to the Markdown documentation bundled with the package.
+#: Path to the documentation bundled with the package.
 #: Use ``skrub.__docs_dir__`` to access it programmatically.
 __docs_dir__ = _Path(__file__).parent / "_docs"
 

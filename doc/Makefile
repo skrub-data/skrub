@@ -63,16 +63,6 @@ markdown-noplot:
 	@echo
 	@echo "Markdown build (no plot) finished. The markdown files are in $(BUILDDIR)/markdown."
 
-# skrub/_docs is the single source of truth for guide/content RST files.
-# They are synced into doc/ automatically at build time by conf.py.
-# Use this target to verify the two trees are in sync (no-op if they match).
-check-docs-sync:
-	diff -rq --exclude="*.pyc" ../skrub/_docs/ . \
-		--exclude="CHANGES.rst" --exclude="CONTRIBUTING.rst" \
-		--exclude="RELEASE_PROCESS.rst" \
-		$(addprefix --exclude=,$(notdir $(wildcard ../skrub/_docs/*.rst))) \
-		&& echo "skrub/_docs and doc/ are in sync" || true
-
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile

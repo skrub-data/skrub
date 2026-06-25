@@ -34,6 +34,8 @@ def _example_data_dict():
     }
 
 
+# this is needed to ignore the skrub/_docs folder when running pytest
+# otherwise, the examples in the folder are executed any time test discovery is run
 collect_ignore_glob = ["_docs/**/*.py"]
 
 
