@@ -16,12 +16,21 @@
 #
 import os
 import runpy
+import shutil
 import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
 
 import jinja2
+
+# -- Copy files for docs --------------------------------------------------
+#
+# We avoid duplicating the information, but we do not use symlinks to be
+# able to build the docs on Windows
+shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
+shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
+shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
 
 # Allow skipping jupyterlite to speed up builds (e.g. html-noplot)
 _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
