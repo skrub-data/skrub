@@ -674,3 +674,8 @@ def test_column_filters_fail(df_module, filter, expected, match):
     )
     with pytest.raises(expected, match=match):
         TableReport(df, column_filters=filter)
+
+
+def test_table_report_dict(air_quality):
+    report = TableReport(air_quality)
+    assert report.dict() == json.loads(report.json())
