@@ -3,8 +3,8 @@
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_sharing:
-How to export and share the |TableReport|
------------------------------------------
+How to export and share the |TableReport| for use by other tools
+----------------------------------------------------------------
 
 The |TableReport| is generated as a standalone HTML file that includes the report
 data, the plots, and the Javascript necessary to provide interactivity.
@@ -31,7 +31,8 @@ respectively.
 
 The report can be exported in JSON format, which allows structured
 access to the data and statistics used to build the report with
-:func:`~skrub.TableReport.json`.
+:func:`~skrub.TableReport.json`. The schema of the JSON data is reported in
+:ref:`table_report_json_schema`.
 
 .. code-block::
 

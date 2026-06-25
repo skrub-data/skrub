@@ -25,8 +25,9 @@ to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
 be done with the :class:`~sklearn.compose.ColumnTransformer`.
 
-Skrub provides the |ApplyToCols| transformer to achieve the same results with
-a larger degree of control over which columns are being transformed.
+Skrub provides the |ApplyToCols| transformer and the
+:ref:`selectors<user_guide_selectors>` to achieve the same results with larger
+degree of control over which columns are being transformed.
 |ApplyToCols| maps a transformer to columns in a dataframe, so that all
 columns that satisfy a certain condition are transformed, while the others are
 left untouched.
@@ -35,8 +36,7 @@ left untouched.
 
     If a skrub transformer has a ``cols`` parameter to specify a column list,
     that can be a selector as well. Selectors give more control over which columns
-    are being transformed: they are discussed at length in the
-    :ref:`selectors user guide<user_guide_selectors>`.
+    are being transformed.
 
 
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
