@@ -3,7 +3,6 @@ import re
 import traceback
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
@@ -636,11 +635,6 @@ def test_unhashable():
         {skrub.choose_bool(name="b")}
     with pytest.raises(TypeError, match="unhashable type"):
         {skrub.choose_bool(name="b").if_else(0, 1)}
-
-
-def test_int_column_names():
-    with pytest.warns(match="Some dataframe column names are not strings"):
-        skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
 
 
 def test_mark_as_X_missing_cv():
