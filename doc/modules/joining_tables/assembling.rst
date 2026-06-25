@@ -71,4 +71,4 @@ in the right table (the table to be added). This is done by estimating the value
 that the missing rows would have by training a machine learning model on the data
 we have access to.
 
-This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_0080_interpolation_join.py>`.
+This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_03_joining_0080_interpolation_join.py>`.

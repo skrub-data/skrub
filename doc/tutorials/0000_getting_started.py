@@ -112,7 +112,8 @@ results["test_score"]
 # To handle rich tabular data and feed it to a machine learning model, the
 # pipeline returned by |tabular_pipeline| preprocesses and encodes
 # strings, categories and dates using the |TableVectorizer|.
-# See its documentation or :ref:`sphx_glr_auto_examples_0010_encodings.py` for
+# See its documentation or
+# :ref:`sphx_glr_auto_examples_01_encoding_0010_encodings.py` for
 # more details. An overview of the chosen defaults is available in
 # :ref:`user_guide_tabular_pipeline`.
 
@@ -190,7 +191,8 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # which uses pre-trained language models retrieved from the HuggingFace hub to
 # create meaningful text embeddings.
 # See :ref:`user_guide_encoders_index` for more details on all the categorical encoders
-# provided by skrub, and :ref:`sphx_glr_auto_examples_0010_encodings.py` for a
+# provided by skrub, and
+# :ref:`sphx_glr_auto_examples_01_encoding_0010_encodings.py` for a
 # comparison between the different methods.
 #
 
