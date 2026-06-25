@@ -28,3 +28,8 @@ def test_histogram():
     data = pd.Series([0.0])
     _, hist = _plotting.histogram(data)
     assert (hist["n_low_outliers"], hist["n_high_outliers"]) == (0, 0)
+
+    low = np.float32(10.0)
+    high = np.nextafter(low, 11.0)
+    data = pd.Series([low, high])
+    _, hist = _plotting.histogram(data)

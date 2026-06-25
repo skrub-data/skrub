@@ -193,6 +193,15 @@ def _get_range(values, frac=0.2, factor=3.0):
     return low, high
 
 
+def _get_safe_hist_range(values):
+    # make sure numpy can find bin edges between the range low and high bounds
+    vmin, vmax = values.min(), values.max()
+    delta = max(np.spacing(vmin), np.spacing(vmax))
+    if vmax - vmin > 12 * delta:
+        return None
+    return vmin - 6 * delta, vmax + 6 * delta
+
+
 def _robust_hist(col, ax=None, color=None):
     col = sbd.drop_nulls(col)
     if sbd.is_float(col):
@@ -218,12 +227,16 @@ def _robust_hist(col, ax=None, color=None):
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
     result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
+    np_histogram_inliers = np_histogram_values[inlier_mask]
     result["bin_counts"], result["bin_edges"] = np.histogram(
-        np_histogram_values[inlier_mask]
+        np_histogram_inliers, range=_get_safe_hist_range(np_histogram_inliers)
     )
     if ax is None:
         return result
-    n, bins, patches = ax.hist(values[inlier_mask])
+    histogram_inliers = values[inlier_mask]
+    n, bins, patches = ax.hist(
+        histogram_inliers, range=_get_safe_hist_range(histogram_inliers)
+    )
     n_out = n_low_outliers + n_high_outliers
     if not n_out:
         return result
