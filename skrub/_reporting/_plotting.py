@@ -227,7 +227,7 @@ def _robust_hist(col, ax=None, color=None):
             _datetime_encoder.DatetimeEncoder(resolution=None).fit_transform(col)
         ).ravel()
         result["total_seconds_offset"] = np_histogram_values.min()
-        np_histogram_values -= result["total_seconds_offset"]
+        np_histogram_values = np_histogram_values - result["total_seconds_offset"]
     else:
         np_histogram_values = values
     low, high = _get_range(values)
