@@ -1,2 +1,0 @@
-Encoding features
-=================

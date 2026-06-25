@@ -50,13 +50,32 @@ sys.path.insert(0, os.path.abspath("sphinxext"))
 from github_link import make_linkcode_resolve
 from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
 
-# -- Copy files for docs --------------------------------------------------
+# -- Sync documentation source files from skrub/_docs --------------------
 #
-# We avoid duplicating the information, but we do not use symlinks to be
-# able to build the docs on Windows
+# skrub/_docs is the single source of truth for all guide/content RST files
+# so they are packaged with the wheel. We copy them into doc/ at build time
+# rather than using symlinks (to support Windows builds).
+#
+# CHANGES.rst, CONTRIBUTING.rst and RELEASE_PROCESS.rst are canonical in the
+# project root and are NOT stored in skrub/_docs.
 shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
 shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
 shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
+
+_docs_src = Path("../skrub/_docs")
+
+# Copy top-level RST content files
+_skip_toplevel = {"CHANGES.rst", "CONTRIBUTING.rst", "RELEASE_PROCESS.rst"}
+for _rst_file in _docs_src.glob("*.rst"):
+    if _rst_file.name not in _skip_toplevel:
+        shutil.copyfile(_rst_file, _rst_file.name)
+
+# Copy content subdirectories (guides, modules)
+for _subdir in ["guides", "modules"]:
+    shutil.copytree(_docs_src / _subdir, _subdir, dirs_exist_ok=True)
+
+# Copy tutorials source files for sphinx-gallery
+shutil.copytree(_docs_src / "tutorials", "tutorials", dirs_exist_ok=True)
 
 # -- General configuration ------------------------------------------------
 
@@ -496,7 +515,7 @@ sphinx_gallery_conf = {
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
     "filename_pattern": ".*",
-    "examples_dirs": ["../examples", "tutorials"],
+    "examples_dirs": ["../skrub/_docs/examples", "tutorials"],
     "gallery_dirs": ["auto_examples", "auto_tutorials"],
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,

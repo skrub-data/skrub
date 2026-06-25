@@ -63,22 +63,15 @@ markdown-noplot:
 	@echo
 	@echo "Markdown build (no plot) finished. The markdown files are in $(BUILDDIR)/markdown."
 
-# Copy the generated markdown docs into the skrub/ package tree so they
-# get bundled with the wheel. Run after html, html-noplot, markdown, or
-# markdown-noplot.
-install-docs:
-	rm -rf ../skrub/_docs
-	mkdir -p ../skrub/_docs
-	mkdir -p ../skrub/_docs/examples
-	mkdir -p ../skrub/_docs/tutorials
-	mkdir -p ../skrub/_docs/guides
-	cp -r $(BUILDDIR)/markdown/guides/* ../skrub/_docs/guides
-	cp -r $(BUILDDIR)/markdown/modules/* ../skrub/_docs/guides
-	cp -r $(BUILDDIR)/markdown/auto_examples/* ../skrub/_docs/examples
-	cp -r $(BUILDDIR)/markdown/auto_tutorials/* ../skrub/_docs/tutorials
-	cp -r $(BUILDDIR)/markdown/*.md ../skrub/_docs/
-	cp -r $(BUILDDIR)/html/llms.txt ../skrub/_docs/
-	find ../skrub/_docs -name "*.md" | wc -l | xargs echo "Number of markdown files installed:"
+# skrub/_docs is the single source of truth for guide/content RST files.
+# They are synced into doc/ automatically at build time by conf.py.
+# Use this target to verify the two trees are in sync (no-op if they match).
+check-docs-sync:
+	diff -rq --exclude="*.pyc" ../skrub/_docs/ . \
+		--exclude="CHANGES.rst" --exclude="CONTRIBUTING.rst" \
+		--exclude="RELEASE_PROCESS.rst" \
+		$(addprefix --exclude=,$(notdir $(wildcard ../skrub/_docs/*.rst))) \
+		&& echo "skrub/_docs and doc/ are in sync" || true
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
