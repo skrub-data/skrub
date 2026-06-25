@@ -258,7 +258,7 @@ class TableReport:
 
     With the code above, in addition to the default filters such as "All
     columns", "Numeric columns", etc., the added "my_filter" will be available
-    in the report, selecting columns "a" and "b".
+    in the report, selecting both columns "a" and "b".
     Filters may be specified as a list of column names, a list of column indices,
     or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
 
