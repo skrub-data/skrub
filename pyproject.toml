@@ -63,6 +63,8 @@ dev = [
   "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxext-opengraph",
+  "sphinx-llms-txt",
+  "sphinx-markdown-builder",
   "sphinx-autosummary-accessors",
   "statsmodels",
 
@@ -124,6 +126,8 @@ sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
+sphinx-llms-txt = "*"
+sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
@@ -278,6 +282,7 @@ exclude = [
   "dist",
   "doc/_build",
   "doc/auto_examples",
+  "skrub/_docs/*.py",
   "build",
   "pixi.lock",
 ]
@@ -359,6 +364,7 @@ log_cli_level = "INFO"
 xfail_strict = true
 addopts = ["--doctest-modules", "--strict-config", "--strict-markers"]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
