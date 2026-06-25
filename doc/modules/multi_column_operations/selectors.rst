@@ -108,8 +108,8 @@ name, data type, contents, or according to arbitrary user-provided rules::
 
     * :ref:`user_guide_advanced_selectors`
 
-Selectors can be combined with the set operators
-------------------------------------------------
+Combining selectors
+-------------------
 
 The available operators are ``|``, ``&``, ``-``, ``^`` with the meaning of usual
 python sets, and ``~`` to invert a selection:
@@ -146,8 +146,8 @@ following selector won't compute the cardinality of non-categorical columns:
 (categorical() & cardinality_below(10))
 
 .. _user_guide_selectors_expand:
-Using selectors with dataframe libraries
-----------------------------------------
+Visualizing a selector
+----------------------
 
 All selectors have the :meth:`expand` method, which allows dataframe manipulation
 outside of a skrub workflow: applying it to any dataframe will return the list
@@ -180,10 +180,8 @@ The :meth:`expand_index` method also exists: rather than returning a list of col
 Using selectors with other skrub transformers
 -------------------------------------------------
 
-Skrub selectors are designed to be used in conjunction with :class:`~skrub.ApplyToCols`,
-:class:`skrub.SelectCols`, and :class:`skrub.DropCols`, as well as
-:func:`~skrub.DataOp.skb.apply` to improve their versatility in how they modify
-columns.
+Skrub transformers are designed to be used in conjunction with other transformers
+that operate on columns to improve their versatility.
 
 For example, it is possible to drop columns that have more unique values than a
 certain amount by combining :func:`~skrub.selectors.cardinality_below` with
