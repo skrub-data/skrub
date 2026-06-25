@@ -208,6 +208,7 @@ def _get_safe_hist_range(values):
 
 
 def _robust_hist(col, ax=None, color=None):
+    result = {}
     col = sbd.drop_nulls(col)
     if sbd.is_float(col):
         # avoid any issues with pandas nullable dtypes
@@ -225,13 +226,15 @@ def _robust_hist(col, ax=None, color=None):
         np_histogram_values = sbd.to_numpy(
             _datetime_encoder.DatetimeEncoder(resolution=None).fit_transform(col)
         ).ravel()
+        result["total_seconds_offset"] = np_histogram_values.min()
+        np_histogram_values -= result["total_seconds_offset"]
     else:
         np_histogram_values = values
     low, high = _get_range(values)
     inlier_mask = (low <= values) & (values <= high)
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
-    result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
+    result.update(n_low_outliers=n_low_outliers, n_high_outliers=n_high_outliers)
     np_histogram_inliers = np_histogram_values[inlier_mask]
     result["bin_counts"], result["bin_edges"] = np.histogram(
         np_histogram_inliers, range=_get_safe_hist_range(np_histogram_inliers)
