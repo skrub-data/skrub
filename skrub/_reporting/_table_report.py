@@ -439,7 +439,7 @@ class TableReport:
         to_remove = ["dataframe", "sample_table"]
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
-        
+
     def dict(self):
         """Get the report data in Python Dictionary format.
 
