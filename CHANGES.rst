@@ -11,6 +11,8 @@ Ongoing development
 
 New Features
 ------------
+- :meth:`TableReport.dict` now allows exporting the report data as a Python 
+  -dictionary. :pr:`2188` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 - New methods :meth:`SkrubLearner.get_named_params` and
   :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
   choices contained in the DataOp, keyed by choice name. It provides a more
