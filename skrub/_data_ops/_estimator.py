@@ -908,9 +908,11 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             score_node._skrub_impl.scorers, mode="fit_transform", environment=env
         )
         all_scores = []
+        caching_estimator = _CachingXyPipeline(self.data_op, self.environment)
+        _copy_attr(self, caching_estimator, ["_is_fitted"])
         for scorer_info in scorers:
             scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
-            scorer_output = scorer(self, X, y)
+            scorer_output = scorer(caching_estimator, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
@@ -919,6 +921,16 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             # returns a number.
             return next(iter(result.values()))
         return result
+
+
+class _CachingXyPipeline(_XyPipeline):
+    def _eval_in_mode(self, mode, X, y=None):
+        if not hasattr(self, "_cache"):
+            self._cache = {}
+        key = (mode, id(X), id(y))
+        if key not in self._cache:
+            self._cache[key] = super()._eval_in_mode(mode, X, y=y)
+        return self._cache[key]
 
 
 def _compute_X_y_and_cv(data_op, environment):
