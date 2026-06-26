@@ -72,6 +72,7 @@ def _parse_env_bool(env_variable_name, default):
 
 
 _global_config = {
+    "table_report_n_rows": int(os.environ.get("SKB_TABLE_REPORT_N_ROWS", 10)),
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "table_report_plots_threshold": _get_deprecated_int_env(
         "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
@@ -128,6 +129,7 @@ def get_config():
 
 
 def set_config(
+    table_report_n_rows=None,
     use_table_report_data_ops=None,
     table_report_plots_threshold=None,
     table_report_associations_threshold=None,
@@ -182,6 +184,13 @@ def set_config(
         Default is 1 (print the progress bar). Refer to the ``TableReport``
         documentation for more details.
 
+    table_report_n_rows : int, default=None
+    Set the default number of rows displayed in :class:`~skrub.TableReport`
+    when the ``n_rows`` parameter is not explicitly passed. Default is 10.
+
+    This configuration can also be set with the ``SKB_TABLE_REPORT_N_ROWS``
+    environment variable.
+    
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
@@ -331,6 +340,17 @@ def set_config(
                 f" {table_report_verbosity!r}"
             )
         local_config["table_report_verbosity"] = table_report_verbosity
+    
+    if table_report_n_rows is not None:
+    if (
+        not isinstance(table_report_n_rows, numbers.Integral)
+        or table_report_n_rows < 1
+    ):
+        raise ValueError(
+            "'table_report_n_rows' must be a positive integer, got"
+            f" {table_report_n_rows!r}"
+        )
+    local_config["table_report_n_rows"] = table_report_n_rows
 
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
@@ -381,6 +401,7 @@ def config_context(
     table_report_plots_threshold=None,
     table_report_associations_threshold=None,
     table_report_verbosity=None,
+    table_report_n_rows=None,
     subsampling_seed=None,
     # Deprecated parameters kept for backward compatibility
     max_plot_columns=None,
@@ -407,6 +428,13 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
+    table_report_n_rows : int, default=None
+    Set the default number of rows displayed in :class:`~skrub.TableReport`
+    when the ``n_rows`` parameter is not explicitly passed. Default is 10.
+
+    This configuration can also be set with the ``SKB_TABLE_REPORT_N_ROWS``
+    environment variable.
+    
     table_report_verbosity : int, default=None
         Set the level of verbosity of the :class:`~skrub.TableReport`.
         Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
@@ -516,6 +544,7 @@ def config_context(
     """
     original_config = get_config()
     set_config(
+        table_report_n_rows=table_report_n_rows,
         use_table_report_data_ops=use_table_report_data_ops,
         table_report_plots_threshold=table_report_plots_threshold,
         table_report_associations_threshold=table_report_associations_threshold,
