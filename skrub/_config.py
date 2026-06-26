@@ -341,7 +341,7 @@ def set_config(
             )
         local_config["table_report_verbosity"] = table_report_verbosity
     
-    if table_report_n_rows is not None:
+   if table_report_n_rows is not None:
     if (
         not isinstance(table_report_n_rows, numbers.Integral)
         or table_report_n_rows < 1
