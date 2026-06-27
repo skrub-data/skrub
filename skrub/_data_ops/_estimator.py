@@ -922,14 +922,16 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
             scorer_output = scorer(caching_estimator, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
-        predictions.update({k: v for ((k, X_id), v) in cache.items() if X_id == id(X)})
+        updated_predictions = {
+            k: v for ((k, X_id), v) in cache.items() if X_id == id(X)
+        }
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
         if cast_to_float and len(result) == 1 and not return_predictions:
             # If there is a single score stick to scikit-learn interface which
             # returns a number.
             return next(iter(result.values()))
-        return (result, predictions) if return_predictions else result
+        return (result, updated_predictions) if return_predictions else result
 
 
 class _CachingXyPipeline(_XyPipeline):
