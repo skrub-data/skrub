@@ -341,16 +341,16 @@ def set_config(
             )
         local_config["table_report_verbosity"] = table_report_verbosity
     
-   if table_report_n_rows is not None:
-    if (
-        not isinstance(table_report_n_rows, numbers.Integral)
-        or table_report_n_rows < 1
-    ):
-        raise ValueError(
-            "'table_report_n_rows' must be a positive integer, got"
-            f" {table_report_n_rows!r}"
-        )
-    local_config["table_report_n_rows"] = table_report_n_rows
+    if table_report_n_rows is not None:
+        if (
+            not isinstance(table_report_n_rows, numbers.Integral)
+            or table_report_n_rows < 1
+        ):
+            raise ValueError(
+                "'table_report_n_rows' must be a positive integer, got"
+                f" {table_report_n_rows!r}"
+            )
+        local_config["table_report_n_rows"] = table_report_n_rows
 
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
@@ -377,7 +377,7 @@ def set_config(
             or cardinality_threshold < 0
         ):
             raise ValueError(
-                "'cardinality_threshold' must be a positive"
+                "'cardinality_threshold' must be a positive "
                 f"integer, got {cardinality_threshold!r}"
             )
 
