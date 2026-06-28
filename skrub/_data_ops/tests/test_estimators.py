@@ -2,6 +2,7 @@ import copy
 import io
 import pickle
 import warnings
+from collections import defaultdict
 from functools import partial
 from unittest.mock import Mock
 
@@ -325,6 +326,179 @@ def test_with_scoring_names():
         "dict_name_a1",
         "dict_name_a2",
     ]
+
+
+def test_score_caching():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+
+    class CountingDummy(DummyClassifier):
+        counts = defaultdict(int)
+
+        def predict(self, X):
+            self.counts["predict"] += 1
+            return super().predict(X)
+
+        def predict_proba(self, X):
+            self.counts["predict_proba"] += 1
+            return super().predict_proba(X)
+
+    def my_accuracy(e, X, y):
+        return accuracy_score(y, e.predict(X))
+
+    def my_accuracy_on_subset(e, X, y):
+        return accuracy_score(y[:20], e.predict(X[:20]))
+
+    def builtin_score(e, X, y):
+        return e.score(X, y)
+
+    learner = (
+        skrub.X()
+        .skb.apply(CountingDummy(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring("f1")
+        .skb.with_scoring("roc_auc")
+        .skb.with_scoring("neg_brier_score")
+        .skb.with_scoring("d2_brier_score")
+        .skb.with_scoring(my_accuracy)
+        .skb.with_scoring(my_accuracy_on_subset)
+        .skb.with_scoring(builtin_score)
+        .skb.make_learner()
+        .fit({"X": X_train, "y": y_train})
+    )
+
+    scores = learner.score({"X": X_test, "y": y_test})
+    assert scores["accuracy"] == 0.44
+    assert scores["my_accuracy_on_subset"] == 0.35
+    assert scores["builtin_score"] == scores["accuracy"]
+    # predict:
+    #  . 1 in accuracy()
+    #  . 1 in my_accuracy_on_subset() because it is called on a different X
+    #  . 1 in builtin_score because it is called directly by
+    #    DummyClassifier.score which does not use the cache
+    #   (cached in f1, my_accuracy)
+    # predict_proba:
+    #  . 1 in roc_auc
+    #    (cached in neg_brier_score and d2_brier_score)
+    assert CountingDummy.counts == {"predict": 3, "predict_proba": 1}
+
+    prediction = learner.predict({"X": X_test, "y": y_test})
+    CountingDummy.counts.clear()
+    # called only for my_accuracy_on_subset and builtin_score
+    new_scores = learner.score(
+        {"X": X_test, "y": y_test, "_skrub_predictions": {"predict": prediction}}
+    )
+    assert new_scores == scores
+    # predict called only for my_accuracy_on_subset and builtin_score
+    assert CountingDummy.counts == {"predict": 2, "predict_proba": 1}
+
+
+def test_score_caching_non_predict_methods():
+    # trigger corner case for codecov
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring(lambda e, X, y: e.fit(X, y) and 3.0, name="s")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    assert learner.score(test_env)["s"] == 3.0
+
+
+def test_score_return_predictions():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring("roc_auc")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    test_env = {"X": X_test, "y": y_test}
+    scores, predictions = learner.score(test_env, return_predictions=True)
+    assert scores["accuracy"] == 0.44
+    assert list(predictions.keys()) == ["predict", "predict_proba"]
+    assert (predictions["predict"] == learner.predict(test_env)).all()
+    assert (predictions["predict_proba"] == learner.predict_proba(test_env)).all()
+
+    # When only the applied estimator's score() is called, we have no
+    # predictions to cache
+    learner_no_scoring = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    acc, new_pred = learner_no_scoring.score(test_env, return_predictions=True)
+    assert acc == 0.44
+    assert new_pred == {}
+
+
+def test_score_provide_predictions():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    prediction = learner.predict(test_env)
+    assert learner.score(test_env) == learner.score(
+        test_env | {"_skrub_predictions": {"predict": prediction}}
+    )
+
+    # check that the prediction in the env is actually being used
+    assert learner.score(test_env | {"_skrub_predictions": {"predict": y_test}}) == {
+        "accuracy": 1.0
+    }
+
+    # when using the builtin score '_skrub_predictions' is not used
+    learner_no_scoring = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    assert (
+        learner_no_scoring.score(test_env | {"_skrub_predictions": {"predict": y_test}})
+        == 0.44
+    )
+
+
+def test_scorer_calls_score():
+    # Test case where the scorer passed to with_scoring calls score(): it uses
+    # the applied estimator's score instead of the skrublearner's score which
+    # would fall into infinite recursion.
+
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+
+    def estimator_score(e, X, y):
+        return e.score(X, y)
+
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring(estimator_score)
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    scores = learner.score(test_env)
+    assert scores["estimator_score"] == scores["accuracy"]
 
 
 def test_cross_validate_return_indices():

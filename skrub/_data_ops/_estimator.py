@@ -941,6 +941,9 @@ class _CachingXyPipeline(_XyPipeline):
 
     def _eval_in_mode(self, mode, X, y=None):
         if y is not None:
+            # Only use caching for methods like predict, predict_proba etc.
+            # (They are the only ones to be called anyway unless a scorer does
+            # something very weird)
             return super()._eval_in_mode(mode, X, y=y)
         key = (mode, id(X))
         if key not in self.cache:
@@ -948,6 +951,8 @@ class _CachingXyPipeline(_XyPipeline):
         return self.cache[key]
 
     def _score(self, X, y=None):
+        # If a scorer calls score(), eval in "score" mode (i.e. ignoring
+        # with_scoring) rather than going into infinite recursion.
         return super()._eval_in_mode("score", X, y=y)
 
 
