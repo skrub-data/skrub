@@ -359,7 +359,7 @@ def test_score_caching():
         .skb.with_scoring("f1")
         .skb.with_scoring("roc_auc")
         .skb.with_scoring("neg_brier_score")
-        .skb.with_scoring("d2_brier_score")
+        .skb.with_scoring("neg_log_loss")
         .skb.with_scoring(my_accuracy)
         .skb.with_scoring(my_accuracy_on_subset)
         .skb.with_scoring(builtin_score)
@@ -379,7 +379,7 @@ def test_score_caching():
     #   (cached in f1, my_accuracy)
     # predict_proba:
     #  . 1 in roc_auc
-    #    (cached in neg_brier_score and d2_brier_score)
+    #    (cached in neg_brier_score and neg_log_loss)
     assert CountingDummy.counts == {"predict": 3, "predict_proba": 1}
 
     prediction = learner.predict({"X": X_test, "y": y_test})
