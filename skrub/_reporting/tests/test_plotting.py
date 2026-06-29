@@ -33,3 +33,11 @@ def test_histogram():
     high = np.nextafter(low, 11.0)
     data = pd.Series([low, high])
     _, hist = _plotting.histogram(data)
+
+    # all infinite. +- inf are outliers
+    data = pd.Series(
+        [None, None, float("nan"), float("-inf"), float("-inf"), float("inf")]
+    )
+    _, hist = _plotting.histogram(data)
+    assert hist["n_low_outliers"] == 2
+    assert hist["n_high_outliers"] == 1
