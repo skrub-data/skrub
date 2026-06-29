@@ -533,7 +533,7 @@ def test_check_is_new_session_no_by(df_module):
     session_id = sbd.to_list(
         sbd.col(
             _add_session_column(
-                df, [], "timestamp", 30 * 60, session_id_column_="timestamp_session_id"
+                df, [], "timestamp", 30 * 60, session_id_column="timestamp_session_id"
             ),
             "timestamp_session_id",
         )
@@ -558,7 +558,7 @@ def test_add_session_column_old_pandas(df_module):
     session_id = sbd.to_list(
         sbd.col(
             _add_session_column(
-                df, [], "timestamp", 30 * 60, session_id_column_="timestamp_session_id"
+                df, [], "timestamp", 30 * 60, session_id_column="timestamp_session_id"
             ),
             "timestamp_session_id",
         )
@@ -666,9 +666,9 @@ def test_error_dispatch():
         _add_session_column(
             np.array([1]),
             split_by_columns=[],
-            timestamp_col="timestamp",
+            timestamp_column="timestamp",
             session_gap=30,
-            session_id_column_="timestamp_session_id",
+            session_id_column="timestamp_session_id",
         )
 
 

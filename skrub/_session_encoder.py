@@ -1,5 +1,6 @@
 """
 The SessionEncoder is a transformer that takes as input:
+
 - a "timestamp" column, which identifies the time of an event
 - a "split_by" column or list of columns, which identifies a user
 - a "session_gap" value, which identifies the maximum allowed gap in seconds
@@ -18,6 +19,12 @@ from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
+
+try:
+    import polars as pl
+except ImportError:
+    pl = None
+
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -29,14 +36,14 @@ from ._utils import random_string
 
 @dispatch
 def _add_session_column(
-    X, split_by_columns, timestamp_col, session_gap, session_id_column_
+    X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
 @_add_session_column.specialize("pandas")
 def _add_session_column_pandas(
-    X, split_by_columns, timestamp_col, session_gap, session_id_column_
+    X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     # needed to avoid a warning with min deps
     grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
@@ -45,11 +52,10 @@ def _add_session_column_pandas(
 
     groups_with_session_ids = []
 
-    for group_key, group_df in groups:
-        # Sort the group by timestamp
-        group_df_sorted = group_df.sort_values(by=timestamp_col)
+    for _, group_df in groups:
+        group_df_sorted = group_df.sort_values(by=timestamp_column)
         # Compute time differences between consecutive events
-        time_diffs = group_df_sorted[timestamp_col].diff().dt.total_seconds()
+        time_diffs = group_df_sorted[timestamp_column].diff().dt.total_seconds()
         # Identify session boundaries based on time gaps
         session_boundaries = (time_diffs > session_gap) | (time_diffs.isna())
         # Assign session IDs based on cumulative sum of session boundaries
@@ -57,22 +63,22 @@ def _add_session_column_pandas(
         session_ids = session_boundaries.cumsum() - 1 + rolling_session_id
         # Update rolling_session_id for the next group
         rolling_session_id = session_ids.max() + 1
-        # Add the session IDs to the original dataframe
+
         group_df_sorted = group_df_sorted.assign(
             **{
-                session_id_column_: pd.Series(
+                session_id_column: pd.Series(
                     session_ids.values, index=group_df_sorted.index
                 )
             }
         )
-        groups_with_session_ids.append((group_key, group_df_sorted))
-    res = sbd.concat(*[group_df for _, group_df in groups_with_session_ids], axis=0)
+        groups_with_session_ids.append(group_df_sorted)
+    res = pd.concat(groups_with_session_ids, axis=0)
     return res
 
 
 @_add_session_column.specialize("polars")
 def _add_session_column_polars(
-    X, split_by_columns, timestamp_col, session_gap, session_id_column_
+    X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     groups = (
         X.group_by(split_by_columns, maintain_order=True)
@@ -83,11 +89,10 @@ def _add_session_column_polars(
 
     groups_with_session_ids = []
 
-    for group_key, group_df in groups:
-        # Sort the group by timestamp
-        group_df_sorted = group_df.sort(by=timestamp_col)
+    for _, group_df in groups:
+        group_df_sorted = group_df.sort(by=timestamp_column)
         # Compute time differences between consecutive events
-        time_diffs = group_df_sorted[timestamp_col].diff().dt.total_seconds()
+        time_diffs = group_df_sorted[timestamp_column].diff().dt.total_seconds()
         # Identify session boundaries based on time gaps
         session_boundaries = (time_diffs > session_gap) | (
             # need both is_nan and is_null to handle older versions of polars
@@ -98,12 +103,12 @@ def _add_session_column_polars(
         session_ids = session_boundaries.cum_sum() - 1 + rolling_session_id
         # Update rolling_session_id for the next group
         rolling_session_id = session_ids.max() + 1
-        # Add the session IDs to the original dataframe
+
         group_df_sorted = group_df_sorted.with_columns(
-            [session_ids.alias(session_id_column_)]
+            session_ids.alias(session_id_column)
         )
         groups_with_session_ids.append(group_df_sorted)
-    res = sbd.concat(*groups_with_session_ids, axis=0)
+    res = pl.concat(groups_with_session_ids)
     return res
 
 
@@ -114,12 +119,15 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     by at most ``session_gap`` seconds. Additionally, it is possible to provide a column
     or list of columns that can be used to distinguish between sessions, such
     as user identifiers (specified by the ``split_by`` column).
-    Sessions change when either the time gap between events exceeds ``session_gap``,
-    or the identifiers in ``split_by`` column(s) change.
+    Within each sequence identified by a unique value in the ``split_by`` column(s),
+    a new session is started when the time gap between events exceeds ``session_gap``
+    seconds.
 
-    The encoder takes care of sorting the data by the timestamp and ``split_by`` columns
-    before identifying sessions, and sorting it back to the original order at the end,
-    so the original order of events in the input dataframe does not matter.
+    The encoder takes care of grouping the data by ``split_by`` and sorting by
+    timestamp column before identifying sessions, and sorting it back to the
+    original order at the end, so the original order of events in the input
+    dataframe does not matter.
+
     All unrelated columns are passed through unchanged.
 
     Parameters
@@ -127,10 +135,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     timestamp_col : str
         The name of the column that identifies the time of an event. This column
         is used to determine the start and end of a session. ``timestamp_col`` must
-        be a datetime, and will be rejected otherwise.
-        The dataframe is sorted by ``timestamp_col`` and ``split_by`` (if provided)
-        before  identifying sessions, and sorted back to the original order at
-        the end, so the order of events in the input dataframe does not matter.
+        be a datetime, and an error will be raised otherwise.
+        Sessions are defined within each group of events that have the same value
+        in the ``split_by`` column(s) (or all events if ``split_by`` is None), and
+        the result will be correct no matter the order of the rows in the input
+        dataframe.
 
     split_by : optional[str, list[str]], default=None
         The name of the column, or list of columns, to use to define sessions.
@@ -150,7 +159,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         different sessions. Default is 1800 seconds (30 minutes).
 
     suffix : str, default="session_id"
-        The suffix to be added to the name of the timestamp column.
+        The suffix to be added to the name of the created session id column.
 
     Attributes
     ----------
@@ -171,9 +180,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     Consider this example where we have a dataframe with user events, and we want
     to identify sessions based on a 30-minute gap between events for each user.
     Users are identified by the value of the column ``user_id``.
-    Note that the order of the events in the input dataframe does not matter:
-    the ``SessionEncoder`` will sort the events by user and timestamp before
-    identifying sessions (and sort them back to the original order at the end).
+    Note that the order of the rows in the input dataframe does not matter.
 
     Sessions are defined by sorting over the ``split_by``columns (if provided)
     and then by the timestamp.
@@ -202,18 +209,26 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     pd.Timestamp("2024-01-01 10:00:00"),  # Different user
     ...     pd.Timestamp("2024-01-01 10:15:00"),  # 15 min later, same session
     ... ],
-    ... "action": ["view", "purchase", "view", "checkout", "view", "login", "view"],
+    ...     "action": [
+    ...         "view",
+    ...         "purchase",
+    ...         "view",
+    ...         "add_to_cart",
+    ...         "checkout",
+    ...         "view",
+    ...         "wishlist",
+    ...     ],
     ... }
     >>> df = pd.DataFrame(data)
-    >>> print(df)
-    user_id device_id           timestamp    action
-    0        1    mobile 2024-01-01 10:00:00      view
-    1        1    mobile 2024-01-01 10:10:00  purchase
-    2        1   desktop 2024-01-01 10:05:00      view
-    3        1   desktop 2024-01-01 10:20:00  checkout
-    4        1    mobile 2024-01-01 11:20:00      view
-    5        2    mobile 2024-01-01 10:00:00     login
-    6        2    mobile 2024-01-01 10:15:00      view
+    >>> df
+    user_id device_id           timestamp       action
+    0        1    mobile 2024-01-01 10:00:00         view
+    1        1    mobile 2024-01-01 10:10:00     purchase
+    2        1   desktop 2024-01-01 10:05:00         view
+    3        1   desktop 2024-01-01 10:20:00  add_to_cart
+    4        1    mobile 2024-01-01 11:20:00     checkout
+    5        2    mobile 2024-01-01 10:00:00         view
+    6        2    mobile 2024-01-01 10:15:00     wishlist
 
     We use the ``SessionEncoder`` with default ``session_gap`` of 30 minutes:
 
@@ -223,14 +238,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... )
     >>> result = encoder.fit_transform(df)
     >>> result
-    user_id device_id           timestamp    action  timestamp_session_id
-    0        1    mobile 2024-01-01 10:00:00      view                     0
-    1        1    mobile 2024-01-01 10:10:00  purchase                     0
-    2        1   desktop 2024-01-01 10:05:00      view                     0
-    3        1   desktop 2024-01-01 10:20:00  checkout                     0
-    4        1    mobile 2024-01-01 11:20:00      view                     1
-    5        2    mobile 2024-01-01 10:00:00     login                     2
-    6        2    mobile 2024-01-01 10:15:00      view                     2
+    user_id device_id           timestamp       action  timestamp_session_id
+    0        1    mobile 2024-01-01 10:00:00         view                     0
+    1        1    mobile 2024-01-01 10:10:00     purchase                     0
+    2        1   desktop 2024-01-01 10:05:00         view                     0
+    3        1   desktop 2024-01-01 10:20:00  add_to_cart                     0
+    4        1    mobile 2024-01-01 11:20:00     checkout                     1
+    5        2    mobile 2024-01-01 10:00:00         view                     2
+    6        2    mobile 2024-01-01 10:15:00     wishlist                     2
 
     In this example, grouping by `user_id` results in three separate sessions:
 
@@ -238,8 +253,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
       60 minutes between their events at 10:20 and 11:20, which exceeds the 30-minute
       threshold. The first four events of user 1 belong to session 0, while the
       last event belongs to session 1.
-    - User 2 has one session (session 2) because their events are within the
-      30-minute window.
+    - User 2 has one session (session 2) because all their events are within
+      30 minutes of the previous one.
 
     You can also identify users by multiple columns. For instance, the same user
     on different devices should have separate sessions.
@@ -249,15 +264,15 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     timestamp_col='timestamp',
     ... )
     >>> result_multi = encoder_multi.fit_transform(df)
-    >>> print(result_multi)
-    user_id device_id           timestamp    action  timestamp_session_id
-    0        1    mobile 2024-01-01 10:00:00      view                     1
-    1        1    mobile 2024-01-01 10:10:00  purchase                     1
-    2        1   desktop 2024-01-01 10:05:00      view                     0
-    3        1   desktop 2024-01-01 10:20:00  checkout                     0
-    4        1    mobile 2024-01-01 11:20:00      view                     2
-    5        2    mobile 2024-01-01 10:00:00     login                     3
-    6        2    mobile 2024-01-01 10:15:00      view                     3
+    >>> result_multi
+    user_id device_id           timestamp       action  timestamp_session_id
+    0        1    mobile 2024-01-01 10:00:00         view                     1
+    1        1    mobile 2024-01-01 10:10:00     purchase                     1
+    2        1   desktop 2024-01-01 10:05:00         view                     0
+    3        1   desktop 2024-01-01 10:20:00  add_to_cart                     0
+    4        1    mobile 2024-01-01 11:20:00     checkout                     2
+    5        2    mobile 2024-01-01 10:00:00         view                     3
+    6        2    mobile 2024-01-01 10:15:00     wishlist                     3
 
     In this example:
 
@@ -267,10 +282,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
       the 30-minute threshold.
     - User 2 on "mobile" has session 3 (different user).
 
-    Note again that sessions are defined by sorting over the ``split_by`` columns
-    and then by the timestamp: this is why the "desktop" session of User 1 is
-    session 0, even though it starts after the "mobile" session in the original
-    dataframe.
+    Note that the value of the session IDs are arbitrary and depend on the order
+    of events in the dataframe. The important thing is that events that belong to
+    the same session have the same session ID, and events that belong to different
+    sessions have different session IDs.
 
     You can also use ``SessionEncoder`` without a user identifier column. In this case,
     sessions are separated only by time gaps. This is useful for analyzing a single
@@ -415,7 +430,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         self.all_inputs_ = sbd.column_names(X)
 
         # Checking that all the needed columns are there
-        self._check_input_dataframe(X)
+        self._check_input(X)
 
         self.session_id_column_ = f"{self.timestamp_col}_{self.suffix}"
 
@@ -458,13 +473,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         row_order_col = f"_row_order_skrub_{random_string()}"
         X_with_order = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
 
-        # sort the input dataframe by the "split_by" and "timestamp" columns
-        # _split_by_columns can be empty if self.split_by is None
-        sort_by = self._split_by_columns + [self.timestamp_col]
-
         # Selecting only the columns needed for sessionization and sorting them
         # to ensure that the sessionization is done correctly
-        X_selected = s.select(X_with_order, sort_by + [row_order_col])
+        X_selected = s.select(
+            X_with_order, self._split_by_columns + [self.timestamp_col, row_order_col]
+        )
         X_with_session_id = _add_session_column(
             X_selected,
             self._split_by_columns,
@@ -484,7 +497,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
 
-    def _check_input_dataframe(self, X):
+    def _check_input(self, X):
         """
         Check that the input columns are present and correct
         """
@@ -496,13 +509,13 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
                 f"session_gap must be a positive number, got {self.session_gap}"
             )
         # check that the suffix is a string
-        if not isinstance(self.suffix, str) or self.suffix is None:
-            raise ValueError(f"Expected a string as suffix, got {self.suffix!r}")
+        if not isinstance(self.suffix, str):
+            raise TypeError(f"Expected a string as suffix, got {self.suffix!r}")
 
         # Check that the timestamp column is present
         if self.timestamp_col not in self.all_inputs_:
             raise ValueError(
-                f"Column '{self.timestamp_col}' not found in input dataframe"
+                f"Column {self.timestamp_col!r} not found in input dataframe"
             )
         # check that the timestamp column is of datetime type
         if not sbd.is_empty_frame(X) and not sbd.is_any_date(
@@ -510,7 +523,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         ):
             raise TypeError(
                 "Expected a datetime column for timestamp_col,"
-                f" got {self.timestamp_col!r}"
+                f" got {sbd.dtype(sbd.col(X, self.timestamp_col))}"
             )
 
         # check that the required columns are present in the input dataframe
@@ -522,10 +535,13 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         elif isinstance(self.split_by, Iterable):
             self._split_by_columns = list(self.split_by)
         else:
-            raise TypeError("split_by must be a string, a list of strings, or None")
+            raise TypeError(
+                "split_by must be a string, a list of strings, or None, got"
+                f" {type(self.split_by)}"
+            )
         for col in self._split_by_columns:
             if col not in self.all_inputs_:
-                raise ValueError(f"Column '{col}' not found in input dataframe")
+                raise ValueError(f"Column {col!r} not found in input dataframe")
 
     def get_feature_names_out(self, input_features=None):
         """Return the column names of the output of ``transform`` as a list of strings.

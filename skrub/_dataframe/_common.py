@@ -54,7 +54,7 @@ __all__ = [
     "reset_index",
     "copy_index",
     "index",
-    "drop_columns",
+    "drop",
     #
     # Inspecting dtypes and casting
     #
@@ -510,6 +510,21 @@ def _shape_polars(obj):
 
 
 @dispatch
+def is_empty_frame(obj):
+    raise_dispatch_unregistered_type(obj, kind="object")
+
+
+@is_empty_frame.specialize("pandas", argument_type="DataFrame")
+def _is_empty_frame_pandas(obj):
+    return obj.empty
+
+
+@is_empty_frame.specialize("polars", argument_type="DataFrame")
+def _is_empty_frame_polars(obj):
+    return obj.is_empty()
+
+
+@dispatch
 def to_frame(col):
     """Convert a single Column to a DataFrame."""
     raise_dispatch_unregistered_type(col, kind="Series")
@@ -632,21 +647,6 @@ def index(obj):
 @index.specialize("pandas")
 def _index_pandas(obj):
     return obj.index
-
-
-@dispatch
-def drop_columns(df, columns):
-    raise_dispatch_unregistered_type(df, kind="DataFrame")
-
-
-@drop_columns.specialize("pandas", argument_type="DataFrame")
-def _drop_columns_pandas(df, columns):
-    return df.drop(columns=columns)
-
-
-@drop_columns.specialize("polars", argument_type="DataFrame")
-def _drop_columns_polars(df, columns):
-    return df.drop(columns)
 
 
 #
@@ -1011,21 +1011,6 @@ def _is_all_null_polars(col):
         return True
     # Column type is not Null, not all values are null (check if NaN etc.): slower
     return all(is_null(col))
-
-
-@dispatch
-def is_empty_frame(obj):
-    raise_dispatch_unregistered_type(obj, kind="object")
-
-
-@is_empty_frame.specialize("pandas", argument_type="DataFrame")
-def _is_empty_frame_pandas(obj):
-    return obj.empty
-
-
-@is_empty_frame.specialize("polars", argument_type="DataFrame")
-def _is_empty_frame_polars(obj):
-    return obj.is_empty()
 
 
 #
@@ -1425,6 +1410,21 @@ def _select_rows_polars(obj, idx):
         # of columns to list of row indices at some point.
         return obj.head(0)
     return obj[idx]
+
+
+@dispatch
+def drop(df, columns):
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
+
+
+@drop.specialize("pandas", argument_type="DataFrame")
+def _drop_pandas(df, columns):
+    return df.drop(columns=columns)
+
+
+@drop.specialize("polars", argument_type="DataFrame")
+def _drop_polars(df, columns):
+    return df.drop(columns)
 
 
 @dispatch
