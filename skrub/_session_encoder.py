@@ -45,9 +45,21 @@ def _add_session_column(
 def _add_session_column_pandas(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
+    # Adding a row order column to sort lines back
+    row_order_col = f"_row_order_skrub_{random_string()}"
+    # X_with_order = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
+    X_with_order = X.assign(**{row_order_col: range(X.shape[0])})
+
+    # Selecting only the columns needed for sessionization and sorting them
+    # to ensure that the sessionization is done correctly
+    X_selected = s.select(
+        X_with_order, split_by_columns + [timestamp_column, row_order_col]
+    )
     # needed to avoid a warning with min deps
     grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
-    groups = X.groupby(grouper) if len(split_by_columns) > 0 else [("", X)]
+    groups = (
+        X_selected.groupby(grouper) if len(split_by_columns) > 0 else [("", X_selected)]
+    )
     rolling_session_id = 0
 
     groups_with_session_ids = []
@@ -72,18 +84,28 @@ def _add_session_column_pandas(
             }
         )
         groups_with_session_ids.append(group_df_sorted)
-    res = pd.concat(groups_with_session_ids, axis=0)
-    return res
+    X_with_session_id = pd.concat(groups_with_session_ids, axis=0)
+    # Reordering rows back to the original order and selecting session id
+    return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
 
 
 @_add_session_column.specialize("polars")
 def _add_session_column_polars(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
+    # Adding a row order column to sort lines back
+    row_order_col = f"_row_order_skrub_{random_string()}"
+    X_with_order = X.with_row_index(name=row_order_col)
+
+    # Selecting only the columns needed for sessionization and sorting them
+    # to ensure that the sessionization is done correctly
+    X_selected = s.select(
+        X_with_order, split_by_columns + [timestamp_column, row_order_col]
+    )
     groups = (
-        X.group_by(split_by_columns, maintain_order=True)
+        X_selected.group_by(split_by_columns, maintain_order=True)
         if len(split_by_columns) > 0
-        else [("", X)]
+        else [("", X_selected)]
     )
     rolling_session_id = 0
 
@@ -108,8 +130,10 @@ def _add_session_column_polars(
             session_ids.alias(session_id_column)
         )
         groups_with_session_ids.append(group_df_sorted)
-    res = pl.concat(groups_with_session_ids)
-    return res
+    X_with_session_id = pl.concat(groups_with_session_ids)
+
+    # Reordering rows back to the original order and selecting only the session id
+    return X_with_session_id.sort(by=row_order_col)[session_id_column]
 
 
 class SessionEncoder(TransformerMixin, BaseEstimator):
@@ -142,16 +166,16 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         dataframe.
 
     split_by : optional[str, list[str]], default=None
-        The name of the column, or list of columns, to use to define sessions.
+        The name of the column (typically the user ID), or list of columns, that
+        is used to identify independent event sequence (such as the activity of
+        different users).
         A session boundary is created when the value in any of these columns
         changes, or when the time gap between events exceeds ``session_gap``.
-        The dataframe is sorted by ``split_by`` and ``timestamp_col`` before
-        identifying sessions, and sorted back to the original order at the end,
-        so the order of events in the input dataframe does not matter.
         This is typically a user identifier column, but it can also be used to define
         sessions by other groupings (e.g. user and device type).
         If not provided, sessions are detected based on the time gap between events,
         and all events are considered to belong to the same user (or group).
+
 
     session_gap : int, default=1800
         The maximum gap (in seconds) between events in a session. If the gap
@@ -469,30 +493,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             )
             return X
 
-        # Adding a row order column to sort lines back
-        row_order_col = f"_row_order_skrub_{random_string()}"
-        X_with_order = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
-
-        # Selecting only the columns needed for sessionization and sorting them
-        # to ensure that the sessionization is done correctly
-        X_selected = s.select(
-            X_with_order, self._split_by_columns + [self.timestamp_col, row_order_col]
-        )
-        X_with_session_id = _add_session_column(
-            X_selected,
+        session_id = _add_session_column(
+            X,
             self._split_by_columns,
             self.timestamp_col,
             self.session_gap,
             self.session_id_column_,
         )
-        # Reordering rows back to the original order
-        X_result = sbd.sort(X_with_session_id, by=row_order_col)
-
-        # Concatenating the session_id column to the original dataframe, so that
-        # all unrelated columns are passed through unchanged.
-        # Doing this has the added benefit of adding the session_id column at the
-        # end of the dataframe.
-        X_result = sbd.concat(X, s.select(X_result, self.session_id_column_), axis=1)
+        X_result = sbd.with_columns(X, **{self.session_id_column_: session_id})
 
         self.all_outputs_ = sbd.column_names(X_result)
         return X_result
