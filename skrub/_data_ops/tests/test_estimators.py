@@ -480,6 +480,9 @@ def test_scorer_calls_score():
     # Test case where the scorer passed to with_scoring calls score(): it uses
     # the applied estimator's score instead of the skrublearner's score which
     # would fall into infinite recursion.
+    #
+    # As in scikit-learn cross_validate, the scorer None also gives that result
+    # (with the key 'score')
 
     X, y = make_classification(random_state=0)
     X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
@@ -494,11 +497,12 @@ def test_scorer_calls_score():
         .skb.apply(DummyClassifier(), y=skrub.y())
         .skb.with_scoring("accuracy")
         .skb.with_scoring(estimator_score)
+        .skb.with_scoring(None)
         .skb.make_learner()
         .fit(train_env)
     )
     scores = learner.score(test_env)
-    assert scores["estimator_score"] == scores["accuracy"]
+    assert scores["estimator_score"] == scores["accuracy"] == scores["score"]
 
 
 def test_cross_validate_return_indices():
