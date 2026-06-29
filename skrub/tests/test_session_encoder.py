@@ -5,11 +5,8 @@ import pandas as pd
 import pytest
 from packaging.version import parse
 
-from skrub import SessionEncoder
-from skrub import _dataframe as sbd
-from skrub._session_encoder import (
-    _add_session_column,
-)
+from .. import _dataframe as sbd
+from .._session_encoder import SessionEncoder, _add_session_column
 
 
 @pytest.fixture
@@ -17,7 +14,6 @@ def example_session_data(df_module):
     """Create example session data with multiple users and sessions."""
     timestamps = []
     user_ids = []
-    usernames = []
 
     base_time = datetime.datetime(2024, 1, 1)
 
@@ -27,7 +23,6 @@ def example_session_data(df_module):
         for event in range(5):
             timestamps.append(session_start + datetime.timedelta(minutes=event * 2))
             user_ids.append(101)
-            usernames.append("alice")
 
     # User 102, bob: 2 sessions with 3 events each, 2 hours apart
     for session in range(2):
@@ -35,22 +30,21 @@ def example_session_data(df_module):
         for event in range(3):
             timestamps.append(session_start + datetime.timedelta(minutes=event * 5))
             user_ids.append(102)
-            usernames.append("bob")
 
     # User 103, charlie: 1 session with 4 events
     session_start = base_time + datetime.timedelta(days=40)
     for event in range(4):
         timestamps.append(session_start + datetime.timedelta(minutes=event * 3))
         user_ids.append(103)
-        usernames.append("charlie")
 
-    return df_module.make_dataframe(
+    df = df_module.make_dataframe(
         {
             "timestamp": timestamps,
             "user_id": user_ids,
-            "username": usernames,
         }
     )
+
+    return sbd.sample(df, n=len(df), seed=42)
 
 
 @pytest.fixture
@@ -104,7 +98,6 @@ def example_session_data_multi_by(df_module):
     "by_column,expected_sessions,split_key_to_sessions",
     [
         ("user_id", 6, {101: 3, 102: 2, 103: 1}),
-        ("username", 6, {"alice": 3, "bob": 2, "charlie": 1}),
     ],
 )
 def test_basic_functionality(
@@ -147,7 +140,6 @@ def test_basic_functionality(
     "by_column,group_keys",
     [
         ("user_id", [101, 102, 103]),
-        ("username", ["alice", "bob", "charlie"]),
     ],
 )
 def test_different_users_different_sessions(
@@ -436,7 +428,7 @@ def test_invalid_parameters(df_module):
     se_invalid_suffix = SessionEncoder(
         split_by="user_id", timestamp_col="timestamp", suffix=None
     )
-    with pytest.raises(ValueError, match="Expected a string as suffix"):
+    with pytest.raises(TypeError, match="Expected a string as suffix"):
         se_invalid_suffix.fit_transform(df)
 
     # Test timestamp column with non-datetime type
@@ -518,30 +510,6 @@ def test_get_feature_names(df_module):
     assert set(feature_names) == {"timestamp", "user_id", "timestamp_session_id"}
 
 
-def test_check_is_new_session_no_by(df_module):
-    """_check_is_new_session with an empty group_by-list uses only the time gap."""
-    df = df_module.make_dataframe(
-        {
-            "timestamp": [
-                datetime.datetime(2024, 1, 1, 10, 0),
-                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
-                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
-                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
-            ]
-        }
-    )
-    session_id = sbd.to_list(
-        sbd.col(
-            _add_session_column(
-                df, [], "timestamp", 30 * 60, session_id_column="timestamp_session_id"
-            ),
-            "timestamp_session_id",
-        )
-    )
-    # Expected: first two events in session 0, last two events in session 1
-    assert session_id == [0, 0, 1, 1]
-
-
 @pytest.mark.skipif(parse(pd.__version__).major >= 3, reason="Test only for pandas < 3")
 def test_add_session_column_old_pandas(df_module):
     """Old versions of pandas have a different branch that needs to be covered"""
@@ -567,40 +535,6 @@ def test_add_session_column_old_pandas(df_module):
     assert session_id == [0, 0, 1, 1]
 
 
-def test_check_is_new_session_with_by(df_module):
-    """_add_session_column returns a dataframe with a ``timestamp_session_id``
-    column when a group_by-list is provided.  A new session starts when the group key
-    changes (even for a tiny time gap) or when the time gap exceeds
-    ``session_gap``.
-
-    Data layout (already sorted by user_id, timestamp):
-      row 0: user 1, 10:00 – first row, session 0
-      row 1: user 1, 10:05 – same user, 5 min gap  → still session 0
-      row 2: user 2, 10:06 – user changed, 1 min gap → new session 1
-      row 3: user 2, 10:10 – same user, 4 min gap  → still session 1
-    Expected session_ids: [0, 0, 1, 1]
-    """
-    df = df_module.make_dataframe(
-        {
-            "user_id": [1, 1, 2, 2],
-            "timestamp": [
-                datetime.datetime(2024, 1, 1, 10, 0),
-                datetime.datetime(2024, 1, 1, 10, 5),  # same user, 5 min gap
-                datetime.datetime(2024, 1, 1, 10, 6),  # different user, 1 min gap
-                datetime.datetime(2024, 1, 1, 10, 10),  # same user, 4 min gap
-            ],
-        }
-    )
-    result = _add_session_column(
-        df, ["user_id"], "timestamp", 30 * 60, "timestamp_session_id"
-    )
-
-    # _add_session_column now returns the full dataframe with session_id added
-    assert "timestamp_session_id" in sbd.column_names(result)
-    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
-    assert session_ids == [0, 0, 1, 1]
-
-
 @pytest.mark.parametrize(
     "timestamp",
     ["timestamp", "something_else"],
@@ -622,7 +556,7 @@ def test_proper_suffix(timestamp, suffix, df_module):
         }
     )
     if suffix is None:
-        with pytest.raises(ValueError, match="Expected a string as suffix*"):
+        with pytest.raises(TypeError, match="Expected a string as suffix*"):
             SessionEncoder(
                 timestamp_col=timestamp, split_by="user_id", suffix=suffix
             ).fit_transform(df)

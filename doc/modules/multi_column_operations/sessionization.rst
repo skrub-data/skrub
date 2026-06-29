@@ -10,7 +10,7 @@ Detecting sessions in timestamped data with the SessionEncoder
 
 When dealing with timestamped data (data that includes at least a timestamp column),
 it may be beneficial to try and identify groups of events as
-:ref:`"sessions" <https://en.wikipedia.org/wiki/Session_(web_analytics)>`_,
+`"sessions" <https://en.wikipedia.org/wiki/Session_(web_analytics)>`__,
 through **sessionization**.
 
 Sessionization is the process of grouping a sequence of events (like user
@@ -42,7 +42,8 @@ A session is then defined as a sequence of events that share the same value in t
 
 Once the necessary features are provided, the |SessionEncoder|
 returns a dataframe that includes a ``timestamp_session_id`` column, which is
-composed of a monotonically increasing integer ID for each session:
+composed of a distinct integer ID for each session:
+
 >>> se = SessionEncoder(timestamp_col="timestamp", split_by="user_id", session_gap=30 * 60)
 >>> res = se.fit_transform(X)
 >>> res.head(5) # doctest: +SKIP
@@ -99,3 +100,7 @@ and their device:
 2  user_0164 2024-01-01 03:32:38.352703+00:00  ...         4.80                    74
 3  user_0008 2024-01-02 10:49:56.974375+00:00  ...        33.94                     2
 4  user_0149 2024-01-04 10:00:15.882835+00:00  ...         4.44                    59
+
+The |SessionEncoder| has additional features that are detailed in the relevant docstring.
+You can also find a working :ref:`example <sphx_glr_auto_examples_0110_session_encoder.py>`
+in the gallery.
