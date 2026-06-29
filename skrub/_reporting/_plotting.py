@@ -218,12 +218,20 @@ def _robust_hist(col, ax=None, color=None):
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
     result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
-    result["bin_counts"], result["bin_edges"] = np.histogram(
-        np_histogram_values[inlier_mask]
-    )
+    _inlier_values = np_histogram_values[inlier_mask]
+    try:
+        result["bin_counts"], result["bin_edges"] = np.histogram(_inlier_values)
+    except ValueError:
+        # Data range is too small for default number of bins.
+        # This can happen with float32 columns where adjacent values differ
+        # by less than the representable precision for 10 bins.
+        result["bin_counts"], result["bin_edges"] = np.histogram(_inlier_values, bins=1)
     if ax is None:
         return result
-    n, bins, patches = ax.hist(values[inlier_mask])
+    try:
+        n, bins, patches = ax.hist(values[inlier_mask])
+    except ValueError:
+        n, bins, patches = ax.hist(values[inlier_mask], bins=1)
     n_out = n_low_outliers + n_high_outliers
     if not n_out:
         return result
