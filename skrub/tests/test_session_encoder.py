@@ -332,13 +332,44 @@ def test_single_event(df_module):
         }
     )
 
-    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
     result = se.fit_transform(df)
 
     session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     assert len(session_ids) == 1
     # Single event should create one session
     assert session_ids[0] == 0
+
+
+def test_missing_values(df_module):
+    """Test that missing values in the group_by or timestamp columns result in
+    None session_id."""
+    df = df_module.make_dataframe(
+        {
+            "user_id": [1, 1, None, 1],  # None value in split_by column
+            "timestamp": [
+                pd.Timestamp("2024-01-01 10:00:00"),
+                None,  # None value in timestamp column
+                pd.Timestamp("2024-01-01 10:10:00"),
+                pd.Timestamp("2024-01-01 10:20:00"),
+            ],
+        }
+    )
+
+    se = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(df)
+
+    session_ids = sbd.to_numpy(sbd.col(result, "timestamp_session_id"))
+    # Rows with None timestamp or None user_id should have None session_id
+    assert np.isnan(session_ids[1])  # Row with missing timestamp
+    assert np.isnan(session_ids[2])  # Row with missing user_id
+    # Rows with valid timestamp and user_id should have valid session ID
+    assert not np.isnan(session_ids[0])
+    assert not np.isnan(session_ids[3])
 
 
 @pytest.mark.parametrize(

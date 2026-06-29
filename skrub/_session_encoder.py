@@ -47,14 +47,20 @@ def _add_session_column_pandas(
 ):
     # Adding a row order column to sort lines back
     row_order_col = f"_row_order_skrub_{random_string()}"
-    # X_with_order = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
     X_with_order = X.assign(**{row_order_col: range(X.shape[0])})
 
     # Selecting only the columns needed for sessionization and sorting them
     # to ensure that the sessionization is done correctly
+
+    selected = split_by_columns + [timestamp_column]
     X_selected = s.select(
         X_with_order, split_by_columns + [timestamp_column, row_order_col]
     )
+    X_has_nulls = X_selected.loc[X_selected[selected].isnull().any(axis=1)]
+    X_has_nulls = X_has_nulls.assign(**{session_id_column: np.nan})
+
+    X_selected = X_selected.dropna(subset=selected)
+
     # needed to avoid a warning with min deps
     grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
     groups = (
@@ -85,6 +91,9 @@ def _add_session_column_pandas(
         )
         groups_with_session_ids.append(group_df_sorted)
     X_with_session_id = pd.concat(groups_with_session_ids, axis=0)
+
+    X_with_session_id = pd.concat([X_with_session_id, X_has_nulls], axis=0)
+
     # Reordering rows back to the original order and selecting session id
     return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
 
@@ -102,6 +111,15 @@ def _add_session_column_polars(
     X_selected = s.select(
         X_with_order, split_by_columns + [timestamp_column, row_order_col]
     )
+
+    # Identify rows with nulls in timestamp or group_by columns
+    selected = split_by_columns + [timestamp_column]
+
+    X_has_nulls = X_selected.filter(
+        pl.any_horizontal(pl.col(selected).is_null())
+    ).with_columns(pl.lit(None).alias(session_id_column))
+    X_selected = X_selected.drop_nulls(subset=selected)
+
     groups = (
         X_selected.group_by(split_by_columns, maintain_order=True)
         if len(split_by_columns) > 0
@@ -131,6 +149,9 @@ def _add_session_column_polars(
         )
         groups_with_session_ids.append(group_df_sorted)
     X_with_session_id = pl.concat(groups_with_session_ids)
+
+    # Concatenate rows with nulls back
+    X_with_session_id = pl.concat([X_with_session_id, X_has_nulls])
 
     # Reordering rows back to the original order and selecting only the session id
     return X_with_session_id.sort(by=row_order_col)[session_id_column]
@@ -405,6 +426,43 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     3        1   desktop 2024-01-01 10:20:00  checkout                      0
     4        2    mobile 2024-01-01 10:00:00     login                      2
     5        2    mobile 2024-01-01 10:15:00      view                      2
+
+    When the timestamp column or any of the split_by columns contains null values,
+    those rows will be assigned a null session ID.
+
+    >>> data_with_nulls = {
+    ...     'user_id': [1, 1, None, 1],  # None value in split_by column
+    ...     'timestamp': [
+    ...         pd.Timestamp('2024-01-01 10:00:00'),
+    ...         None,  # None value in timestamp column
+    ...         pd.Timestamp('2024-01-01 10:10:00'),
+    ...         pd.Timestamp('2024-01-01 10:20:00'),
+    ...     ],
+    ... }
+    >>> df_with_nulls = pd.DataFrame(data_with_nulls)
+    >>> encoder_with_nulls = SessionEncoder(
+    ...     split_by='user_id',
+    ...     timestamp_col='timestamp'
+    ... )
+    >>> result_with_nulls = encoder_with_nulls.fit_transform(df_with_nulls)
+    >>> result_with_nulls
+    user_id           timestamp  timestamp_session_id
+    0      1.0 2024-01-01 10:00:00                  0.0
+    1      1.0                 NaT                  NaN
+    2      NaN 2024-01-01 10:10:00                  NaN
+    3      1.0 2024-01-01 10:20:00                  0.0
+
+    In this example:
+
+    - Row 0 has valid user_id and timestamp, so it gets session ID 0.
+    - Row 1 has a null timestamp, so it gets a null session ID.
+    - Row 2 has a null user_id, so it gets a null session ID.
+    - Row 3 has valid user_id and timestamp, and since there is less than 30 minutes
+      between rows 0 and 3 (ignoring row 1 and 2 due to null values), it gets the
+      same session ID as row 0.
+
+
+
 
     """
 
