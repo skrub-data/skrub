@@ -83,32 +83,21 @@ def all():
 
     This is the most general selector, matching every column regardless of name,
     type, or content. It is useful as a starting point for building complex
-    selections via operators.
+    selections via operators, for example to select all columns except a specific
+    subset.
 
-    **When to use**
-
-    - As a starting point for complex selections: ``s.all() & s.numeric()``
-    - To exclude specific columns: ``s.all() - ['ID', 'index']``
-    - To explicitly select everything (rarely needed, but more readable)
-    - As the complement of other selectors via ``~s.some_selector()``
-
-    Description
-    -----------
-    Returns a selector that matches all columns in the dataframe. This is useful
-    for operations that need a baseline for composition with other selectors,
-    such as selecting all columns except those matching a pattern.
+    Selectors can be combined by using set operators.
 
     See Also
     --------
     inv : Select all columns except those matched by a selector
-    cols : Select columns by explicit name
-    make_selector : Convert a selector, name, or list to a selector
+    cols : Select columns by exact name
 
     Notes
     -----
 
-    Operator combinations
-    ~~~~~~~~~~~~~~~~~~~~~
+    Selectors can be combined by using set operators:
+
     - ``s.all() & s.numeric()`` → All numeric columns
     - ``s.all() - 'ID'`` → All except 'ID'
     - ``s.all() & s.glob('*_mm')`` → All columns matching pattern
@@ -155,7 +144,23 @@ def all():
 
 
 def cols(*columns):
-    """Select columns by name.
+    """Select columns by exact name.
+
+    This selector matches columns whose names are explicitly listed. It is useful
+    for selecting a specific subset of columns, especially when combined with
+    other selectors. For example, to select all numeric columns except for a column
+    named "ID".
+
+    See Also
+    --------
+    inv : Select all columns except those matched by a selector
+    all : Select all columns
+
+    Notes
+    -----
+    Selectors can be combined by using set operators:
+
+    - ``s.all() - s.cols('ID')`` → All except 'ID'
 
     Examples
     --------
@@ -218,6 +223,10 @@ def inv(obj):
     equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
     ``obj`` can be a selector but also a column name or list of column names.
 
+    See Also
+    --------
+    all : Select all columns
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -255,7 +264,7 @@ def inv(obj):
 
 
 def make_selector(obj):
-    """Normalize a selector, column name, or list of names into a ``Selector``
+    """Normalize a selector, column name, or list of names into a ``Selector``\
     object.
 
     This function serves as the gateway function for all selector-accepting
@@ -278,11 +287,6 @@ def make_selector(obj):
     -------
     Selector
         A ``Selector`` object (or subclass).
-
-    Raises
-    ------
-    ValueError
-        If ``obj`` is not a selector, string, or iterable.
 
     See Also
     --------
