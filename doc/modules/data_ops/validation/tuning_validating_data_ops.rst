@@ -256,10 +256,26 @@ SkrubLearner(data_op=<Scoring <Apply DummyClassifier> (1 scorers)>
 Note that the score above is negative: it is the negative log loss we passed to
 ``with_scoring``, and not the default score (accuracy, which would be positive).
 
+If we also want to recover the default score that would be returned by the
+applied estimator's ``score()`` method (what we would get if we did not use
+:meth:`DataOp.skb.with_scoring`), we can pass ``None`` as the scorer, and the
+default corresponding key in the result is ``"score"`` (exactly like in
+:func:`~sklearn.model_selection.cross_validate`):
+
+>>> (
+...     pred.skb.with_scoring(None)
+...     .skb.with_scoring('accuracy')
+...     .skb.with_scoring('roc_auc')
+...     .skb.make_learner()
+...     .fit(split["train"])
+...     .score(split["test"])
+... )
+{'score': 0.6666666666666666, 'accuracy': 0.6666666666666666, 'roc_auc': 0.5}
+
 :meth:`DataOp.skb.with_scoring` only changes how scoring is performed
 (the outputs of :meth:`DataOp.skb.cross_validate`,
 :meth:`DataOp.skb.make_randomized_search`, :class:`SkrubLearner.score <SkrubLearner>` etc.),
-**not** the actual outputs of the learner (it does _not_ affect the outputs of
+**not** the actual outputs of the learner (it does *not* affect the outputs of
 :meth:`DataOp.skb.eval`, :class:`SkrubLearner.predict <SkrubLearner>`, etc.)
 
 This method can be called several times to add scorers that take different
