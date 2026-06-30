@@ -148,8 +148,10 @@ class SessionAggregator(BaseEstimator, TransformerMixin):
             session_dominant_device=("device_type", lambda x: x.mode()[0]),
         )
         # Join back to the original data
-        return X.join(
-            session_agg, how="left", on="timestamp_session_id", maintain_order=True
+        return X.merge(
+            session_agg,
+            how="left",
+            on="timestamp_session_id",
         )
 
 
