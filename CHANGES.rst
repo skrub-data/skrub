@@ -44,6 +44,9 @@ New Features
   columns (the bin count and edges, and numbers of low and high outliers). Now
   ``json()`` contains all the information shown in the report html rendering,
   including the plots. :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
+- Added :func:`skrub.selectors.object` to select columns with the ``object``
+  (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
+  <omkar-334>`.
 
 Changes
 -------
@@ -62,9 +65,28 @@ Changes
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :meth:`SkrubLearner.score` has been enhanced when the DataOp used
+  :meth:`DataOp.skb.with_scoring`. During scoring, predict(), predict_proba()
+  etc. are cached to avoid recomputation when multiple scorers are used (or one
+  scorer calls them several times). Moreover it is possible to pass
+  ``return_predictions=True`` to also retrieve any predictions that have been
+  computed during scoring, in addition to the scores. Finally, in cases where we
+  already have the predictions but want the result of score() without
+  recomputing them, it is possible to provide them in the environment passed to
+  ``score({..., "_skrub_predictions": {"predict_proba": ...}})``.
+  :pr:`2195` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.find_fitted_estimator` now supports searching for the
+  apply node by ID or callable predicate as alternatives to the node name.
+  :pr:`2194` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
+- :class:`MinHashEncoder` with the default ``hashing="fast"`` now uses every
+  n-gram size in ``ngram_range`` (the upper bound is inclusive, as documented
+  and as already done by ``hashing="murmur"``). Previously the largest size was
+  dropped, so the default ``ngram_range=(2, 4)`` ignored 4-grams and a
+  single-size range such as ``(3, 3)`` produced the same constant encoding for
+  every string. :pr:`2168` by :user:`José Maia <glitch-ux>`.
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
   duration columns in pandas and polars has been fixed. Now, both classes convert
   durations to the total number of seconds (with fractional part). This is done
@@ -74,6 +96,9 @@ Bugfixes
   double dollar (``$$``) signs has been fixed.
   :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
   :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
+- An error that happened when running ``TableReport`` or ``column_associations``
+  on some dataframes with non-string column names has been fixed in :pr:`2179`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------

@@ -20,14 +20,6 @@ def cast_column_names_to_strings(df):
 
 
 def _column_names_to_strings(column_names):
-    non_string = [c for c in column_names if not isinstance(c, str)]
-    if not non_string:
-        return column_names
-    warnings.warn(
-        f"Some dataframe column names are not strings: {non_string}.\n"
-        "All dataframe column names must be strings in skrub pipelines; "
-        "converting to strings."
-    )
     return list(map(str, column_names))
 
 

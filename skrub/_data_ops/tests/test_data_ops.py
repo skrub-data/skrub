@@ -879,34 +879,42 @@ def test_concat_vertical_duplicate_cols():
 def test_concat_non_str_colname():
     int_columns = pd.DataFrame({0: [1, 2], 1: [3, 4]})
     string_columns = pd.DataFrame({"0": [1, 2], "1": [3, 4]})
+    result = (
+        skrub.as_data_op(int_columns)
+        .skb.concat([skrub.as_data_op(string_columns)], axis=1)
+        .skb.eval()
+    )
+    assert result.shape == (2, 4)
 
-    # check that a warning is raised because of non-string column name
-    with pytest.warns(
-        UserWarning, match="Some dataframe column names are not strings:"
-    ):
-        skrub.as_data_op(int_columns).skb.concat(
-            [skrub.as_data_op(string_columns)], axis=1
-        )
-    with pytest.warns(
-        UserWarning, match="Some dataframe column names are not strings:"
-    ):
-        skrub.as_data_op(int_columns).skb.concat(
-            [skrub.as_data_op(int_columns)], axis=1
-        )
+    result = (
+        skrub.as_data_op(int_columns)
+        .skb.concat([skrub.as_data_op(int_columns)], axis=1)
+        .skb.eval()
+    )
+    assert result.shape == (2, 4)
 
-    # no warnings raised when all column names are strings
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        skrub.as_data_op(string_columns).skb.concat(
-            [skrub.as_data_op(string_columns)], axis=1
-        )
+    result = (
+        skrub.as_data_op(string_columns)
+        .skb.concat([skrub.as_data_op(string_columns)], axis=1)
+        .skb.eval()
+    )
+    assert result.shape == (2, 4)
 
-    # check that no warning is raised when concatenating vertically
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        skrub.as_data_op(int_columns).skb.concat(
-            [skrub.as_data_op(int_columns)], axis=0
-        )
+    result = (
+        skrub.as_data_op(int_columns)
+        .skb.concat([skrub.as_data_op(int_columns)], axis=0)
+        .skb.eval()
+    )
+    assert result.shape == (4, 2)
+    assert list(result.columns) == [0, 1]
+
+    result = (
+        skrub.as_data_op(string_columns)
+        .skb.concat([skrub.as_data_op(string_columns)], axis=0)
+        .skb.eval()
+    )
+    assert result.shape == (4, 2)
+    assert list(result.columns) == ["0", "1"]
 
 
 def test_concat_numpy_arrays():
@@ -926,6 +934,12 @@ def test_concat_numpy_arrays():
     out = result.skb.eval()
     expected = np.concatenate([a, b], axis=1)
     np.testing.assert_array_equal(out, expected)
+
+
+def test_int_column_names():
+    assert list(
+        skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough").skb.eval().columns
+    ) == ["0"]
 
 
 def test_get_vars():
