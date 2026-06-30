@@ -260,7 +260,7 @@ class TableReport:
     def __init__(
         self,
         dataframe,
-        n_rows=10,
+        n_rows=None,
         order_by=None,
         title=None,
         column_filters=None,
@@ -287,7 +287,7 @@ class TableReport:
                     "TableReport only supports 1D and 2D arrays"
                 )
 
-        n_rows = max(1, n_rows)
+        n_rows = max(1, n_rows if n_rows is not None else _config.get_config()["table_report_n_rows"])
         if verbose is None:
             self.verbose = _config.get_config()["table_report_verbosity"]
         else:

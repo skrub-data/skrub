@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- :func:`set_config` and :func:`config_context` now accept a
+  ``table_report_n_rows`` parameter to globally control the default number of
+  rows displayed in :class:`TableReport`.
+  :pr:`2166` by :user:`Mann <m4nn2609-dot>`.
 - New methods :meth:`SkrubLearner.get_named_params` and
   :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
   choices contained in the DataOp, keyed by choice name. It provides a more
