@@ -2,8 +2,11 @@
 
 .. _user_guide_data_ops_control_flow:
 
-Control flow in DataOps: eager and deferred evaluation
-======================================================
+Running complex operations on DataOps variables: deferred evaluation
+====================================================================
+
+Why some operations cannot be passed straight to DataOps objects
+----------------------------------------------------------------
 
 DataOps represent computations that have not been executed yet, and will
 only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
@@ -31,27 +34,17 @@ Traceback (most recent call last):
 TypeError: This object is a DataOp that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
 We get an error because the ``for`` statement tries to iterate immediately
-over the columns. However, ``orders.columns`` is not an actual list of
-columns: it is a skrub DataOp that will produce a list of columns, later,
+over the columns. This is the way any computation on any variable is usually run,
+referred to here as *eager* evaluation. However, ``orders.columns`` is not an actual
+list of columns: it is a skrub DataOp that will produce a list of columns, later,
 when we run the computation.
 
-This remains true even if we have provided a value for ``orders`` and we can
-see a result for that value:
+Eager vs. deferred
+------------------
 
->>> orders.columns
-<GetAttr 'columns'>
-Result:
-―――――――
-Index(['item', 'price', 'qty'], dtype=...)
-
-The "result" we see is an *example* result that the computation produces for the
-data we provided. But we want to fit our pipeline and apply it to different
-datasets, for which it will return a new object every time. So even if we see a
-preview of the output on the data we provided, ``orders.columns`` still
-represents a future computation that remains to be evaluated.
-
-Therefore, we must delay the execution of the ``for`` statement until the computation
-actually runs and ``orders.columns`` has been evaluated.
+To circumvent this issue, we must delay the execution of the ``for`` statement until
+the computation actually runs and ``orders.columns`` has been evaluated, hence the designation of
+*deferred* computation rather than *eager*.
 
 We can achieve this by defining a function that contains the control flow logic
 we need, and decorating it with :func:`deferred`. This decorator defers the execution
@@ -85,8 +78,19 @@ so it is possible to use standard Python control flow statements such as
 ``if``, ``for``, and it is possible to treat the inputs as if they were
 regular objects (e.g., a Pandas DataFrame or Series).
 
-When the first argument to our function is a skrub DataOp, rather than
-applying ``deferred`` and calling the function as shown above we can use
+
+.. warning::
+  DataOps are evaluated *lazily* (we are building a pipeline, not immediately
+  computing a single result), similarly to the transformers in a scikit-learn
+  pipeline where each transformer computes a new result without modifying its input.
+  As a result, any transformation that we apply *must not modify its
+  input in-place*, but leave it unchanged and return a new value.
+
+Alternate notations
+-------------------
+
+A function can be marked as deferred using the :func:`deferred` decorator, but
+also applied directly to a skrub DataOp using
 :meth:`.skb.apply_func() <DataOp.skb.apply_func>`:
 
 >>> def with_upper_columns(df):
@@ -102,6 +106,13 @@ Result:
 1   cup    NaN    1
 2   pen    1.5    2
 3  fork    2.2    4
+
+It is also possible to create a specific deferred function from a preexisting eager
+one: for instance, if we need to call module-level functions from a library. For
+example, to delay the loading of a CSV file, we could write something like:
+
+>>> csv_path = skrub.var("csv_path")
+>>> data = skrub.deferred(pd.read_csv)(csv_path)
 
 Unpacking multiple outputs from deferred functions
 --------------------------------------------------
@@ -125,37 +136,6 @@ Instead, keep the result as a single DataOp and index into it:
 >>> res = test.skb.apply_func(process_test_data)
 >>> left = res[0]
 >>> right = res[1]
-
-:func:`deferred` is useful not only for our own functions, but also when we
-need to call module-level functions from a library. For example, to delay the
-loading of a CSV file, we could write something like:
-
->>> csv_path = skrub.var("csv_path")
->>> data = skrub.deferred(pd.read_csv)(csv_path)
-
-or, with ``apply_func``:
-
->>> data = csv_path.skb.apply_func(pd.read_csv)
-
-Another consequence of the fact that DataOps are evaluated lazily (we are
-building a pipeline, not immediately computing a single result), any
-transformation that we apply must not modify its input, but leave it unchanged
-and return a new value.
-
-Consider the transformers in a scikit-learn pipeline: each computes a new
-result without modifying its input.
-
->>> orders['total'] = orders['price'] * orders['qty']
-Traceback (most recent call last):
-    ...
-TypeError: Do not modify a DataOp in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
-For example if df is a pandas DataFrame:
-df = df.assign(new_col=...) instead of df['new_col'] = ...
-
-Note the suggestion in the error message: using :meth:`pandas.DataFrame.assign`.
-When we do need assignments or in-place transformations, we can put them in a
-:func:`deferred` function. But we should make a (shallow) copy of the inputs and
-return a new value.
 
 Finally, there are other situations where using :func:`deferred` can be helpful:
 
