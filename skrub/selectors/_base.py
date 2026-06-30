@@ -79,7 +79,28 @@ from .._utils import repr_args
 
 
 def all():
-    """Select all columns.
+    """Select all columns in a dataframe.
+
+    This is the most general selector, matching every column regardless of name,
+    type, or content. It is useful as a starting point for building complex
+    selections via operators, for example to select all columns except a specific
+    subset.
+
+    Selectors can be combined by using set operators.
+
+    See Also
+    --------
+    inv : Select all columns except those matched by a selector
+    cols : Select columns by exact name
+
+    Notes
+    -----
+
+    Selectors can be combined by using set operators:
+
+    - ``s.all() & s.numeric()`` → All numeric columns
+    - ``s.all() - 'ID'`` → All except 'ID'
+    - ``s.all() & s.glob('*_mm')`` → All columns matching pattern
 
     Examples
     --------
@@ -98,16 +119,48 @@ def all():
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
+    Select all columns:
+
     >>> s.select(df, s.all())
        height_mm  width_mm kind  ID
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
+
+    Use ``all()`` as a base for exclusion:
+
+    >>> s.select(df, s.all() - 'ID')
+       height_mm  width_mm kind
+    0      297.0     210.0   A4
+    1      420.0     297.0   A3
+
+    Combine with type selectors:
+
+    >>> s.select(df, s.all() & s.numeric())
+       height_mm  width_mm  ID
+    0      297.0     210.0   4
+    1      420.0     297.0   3
     """
     return All()
 
 
 def cols(*columns):
-    """Select columns by name.
+    """Select columns by exact name.
+
+    This selector matches columns whose names are explicitly listed. It is useful
+    for selecting a specific subset of columns, especially when combined with
+    other selectors. For example, to select all numeric columns except for a column
+    named "ID".
+
+    See Also
+    --------
+    inv : Select all columns except those matched by a selector
+    all : Select all columns
+
+    Notes
+    -----
+    Selectors can be combined by using set operators:
+
+    - ``s.all() - s.cols('ID')`` → All except 'ID'
 
     Examples
     --------
@@ -137,7 +190,8 @@ def cols(*columns):
     >>> s.select(df, s.cols('width_mm', 'depth_mm'))
     Traceback (most recent call last):
         ...
-    ValueError: The following columns are requested for selection but missing from dataframe: ['depth_mm']
+    ValueError: The following columns are requested for selection but missing
+    from dataframe: ['depth_mm']
 
     However, no error is raised when this selector is combined with other
     selectors:
@@ -168,6 +222,10 @@ def inv(obj):
     This selects all columns except those that are matched by the input; it is
     equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
     ``obj`` can be a selector but also a column name or list of column names.
+
+    See Also
+    --------
+    all : Select all columns
 
     Examples
     --------
@@ -206,22 +264,82 @@ def inv(obj):
 
 
 def make_selector(obj):
-    """Transform a selector, column name or list of column names into a selector.
+    """Normalize a selector, column name, or list of names into a ``Selector``\
+    object.
 
+    This function serves as the gateway function for all selector-accepting
+    APIs in skrub. It is used internally by skrub to normalize user input into a
+    consistent selector object:
+
+    - Selectors are returned as-is
+    - Strings are converted to ``cols(name)``
+    - Lists of strings are converted to ``cols(*names)``
+
+    Parameters
+    ----------
+    obj : selector, str, or list
+        The object to normalize:
+        - A ``Selector`` object: returned as-is
+        - A string: converted to ``cols(name)``
+        - A list/iterable of strings: converted to ``cols(*names)``
+
+    Returns
+    -------
+    Selector
+        A ``Selector`` object (or subclass).
+
+    See Also
+    --------
+    cols : Select specific columns by name
+    select : Apply a selector and return matching columns
+    drop : Apply a selector and return non-matching columns
 
     Examples
     --------
     >>> from skrub import selectors as s
 
+    Normalize a single column name:
+
     >>> s.make_selector('ID')
     cols('ID')
+
+    Normalize a list of column names:
 
     >>> s.make_selector(['ID', 'kind'])
     cols('ID', 'kind')
 
+    A selector is returned unchanged:
+
     >>> s.make_selector(s.cols('ID', 'kind'))
     cols('ID', 'kind')
 
+    Use with operators:
+
+    >>> s.make_selector('ID') | s.numeric()
+    (cols('ID') | numeric())
+
+    This is useful in APIs that accept flexible column specifications:
+
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
+
+    These all work interchangeably:
+
+    >>> s.select(df, s.cols('a'))
+       a
+    0  1
+    1  2
+
+    >>> s.select(df, 'a')  # Converted via make_selector
+       a
+    0  1
+    1  2
+
+    >>> s.select(df, ['a'])  # Also converted via make_selector
+       a
+    0  1
+    1  2
     """
     if isinstance(obj, Selector):
         return obj
@@ -248,12 +366,59 @@ def _select_col_names_polars(df, col_names):
 
 
 def select(df, selector):
-    """Apply a selector to a dataframe and return a dataframe with the selected \
-    columns.
+    """Apply a selector to a dataframe and return the selected columns.
 
+    This is the primary function for materializing selector expressions into
+    actual column subsets. It evaluates a selector against a specific dataframe
+    and returns a new dataframe containing only the columns matched by the selector.
 
-    ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
-    column name or list of column names.
+    **When to use**
+
+    - To extract columns matching a pattern or criterion from a dataframe
+    - To prepare data for modeling (e.g., select features for a pipeline)
+    - To inspect which columns a selector expression matches
+    - Combined with selectors in exploratory data analysis workflows
+
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe to select columns from (pandas or polars).
+    selector : selector, str, or list
+        A selector object, single column name, or list of column names.
+        Passed through ``make_selector`` for normalization.
+
+    Returns
+    -------
+    dataframe
+        A new dataframe containing only the columns matched by the selector.
+        The column order matches the selector's expansion order.
+
+    See Also
+    --------
+    drop : Return all columns except those matched by a selector
+    make_selector : Normalize column specifications into a selector
+    Selector.expand : Get the column names matched by a selector (without
+    subsetting)
+
+    Notes
+    -----
+    ``select`` is a convenience function that combines two operations:
+
+    1. ``selector.expand(df)`` - Get list of matching column names
+    2. Return the dataframe subset to those columns
+
+    If you only need the list of matching column names (without subsetting the
+    dataframe), use ``selector.expand(df)`` directly.
+
+    Operator combinations
+    ~~~~~~~~~~~~~~~~~~~~~
+    Complex selections use operators before passing to ``select``:
+
+    - ``s.select(df, s.numeric() & s.glob('*_mm'))`` → Numeric columns with _mm
+      suffix
+    - ``s.select(df, s.all() - s.glob('ID'))`` → All except ID columns
+    - ``s.select(df, s.numeric() | s.string())`` → Numeric or string columns
+    - ``s.select(df, ~s.has_nulls())`` → Columns without missing values
 
     Examples
     --------
@@ -272,48 +437,98 @@ def select(df, selector):
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
+    Build and apply a complex selector:
+
     >>> selector = s.all() - 'ID'
     >>> selector
     (all() - cols('ID'))
-
-    >>> selector.expand(df)
-    ['height_mm', 'width_mm', 'kind']
 
     >>> s.select(df, selector)
        height_mm  width_mm kind
     0      297.0     210.0   A4
     1      420.0     297.0   A3
 
-    We can also pass column names directly:
+    Pass column names directly (implicitly converted):
 
     >>> s.select(df, ['kind', 'ID'])
       kind  ID
     0   A4   4
     1   A3   3
 
+    Select by type:
+
+    >>> s.select(df, s.numeric())
+       height_mm  width_mm  ID
+    0      297.0     210.0   4
+    1      420.0     297.0   3
+
+    Combine multiple criteria:
+
+    >>> s.select(df, s.all() & s.glob('*_mm'))
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
+
+    Use to explore selector matches:
+
+    >>> s.select(df, s.string())
+      kind
+    0   A4
+    1   A3
     """
     return _select_col_names(df, make_selector(selector).expand(df))
 
 
 def drop(df, selector):
-    """Apply a selector to a dataframe and return a dataframe without the \
-    selected columns.
+    """Apply a selector to a dataframe and return it without the selected columns.
 
-    ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
-    column name or list of column names.
+    This is the complement of ``select()``: it returns a new dataframe containing
+    all columns except those matched by the selector. Useful for removing unwanted
+    columns (identifiers, metadata, noise) before modeling or analysis.
+
+    **When to use**
+    -----------
+    - Remove ID/index columns before fitting models
+    - Exclude metadata or internal columns from analysis
+    - Drop all columns of a certain type (e.g., all nulls)
+    - Clean data by removing problematic columns
 
     Parameters
     ----------
     df : dataframe
-        The dataframe to process.
+        The dataframe to process (pandas or polars).
     selector : selector, str, or list
-        A selector object, column name, or list of column names indicating which
-        columns to drop.
+        A selector object, single column name, or list of column names indicating
+        which columns to drop. Passed through ``make_selector`` for normalization.
 
     Returns
     -------
     dataframe
-        The dataframe without the columns matched by the selector.
+        A new dataframe with the matched columns removed, preserving the order
+        of remaining columns.
+
+    See Also
+    --------
+    select : Return only the columns matched by a selector
+    make_selector : Normalize column specifications into a selector
+    inv : Create an inverted selector matching all columns except those from the input
+
+    Notes
+    -----
+    ``drop`` is logically equivalent to ``select(df, ~selector)`` or
+    ``select(df, s.all() - selector)``. The difference is that ``drop`` is more
+    readable when your intent is to remove columns rather than specify what to keep.
+
+    ``drop`` preserves the original column order of the remaining columns.
+
+    Operator combinations
+    ~~~~~~~~~~~~~~~~~~~~~
+    Use operators to drop complex column selections:
+
+    - ``s.drop(df, s.glob('ID*'))`` → Remove all ID columns
+    - ``s.drop(df, s.numeric() & s.has_nulls())`` → Remove numeric cols with nulls
+    - ``s.drop(df, s.all() - s.string())`` → Keep only string columns
+    - ``s.drop(df, s.filter(lambda col: len(col) < 10))`` → Drop short columns
 
     Examples
     --------
@@ -332,18 +547,40 @@ def drop(df, selector):
     0      210.0     188.5   A5   5
     1      297.0     210.0   A4   4
 
+    Drop columns matching a pattern:
+
     >>> s.drop(df, s.glob("*_mm"))
       kind  ID
     0   A5   5
     1   A4   4
 
-    We can also pass column names directly:
+    Drop specific columns by name (can pass names directly):
 
     >>> s.drop(df, ['height_mm', 'width_mm'])
       kind  ID
     0   A5   5
     1   A4   4
 
+    Drop by type:
+
+    >>> s.drop(df, s.numeric())
+      kind
+    0   A5
+    1   A4
+
+    Drop columns matching a predicate:
+
+    >>> s.drop(df, s.filter_names(str.startswith, 'h'))
+       width_mm kind  ID
+    0      188.5   A5   5
+    1      210.0   A4   4
+
+    Preserve only certain types (via drop):
+
+    >>> s.drop(df, s.all() - s.string())
+      kind
+    0   A5
+    1   A4
     """
     all_cols = sbd.column_names(df)
     matched_cols = make_selector(selector).expand(df)
@@ -352,28 +589,144 @@ def drop(df, selector):
 
 
 class Selector:
-    """Generic selector type, that returns set columns when applied.
+    """Generic selector type that selects columns from a dataframe.
 
-    This class is not meant to be instantiated manually, ``Selector``
-    objects are created by calling one of the selector builders such
-    as :meth:`skrub.selectors.all()` or :meth:`skrub.selectors.make_selector()`.
+    A ``Selector`` is a reusable rule for selecting columns based on various
+    criteria (data type, name pattern, content properties, etc.). Selectors
+    enable delayed selection: you can define a selection rule before the data
+    is available, making them ideal for scikit-learn pipelines and data
+    processing workflows.
+
+    This class is not meant to be instantiated manually. Create selectors using
+    builder functions such as :func:`skrub.selectors.all()`,
+    :func:`skrub.selectors.numeric()`, :func:`skrub.selectors.glob()`, etc.
+
+    **How Selectors Work**
+
+    For each column in a dataframe, a selector evaluates the ``_matches(column)``
+    method:
+
+    - Returns ``True`` → column is selected
+    - Returns ``False`` → column is excluded
+
+    **Key Methods**
+
+    - :meth:`expand` - Get list of column names that the selector would select
+    - :meth:`expand_index` - Get indices of columns that the selector would select
+    - Operator support: ``|`` (OR), ``&`` (AND), ``-`` (except), ``^``
+      (XOR), ``~`` (NOT)
+
+    **Ways to Use Selectors**
+
+    1. **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
+    2. **In transformers:** ``ApplyToCols(transformer, cols=selector)`` applies a
+       transformer to selected columns
+    3. **In DataOps:** ``skrub.X(df).skb.apply(transformer, cols=selector)``
+    4. **Manual expansion:** ``selector.expand(df)`` gets column names for manual use
+
+    **Combining Selectors**
+
+    Selectors can be combined with operators to create complex selection rules:
+
+    - ``s.numeric() | s.boolean()`` - numeric OR boolean columns
+    - ``s.all() - s.glob('*_id')`` - all columns except ID-like ones
+    - ``s.string() & ~s.cardinality_below(10)`` - high-cardinality string columns
+
+    **Why Delayed Selection Matters**
+
+    Selectors enable pipelines that work with different datasets:
+
+    ```python
+    # Without selectors: hardcoded column names break with different data
+    transformer = ApplyToCols(StandardScaler(), cols=['height', 'width'])
+
+    # With selectors: rules adapt to any dataset
+    transformer = ApplyToCols(StandardScaler(), cols=s.numeric())
+    ```
+
+    See Also
+    --------
+    skrub.selectors : Module containing all available selector functions
+
+    Examples
+    --------
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'height_mm': [297.0, 420.0],
+    ...     'width_mm': [210.0, 297.0],
+    ...     'kind': ['A4', 'A3'],
+    ...     'ID': [4, 3],
+    ... })
+
+    Use a selector to get matching column names:
+
+    >>> s.numeric().expand(df)
+    ['height_mm', 'width_mm', 'ID']
+
+    Combine selectors for complex rules:
+
+    >>> (s.numeric() & ~s.glob('*_ID')).expand(df)
+    ['height_mm', 'width_mm']
+
+    Use in data transformations:
+
+    >>> from skrub import ApplyToCols
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> ApplyToCols(StandardScaler(), cols=s.numeric()).fit_transform(df)
+       height_mm  width_mm  ID  kind
+    0       -1.0      -1.0   4    A4
+    1        1.0       1.0   3    A3
     """
 
     def _matches(self, col):
+        """Check if a column should be selected.
+
+        This internal method is called by :meth:`expand` for each column in the
+        dataframe. Subclasses must override this method to define their selection
+        criteria.
+
+        Parameters
+        ----------
+        col : column object
+            A column from the dataframe (pandas Series, polars Series, etc.).
+
+        Returns
+        -------
+        bool
+            ``True`` if the column should be selected, ``False`` otherwise.
+
+        Notes
+        -----
+        This is an internal method intended for subclass implementation.
+        Users should use the public API functions like :func:`skrub.selectors.numeric`
+        or :func:`skrub.selectors.glob` instead.
+        """
         raise NotImplementedError()
 
     def expand(self, df):
-        """Lists the column names that the selector would retain if applied to \
-        the dataframe ``df``.
+        """Get the list of column names that the selector would select.
+
+        This method evaluates the selector's matching criteria against each column
+        in the dataframe and returns the names of columns that match.
+
+        Use this method for exploratory work or when you need just the column names.
+        For pipelines and transformers, pass the selector directly to
+        :class:`~skrub.ApplyToCols`, :class:`~skrub.SelectCols`, etc.
 
         Parameters
         ----------
         df : dataframe
+            A pandas or polars dataframe to evaluate the selector against.
 
         Returns
         -------
-        list
-            The list of ``df``'s columns that the item would select.
+        list of str
+            The names of columns from ``df`` that the selector matches.
+
+        See Also
+        --------
+        expand_index : Get indices of matching columns instead of names.
 
         Examples
         --------
@@ -391,11 +744,18 @@ class Selector:
         >>> some_selector.expand(df)
         ['kind', 'ID']
 
+        Use with dataframe selection:
+
+        >>> df[some_selector.expand(df)]
+           kind  ID
+        0   A5   5
+        1   A4   4
 
         Notes
         -----
-        In effect, running ``df[sel.expand(df)]`` should give the exact same result as
-        ``sel.transform(df)``.
+        Internally, this method calls ``_matches(col)`` for each column. The selector
+        is evaluated independently for each column, allowing for parallelization
+        opportunities in the future.
 
         """
         matching_col_names = []
@@ -406,18 +766,28 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
-        """Lists the indices of dataframe ``df``'s columns that the selector \
-        would retain if applied to ``df``.
+        """Get the indices of columns that the selector would select.
+
+        This method evaluates the selector against each column and returns the
+        positional indices (0, 1, 2, ...) of matching columns instead of their names.
+
+        Use this when you need column positions (e.g., for numpy-based operations
+        or when column order matters more than names).
 
         Parameters
         ----------
         df : dataframe
+            A pandas or polars dataframe to evaluate the selector against.
 
         Returns
         -------
-        list
-            The list of indices among ``df``'s columns that the item would select.
+        list of int
+            The indices (0-based positions) of columns from ``df`` that the
+            selector matches.
 
+        See Also
+        --------
+        expand : Get names of matching columns instead of indices.
 
         Examples
         --------
@@ -435,13 +805,23 @@ class Selector:
         >>> some_selector.expand_index(df)
         [2, 3]
 
+        Use with column access by position:
+
+        >>> cols = df.columns[[2, 3]]
+        >>> df[cols]
+           kind  ID
+        0   A5   5
+        1   A4   4
 
         Notes
         -----
+        If ``cols`` is the list of column names in ``df``, then selecting by index
+        and by name gives equivalent results:
 
-        In effect, (as with ``expand``), if ``cols`` is the list of columns in ``df``,
-        running ``df[cols[i] for i in sel.expand(df)]`` should give the exact same
-        result as ``sel.transform(df)``.
+        ``df[cols[i] for i in sel.expand_index(df)]`` == ``df[sel.expand(df)]``
+
+        This method uses the same matching logic as :meth:`expand`; only the return
+        format differs (indices vs. names).
 
         """
         matching_col_indices = []
@@ -607,18 +987,76 @@ class Filter(Selector):
 
 
 def filter(predicate, *args, **kwargs):
-    """Select columns for which ``predicate`` returns True.
+    """Select columns for which a custom predicate function returns ``True``.
 
+    This is the most flexible selector, allowing arbitrary column selection logic
+    based on column data (values, dtype, shape, etc.). The predicate receives the
+    actual column object (pandas/polars Series) for inspection.
 
-    For each column ``col`` in the dataframe, ``predicate`` is called as
-    ``predicate(col, *args, **kwargs)`` and the column is kept if it returns
-    True. To filter columns based only on their name, see also
-    ``filter_names``.
+    When to use
+    -----------
+    - When built-in selectors don't match your selection criterion
+    - To select columns based on column content properties (e.g., variance, range)
+    - To select columns by custom statistics or computed properties
+    - To combine multiple criteria in a single predicate
+    - See ``filter_names`` for selections based only on column names
 
-    ``args`` and ``kwargs`` are extra parameters for the predicate. Storing
-    parameters like this rather than in a closure can help using an importable
-    function as the predicate rather than a local one, which is necessary to
-    pickle the selector. (An alternative is to use ``functools.partial``).
+    Parameters
+    ----------
+    predicate : callable
+        A function that takes a column and optional extra arguments, returning
+        ``True`` to select the column or ``False`` to exclude it.
+        Signature: ``predicate(col, *args, **kwargs) -> bool``
+    *args : tuple
+        Extra positional arguments passed to the predicate. Using explicit
+        arguments (instead of closures) helps with pickling the selector.
+    **kwargs : dict
+        Extra keyword arguments passed to the predicate. Using explicit
+        arguments (instead of closures) helps with pickling the selector.
+
+    Returns
+    -------
+    Selector
+        A ``Filter`` selector that matches columns where ``predicate`` returns ``True``.
+
+    See Also
+    --------
+    filter_names : Select columns based only on their name (not content)
+    Selector.expand : Evaluate a selector to get matching column names
+
+    Notes
+    -----
+    **Predicate signature**: For a column ``col``, the predicate is called as::
+
+        predicate(col, *args, **kwargs)
+
+    The column is kept if the result is ``True``.
+
+    **Pickling**: To pickle the selector, use importable functions as predicates
+    rather than lambdas or closures. Pass parameters via ``*args`` or ``**kwargs``
+    instead of capturing them in a closure::
+
+        # Picklable (importable function + explicit args)
+        s.filter(str.startswith, 'prefix')
+
+        # Picklable alternative (with functools.partial)
+        import functools
+        s.filter(functools.partial(str.startswith, 'prefix'))
+
+        # NOT picklable (closure)
+        prefix = 'test'
+        s.filter(lambda col: str(col.name).startswith(prefix))
+
+    **Performance**: The predicate is called once per column, so operations on
+    entire columns (not individual values) are efficient.
+
+    Operator combinations
+    ~~~~~~~~~~~~~~~~~~~~~
+    - ``s.filter(lambda col: col.std() > 1) & s.numeric()`` → Numeric cols with high
+      variance
+    - ``s.filter(lambda col: len(col) > 100) | s.string()`` → Wide columns or strings
+    - ``~s.filter(lambda col: col.isna().all())`` → All non-empty columns
+    - ``s.filter(lambda col: col.dtype in [int, float]) - 'ID'`` → Numeric but not ID
 
     Examples
     --------
@@ -637,11 +1075,15 @@ def filter(predicate, *args, **kwargs):
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
+    Select columns containing a specific value:
+
     >>> selector = s.filter(lambda col: 'A4' in col.values)
     >>> s.select(df, selector)
       kind
     0   A4
     1   A3
+
+    Use an importable function with explicit arguments (picklable):
 
     >>> def contains(col, value):
     ...    return value in col.values
@@ -655,6 +1097,22 @@ def filter(predicate, *args, **kwargs):
     0   4
     1   3
 
+    Select columns with high variance:
+
+    >>> s.select(df, s.filter(lambda col: col.std() > 50))
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
+
+    Combine with type selectors:
+
+    >>> def has_high_range(col):
+    ...     return col.max() - col.min() > 100
+
+    >>> s.select(df, s.numeric() & s.filter(has_high_range))
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
     """
     return Filter(predicate, args=args, kwargs=kwargs)
 
@@ -669,20 +1127,85 @@ class NameFilter(Filter):
 
 
 def filter_names(predicate, *args, **kwargs):
-    """Select columns based on their name.
+    r"""Select columns based only on their name (not content or type).
 
+    This is a specialized version of ``filter`` that passes only the column name
+    (a string) to the predicate, rather than the column itself. Use this when
+    your selection logic depends only on naming patterns, not data values.
 
-    For a column whose name is ``col_name``, ``predicate`` is called as
-    ``predicate(col_name, *args, **kwargs)`` and the column is selected if
-    returns ``True``. Note this is different from ``filter``, because here the
-    predicate is passed the column name; with ``filter``, the predicate
-    is passed the actual column (pandas or polars Series).
+    When to use
+    -----------
+    - Select columns matching regex patterns (use ``glob()`` or ``regex()``
+      for simple patterns)
+    - Check column names for prefixes, suffixes, or substrings
+    - Filter by naming conventions (e.g., 'internal_*', 'tmp_*')
+    - Custom naming-based logic that doesn't involve column data
 
+    Parameters
+    ----------
+    predicate : callable
+        A function that takes a column name (string) and optional extra arguments,
+        returning ``True`` to select the column or ``False`` to exclude it.
+        Signature: ``predicate(col_name, *args, **kwargs) -> bool``
+    *args : tuple
+        Extra positional arguments passed to the predicate. Using explicit
+        arguments (instead of closures) helps with pickling the selector.
+    **kwargs : dict
+        Extra keyword arguments passed to the predicate. Using explicit
+        arguments (instead of closures) helps with pickling the selector.
 
-    ``args`` and ``kwargs`` are extra parameters for the predicate. Storing
-    parameters like this rather than in a closure can help using an importable
-    function as the predicate rather than a local one, which is necessary to
-    pickle the selector. (An alternative is to use ``functools.partial``).
+    Returns
+    -------
+    Selector
+        A ``NameFilter`` selector that matches columns where ``predicate(name)``
+        returns ``True``.
+
+    See Also
+    --------
+    filter : Select columns based on their content or properties
+    glob : Select columns by wildcard pattern matching
+    regex : Select columns by regular expression pattern matching
+    Selector.expand : Evaluate a selector to get matching column names
+
+    Notes
+    -----
+    **Key difference from ``filter``**: ``filter_names`` passes the column NAME
+    (a string), while ``filter`` passes the column OBJECT (Series/DataFrame)::
+
+        # filter receives the Series/array
+        s.filter(lambda col: col.max() > 100)  # col is the Series
+
+        # filter_names receives the string name
+        s.filter_names(lambda name: name.startswith('x'))  # name is a string
+
+    **Built-in alternatives**: For common patterns, prefer simpler selectors:
+
+    - ``s.glob('*_mm')`` instead of ``s.filter_names(lambda n: n.endswith('_mm'))``
+    - ``s.regex(r'col_\d+')`` instead of ``s.filter_names(lambda n: re.match(...))``
+
+    **Pickling**: To pickle the selector, use importable functions as predicates
+    rather than lambdas or closures. Pass parameters via ``*args`` or ``**kwargs``::
+
+        # Picklable (importable function + explicit args)
+        s.filter_names(str.endswith, '_mm')
+
+        # Picklable alternative (with functools.partial)
+        import functools
+        s.filter_names(functools.partial(str.endswith, '_mm'))
+
+        # NOT picklable (closure)
+        suffix = '_mm'
+        s.filter_names(lambda name: name.endswith(suffix))
+
+    **Performance**: Very fast since only column names are inspected, no column
+    data is loaded.
+
+    Operator combinations
+    ~~~~~~~~~~~~~~~~~~~~~
+    - ``s.filter_names(str.startswith, 'in_') & s.numeric()`` → Internal numeric cols
+    - ``s.filter_names(str.isupper) | s.glob('*_ID')`` → All caps names or *_ID cols
+    - ``s.all() - s.filter_names(str.startswith, '_')`` → All except private cols
+    - ``s.filter_names(lambda n: len(n) < 10)`` → Columns with short names
 
     Examples
     --------
@@ -701,14 +1224,15 @@ def filter_names(predicate, *args, **kwargs):
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
+    Select columns ending with a suffix (using lambda):
+
     >>> selector = s.filter_names(lambda name: name.endswith('_mm'))
     >>> s.select(df, selector)
        height_mm  width_mm
     0      297.0     210.0
     1      420.0     297.0
 
-    If we want to pickle the selector, we're better off using an importable
-    function and passing the arguments separately:
+    Use an importable function with explicit arguments (picklable):
 
     >>> selector = s.filter_names(str.endswith, '_mm')
     >>> selector
@@ -720,7 +1244,27 @@ def filter_names(predicate, *args, **kwargs):
     1      420.0     297.0
 
     >>> import pickle
-    >>> _ = pickle.dumps(selector) # OK
+    >>> _ = pickle.dumps(selector)  # Pickling works!
 
+    Select columns with uppercase names:
+
+    >>> s.select(df, s.filter_names(str.isupper))
+       ID
+    0   4
+    1   3
+
+    Combine with type selectors:
+
+    >>> s.select(df, s.numeric() & s.filter_names(str.islower))
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
+
+    Drop internal/private columns (starting with underscore):
+
+    >>> s.drop(df, s.filter_names(str.startswith, '_'))
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
     """
     return NameFilter(predicate, args=args, kwargs=kwargs)
