@@ -928,43 +928,42 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             score_node._skrub_impl.scorers, mode="fit_transform", environment=env
         )
         all_scores = []
-        predictions = env.get("_skrub_predictions", {})
-        cache = {(k, id(X)): v for k, v in predictions.items()}
+        cache = dict(env.get("_skrub_predictions", {}))
         caching_estimator = _CachingXyPipeline(
-            self.data_op, self.environment, cache=cache
+            self.data_op, self.environment, X_id=id(X), cache=cache
         )
         _copy_attr(self, caching_estimator, ["_is_fitted"])
         for scorer_info in scorers:
             scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
             scorer_output = scorer(caching_estimator, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
-        updated_predictions = {
-            k: v for ((k, X_id), v) in cache.items() if X_id == id(X)
-        }
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
         if cast_to_float and len(result) == 1 and not return_predictions:
             # If there is a single score stick to scikit-learn interface which
             # returns a number.
             return next(iter(result.values()))
-        return (result, updated_predictions) if return_predictions else result
+        return (result, caching_estimator.cache) if return_predictions else result
 
 
 class _CachingXyPipeline(_XyPipeline):
-    def __init__(self, data_op, environment, cache):
+    def __init__(self, data_op, environment, X_id, cache):
         super().__init__(data_op, environment)
+        self.X_id = X_id
         self.cache = cache
 
     def _eval_in_mode(self, mode, X, y=None):
-        if y is not None:
+        if y is not None or id(X) != self.X_id:
             # Only use caching for methods like predict, predict_proba etc.
-            # (They are the only ones to be called anyway unless a scorer does
-            # something very weird)
+            # (for which y is None), and when they are called on the "main" X,
+            # the X that was passed to SkrubLearner.score . For example if a
+            # scorer computes a metric on a subsample of the dataset (e.g. a
+            # group for fairness etc.), we do not use the cached result for
+            # that different input.
             return super()._eval_in_mode(mode, X, y=y)
-        key = (mode, id(X))
-        if key not in self.cache:
-            self.cache[key] = super()._eval_in_mode(mode, X, y=y)
-        return self.cache[key]
+        if mode not in self.cache:
+            self.cache[mode] = super()._eval_in_mode(mode, X, y=y)
+        return self.cache[mode]
 
     def _score(self, X, y=None):
         # If a scorer calls score(), eval in "score" mode (i.e. ignoring
