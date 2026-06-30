@@ -54,7 +54,7 @@ def _add_session_column_pandas(
 
     selected = split_by_columns + [timestamp_column]
     X_selected = s.select(
-        X_with_order, split_by_columns + [timestamp_column, row_order_col]
+        X_with_order, selected + [row_order_col]
     )
     X_has_nulls = X_selected.loc[X_selected[selected].isnull().any(axis=1)]
     # Assigning a session ID of -1 to rows with nulls in timestamp or group_by columns
@@ -541,9 +541,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if self.session_id_column_ in self.all_inputs_:
             self.session_id_column_ += f"_skrub_{random_string()}"
 
-        X_result = self.transform(X, y)
-
-        return X_result
+        return self.transform(X, y)
 
     def transform(self, X, y=None):
         """Transform the data by encoding sessions.
@@ -566,10 +564,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         # if the input dataframe is empty, we can skip all the processing and
         # return an empty dataframe with the session_id column added
         if sbd.is_empty_frame(X):
-            X = sbd.with_columns(
+            return sbd.with_columns(
                 X, **{self.session_id_column_: np.array([], dtype=np.int64)}
             )
-            return X
 
         session_id = _add_session_column(
             X,
