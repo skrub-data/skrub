@@ -100,7 +100,10 @@ class TableReport:
 
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
-    column. Numpy arrays are converted to pandas DataFrame or Series.
+    column. Numpy arrays are converted to pandas DataFrame or Series. The computed
+    statistics can be accessed interactively in a Jupyter notebook or web browser.
+    Alternatively, it can be saved or exported in JSON, Markdown, or HTML format
+    for programmatic access or for inclusion in documents.
 
     Parameters
     ----------
@@ -232,7 +235,8 @@ class TableReport:
     # DataFrame Report...
 
     The report can also be obtained in JSON format with :meth:`json`, which can
-    be useful for programmatic access to the report data.
+    be useful for programmatic access to the report data. The schema of the
+    JSON data is reported in :ref:`table_report_json_schema`.
 
     Note that the resulting JSON includes the plots in SVG format, which can be
     quite verbose: plots can be disabled by setting ``plot_distributions=False``
@@ -244,17 +248,20 @@ class TableReport:
 
 
     Advanced configuration: you can add custom column filters that will appear
-    in the report's dropdown menu.
+    in the report's dropdown menu, allowing you to select a subset of columns to
+    display in the report.
 
     >>> filters = {
-    ...         "display_name": ["a", "b"],
+    ...         "my_filter": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
     With the code above, in addition to the default filters such as "All
-    columns", "Numeric columns", etc., the added "Columns with at least 2
-    unique values" will be available in the report, selecting columns "a" and
-    "b".
+    columns", "Numeric columns", etc., the added "my_filter" will be available
+    in the report, selecting both columns "a" and "b".
+    Filters may be specified as a list of column names, a list of column indices,
+    or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
+
     """
 
     def __init__(
@@ -430,6 +437,13 @@ class TableReport:
 
     def json(self):
         """Get the report data in JSON format.
+
+        By default, the JSON output includes the plots in SVG format, which can
+        be quite verbose. Plots can be disabled by setting
+        ``plot_distributions=False`` when generating the report.
+
+        The schema of the JSON data is reported in :ref:`table_report_json_schema`.
+
 
         Returns
         -------
