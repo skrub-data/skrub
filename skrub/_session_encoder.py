@@ -98,9 +98,7 @@ def _get_session_column_pandas(
             }
         )
         groups_with_session_ids.append(group_df_sorted)
-    X_with_session_id = pd.concat(groups_with_session_ids, axis=0)
-
-    X_with_session_id = pd.concat([X_with_session_id, X_has_nulls], axis=0)
+    X_with_session_id = pd.concat(groups_with_session_ids + [X_has_nulls], axis=0)
 
     # Reordering rows back to the original order and selecting session id
     return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
