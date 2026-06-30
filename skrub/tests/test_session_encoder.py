@@ -345,7 +345,7 @@ def test_single_event(df_module):
 
 def test_missing_values(df_module):
     """Test that missing values in the group_by or timestamp columns result in
-    None session_id."""
+    -1 session_id."""
     df = df_module.make_dataframe(
         {
             "user_id": [1, 1, None, 1],  # None value in split_by column
@@ -364,12 +364,12 @@ def test_missing_values(df_module):
     result = se.fit_transform(df)
 
     session_ids = sbd.to_numpy(sbd.col(result, "timestamp_session_id"))
-    # Rows with None timestamp or None user_id should have None session_id
-    assert np.isnan(session_ids[1])  # Row with missing timestamp
-    assert np.isnan(session_ids[2])  # Row with missing user_id
+    # Rows with None timestamp or None user_id should have -1 session_id
+    assert session_ids[1] == -1  # Row with missing timestamp
+    assert session_ids[2] == -1  # Row with missing user_id
     # Rows with valid timestamp and user_id should have valid session ID
-    assert not np.isnan(session_ids[0])
-    assert not np.isnan(session_ids[3])
+    assert session_ids[0] != -1
+    assert session_ids[3] != -1
 
 
 @pytest.mark.parametrize(
