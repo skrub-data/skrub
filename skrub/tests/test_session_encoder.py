@@ -6,7 +6,7 @@ import pytest
 from packaging.version import parse
 
 from .. import _dataframe as sbd
-from .._session_encoder import SessionEncoder, _add_session_column
+from .._session_encoder import SessionEncoder, _get_session_column
 
 
 @pytest.fixture
@@ -542,7 +542,7 @@ def test_get_feature_names(df_module):
 
 
 @pytest.mark.skipif(parse(pd.__version__).major >= 3, reason="Test only for pandas < 3")
-def test_add_session_column_old_pandas(df_module):
+def test_get_session_column_old_pandas(df_module):
     """Old versions of pandas have a different branch that needs to be covered"""
     df = df_module.make_dataframe(
         {
@@ -555,7 +555,7 @@ def test_add_session_column_old_pandas(df_module):
         }
     )
     session_id = sbd.to_list(
-        _add_session_column(
+        _get_session_column(
             df, [], "timestamp", 30 * 60, session_id_column="timestamp_session_id"
         ),
     )
@@ -592,7 +592,7 @@ def test_proper_suffix(timestamp, suffix, df_module):
         result = SessionEncoder(
             timestamp_col=timestamp, split_by="user_id", suffix=suffix
         ).fit_transform(df)
-        # _add_session_column now returns the full dataframe with session_id added
+        # SessionEncoder now returns the full dataframe with session_id added
         expected_name = f"{timestamp}_{suffix}"
         assert expected_name in sbd.column_names(result)
 
@@ -625,7 +625,7 @@ def test_preserves_input_order(df_module):
 
 def test_error_dispatch():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
-        _add_session_column(
+        _get_session_column(
             np.array([1]),
             split_by_columns=[],
             timestamp_column="timestamp",

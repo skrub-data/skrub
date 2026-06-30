@@ -11,7 +11,11 @@ additional column that identifies the session to which each event belongs.
 The name of the session column is "{timestamp}_{suffix}", where "timestamp" is the name
 of the timestamp column, and "suffix" is a string that can be set via the "suffix"
 parameter (default is "session_id"). The session column contains a unique identifier for
-each session, which is a combination of the "split_by" column(s) and a session number
+each session, which is a combination of the "split_by" column(s) and a session number.
+
+Null values in "timestamp" or "split_by" columns are assigned a session ID of -1,
+and are ignored when computing time intervals.
+
 """
 
 import numbers
@@ -35,14 +39,14 @@ from ._utils import random_string
 
 
 @dispatch
-def _add_session_column(
+def _get_session_column(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
-@_add_session_column.specialize("pandas")
-def _add_session_column_pandas(
+@_get_session_column.specialize("pandas")
+def _get_session_column_pandas(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     # Adding a row order column to sort lines back
@@ -102,8 +106,8 @@ def _add_session_column_pandas(
     return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
 
 
-@_add_session_column.specialize("polars")
-def _add_session_column_polars(
+@_get_session_column.specialize("polars")
+def _get_session_column_polars(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
     # Adding a row order column to sort lines back
@@ -566,7 +570,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
                 X, **{self.session_id_column_: np.array([], dtype=np.int64)}
             )
 
-        session_id = _add_session_column(
+        session_id = _get_session_column(
             X,
             self._split_by_columns,
             self.timestamp_col,
