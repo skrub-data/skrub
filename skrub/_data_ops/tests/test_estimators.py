@@ -1442,24 +1442,30 @@ def test_set_named_params_value_or_index():
 
 
 def test_find_fitted_estimator():
-    learner = (
+    scaler = (
         (skrub.X() * 1.0)
         .skb.set_name("mul")
         .skb.apply(StandardScaler())
         .skb.set_name("scaler")
-        .skb.apply(LogisticRegression(), y=skrub.y())
+    )
+
+    learner = (
+        scaler.skb.apply(LogisticRegression(), y=skrub.y())
         .skb.set_name("predictor")
         .skb.make_learner()
     )
-    with pytest.raises(KeyError, match="'xyz'"):
+    with pytest.raises(ValueError, match="'xyz'"):
         learner.find_fitted_estimator("xyz")
-    with pytest.raises(TypeError, match="Node 'X' does not represent"):
+    with pytest.raises(TypeError, match="Node <Var 'X'> does not represent"):
         learner.find_fitted_estimator("X")
-    with pytest.raises(ValueError, match="Node 'scaler' has not been fitted"):
+    with pytest.raises(
+        ValueError, match="Node <scaler | Apply StandardScaler> has not been fitted"
+    ):
         learner.find_fitted_estimator("scaler")
     data = _simple_data()
     learner.fit(data)
     assert isinstance(learner.find_fitted_estimator("scaler"), StandardScaler)
+    assert isinstance(learner.find_fitted_estimator(scaler.skb.id), StandardScaler)
     assert isinstance(learner.find_fitted_estimator("predictor"), LogisticRegression)
 
 

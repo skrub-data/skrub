@@ -75,6 +75,9 @@ Changes
   recomputing them, it is possible to provide them in the environment passed to
   ``score({..., "_skrub_predictions": {"predict_proba": ...}})``.
   :pr:`2195` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.find_fitted_estimator` now supports searching for the
+  apply node by ID or callable predicate as alternatives to the node name.
+  :pr:`2194` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
