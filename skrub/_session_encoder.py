@@ -152,16 +152,10 @@ def _get_session_column_polars(
         rolling_session_id = session_ids.max() + 1
 
         group_df_sorted = group_df_sorted.with_columns(
-            session_ids.alias(session_id_column)
+            session_ids.alias(session_id_column).cast(pl.Int64)
         )
         groups_with_session_ids.append(group_df_sorted)
-    X_with_session_id = pl.concat(groups_with_session_ids)
-    X_with_session_id = X_with_session_id.with_columns(
-        pl.col(session_id_column).cast(pl.Int64)
-    )
-
-    # Concatenate rows with nulls back
-    X_with_session_id = pl.concat([X_with_session_id, X_has_nulls])
+    X_with_session_id = pl.concat(groups_with_session_ids + [X_has_nulls])
 
     # Reordering rows back to the original order and selecting only the session id
     return X_with_session_id.sort(by=row_order_col)[session_id_column]
