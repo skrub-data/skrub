@@ -65,6 +65,9 @@ Changes
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :meth:`SkrubLearner.find_fitted_estimator` now supports searching for the
+  apply node by ID or callable predicate as alternatives to the node name.
+  :pr:`2194` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
