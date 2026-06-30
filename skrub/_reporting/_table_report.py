@@ -440,6 +440,16 @@ class TableReport:
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
+    def dict(self):
+        """Get the report data in Python Dictionary format.
+
+        Returns
+        -------
+        dict :
+            The report data
+        """
+        return json.loads(self.json())
+
     def markdown(self):
         """Get the report as a Markdown string.
 
