@@ -62,9 +62,6 @@ def _get_session_column_pandas(
     # Assigning a session ID of -1 to rows with nulls in timestamp or group_by columns
     # -1 rather than None because adding nulls to a pandas column of integers will
     # convert it to float
-    # This is a problem because session IDs are meant to be grouped over, and
-    # when the session ID is float32, numerical instability can cause issues
-    # with grouping if there are a lot of sessions
     X_has_nulls = X_has_nulls.assign(**{session_id_column: -1})
 
     X_selected = X_selected.dropna(subset=selected)
