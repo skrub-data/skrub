@@ -90,6 +90,7 @@ API_REFERENCE = {
                     "SimilarityEncoder",
                     "ToCategorical",
                     "DatetimeEncoder",
+                    "SessionEncoder",
                     "ToDatetime",
                     "ToFloat",
                 ],
@@ -341,6 +342,9 @@ API_REFERENCE = {
                     "datasets.get_data_dir",
                     "datasets.make_deduplication_data",
                     "datasets.toy_orders",
+                    "datasets.toy_products",
+                    "datasets.toy_cities",
+                    "datasets.make_retail_events",
                 ],
             }
         ],
