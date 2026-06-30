@@ -288,14 +288,17 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         self._set_is_fitted(mode)
         return result
 
-    def _score(self, environment):
+    def _score(self, environment, return_predictions=False):
         score_node = find_scoring_node(self.data_op)
         if score_node is None:
-            return self._eval_in_mode("score", environment)
+            result = self._eval_in_mode("score", environment)
+            return (result, {}) if return_predictions else result
         estimator = self.__skrub_to_Xy_pipeline__(environment)
         cv_data = _compute_X_y_and_cv(self.data_op, environment)
         X, y = cv_data["X"], cv_data.get("y")
-        return estimator._score(X, y, cast_to_float=False)
+        return estimator._score(
+            X, y, cast_to_float=False, return_predictions=return_predictions
+        )
 
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
@@ -915,26 +918,57 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
                     name = "score"
         return [(name, scorer_output)]
 
-    def _score(self, X, y=None, cast_to_float=True):
+    def _score(self, X, y=None, cast_to_float=True, return_predictions=False):
         score_node = find_scoring_node(self.data_op)
         if score_node is None:
-            return self._eval_in_mode("score", X, y)
+            result = self._eval_in_mode("score", X, y)
+            return (result, {}) if return_predictions else result
         env = self._get_env(X, y)
         scorers = evaluate(
             score_node._skrub_impl.scorers, mode="fit_transform", environment=env
         )
         all_scores = []
+        cache = dict(env.get("_skrub_predictions", {}))
+        caching_estimator = _CachingXyPipeline(
+            self.data_op, self.environment, X_id=id(X), cache=cache
+        )
+        _copy_attr(self, caching_estimator, ["_is_fitted"])
         for scorer_info in scorers:
             scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
-            scorer_output = scorer(self, X, y)
+            scorer_output = scorer(caching_estimator, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
-        if cast_to_float and len(result) == 1:
+        if cast_to_float and len(result) == 1 and not return_predictions:
             # If there is a single score stick to scikit-learn interface which
             # returns a number.
             return next(iter(result.values()))
-        return result
+        return (result, caching_estimator.cache) if return_predictions else result
+
+
+class _CachingXyPipeline(_XyPipeline):
+    def __init__(self, data_op, environment, X_id, cache):
+        super().__init__(data_op, environment)
+        self.X_id = X_id
+        self.cache = cache
+
+    def _eval_in_mode(self, mode, X, y=None):
+        if y is not None or id(X) != self.X_id:
+            # Only use caching for methods like predict, predict_proba etc.
+            # (for which y is None), and when they are called on the "main" X,
+            # the X that was passed to SkrubLearner.score . For example if a
+            # scorer computes a metric on a subsample of the dataset (e.g. a
+            # group for fairness etc.), we do not use the cached result for
+            # that different input.
+            return super()._eval_in_mode(mode, X, y=y)
+        if mode not in self.cache:
+            self.cache[mode] = super()._eval_in_mode(mode, X, y=y)
+        return self.cache[mode]
+
+    def _score(self, X, y=None):
+        # If a scorer calls score(), eval in "score" mode (i.e. ignoring
+        # with_scoring) rather than going into infinite recursion.
+        return super()._eval_in_mode("score", X, y=y)
 
 
 def _compute_X_y_and_cv(data_op, environment):
