@@ -2,11 +2,6 @@
 Hands-On with Column Selection and Transformers
 ===============================================
 
-In previous examples, we saw how skrub provides powerful abstractions like
-:class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_pipeline` to create pipelines.
-
-In this new example, we show how to create more flexible pipelines by selecting
-and transforming dataframe columns using arbitrary logic.
 
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
@@ -17,6 +12,9 @@ and transforming dataframe columns using arbitrary logic.
 .. |PCA| replace:: :class:`~sklearn.decomposition.PCA`
 .. |Pipeline| replace:: :class:`~sklearn.pipeline.Pipeline`
 .. |ColumnTransformer| replace:: :class:`~sklearn.compose.ColumnTransformer`
+
+In this example, we show how to create flexible pipelines by selecting
+and transforming dataframe columns using arbitrary logic with |ApplyToCols|.
 
 """
 
@@ -40,7 +38,7 @@ X
 # choosing: ``division`` and ``employee_position_title``.
 #
 # We can achieve this using |ApplyToCols|, whose job is to apply a
-# transformer to multiple columns independently, and let unmatched columns through
+# transformer to multiple columns in parallel, and let unmatched columns through
 # without changes.
 # This can be seen as a handy drop-in replacement of the
 # |ColumnTransformer|.
@@ -99,17 +97,6 @@ model = make_pipeline(
     apply_string_encoder,
     apply_pca,
 ).fit_transform(X)
-
-# %%
-# .. admonition:: Under the hood of |ApplyToCols|
-#   :collapsible: closed
-#
-#   |ApplyToCols| is implemented using the ``ApplyToEachCol`` and ``ApplyToSubFrame``
-#   classes.
-#   The former applies a transformer to each column independently, while the latter
-#   applies a transformer to a sub-dataframe.
-#   Normally, users don't need to worry about these two classes, but they can be useful
-#   when more control is needed.
 
 # %%
 # Note that selectors also come in handy in a pipeline to select or drop columns, using
