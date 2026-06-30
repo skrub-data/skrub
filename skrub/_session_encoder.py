@@ -53,9 +53,7 @@ def _add_session_column_pandas(
     # to ensure that the sessionization is done correctly
 
     selected = split_by_columns + [timestamp_column]
-    X_selected = s.select(
-        X_with_order, selected + [row_order_col]
-    )
+    X_selected = s.select(X_with_order, selected + [row_order_col])
     X_has_nulls = X_selected.loc[X_selected[selected].isnull().any(axis=1)]
     # Assigning a session ID of -1 to rows with nulls in timestamp or group_by columns
     # -1 rather than None because adding nulls to a pandas column of integers will
