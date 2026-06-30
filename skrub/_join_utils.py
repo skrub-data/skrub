@@ -284,6 +284,12 @@ def _do_left_join_polars(left, right, left_on, right_on):
         kw = {"coalesce": True}
     else:
         kw = {}
+        join_params = inspect.signature(left.join).parameters
+        kw = {}
+        if "coalesce" in join_params:
+            kw["coalesce"] = True
+        if "maintain_order" in join_params:
+            kw["maintain_order"] = "left"
     return left.join(
         right, left_on=left_on, right_on=right_on, how="left", suffix="", **kw
     )
