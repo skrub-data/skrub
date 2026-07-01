@@ -200,16 +200,34 @@ def _get_range(values, frac=0.2, factor=3.0):
 
 
 def _get_safe_hist_range(values):
-    # make sure numpy can find bin edges between the range low and high bounds
+    # Get a safe min, max range for the histogram (the 'range' parameter of
+    # np.histogram).
+    #
+    # This handles a corner case where the range of the data is very narrow and
+    # there are less than 10 (the default number of bins) representable
+    # floating-point numbers between the data min and max (with the precision
+    # of the input column dtype). In this case numpy/matplotlib histogram with
+    # default parameters fails, so we pass the 'range' parameter to extend it
+    # slightly beyond the data range so that it is wide enough to contain 10
+    # bins.
     if not len(values) or not (
         np.issubdtype(values.dtype, np.floating)
         or np.issubdtype(values.dtype, np.integer)
     ):
+        # empty or non-numeric inputs (datetimes) need no special handling.
         return None
     vmin, vmax = values.min(), values.max()
     delta = max(np.spacing(vmin), np.spacing(vmax))
     if vmax - vmin > 12 * delta:
+        # Min and max are far enough to divide the data range into 10 bins, we
+        # can keep the default range=None.
+        #
+        # 12 is a bit conservative, 10 is probably enough, but there is no
+        # harm in having the plot range slightly wider than is strictly
+        # required.
         return None
+    # Extend the range by 12 spacing steps (6 on each side) so the new range
+    # can contain the bins.
     return vmin - 6 * delta, vmax + 6 * delta
 
 
