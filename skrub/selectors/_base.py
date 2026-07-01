@@ -1,3 +1,78 @@
+"""
+Defining new selectors
+----------------------
+
+This advanced section is aimed at skrub developers adding new selectors to
+this module.
+
+A Selector subclass must define the ``_matches`` method. It accepts a column and
+returns True if the column should be selected.
+
+Additionally, the subclass can override the ``expand`` method. It accepts a
+dataframe and returns the list of column names that should be selected. This is
+only called when the selector is used by itself. Whenever it is combined with
+other selectors with operators, ``_matches`` is used. Overriding ``expand`` thus
+allows special-casing the behavior when it is used on its own, such as raising
+an exception when a simple list of column names is used for selection and some
+are missing from the dataframe. Overriding ``expand`` is not necessary in most
+cases; it may actually never be necessary except for the ``cols`` special case.
+
+A simpler alternative to defining a new Selector subclass is to define a
+function that constructs a selector by calling ``filter`` or ``filter_names`` with an
+appropriate predicate and arguments; most selectors offered by this module are
+implemented with this approach.
+
+>>> from skrub import _dataframe as sbd
+>>> from skrub import selectors as s
+>>> import pandas as pd
+>>> df = pd.DataFrame(
+...     {
+...         "height_mm": [297.0, 420.0],
+...         "width_mm": [210.0, 297.0],
+...         "kind": ["A4", "A3"],
+...         "ID": [4, 3],
+...     }
+... )
+
+Defining a new class:
+
+>>> class EndsWith(s.Selector):
+...     def __init__(self, suffix):
+...         self.suffix = suffix
+...
+...     def _matches(self, col):
+...         return sbd.name(col).endswith(self.suffix)
+
+>>> EndsWith('_mm').expand(df)
+['height_mm', 'width_mm']
+
+Using a filter:
+
+>>> def ends_with(suffix):
+...     return s.filter_names(str.endswith, suffix)
+
+>>> ends_with('_mm').expand(df)
+['height_mm', 'width_mm']
+
+>>> ends_with('_mm')
+filter_names(str.endswith, '_mm')
+
+Directly instantiating a Filter or FilterNames object allows passing the name
+argument and thus controlling the repr of the resulting selector, so an
+slightly improved version could be:
+
+>>> from skrub.selectors._base import NameFilter
+
+>>> def ends_with(suffix):
+...     return NameFilter(str.endswith, args=(suffix,), name='ends_with')
+
+>>> ends_with('_mm')
+ends_with('_mm')
+
+>>> ends_with('_mm').expand(df)
+['height_mm', 'width_mm']
+"""
+
 from .. import _dataframe as sbd
 from .._dispatch import dispatch, raise_dispatch_unregistered_type
 from .._utils import repr_args
@@ -218,6 +293,62 @@ def select(df, selector):
 
     """
     return _select_col_names(df, make_selector(selector).expand(df))
+
+
+def drop(df, selector):
+    """Apply a selector to a dataframe and return a dataframe without the \
+    selected columns.
+
+    ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
+    column name or list of column names.
+
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe to process.
+    selector : selector, str, or list
+        A selector object, column name, or list of column names indicating which
+        columns to drop.
+
+    Returns
+    -------
+    dataframe
+        The dataframe without the columns matched by the selector.
+
+    Examples
+    --------
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [210.0, 297.0],
+    ...         "width_mm": [188.5, 210.0],
+    ...         "kind": ["A5", "A4"],
+    ...         "ID": [5, 4],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      210.0     188.5   A5   5
+    1      297.0     210.0   A4   4
+
+    >>> s.drop(df, s.glob("*_mm"))
+      kind  ID
+    0   A5   5
+    1   A4   4
+
+    We can also pass column names directly:
+
+    >>> s.drop(df, ['height_mm', 'width_mm'])
+      kind  ID
+    0   A5   5
+    1   A4   4
+
+    """
+    all_cols = sbd.column_names(df)
+    matched_cols = make_selector(selector).expand(df)
+    remaining_cols = [col for col in all_cols if col not in matched_cols]
+    return _select_col_names(df, remaining_cols)
 
 
 class Selector:

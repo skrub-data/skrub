@@ -1,3 +1,4 @@
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -174,3 +175,29 @@ def test_cant_download(monkeypatch):
     with TemporaryDirectory() as temp_dir:
         with pytest.raises(OSError, match="Can't download"):
             _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+
+
+@xfail_with_download_error
+def test_electricity_forecasting():
+    files = set(
+        [
+            "weather_bayonne.csv",
+            "weather_brest.csv",
+            "weather_lille.csv",
+            "weather_limoges.csv",
+            "weather_lyon.csv",
+            "weather_marseille.csv",
+            "weather_nantes.csv",
+            "weather_paris.csv",
+            "weather_strasbourg.csv",
+            "weather_toulouse.csv",
+            "Total Load - Day Ahead _ Actual_202501010000-202601010000.csv",
+            "Total Load - Day Ahead _ Actual_202401010000-202501010000.csv",
+            "Total Load - Day Ahead _ Actual_202301010000-202401010000.csv",
+            "Total Load - Day Ahead _ Actual_202201010000-202301010000.csv",
+            "Total Load - Day Ahead _ Actual_202101010000-202201010000.csv",
+        ]
+    )
+    path = _fetching.fetch_electricity_forecasting()
+    downloaded = [f.name for f in Path(path).iterdir() if f.is_file()]
+    assert set(downloaded) == files

@@ -3,7 +3,6 @@ import re
 import traceback
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
@@ -443,30 +442,39 @@ def test_call_method_errors():
     )
 
 
-def test_concat_horizontal_numpy():
+def test_concat_dataframe_with_numpy():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
-    with pytest.raises(Exception, match=".*can only be used with dataframes"):
+    with pytest.raises(Exception, match="should be passed a list of arrays"):
         b.skb.concat([a], axis=1)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+    with pytest.raises(Exception, match="should be passed a list of dataframes"):
         a.skb.concat([b], axis=1)
-
-
-def test_concat_vertical_numpy():
-    a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    b = skrub.var("b", np.eye(3))
-    with pytest.raises(Exception, match=".*can only be used with dataframes"):
-        b.skb.concat([a], axis=0)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat([b], axis=0)
 
 
 def test_concat_needs_wrapping_in_list():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+    with pytest.raises(
+        Exception, match="should be passed a list of numpy arrays or dataframes"
+    ):
         a.skb.concat(a, axis=1)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat(a, axis=0)
+    b = skrub.var("b", np.eye(3))
+    with pytest.raises(
+        Exception, match="should be passed a list of numpy arrays or dataframes"
+    ):
+        b.skb.concat(b, axis=1)
+
+
+def test_concat_bad_first_type():
+    with pytest.raises(
+        Exception, match="can only be used on a numpy array or a dataframe"
+    ):
+        skrub.var("a", []).skb.concat([])
+
+
+def test_concat_bad_others_type():
+    a = skrub.var("a", np.eye(3))
+    with pytest.raises(Exception, match="should be passed a list"):
+        a.skb.concat(None, axis=0)
 
 
 def test_concat_axis_undefined():
@@ -627,11 +635,6 @@ def test_unhashable():
         {skrub.choose_bool(name="b")}
     with pytest.raises(TypeError, match="unhashable type"):
         {skrub.choose_bool(name="b").if_else(0, 1)}
-
-
-def test_int_column_names():
-    with pytest.warns(match="Some dataframe column names are not strings"):
-        skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
 
 
 def test_mark_as_X_missing_cv():
