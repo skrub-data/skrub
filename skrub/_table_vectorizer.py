@@ -184,6 +184,39 @@ def _get_preprocessors(
     return steps
 
 
+def _list_transformations(estimator):
+    message = ""
+    for step in estimator._pipeline.named_steps:
+        if step == "checkinputdataframe":
+            continue
+        transformer = estimator._pipeline.named_steps[step]
+        match transformer.transformer:
+            case DropUninformative():
+                dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
+                if dropped != set():
+                    message += "DropUninformative - " + "\n"
+                    message += f"Dropped columns {dropped}" + "\n"
+                    message += f"Used inputs: {transformer.used_inputs_}" + "\n"
+            case ToFloat():
+                message += "ToFloat - " + "\n"
+                message += (
+                    f"Columns transformed to float: {transformer.used_inputs_}" + "\n"
+                )
+            case ToDatetime():
+                message += "ToDatetime - " + "\n"
+                message += (
+                    f"Columns transformed to datetime: {transformer.used_inputs_}"
+                    + "\n"
+                )
+            case CleanNullStrings():
+                message += "CleanNullStrings - " + "\n"
+                message += (
+                    f"Columns with standardized nulls: {transformer.used_inputs_}"
+                    + "\n"
+                )
+    return message
+
+
 class Cleaner(TransformerMixin, SkrubBaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
@@ -540,6 +573,9 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
+
+    def list_transformations(self):
+        return _list_transformations(self)
 
 
 class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
@@ -1164,3 +1200,45 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         """
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
+
+    def list_transformations(self):
+        preprocessing_transformations = _list_transformations(self)
+        vectorize_transformations = ""
+        specific_transformations = ""
+
+        all_transformers = self.kind_to_columns_.copy()
+        specific = all_transformers.pop("specific")
+
+        for transformer_type, transformer_cols in all_transformers.items():
+            if transformer_cols != []:
+                vectorize_transformations += (
+                    f"{transformer_type} transformer is "
+                    f"{repr_format(getattr(self, transformer_type))} "
+                    f"and was applied to {transformer_cols}." + "\n"
+                )
+            else:
+                vectorize_transformations += (
+                    f"{transformer_type} transformer is "
+                    f"{repr_format(getattr(self, transformer_type))} "
+                    "and was applied to nothing." + "\n"
+                )
+
+        if self.specific_transformers != ():
+            for t in self.specific_transformers:
+                specific_transformations += (
+                    f"specific transformer {t} was applied to {specific}"
+                )
+
+        return (
+            preprocessing_transformations
+            + "\n\n"
+            + vectorize_transformations
+            + "\n\n"
+            + specific_transformations
+        )
+
+
+def repr_format(s):
+    without_spaces = repr(s).replace("  ", "")
+    without_lineskip = without_spaces.replace("\n", "")
+    return without_lineskip

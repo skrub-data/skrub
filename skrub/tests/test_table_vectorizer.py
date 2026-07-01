@@ -28,6 +28,7 @@ from skrub._table_vectorizer import (
 from skrub._to_float import ToFloat
 from skrub._to_str import ToStr
 from skrub.conftest import _POLARS_INSTALLED
+from skrub.datasets._generating import toy_cities
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -1277,3 +1278,15 @@ def test_duration_to_float(df_module):
     vectorizer = Cleaner()
     transformed = vectorizer.fit_transform(df)
     df_module.assert_column_equal(transformed["duration"], df["duration"])
+
+
+def test_list_transformations(df_module):
+    df = toy_cities()
+
+    vectorizer = TableVectorizer()
+    _ = vectorizer.fit_transform(df)
+    _ = vectorizer.list_transformations()
+
+    vectorizer = Cleaner()
+    _ = vectorizer.fit_transform(df)
+    _ = vectorizer.list_transformations()
