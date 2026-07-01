@@ -1206,29 +1206,28 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         vectorize_transformations = ""
         specific_transformations = ""
 
-        all_transformers = self.kind_to_columns_
+        all_transformers = self.kind_to_columns_.copy()
         specific = all_transformers.pop("specific")
 
         for transformer_type, transformer_cols in all_transformers.items():
             if transformer_cols != []:
                 vectorize_transformations += (
-                    f"{transformer_type} transformer is \
-                        {getattr(self, transformer_type)} \
-                            and was applied to {transformer_cols}."
-                    + "\n"
+                    f"{transformer_type} transformer is "
+                    f"{repr_format(getattr(self, transformer_type))} "
+                    f"and was applied to {transformer_cols}." + "\n"
                 )
             else:
                 vectorize_transformations += (
-                    f"{transformer_type} transformer is \
-                        {getattr(self, transformer_type)} \
-                            and was applied to nothing."
-                    + "\n"
+                    f"{transformer_type} transformer is "
+                    f"{repr_format(getattr(self, transformer_type))} "
+                    "and was applied to nothing." + "\n"
                 )
 
         if self.specific_transformers != ():
             for t in self.specific_transformers:
-                specific_transformations += f"specific transformer \
-                        {t} was applied to {specific}"
+                specific_transformations += (
+                    f"specific transformer {t} was applied to {specific}"
+                )
 
         return (
             preprocessing_transformations
@@ -1237,3 +1236,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             + "\n\n"
             + specific_transformations
         )
+
+
+def repr_format(s):
+    without_spaces = repr(s).replace("  ", "")
+    without_lineskip = without_spaces.replace("\n", "")
+    return without_lineskip
