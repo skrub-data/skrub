@@ -1379,7 +1379,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         min_score=None,
         show_scores=None,
         show_choices=None,
-        show_time=True,
+        show_times=True,
     ):
         """Create a parallel coordinate plot of the cross-validation results.
 
@@ -1407,7 +1407,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             (e.g. "alpha" in ``choose_float(0.0, 1.0, name="alpha")``).
             By default all are shown.
 
-        show_time : bool, optional, default=True
+        show_times : bool, optional, default=True
             Whether to show fit and score time or not.
 
         Returns
@@ -1444,7 +1444,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
 
         cv_results, metadata = self._get_cv_results_table(detailed=True)
 
-        # Find columns to show based on show_scores, show_choices and show_time
+        # Find columns to show based on show_scores, show_choices and show_times
 
         to_drop = set()
         for col_name, col_meta in metadata["columns_metadata"].items():
@@ -1462,7 +1462,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
                 if show_choices is not None and col_meta["name"] not in show_choices:
                     to_drop.add(col_name)
         time_cols = {"mean_fit_time", "mean_score_time"}
-        to_drop = (to_drop - time_cols) if show_time else (to_drop | time_cols)
+        to_drop = (to_drop - time_cols) if show_times else (to_drop | time_cols)
         to_show = set(cv_results.columns) - to_drop
 
         # Find rows to show based on min_score

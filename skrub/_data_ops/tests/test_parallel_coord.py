@@ -176,7 +176,7 @@ def classif_grid_search():
 
 
 @pytest.mark.parametrize(
-    "show_scores, show_choices, show_time, expected",
+    "show_scores, show_choices, show_times, expected",
     [
         (
             None,
@@ -215,10 +215,10 @@ def classif_grid_search():
     ],
 )
 def test_multi_scoring_and_filtering(
-    classif_grid_search, show_scores, show_choices, show_time, expected
+    classif_grid_search, show_scores, show_choices, show_times, expected
 ):
     fig = classif_grid_search.plot_results(
-        show_scores=show_scores, show_choices=show_choices, show_time=show_time
+        show_scores=show_scores, show_choices=show_choices, show_times=show_times
     )
     dimensions = fig.data[0]["dimensions"]
     assert [d["label"] for d in dimensions] == expected
