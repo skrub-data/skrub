@@ -655,7 +655,7 @@ environments:
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/numpy/2.6.0.dev0/numpy-2.6.0.dev0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pandas/3.1.0.dev0+1192.gc693b12ad8/pandas-3.1.0.dev0+1192.gc693b12ad8-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pillow/13.0.0.dev0/pillow-13.0.0.dev0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
-      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-manylinux_2_28_x86_64.whl
+      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-manylinux_2_28_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scikit-learn/1.10.dev0/scikit_learn-1.10.dev0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scipy/1.19.0.dev0/scipy-1.19.0.dev0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
       osx-64:
@@ -736,7 +736,7 @@ environments:
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/numpy/2.6.0.dev0/numpy-2.6.0.dev0-cp314-cp314-macosx_10_15_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pandas/3.1.0.dev0+1192.gc693b12ad8/pandas-3.1.0.dev0+1192.gc693b12ad8-cp314-cp314-macosx_10_15_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pillow/13.0.0.dev0/pillow-13.0.0.dev0-cp314-cp314-macosx_10_15_x86_64.whl
-      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-macosx_12_0_x86_64.whl
+      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-macosx_12_0_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scikit-learn/1.10.dev0/scikit_learn-1.10.dev0-cp314-cp314-macosx_10_15_x86_64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scipy/1.19.0.dev0/scipy-1.19.0.dev0-cp314-cp314-macosx_10_15_x86_64.whl
       osx-arm64:
@@ -816,7 +816,7 @@ environments:
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/numpy/2.6.0.dev0/numpy-2.6.0.dev0-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pandas/3.1.0.dev0+1192.gc693b12ad8/pandas-3.1.0.dev0+1192.gc693b12ad8-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pillow/13.0.0.dev0/pillow-13.0.0.dev0-cp314-cp314-macosx_11_0_arm64.whl
-      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-macosx_12_0_arm64.whl
+      - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-macosx_12_0_arm64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scikit-learn/1.10.dev0/scikit_learn-1.10.dev0-cp314-cp314-macosx_12_0_arm64.whl
       - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scipy/1.19.0.dev0/scipy-1.19.0.dev0-cp314-cp314-macosx_12_0_arm64.whl
       win-64:
@@ -39811,24 +39811,24 @@ packages:
   - trove-classifiers>=2024.10.12 ; extra == 'tests'
   - defusedxml ; extra == 'xmp'
   requires_python: '>=3.10'
-- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-macosx_12_0_arm64.whl
-  name: pyarrow
-  version: 25.0.0.dev217
-  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
-  requires_python: '>=3.10'
-- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-macosx_12_0_x86_64.whl
-  name: pyarrow
-  version: 25.0.0.dev217
-  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
-  requires_python: '>=3.10'
-- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-manylinux_2_28_x86_64.whl
-  name: pyarrow
-  version: 25.0.0.dev217
-  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
-  requires_python: '>=3.10'
 - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev217/pyarrow-25.0.0.dev217-cp314-cp314-win_amd64.whl
   name: pyarrow
   version: 25.0.0.dev217
+  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+  requires_python: '>=3.10'
+- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-macosx_12_0_arm64.whl
+  name: pyarrow
+  version: 25.0.0.dev222
+  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+  requires_python: '>=3.10'
+- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-macosx_12_0_x86_64.whl
+  name: pyarrow
+  version: 25.0.0.dev222
+  index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+  requires_python: '>=3.10'
+- pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/pyarrow/25.0.0.dev222/pyarrow-25.0.0.dev222-cp314-cp314-manylinux_2_28_x86_64.whl
+  name: pyarrow
+  version: 25.0.0.dev222
   index: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
   requires_python: '>=3.10'
 - pypi: https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/scikit-learn/1.10.dev0/scikit_learn-1.10.dev0-cp314-cp314-macosx_10_15_x86_64.whl
