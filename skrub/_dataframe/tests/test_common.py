@@ -447,6 +447,15 @@ def test_index(df_module):
         assert ns.index(col) is None
 
 
+def test_drop_columns(df_module):
+    df = df_module.example_dataframe
+    col_names = ns.column_names(df)
+    col_to_drop = col_names[0]
+    df_dropped = ns.drop(df, [col_to_drop])
+    assert col_to_drop not in ns.column_names(df_dropped)
+    assert len(ns.column_names(df_dropped)) == len(col_names) - 1
+
+
 #
 # Inspecting dtypes and casting
 # =============================
@@ -676,6 +685,14 @@ def test_is_all_null_polars(pl_module):
     col = col[1:]
 
     assert ns.is_all_null(col)
+
+
+def test_is_empty_frame(df_module):
+    empty_frame = df_module.make_dataframe({"a": []})
+    not_empty_frame = df_module.make_dataframe({"a": [1]})
+
+    assert ns.is_empty_frame(empty_frame)
+    assert not ns.is_empty_frame(not_empty_frame)
 
 
 # Inspecting, selecting and modifying values

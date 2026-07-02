@@ -31,6 +31,15 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`SessionEncoder` is now available. This encoder adds a `session_id`
+  column, which groups together events that occur within the given session gap.
+  Additionally, it is possible to provide a ``split_by`` column or list of columns
+  (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
+  value.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+-  A new synthetic dataset generator for timestamped data and session-based
+  operations has been added: :meth:`~skrub.datasets.make_retail_events`.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
@@ -65,6 +74,19 @@ Changes
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :meth:`SkrubLearner.score` has been enhanced when the DataOp used
+  :meth:`DataOp.skb.with_scoring`. During scoring, predict(), predict_proba()
+  etc. are cached to avoid recomputation when multiple scorers are used (or one
+  scorer calls them several times). Moreover it is possible to pass
+  ``return_predictions=True`` to also retrieve any predictions that have been
+  computed during scoring, in addition to the scores. Finally, in cases where we
+  already have the predictions but want the result of score() without
+  recomputing them, it is possible to provide them in the environment passed to
+  ``score({..., "_skrub_predictions": {"predict_proba": ...}})``.
+  :pr:`2195` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.find_fitted_estimator` now supports searching for the
+  apply node by ID or callable predicate as alternatives to the node name.
+  :pr:`2194` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------

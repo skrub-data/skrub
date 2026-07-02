@@ -256,11 +256,75 @@ SkrubLearner(data_op=<Scoring <Apply DummyClassifier> (1 scorers)>
 Note that the score above is negative: it is the negative log loss we passed to
 ``with_scoring``, and not the default score (accuracy, which would be positive).
 
+If we also want to recover the default score that would be returned by the
+applied estimator's ``score()`` method (what we would get if we did not use
+:meth:`DataOp.skb.with_scoring`), we can pass ``None`` as the scorer, and the
+default corresponding key in the result is ``"score"`` (exactly like in
+:func:`~sklearn.model_selection.cross_validate`):
+
+>>> (
+...     pred.skb.with_scoring(None)
+...     .skb.with_scoring('accuracy')
+...     .skb.with_scoring('roc_auc')
+...     .skb.make_learner()
+...     .fit(split["train"])
+...     .score(split["test"])
+... )
+{'score': 0.6666666666666666, 'accuracy': 0.6666666666666666, 'roc_auc': 0.5}
+
 :meth:`DataOp.skb.with_scoring` only changes how scoring is performed
 (the outputs of :meth:`DataOp.skb.cross_validate`,
 :meth:`DataOp.skb.make_randomized_search`, :class:`SkrubLearner.score <SkrubLearner>` etc.),
-**not** the actual outputs of the learner (it does _not_ affect the outputs of
+**not** the actual outputs of the learner (it does *not* affect the outputs of
 :meth:`DataOp.skb.eval`, :class:`SkrubLearner.predict <SkrubLearner>`, etc.)
 
 This method can be called several times to add scorers that take different
 kwargs. See the reference documentation for details.
+
+Avoiding computing predictions multiple times
+=============================================
+
+This section gives a few tips to avoid recomputing predictions, which is
+particularly important for pipelines for which inference is expensive, such as
+those using the :class:`TextEncoder` or Tabular Foundation Models such as
+`TabICL <https://tabicl.readthedocs.io/en/latest/>`_.
+
+When :meth:`DataOp.skb.with_scoring` is used, predictions are cached during
+scoring so that if multiple scorers call the same function (e.g. ``predict()``
+or ``predict_proba()``) the computation runs only once. Moreover, if we also
+need the predictions in addition to the scores (for example to create plots,
+study calibration, etc.) we can pass ``return_predictions=True`` to the
+learner's ``score()`` method.
+
+Instead of doing the following, which computes the predictions twice:
+
+>>> scores = learner.score(split['test'])
+>>> predictions = learner.predict(split['test']) # used for plotting etc.
+
+We can write:
+
+>>> scores, predictions = learner.score(split['test'], return_predictions=True)
+>>> scores  # doctest: +SKIP
+{'neg_log_loss': -0.6365141682948128}
+>>> predictions
+{'predict_proba': array([[0.66666667, 0.33333333],
+       [0.66666667, 0.33333333],
+       [0.66666667, 0.33333333]])}
+
+The returned dictionary contains any predictions of the pipeline that have been
+computed as part of scoring. When :meth:`DataOp.skb.with_scoring` has not been
+used, it will always be empty.
+
+If we happen to already have the predictions for the data we are scoring on, but
+would like to use the learner's ``score`` method to get the scores, we can
+inject the precomputed predictions in the input environment, under the special
+key ``"_skrub_predictions"``:
+
+>>> predict_proba = learner.predict_proba(split['test'])
+>>> learner.score(split['test'] | {'_skrub_predictions': {'predict_proba': predict_proba}})
+{'neg_log_loss': -0.63...}
+
+With the above, ``predict()`` is not called during scoring. As for
+``return_predictions``, this only applies to scorers added with
+:meth:`DataOp.skb.with_scoring`. If no scorer has been configured
+``'_skrub_predictions'`` will be ignored.
