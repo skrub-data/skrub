@@ -8,7 +8,9 @@ __all__ = ["get_parallel_coord_data", "plot_parallel_coord", "DEFAULT_COLORSCALE
 DEFAULT_COLORSCALE = "bluered"
 
 
-def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def plot_parallel_coord(
+    *, cv_results, show_columns, metadata, colorscale=DEFAULT_COLORSCALE
+):
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -17,8 +19,9 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     return go.Figure(
         data=go.Parcoords(
             **get_parallel_coord_data(
-                cv_results,
-                metadata,
+                cv_results=cv_results,
+                show_columns=show_columns,
+                metadata=metadata,
                 colorscale=colorscale,
             )
         ),
@@ -26,7 +29,9 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     )
 
 
-def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def get_parallel_coord_data(
+    cv_results, show_columns, metadata, colorscale=DEFAULT_COLORSCALE
+):
     prepared_columns = [
         _prepare_column(
             cv_results[col_name],
@@ -34,6 +39,7 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
             is_int=col_name in metadata["int_columns"],
         )
         for col_name in cv_results.columns
+        if col_name in show_columns
     ]
     prepared_columns = [
         _add_jitter(column) if column["label"] != "score" else column

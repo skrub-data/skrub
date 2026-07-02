@@ -1315,6 +1315,17 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         table = pd.DataFrame(
             all_rows, columns=list(data_op_choices["choice_display_names"].values())
         )
+        columns_metadata = []
+        for c_id, display_name in data_op_choices["choice_display_names"].items():
+            c = data_op_choices["choices"][c_id]
+            columns_metadata.append(
+                {
+                    "type": "choice",
+                    "id": c_id,
+                    "name": c.name,
+                    "display_name": display_name,
+                }
+            )
         metric_names = [
             k.removeprefix("mean_test_")
             for k in self.cv_results_.keys()
@@ -1343,9 +1354,12 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             for k in result_keys[len(metric_names) :][::-1]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
+                    columns_metadata.append({"type": "score", "name": k})
         for k in result_keys[: len(metric_names)][::-1]:
             table.insert(table.shape[1], k, self.cv_results_[k])
+            columns_metadata.append({"type": "score", "name": k})
         metadata["col_score"] = f"mean_test_{metric_names[0]}"
+        metadata["columns_metadata"] = dict(zip(table.columns, columns_metadata))
         table = table.sort_values(
             metadata["col_score"],
             ascending=False,
@@ -1354,7 +1368,15 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         )
         return table, metadata
 
-    def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
+    def plot_results(
+        self,
+        *,
+        colorscale=DEFAULT_COLORSCALE,
+        min_score=None,
+        show_scores=None,
+        show_choices=None,
+        show_time=True,
+    ):
         """Create a parallel coordinate plot of the cross-validation results.
 
         Plotly must be installed to use this method.
@@ -1371,29 +1393,50 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             perform well, to make the plot less cluttered and to make better
             use of the colorscale's range.
 
+        metrics :
+
         Returns
         -------
         Plotly Figure
         """
         cv_results, metadata = self._get_cv_results_table(detailed=True)
-        cv_results = cv_results.drop(
-            [
-                "std_test_score",
-                "std_fit_time",
-                "std_score_time",
-                "mean_train_score",
-                "std_train_score",
-            ],
-            axis="columns",
-            errors="ignore",
-        )
+        if isinstance(show_scores, str):
+            show_scores = [show_scores]
+        if isinstance(show_choices, str):
+            show_choices = [show_choices]
+        to_drop = set()
+        for col_name, col_meta in metadata["columns_metadata"].items():
+            if col_meta["type"] == "score":
+                if col_meta["name"].startswith("std_") or col_meta["name"].startswith(
+                    "mean_train_"
+                ):
+                    to_drop.add(col_name)
+                if (
+                    show_scores is not None
+                    and col_meta["name"].removeprefix("mean_test_") not in show_scores
+                ):
+                    to_drop.add(col_name)
+            if (
+                show_choices is not None
+                and col_meta["type"] == "choice"
+                and col_meta["name"] not in show_choices
+            ):
+                to_drop.add(col_name)
+        time_cols = {"mean_fit_time", "mean_score_time"}
+        to_drop = (to_drop - time_cols) if show_time else (to_drop | time_cols)
+        to_show = set(cv_results.columns) - to_drop
 
         if min_score is not None:
             col_score = metadata["col_score"]
             cv_results = cv_results[cv_results[col_score] >= min_score]
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
-        return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+        return plot_parallel_coord(
+            cv_results=cv_results,
+            show_columns=to_show,
+            metadata=metadata,
+            colorscale=colorscale,
+        )
 
 
 def _get_results_metadata(data_op_choices):
