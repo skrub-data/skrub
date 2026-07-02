@@ -175,8 +175,6 @@ def test_multi_scoring():
         "cols",
         "score time",
         "fit time",
-        "std_test_neg_brier_score",
-        "std_test_accuracy",
         "mean_test_neg_brier_score",
         "mean_test_accuracy",
     ]
