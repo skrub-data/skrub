@@ -354,6 +354,10 @@ filterwarnings = [
   # We avoid turning huggingface_hub warnings into errors, because they get
   # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
   'default::DeprecationWarning:huggingface_hub',
+  # Ignore polars warning about horizontal concatenation being deprecated
+  # We always expect dataframes to concatenate to have the same length, so the
+  # intended behavior starting from version 1.42 is already what we want
+  "ignore:the default behavior of `how='horizontal'`.*:DeprecationWarning"
 ]
 log_cli_level = "INFO"
 xfail_strict = true
