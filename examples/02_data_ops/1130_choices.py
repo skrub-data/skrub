@@ -279,10 +279,10 @@ search.plot_results()
 # durations or not.
 #
 # For example if we wanted to include only the encoder and classifier and hide
-# the times:
+# the fitting time:
 
 # %%
-search.plot_results(show_choices=["encoder", "classifier"], show_times=False)
+search.plot_results(show_choices=["encoder", "classifier"], show_times=["score"])
 
 # %%
 # In this example, we've seen how to use skrub's ``choose_from`` objects to tune

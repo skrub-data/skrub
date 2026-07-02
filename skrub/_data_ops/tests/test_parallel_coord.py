@@ -181,7 +181,7 @@ def classif_grid_search():
         (
             None,
             None,
-            True,
+            None,
             [
                 "cols",
                 "add",
@@ -195,21 +195,20 @@ def classif_grid_search():
         (
             "accuracy",
             ["cols", "add"],
-            False,
+            "fit",
             [
                 "cols",
                 "add",
+                "fit time",
                 "mean_test_accuracy",
             ],
         ),
         (
             [],
             "add",
-            True,
+            [],
             [
                 "add",
-                "score time",
-                "fit time",
             ],
         ),
     ],

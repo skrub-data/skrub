@@ -1379,7 +1379,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         min_score=None,
         show_scores=None,
         show_choices=None,
-        show_times=True,
+        show_times=None,
     ):
         """Create a parallel coordinate plot of the cross-validation results.
 
@@ -1407,38 +1407,34 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             (e.g. "alpha" in ``choose_float(0.0, 1.0, name="alpha")``).
             By default all are shown.
 
-        show_times : bool, optional, default=True
-            Whether to show fit and score time or not.
+        show_times : list of str, optional
+            List of durations to show. Available times are ["fit", "score"].
+            By default both are shown.
 
         Returns
         -------
         Plotly Figure
         """
 
-        # Check that requested show_scores and show_choices (if any) are available
+        # Check that requested show_scores, show_choices, and show_times
+        # (if any) are available
 
-        if isinstance(show_scores, str):
-            show_scores = [show_scores]
-        if show_scores is not None:
-            available_scores = self._get_score_names()
-            missing_scores = set(show_scores).difference(available_scores)
-            if missing_scores:
-                raise ValueError(
-                    "The following scores were requested in show_scores "
-                    f"but do not exist in the results:\n{missing_scores}.\n"
-                    f"The available scores are:\n{available_scores}."
-                )
-        if isinstance(show_choices, str):
-            show_choices = [show_choices]
-        if show_choices is not None:
-            available_choices = self._get_choice_names()
-            missing_choices = set(show_choices).difference(available_choices)
-            if missing_choices:
-                raise ValueError(
-                    "The following choices (params) were requested in show_choices "
-                    f"but do not exist in the results:\n{missing_choices}.\n"
-                    f"The available choices are: {available_choices}."
-                )
+        def _check(requested, available, name):
+            if isinstance(requested, str):
+                requested = [requested]
+            if requested is not None:
+                missing = set(requested).difference(available)
+                if missing:
+                    raise ValueError(
+                        f"The following {name} were requested in show_{name} "
+                        f"but do not exist in the results:\n{missing}.\n"
+                        f"The available {name} are:\n{available}."
+                    )
+            return requested
+
+        show_scores = _check(show_scores, self._get_score_names(), "scores")
+        show_choices = _check(show_choices, self._get_choice_names(), "choices")
+        show_times = _check(show_times, ["fit", "score"], "times")
 
         # Prepare the figure data
 
@@ -1461,8 +1457,11 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             if col_meta["type"] == "choice":
                 if show_choices is not None and col_meta["name"] not in show_choices:
                     to_drop.add(col_name)
-        time_cols = {"mean_fit_time", "mean_score_time"}
-        to_drop = (to_drop - time_cols) if show_times else (to_drop | time_cols)
+        for meth in ["fit", "score"]:
+            if show_times is None or meth in show_times:
+                to_drop.discard(f"mean_{meth}_time")
+            else:
+                to_drop.add(f"mean_{meth}_time")
         to_show = set(cv_results.columns) - to_drop
 
         # Find rows to show based on min_score
