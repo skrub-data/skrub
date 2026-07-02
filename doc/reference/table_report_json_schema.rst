@@ -65,7 +65,7 @@ Top-level object
        :class:`~skrub.TableReport`.
    * - ``order_by``
      - string
-     - *Optional.* Name of the column used for sorting when ``order_by`` was
+     - *Optional.* Name of the column used for sorting when the deprecated parameter ``order_by`` was
        passed to :class:`~skrub.TableReport`.
 
 
@@ -120,7 +120,7 @@ below.
      - array of strings
      - Names of the plot keys that are present on this column object (e.g.
        ``["histogram_plot"]``). Empty when ``plots_skipped`` is ``true`` or
-       when the column contains only nulls.
+       when the column is constant or contains only nulls.
 
 
 Columns containing only nulls

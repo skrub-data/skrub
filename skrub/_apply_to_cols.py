@@ -216,7 +216,7 @@ class ApplyToCols(TransformerMixin, SkrubBaseEstimator):
     skrub.core.RejectColumn: Column 'A' does not have Date or Datetime dtype.
     Transformer DatetimeEncoder.fit_transform failed on column 'A'. See above for the full traceback.
 
-    It is also possible to wrap a :class:`TableVectorizer` or :class:`Cleaner` in
+    It is often useful to wrap a :class:`TableVectorizer` or :class:`Cleaner` in
     ``ApplyToCols`` to select or exclude columns based on patterns. For example,
     to apply a :class:`TableVectorizer` to all columns except those ending with "_id",
     we can do:
@@ -229,7 +229,7 @@ class ApplyToCols(TransformerMixin, SkrubBaseEstimator):
     ...     age=[25, 30],
     ...     department=["Engineering", "Sales"],
     ... ))
-    >>> tv = ApplyToCols(TableVectorizer(), cols=~s.glob("*_id"))
+    >>> tv = ApplyToCols(TableVectorizer(), exclude_cols=s.glob("*_id"))
     >>> tv.fit_transform(df)
         user_id   age   department_Sales
     0    A001  25.0               0.0
