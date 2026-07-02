@@ -108,6 +108,10 @@ Bugfixes
 - An error that happened when running ``TableReport`` or ``column_associations``
   on some dataframes with non-string column names has been fixed in :pr:`2179`
   by :user:`Jérôme Dockès <jeromedockes>`.
+- An error that could arise in histograms when running :class:`TableReport` on
+  data with a very small range (less than 10 representable floating-point
+  numbers between min and max) has been fixed.
+  :pr:`2189` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
