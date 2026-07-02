@@ -1393,7 +1393,16 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             perform well, to make the plot less cluttered and to make better
             use of the colorscale's range.
 
-        metrics :
+        show_scores : list of str, optional
+            List of score names to show. By default all are shown.
+
+        show_choices : list of str, optional
+            List of choice names (e.g. "alpha" in
+            ``choose_float(0.0, 1.0, name="alpha")``) to show.
+            By default all are shown.
+
+        show_time : bool, optional, default=True
+            Whether to show fit and score time or not.
 
         Returns
         -------
