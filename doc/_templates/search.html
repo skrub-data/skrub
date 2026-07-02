@@ -1,0 +1,68 @@
+{%- extends "pydata_sphinx_theme/search.html" %}
+
+{# Load the Fuse.js search index as a plain script tag so it works on
+   file:// URLs (fetch() is blocked by CORS on the local filesystem). #}
+{%- block extrahead %}
+{{ super() }}
+<script src="{{ pathto('_static/fuse-search-index.js', 1) }}"></script>
+{%- endblock %}
+
+{# Replace the search body with our Fuse.js-powered form and results area.
+   The rest of the page (navbar, sidebars, footer) is inherited unchanged. #}
+{% block docs_body %}
+  <div class="bd-search-container">
+    <h1>{{ _("Search") }}</h1>
+
+    <form id="fuse-search-form" action="" role="search">
+      <div class="fuse-search-input-group">
+        <input
+          id="fuse-search-input"
+          type="search"
+          name="q"
+          aria-label="Search query"
+          placeholder="Search titles and content…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span id="fuse-search-count" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <div class="fuse-search-filters" id="fuse-type-filters" hidden>
+      <span class="fuse-filter-label">Filter:</span>
+      <label class="fuse-filter-btn active" data-type="all">
+        <input type="radio" name="fuse-type" value="all" checked hidden />
+        All
+      </label>
+      <label class="fuse-filter-btn" data-type="page">
+        <input type="radio" name="fuse-type" value="page" hidden />
+        Guide
+      </label>
+      <label class="fuse-filter-btn" data-type="api">
+        <input type="radio" name="fuse-type" value="api" hidden />
+        API reference
+      </label>
+      <label class="fuse-filter-btn" data-type="section">
+        <input type="radio" name="fuse-type" value="section" hidden />
+        Sections
+      </label>
+      <label class="fuse-filter-btn" data-type="example">
+        <input type="radio" name="fuse-type" value="example" hidden />
+        Examples
+      </label>
+    </div>
+
+    <noscript>
+      <div class="admonition warning">
+        <p class="admonition-title">Warning</p>
+        <p>JavaScript is required for search.</p>
+      </div>
+    </noscript>
+
+    <!-- results injected here by fuse-search.js -->
+    <div id="fuse-search-results"></div>
+  </div>
+{% endblock docs_body %}
+
+{# Sphinx's searchtools/searchindex are still loaded by the parent template
+   but are never initialised — Fuse.js handles everything instead. #}
