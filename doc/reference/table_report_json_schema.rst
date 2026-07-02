@@ -6,11 +6,6 @@ TableReport JSON schema
 :meth:`TableReport.json() <skrub.TableReport.json>` returns a JSON string whose
 top-level object contains the keys described below.
 
-.. note::
-
-   The ``dataframe`` and ``sample_table`` keys, which are present in the
-   internal summary object, are **not** included in the JSON output.
-
 Top-level object
 ----------------
 
@@ -61,12 +56,12 @@ Top-level object
        Present only when ``associations_skipped`` is ``false``.
    * - ``title``
      - string
-     - *Optional.* Present only when a ``title`` argument was passed to
+     - **Optional.** Present only when a ``title`` argument was passed to
        :class:`~skrub.TableReport`.
    * - ``order_by``
      - string
-     - *Optional.* Name of the column used for sorting when the deprecated parameter ``order_by`` was
-       passed to :class:`~skrub.TableReport`.
+     - **Optional.** Name of the column used for sorting when the deprecated
+       parameter ``order_by`` was passed to :class:`~skrub.TableReport`.
 
 
 .. _table_report_json_schema_column:
@@ -163,12 +158,12 @@ entirely null.
      - The up to 10 most frequent values (same order as ``value_counts``).
    * - ``constant_value``
      - any
-     - *Present only when* ``value_is_constant`` *is* ``true``. The single
+     - **Optional**: Present only when ``value_is_constant`` is ``true``. The single
        value shared by all non-null rows.
    * - ``value_counts_plot``
      - string (SVG)
-     - *Present only when* ``plots_skipped`` *is* ``false`` *and*
-       ``value_is_constant`` *is* ``false``. Bar chart of the top value
+     - **Optional**: Present only when ``plots_skipped`` is ``false`` and
+       ``value_is_constant`` is ``false``. Bar chart of the top value
        counts as an inline SVG string.
 
 
@@ -211,7 +206,7 @@ Present for columns whose dtype is numeric (integer or float), or duration
        ``value_is_constant`` is ``true``.
    * - ``constant_value``
      - number
-     - *Present only when* ``value_is_constant`` *is* ``true``. The single
+     - **Optional**. Present only when ``value_is_constant`` is ``true``. The single
        value shared by all non-null rows.
    * - ``is_duration``
      - boolean
@@ -229,13 +224,13 @@ Present for columns whose dtype is numeric (integer or float), or duration
        ``true``).
    * - ``histogram_plot``
      - string (SVG)
-     - *Present only when* ``plots_skipped`` *is* ``false`` *and*
-       ``order_by`` *is not set*. Distribution histogram as an inline SVG
+     - **Optional**. Present only when ``plots_skipped`` is ``false`` and
+       ``order_by`` is not set. Distribution histogram as an inline SVG
        string.
    * - ``line_plot``
      - string (SVG)
-     - *Present only when* ``plots_skipped`` *is* ``false`` *and* ``order_by``
-       *is set*. Line chart of the column values against the sort column as
+     - **Optional**. Present only when ``plots_skipped`` is ``false`` and ``order_by``
+       is set. Line chart of the column values against the sort column as
        an inline SVG string.
 
 
@@ -270,7 +265,7 @@ Present for columns with a date or datetime dtype.
        ``true``.
    * - ``constant_value``
      - string (ISO 8601)
-     - *Present only when* ``value_is_constant`` *is* ``true``. The single
+     - **Optional**. Present only when ``value_is_constant`` is ``true``. The single
        datetime value shared by all non-null rows.
    * - ``histogram_data``
      - :ref:`histogram data object <table_report_json_schema_hist_data>`
@@ -278,8 +273,8 @@ Present for columns with a date or datetime dtype.
        columns (even when ``plots_skipped`` is ``true``).
    * - ``histogram_plot``
      - string (SVG)
-     - *Present only when* ``plots_skipped`` *is* ``false`` *and*
-       ``value_is_constant`` *is* ``false``. Distribution histogram as an
+     - **Optional**. Present only when ``plots_skipped`` is ``false`` and
+       ``value_is_constant`` is ``false``. Distribution histogram as an
        inline SVG string.
 
 
@@ -303,7 +298,8 @@ object with the following keys.
      - Count of values in each bin (length *n*).
    * - ``bin_edges``
      - array of numbers
-     - Left and right edges of each bin (length *n + 1*).
+     - Left and right edges of each bin (length *n + 1*). Refer to
+       :func:`numpy.histogram` for more detail.
    * - ``n_low_outliers``
      - integer
      - Number of values below the plotted range that were excluded from the
@@ -312,7 +308,10 @@ object with the following keys.
      - integer
      - Number of values above the plotted range that were excluded from the
        histogram bins.
-
+   * - ``total_seconds_offset``
+     - number
+     - Only present for datetime columns. Offset value subtracted from all values
+       before building the histogram. The offset is the minimum of the column.
 
 .. _table_report_json_schema_assoc:
 
