@@ -1303,6 +1303,20 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         except NotFittedError:
             attribute_error(self, "results_")
 
+    def _get_score_names(self):
+        return [
+            k.removeprefix("mean_test_")
+            for k in self.cv_results_.keys()
+            if k.startswith("mean_test_")
+        ]
+
+    def _get_choice_names(self):
+        return [
+            n
+            for c in choice_graph(self.data_op)["choices"].values()
+            if (n := c.name) is not None
+        ]
+
     def _get_cv_results_table(self, detailed=False):
         check_is_fitted(self, "cv_results_")
         data_op_choices = choice_graph(self.data_op)
@@ -1318,30 +1332,20 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         columns_metadata = []
         for c_id, display_name in data_op_choices["choice_display_names"].items():
             c = data_op_choices["choices"][c_id]
-            columns_metadata.append(
-                {
-                    "type": "choice",
-                    "id": c_id,
-                    "name": c.name,
-                    "display_name": display_name,
-                }
-            )
-        metric_names = [
-            k.removeprefix("mean_test_")
-            for k in self.cv_results_.keys()
-            if k.startswith("mean_test_")
-        ]
+            columns_metadata.append({"type": "choice", "name": c.name})
+        score_names = self._get_score_names()
+
         if isinstance(self.refit_, str):
-            metric_names.insert(0, metric_names.pop(metric_names.index(self.refit_)))
+            score_names.insert(0, score_names.pop(score_names.index(self.refit_)))
         result_keys = [
-            *(f"mean_test_{n}" for n in metric_names),
-            *(f"std_test_{n}" for n in metric_names),
+            *(f"mean_test_{n}" for n in score_names),
+            *(f"std_test_{n}" for n in score_names),
             "mean_fit_time",
             "std_fit_time",
             "mean_score_time",
             "std_score_time",
-            *(f"mean_train_{n}" for n in metric_names),
-            *(f"std_train_{n}" for n in metric_names),
+            *(f"mean_train_{n}" for n in score_names),
+            *(f"std_train_{n}" for n in score_names),
         ]
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
@@ -1351,14 +1355,14 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             renaming[c] for c in metadata["log_scale_columns"]
         ]
         if detailed:
-            for k in result_keys[len(metric_names) :][::-1]:
+            for k in result_keys[len(score_names) :][::-1]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
                     columns_metadata.append({"type": "score", "name": k})
-        for k in result_keys[: len(metric_names)][::-1]:
+        for k in result_keys[: len(score_names)][::-1]:
             table.insert(table.shape[1], k, self.cv_results_[k])
             columns_metadata.append({"type": "score", "name": k})
-        metadata["col_score"] = f"mean_test_{metric_names[0]}"
+        metadata["col_score"] = f"mean_test_{score_names[0]}"
         metadata["columns_metadata"] = dict(zip(table.columns, columns_metadata))
         table = table.sort_values(
             metadata["col_score"],
@@ -1394,11 +1398,13 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
             use of the colorscale's range.
 
         show_scores : list of str, optional
-            List of score names to show. By default all are shown.
+            List of score names to show
+            (e.g. "accuracy" in ``.skb.with_scoring(["roc_auc", "accuracy"])``).
+            By default all are shown.
 
         show_choices : list of str, optional
-            List of choice names (e.g. "alpha" in
-            ``choose_float(0.0, 1.0, name="alpha")``) to show.
+            List of choice names to show
+            (e.g. "alpha" in ``choose_float(0.0, 1.0, name="alpha")``).
             By default all are shown.
 
         show_time : bool, optional, default=True
@@ -1408,11 +1414,38 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         -------
         Plotly Figure
         """
-        cv_results, metadata = self._get_cv_results_table(detailed=True)
+
+        # Check that requested show_scores and show_choices (if any) are available
+
         if isinstance(show_scores, str):
             show_scores = [show_scores]
+        if show_scores is not None:
+            available_scores = self._get_score_names()
+            missing_scores = set(show_scores).difference(available_scores)
+            if missing_scores:
+                raise ValueError(
+                    "The following scores were requested in show_scores "
+                    f"but do not exist in the results:\n{missing_scores}.\n"
+                    f"The available scores are:\n{available_scores}."
+                )
         if isinstance(show_choices, str):
             show_choices = [show_choices]
+        if show_choices is not None:
+            available_choices = self._get_choice_names()
+            missing_choices = set(show_choices).difference(available_choices)
+            if missing_choices:
+                raise ValueError(
+                    "The following choices (params) were requested in show_choices "
+                    f"but do not exist in the results:\n{missing_choices}.\n"
+                    f"The available choices are: {available_choices}."
+                )
+
+        # Prepare the figure data
+
+        cv_results, metadata = self._get_cv_results_table(detailed=True)
+
+        # Find columns to show based on show_scores, show_choices and show_time
+
         to_drop = set()
         for col_name, col_meta in metadata["columns_metadata"].items():
             if col_meta["type"] == "score":
@@ -1425,21 +1458,23 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
                     and col_meta["name"].removeprefix("mean_test_") not in show_scores
                 ):
                     to_drop.add(col_name)
-            if (
-                show_choices is not None
-                and col_meta["type"] == "choice"
-                and col_meta["name"] not in show_choices
-            ):
-                to_drop.add(col_name)
+            if col_meta["type"] == "choice":
+                if show_choices is not None and col_meta["name"] not in show_choices:
+                    to_drop.add(col_name)
         time_cols = {"mean_fit_time", "mean_score_time"}
         to_drop = (to_drop - time_cols) if show_time else (to_drop | time_cols)
         to_show = set(cv_results.columns) - to_drop
+
+        # Find rows to show based on min_score
 
         if min_score is not None:
             col_score = metadata["col_score"]
             cv_results = cv_results[cv_results[col_score] >= min_score]
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
+
+        # Make the figure
+
         return plot_parallel_coord(
             cv_results=cv_results,
             show_columns=to_show,
