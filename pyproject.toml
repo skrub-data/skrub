@@ -225,7 +225,8 @@ python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
-build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+build-doc-no-plot = { cmd = "make html-no-plot", cwd = "doc" }
+build-doc-quick = { cmd = "make html-quick", cwd = "doc" }
 clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }

@@ -43,6 +43,12 @@ html-noplot:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+html-quick:
+	# Only build the HTML pages, skipping the markdown build and copying of sources
+	SKB_TABLE_REPORT_VERBOSITY=0 SKIP_JUPYTERLITE=1 $(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
 linkcheck:
 	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
