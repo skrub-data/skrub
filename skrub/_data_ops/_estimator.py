@@ -1416,6 +1416,8 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         Plotly Figure
         """
 
+        check_is_fitted(self, "cv_results_")
+
         # Check that requested show_scores, show_choices, and show_times
         # (if any) are available
 
