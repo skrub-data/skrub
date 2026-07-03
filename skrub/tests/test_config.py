@@ -36,6 +36,7 @@ def test_default_config():
     assert cfg["use_table_report_data_ops"] is True
     # On CI the absolute path is different, check that it ends with skrub_data
     assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
+    assert cfg["table_report_n_rows"] == 10
     assert cfg["table_report_verbosity"] == 1
     assert cfg["table_report_plots_threshold"] == 30
     assert cfg["table_report_associations_threshold"] == 30
@@ -52,6 +53,7 @@ def test_default_config():
     expected_keys = {
         "use_table_report_data_ops",
         "data_dir",
+        "table_report_n_rows",
         "table_report_verbosity",
         "table_report_plots_threshold",
         "table_report_associations_threshold",

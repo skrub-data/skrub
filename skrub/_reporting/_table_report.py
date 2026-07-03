@@ -109,11 +109,15 @@ class TableReport:
     ----------
     dataframe : pandas or polars Series or DataFrame
         The dataframe or series to summarize.
-    n_rows : int, default=10
+    n_rows : int, default=None
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
         (tail). Note this is only for display. Summary statistics, histograms
         etc. are computed using the whole dataframe.
+
+        The default value ``None`` uses the global configuration (see
+        :func:`set_config`), which then defaults to 10.
+
     order_by : str, deprecated
         Deprecated. Column name to use for sorting. Other numerical columns
         will be plotted as function of the sorting column. Must be of
@@ -267,7 +271,7 @@ class TableReport:
     def __init__(
         self,
         dataframe,
-        n_rows=10,
+        n_rows=None,
         order_by=None,
         title=None,
         column_filters=None,
@@ -294,7 +298,10 @@ class TableReport:
                     "TableReport only supports 1D and 2D arrays"
                 )
 
+        if n_rows is None:
+            n_rows = _config.get_config()["table_report_n_rows"]
         n_rows = max(1, n_rows)
+
         if verbose is None:
             self.verbose = _config.get_config()["table_report_verbosity"]
         else:

@@ -20,7 +20,7 @@ challenging datasets in later sections.
 # sphinx_gallery_start_ignore
 import skrub
 
-skrub.set_config(data_ops_open_graph_dropdown=True)
+skrub.set_config(data_ops_open_graph_dropdown=True, table_report_n_rows=5)
 # sphinx_gallery_end_ignore
 
 import skrub
