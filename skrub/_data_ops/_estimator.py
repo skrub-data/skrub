@@ -1405,7 +1405,10 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         show_choices : list of str, optional
             List of choice names to show
             (e.g. "alpha" in ``choose_float(0.0, 1.0, name="alpha")``).
-            By default all are shown.
+            Only choices that were given an explicit name (with the ``name``
+            parameter, as above) can be selected by the filter.
+            By default there is no filtering and all choices (even those
+            without names) are shown.
 
         show_times : list of str, optional
             List of durations to show. Available times are ["fit", "score"].
