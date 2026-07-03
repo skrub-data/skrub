@@ -1268,7 +1268,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
         f.__name__ = name
         return f
 
-    def _call_predictor_method(self, name, environment):
+    def _call_predictor_method(self, name, environment, **kwargs):
         check_is_fitted(self, "cv_results_")
         if not hasattr(self, "best_learner_"):
             raise AttributeError(
@@ -1277,7 +1277,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
                 "Please pass another value to `refit` or fit a learner manually "
                 "using the `best_params_` or `cv_results_` attributes."
             )
-        return getattr(self.best_learner_, name)(environment)
+        return getattr(self.best_learner_, name)(environment, **kwargs)
 
     @property
     def results_(self):

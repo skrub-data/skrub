@@ -585,6 +585,10 @@ def test_randomized_search_with_scoring(randomized_search_backend):
     search.fit(split["train"])
     assert (search.results_["mean_test_neg_brier_score"] <= 0).all()
     assert list(search.score(split["test"]).keys()) == ["neg_brier_score", "roc_auc"]
+    # Test return_predictions is forwarded to best_learner_.score
+    scores, predictions = search.score(split["test"], return_predictions=True)
+    assert list(scores.keys()) == ["neg_brier_score", "roc_auc"]
+    assert predictions["predict_proba"].shape == (split["y_test"].shape[0], 2)
 
 
 def test_grid_search(data_op, data, n_jobs):
