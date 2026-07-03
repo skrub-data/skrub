@@ -35,8 +35,7 @@ def test_no_plotly():
         search.plot_results()
 
 
-@pytest.mark.parametrize("specify_show_scores", [False, True])
-def test_parallel_coord(specify_show_scores):
+def test_parallel_coord():
     X_a, y_a = make_classification(n_samples=20, n_features=4, n_informative=2)
     c0 = skrub.choose_from({"a": 0, "b": 1}, name="c0")
     c1 = skrub.choose_from([0, 1], name="c1")
@@ -57,7 +56,7 @@ def test_parallel_coord(specify_show_scores):
 
     pytest.importorskip("plotly")
 
-    fig = search.plot_results(show_scores=["score"] if specify_show_scores else None)
+    fig = search.plot_results()
     data = iter(fig.data[0]["dimensions"])
     dim = next(data)
     assert dim["label"] == "c0"
@@ -154,8 +153,9 @@ def test_column_preparation(is_log_scale, is_int):
         assert np.all(jittered["values"] == 1.0)
 
 
-@pytest.fixture(scope="module")
-def classif_grid_search():
+@pytest.fixture(scope="module", params=[False, True])
+def classif_grid_search(request):
+    use_with_scoring = request.param
     pytest.importorskip("plotly")
 
     X, y = make_classification()
@@ -167,12 +167,19 @@ def classif_grid_search():
     add = skrub.choose_float(0.0, 1.0, name="add", n_steps=3)
     mul = skrub.choose_float(1.0, 2.0, n_steps=3)  # no name
     pred = ((X[cols] + add) * mul).skb.apply(DummyClassifier(), y=y)
-    search = pred.skb.make_grid_search(
-        fitted=True,
-        scoring=["accuracy", "neg_brier_score"],
-        refit="accuracy",
-    )
-    return search
+    if use_with_scoring:
+        return pred.skb.with_scoring(
+            ["accuracy", "neg_brier_score"]
+        ).skb.make_grid_search(
+            fitted=True,
+            refit="accuracy",
+        )
+    else:
+        return pred.skb.make_grid_search(
+            fitted=True,
+            scoring=["accuracy", "neg_brier_score"],
+            refit="accuracy",
+        )
 
 
 @pytest.mark.parametrize(
