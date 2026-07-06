@@ -186,34 +186,44 @@ def _get_preprocessors(
 
 def _list_transformations(estimator):
     message = ""
+
+    try:
+        post = estimator._postprocessors
+    except AttributeError:
+        post = []
+
     for step in estimator._pipeline.named_steps:
         if step == "checkinputdataframe":
             continue
         transformer = estimator._pipeline.named_steps[step]
-        match transformer.transformer:
-            case DropUninformative():
-                dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
-                if dropped != set():
-                    message += "DropUninformative - " + "\n"
-                    message += f"Dropped columns {dropped}" + "\n"
-                    message += f"Used inputs: {transformer.used_inputs_}" + "\n"
-            case ToFloat():
-                message += "ToFloat - " + "\n"
-                message += (
-                    f"Columns transformed to float: {transformer.used_inputs_}" + "\n"
-                )
-            case ToDatetime():
-                message += "ToDatetime - " + "\n"
-                message += (
-                    f"Columns transformed to datetime: {transformer.used_inputs_}"
-                    + "\n"
-                )
-            case CleanNullStrings():
-                message += "CleanNullStrings - " + "\n"
-                message += (
-                    f"Columns with standardized nulls: {transformer.used_inputs_}"
-                    + "\n"
-                )
+        if transformer not in post:
+            match transformer.transformer:
+                case DropUninformative():
+                    dropped = set(transformer.all_inputs_) - set(
+                        transformer.all_outputs_
+                    )
+                    if dropped != set():
+                        message += "DropUninformative - " + "\n"
+                        message += f"Dropped columns {dropped}" + "\n"
+                        message += f"Used inputs: {transformer.used_inputs_}" + "\n"
+                case ToFloat():
+                    message += "ToFloat - " + "\n"
+                    message += (
+                        f"Columns transformed to float: {transformer.used_inputs_}"
+                        + "\n"
+                    )
+                case ToDatetime():
+                    message += "ToDatetime - " + "\n"
+                    message += (
+                        f"Columns transformed to datetime: {transformer.used_inputs_}"
+                        + "\n"
+                    )
+                case CleanNullStrings():
+                    message += "CleanNullStrings - " + "\n"
+                    message += (
+                        f"Columns with standardized nulls: {transformer.used_inputs_}"
+                        + "\n"
+                    )
     return message
 
 
