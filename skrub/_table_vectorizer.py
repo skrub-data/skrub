@@ -187,43 +187,32 @@ def _get_preprocessors(
 def _list_transformations(estimator):
     message = ""
 
-    try:
-        post = estimator._postprocessors
-    except AttributeError:
-        post = []
+    # if isinstance(estimator, TableVectorizer):
+    #     post = estimator._postprocessors
+    # else:
+    #     post = []
 
     for step in estimator._pipeline.named_steps:
         if step == "checkinputdataframe":
             continue
         transformer = estimator._pipeline.named_steps[step]
-        if transformer not in post:
-            match transformer.transformer:
-                case DropUninformative():
-                    dropped = set(transformer.all_inputs_) - set(
-                        transformer.all_outputs_
-                    )
-                    if not dropped:
-                        message += "DropUninformative - " + "\n"
-                        message += f"Dropped columns {dropped}" + "\n"
-                        message += f"Used inputs: {transformer.used_inputs_}" + "\n"
-                case ToFloat():
-                    message += "ToFloat - " + "\n"
-                    message += (
-                        f"Columns transformed to float: {transformer.used_inputs_}"
-                        + "\n"
-                    )
-                case ToDatetime():
-                    message += "ToDatetime - " + "\n"
-                    message += (
-                        f"Columns transformed to datetime: {transformer.used_inputs_}"
-                        + "\n"
-                    )
-                case CleanNullStrings():
-                    message += "CleanNullStrings - " + "\n"
-                    message += (
-                        f"Columns with standardized nulls: {transformer.used_inputs_}"
-                        + "\n"
-                    )
+        match transformer.transformer:
+            case DropUninformative():
+                dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
+                if dropped:
+                    message += "Columns dropped by DropUninformative:" + "\n\t"
+                    message += "\n\t".join(limit_cols(dropped))
+                    message += f"Used inputs: {transformer.used_inputs_}" + "\n"
+            # case ToFloat():
+            #    if transformer not in post:
+            #       message += "Columns transformed to float:" + "\n"
+            #       message += "\n\t".join(transformer.used_inputs_)
+            case ToDatetime():
+                message += "Columns transformed to datetime:" + "\n\t"
+                message += "\n\t".join(limit_cols(transformer.used_inputs_)) + "\n"
+            case CleanNullStrings():
+                message += "Columns with standardized nulls:" + "\n\t"
+                message += "\n\t".join(limit_cols(transformer.used_inputs_)) + "\n"
     return message
 
 
@@ -1214,6 +1203,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         return np.asarray(self.all_outputs_)
 
     def list_transformations(self):
+        """Returns a string reporting the transformations applied by the table
+        vectorizer, and the columns they are each applied to. This covers every
+        preprocessing step, each of the `numeric`, `datetime`, `low cardinality`
+        and `high cardinality` transformations and any specific transformer.
+        """
         preprocessing_transformations = _list_transformations(self)
         vectorize_transformations = ""
         specific_transformations = ""
@@ -1222,23 +1216,24 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         specific = all_transformers.pop("specific")
 
         for transformer_type, transformer_cols in all_transformers.items():
-            if transformer_cols != []:
+            if transformer_cols:
                 vectorize_transformations += (
                     f"{transformer_type} transformer is "
-                    f"{repr_format(getattr(self, transformer_type))} "
-                    f"and was applied to {transformer_cols}." + "\n"
+                    f"{getattr(self, transformer_type).__class__.__name__} "
+                    f"and was applied to:" + "\n\t"
+                )
+                vectorize_transformations += (
+                    "\n\t".join(limit_cols(transformer_cols)) + "\n"
                 )
             else:
                 vectorize_transformations += (
-                    f"{transformer_type} transformer is "
-                    f"{repr_format(getattr(self, transformer_type))} "
-                    "and was applied to nothing." + "\n"
+                    f"No {transformer_type} columns have been detected." + "\n"
                 )
 
-        if self.specific_transformers != ():
+        if self.specific_transformers:
             for t in self.specific_transformers:
                 specific_transformations += (
-                    f"specific transformer {t} was applied to {specific}"
+                    f"specific transformer {t} was applied to {limit_cols(specific)}"
                 )
 
         return (
@@ -1254,3 +1249,11 @@ def repr_format(s):
     without_spaces = repr(s).replace("  ", "")
     without_lineskip = without_spaces.replace("\n", "")
     return without_lineskip
+
+
+def limit_cols(col_names, max_cols=10):
+    if len(col_names) > max_cols:
+        list_cols = list(col_names)[:max_cols] + ["..."]
+    else:
+        list_cols = list(col_names)
+    return list_cols

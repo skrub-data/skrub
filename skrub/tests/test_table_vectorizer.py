@@ -1285,8 +1285,22 @@ def test_list_transformations(df_module):
 
     vectorizer = TableVectorizer()
     _ = vectorizer.fit_transform(df)
-    _ = vectorizer.list_transformations()
+    vectorizer_output = vectorizer.list_transformations()
+    assert vectorizer_output == (
+        "Columns with standardized nulls:\n\tuid\n\tcities\nColumns "
+        "transformed to datetime:\n\tstart\n\tend\n\n\nnumeric transformer"
+        " is PassThrough and was applied to:\n\tencoded_cities\n\tmetric_0"
+        "\n\tmetric_1\n\tmetric_2\n\tmetric_3\ndatetime transformer is "
+        "DatetimeEncoder and was applied to:\n\tstart\n\tend\nlow_cardinality"
+        " transformer is OneHotEncoder and was applied to:\n\tcities\n"
+        "high_cardinality transformer is StringEncoder and was applied "
+        "to:\n\tuid\n\n\n"
+    )
 
     vectorizer = Cleaner()
     _ = vectorizer.fit_transform(df)
-    _ = vectorizer.list_transformations()
+    cleaner_output = vectorizer.list_transformations()
+    assert (
+        cleaner_output == "Columns with standardized nulls:\n\tuid\n\tcities\nColumns "
+        "transformed to datetime:\n\tstart\n\tend\n"
+    )
