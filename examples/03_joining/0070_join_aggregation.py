@@ -162,7 +162,7 @@ X_train.shape, y_train.shape
 #
 # We bring this logic into a |TableVectorizer| to vectorize these columns in a
 # single step.
-# See `this example <https://skrub-data.org/stable/auto_examples/01_encodings.html#specializing-the-tablevectorizer-for-histgradientboosting>`_
+# See :ref:`this example <sphx_glr_auto_examples_01_encoding_0010_encodings.py>`
 # for more details about these encoding choices.
 from sklearn.preprocessing import OrdinalEncoder
 

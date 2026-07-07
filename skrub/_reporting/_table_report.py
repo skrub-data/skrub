@@ -100,17 +100,24 @@ class TableReport:
 
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
-    column. Numpy arrays are converted to pandas DataFrame or Series.
+    column. Numpy arrays are converted to pandas DataFrame or Series. The computed
+    statistics can be accessed interactively in a Jupyter notebook or web browser.
+    Alternatively, it can be saved or exported in JSON, Markdown, or HTML format
+    for programmatic access or for inclusion in documents.
 
     Parameters
     ----------
     dataframe : pandas or polars Series or DataFrame
         The dataframe or series to summarize.
-    n_rows : int, default=10
+    n_rows : int, default=None
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
         (tail). Note this is only for display. Summary statistics, histograms
         etc. are computed using the whole dataframe.
+
+        The default value ``None`` uses the global configuration (see
+        :func:`set_config`), which then defaults to 10.
+
     order_by : str, deprecated
         Deprecated. Column name to use for sorting. Other numerical columns
         will be plotted as function of the sorting column. Must be of
@@ -232,7 +239,8 @@ class TableReport:
     # DataFrame Report...
 
     The report can also be obtained in JSON format with :meth:`json`, which can
-    be useful for programmatic access to the report data.
+    be useful for programmatic access to the report data. The schema of the
+    JSON data is reported in :ref:`table_report_json_schema`.
 
     Note that the resulting JSON includes the plots in SVG format, which can be
     quite verbose: plots can be disabled by setting ``plot_distributions=False``
@@ -244,23 +252,26 @@ class TableReport:
 
 
     Advanced configuration: you can add custom column filters that will appear
-    in the report's dropdown menu.
+    in the report's dropdown menu, allowing you to select a subset of columns to
+    display in the report.
 
     >>> filters = {
-    ...         "display_name": ["a", "b"],
+    ...         "my_filter": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
     With the code above, in addition to the default filters such as "All
-    columns", "Numeric columns", etc., the added "Columns with at least 2
-    unique values" will be available in the report, selecting columns "a" and
-    "b".
+    columns", "Numeric columns", etc., the added "my_filter" will be available
+    in the report, selecting both columns "a" and "b".
+    Filters may be specified as a list of column names, a list of column indices,
+    or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
+
     """
 
     def __init__(
         self,
         dataframe,
-        n_rows=10,
+        n_rows=None,
         order_by=None,
         title=None,
         column_filters=None,
@@ -287,7 +298,10 @@ class TableReport:
                     "TableReport only supports 1D and 2D arrays"
                 )
 
+        if n_rows is None:
+            n_rows = _config.get_config()["table_report_n_rows"]
         n_rows = max(1, n_rows)
+
         if verbose is None:
             self.verbose = _config.get_config()["table_report_verbosity"]
         else:
@@ -431,6 +445,13 @@ class TableReport:
     def json(self):
         """Get the report data in JSON format.
 
+        By default, the JSON output includes the plots in SVG format, which can
+        be quite verbose. Plots can be disabled by setting
+        ``plot_distributions=False`` when generating the report.
+
+        The schema of the JSON data is reported in :ref:`table_report_json_schema`.
+
+
         Returns
         -------
         str :
@@ -439,6 +460,16 @@ class TableReport:
         to_remove = ["dataframe", "sample_table"]
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
+
+    def dict(self):
+        """Get the report data in Python Dictionary format.
+
+        Returns
+        -------
+        dict :
+            The report data
+        """
+        return json.loads(self.json())
 
     def markdown(self):
         """Get the report as a Markdown string.

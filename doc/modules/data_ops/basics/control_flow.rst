@@ -170,7 +170,7 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 - See :ref:`sphx_glr_auto_examples_data_ops_1111_data_ops_quick_tour.py` for an introductory
   example on how to use skrub DataOps on a single dataframe.
-- See :ref:`sphx_glr_auto_examples_data_ops_1120_multiple_tables.py` for an example
+- See :ref:`sphx_glr_auto_examples_02_data_ops_1120_multiple_tables.py` for an example
   of how skrub DataOps can be used to process multiple tables using dataframe APIs.
-- See :ref:`sphx_glr_auto_examples_data_ops_1130_choices.py` for an example of
+- See :ref:`sphx_glr_auto_examples_02_data_ops_1130_choices.py` for an example of
   hyper-parameter tuning using skrub DataOps.

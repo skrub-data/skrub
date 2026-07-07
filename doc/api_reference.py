@@ -122,10 +122,12 @@ API_REFERENCE = {
                 "description": None,
                 "autosummary": [
                     "SquashingScaler",
-                    "deduplicate",
                     "Cleaner",
                     "DropUninformative",
+                    "DropSimilar",
+                    "DurationToFloat",
                     "to_datetime",
+                    "deduplicate",
                 ],
             },
         ],

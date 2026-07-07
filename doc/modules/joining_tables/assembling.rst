@@ -9,7 +9,22 @@ requires including as much information as possible, often from different sources
 Skrub allows you to join tables on keys of different types (string, numerical,
 datetime) with imprecise correspondence.
 
+.. warning::
 
+    To be considered when using one of the joiners:
+
+    **Joiners are designed for small-to-medium datasets.**
+
+    - **Memory**: The auxiliary table is stored in the transformer state.
+      For tables > 1 million rows, consider using :ref:`skrub Data Ops
+      <user_guide_data_ops_index>` with pandas/polars joins instead.
+
+    - **Computational Cost**: Fuzzy joining requires vectorizing columns
+      and nearest-neighbor search. Test on samples first for large datasets.
+
+    - **Dynamic Data**: If your auxiliary table changes after fitting,
+      you must refit the transformer. Joiners are not suitable for continuously
+      updated tables.
 
 Joining external tables for machine learning
 --------------------------------------------
@@ -58,4 +73,4 @@ in the right table (the table to be added). This is done by estimating the value
 that the missing rows would have by training a machine learning model on the data
 we have access to.
 
-This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_0080_interpolation_join.py>`.
+This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_03_joining_0080_interpolation_join.py>`.

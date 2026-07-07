@@ -63,6 +63,8 @@ dev = [
   "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxext-opengraph",
+  "sphinx-llms-txt",
+  "sphinx-markdown-builder",
   "sphinx-autosummary-accessors",
   "statsmodels",
 
@@ -124,6 +126,8 @@ sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
+sphinx-llms-txt = "*"
+sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
@@ -221,7 +225,8 @@ python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
-build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+build-doc-no-plot = { cmd = "make html-no-plot", cwd = "doc" }
+build-doc-quick = { cmd = "make html-quick", cwd = "doc" }
 clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
@@ -278,6 +283,7 @@ exclude = [
   "dist",
   "doc/_build",
   "doc/auto_examples",
+  "skrub/_docs/*.py",
   "build",
   "pixi.lock",
 ]
@@ -354,11 +360,16 @@ filterwarnings = [
   # We avoid turning huggingface_hub warnings into errors, because they get
   # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
   'default::DeprecationWarning:huggingface_hub',
+  # Ignore polars warning about horizontal concatenation being deprecated
+  # We always expect dataframes to concatenate to have the same length, so the
+  # intended behavior starting from version 1.42 is already what we want
+  "ignore:the default behavior of `how='horizontal'`.*:DeprecationWarning"
 ]
 log_cli_level = "INFO"
 xfail_strict = true
 addopts = ["--doctest-modules", "--strict-config", "--strict-markers"]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
