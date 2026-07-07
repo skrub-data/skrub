@@ -202,7 +202,7 @@ def _list_transformations(estimator):
                     dropped = set(transformer.all_inputs_) - set(
                         transformer.all_outputs_
                     )
-                    if dropped != set():
+                    if not dropped:
                         message += "DropUninformative - " + "\n"
                         message += f"Dropped columns {dropped}" + "\n"
                         message += f"Used inputs: {transformer.used_inputs_}" + "\n"
