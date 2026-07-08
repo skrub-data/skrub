@@ -30,7 +30,7 @@ from ._data_ops import (
     Value,
     Var,
 )
-from ._utils import NULL, X_NAME, Y_NAME, simple_repr
+from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, X_NAME, Y_NAME, simple_repr
 
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
 
@@ -488,7 +488,13 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
             data_op
         )
     except UninitializedVariable as e:
-        if hasattr(e, "add_note") and environment is not None:
+        if (
+            hasattr(e, "add_note")
+            and environment is not None
+            and not environment.get(IS_PREVIEW_DATA_ENV_NAME)
+        ):
+            # user passed an explicit environment rather than using the
+            # variables' preview values.
             e.add_note(_uninitialized_variable_msg(e, data_op, environment))
         raise
     finally:
@@ -498,15 +504,22 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
 
 def _uninitialized_variable_msg(error, data_op, environment):
     missing_name = error.name
-    var_names = list(data_op.skb.get_vars().keys())
+    var_names = list(named_nodes(data_op).keys())
     choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
-    unused = list(set(environment.keys()).difference(var_names + choice_names))
+    unused = list(
+        {k for k in environment.keys() if not k.startswith("_skrub_")}.difference(
+            var_names + choice_names
+        )
+    )
 
     msg = (
-        "- Note that all values are dropped by .skb.make_learner() "
-        "by default\n  and need to be passed explicitly in the environment.\n"
-        f"  (You can use skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
-        "  to always retain the passed value as a default.)"
+        "- Note that preview values passed to initialize skrub variables\n"
+        "  are ignored by default when we pass an explicit 'environment' dictionary,\n"
+        "  for example when calling SkrubLearner.fit({'X': ..., 'y': ...}).\n"
+        f"  Please pass a value for {missing_name!r} in the environment.\n"
+        "  You can also use "
+        f"skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
+        "  to always retain the initialization value as a default."
     )
     if unused:
         msg += (
@@ -698,6 +711,12 @@ def graph(data_op):
 
 def nodes(data_op):
     return list(graph(data_op)["nodes"].values())
+
+
+def named_nodes(data_op):
+    return {
+        name: op for op in nodes(data_op) if (name := op._skrub_impl.name) is not None
+    }
 
 
 def clear_results(data_op, mode=None):
