@@ -28,7 +28,6 @@ from skrub._table_vectorizer import (
 from skrub._to_float import ToFloat
 from skrub._to_str import ToStr
 from skrub.conftest import _POLARS_INSTALLED
-from skrub.datasets._generating import toy_cities
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -1281,26 +1280,38 @@ def test_duration_to_float(df_module):
 
 
 def test_list_transformations(df_module):
-    df = toy_cities()
+    df = df_module.make_dataframe(
+        {
+            "numbers": [1, 2, 3, 4, 5, 6, None],
+            "low_card": ["up", "up", "up", "down", "down", "up", "down"],
+            "datetime": [
+                "2026-06-01",
+                "2026-06-04",
+                "2026-07-03",
+                "2026-05-29",
+                "2026-01-08",
+                "2026-06-20",
+                None,
+            ],
+        }
+    )
 
     vectorizer = TableVectorizer()
     _ = vectorizer.fit_transform(df)
     vectorizer_output = vectorizer.list_transformations()
     assert vectorizer_output == (
-        "Columns with standardized nulls:\n\tuid\n\tcities\nColumns "
-        "transformed to datetime:\n\tstart\n\tend\n\n\nnumeric transformer"
-        " is PassThrough and was applied to:\n\tencoded_cities\n\tmetric_0"
-        "\n\tmetric_1\n\tmetric_2\n\tmetric_3\ndatetime transformer is "
-        "DatetimeEncoder and was applied to:\n\tstart\n\tend\nlow_cardinality"
-        " transformer is OneHotEncoder and was applied to:\n\tcities\n"
-        "high_cardinality transformer is StringEncoder and was applied "
-        "to:\n\tuid\n\n\n"
+        "Columns with standardized nulls:\n\tlow_card\n\tdatetime\nColumns "
+        "transformed to datetime:\n\tdatetime\n\n\nnumeric transformer is "
+        "PassThrough and was applied to:\n\tnumbers\ndatetime transformer "
+        "is DatetimeEncoder and was applied to:\n\tdatetime\nlow_cardinality "
+        "transformer is OneHotEncoder and was applied to:\n\tlow_card\n"
+        "No high_cardinality columns have been detected.\n\n\n"
     )
 
     vectorizer = Cleaner()
     _ = vectorizer.fit_transform(df)
     cleaner_output = vectorizer.list_transformations()
     assert (
-        cleaner_output == "Columns with standardized nulls:\n\tuid\n\tcities\nColumns "
-        "transformed to datetime:\n\tstart\n\tend\n"
+        cleaner_output == "Columns with standardized nulls:\n\tlow_card\n\t"
+        "datetime\nColumns transformed to datetime:\n\tdatetime\n"
     )
