@@ -532,7 +532,8 @@ def _uninitialized_variable_msg(error, data_op, environment, ancestor_data_op):
 
     msg = (
         "- Note that preview values passed to initialize skrub variables\n"
-        "  are ignored by default when we pass an explicit 'environment' dictionary,\n"
+        "  are ignored by default whenever we pass "
+        "an explicit 'environment' dictionary,\n"
         "  for example when calling SkrubLearner.fit({'X': ..., 'y': ...}).\n"
         f"  Please pass a value for {missing_name!r} in the environment.\n"
         "  You can also use "
