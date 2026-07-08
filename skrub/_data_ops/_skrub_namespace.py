@@ -1982,7 +1982,9 @@ class SkrubNamespace:
         if not fitted:
             return learner
         return learner.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(
+                self._data_op, self._env_or_preview_data(None), keep_subsampling
+            )
         )
 
     @_check_before
@@ -2300,7 +2302,9 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(
+                self._data_op, self._env_or_preview_data(None), keep_subsampling
+            )
         )
 
     @_check_before
@@ -2587,7 +2591,9 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(
+                self._data_op, self._env_or_preview_data(None), keep_subsampling
+            )
         )
 
     @_check_before
