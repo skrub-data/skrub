@@ -1489,12 +1489,12 @@ class SkrubNamespace:
         """
         from ._data_ops import Var
 
-        all_named_nodes = named_nodes(self._data_op)
+        found_nodes = named_nodes(self._data_op)
         if all_named_ops:
-            return all_named_nodes
+            return found_nodes
         return {
             name: op
-            for name, op in all_named_nodes.items()
+            for name, op in found_nodes.items()
             if isinstance(op._skrub_impl, Var)
         }
 
