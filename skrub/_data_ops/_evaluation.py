@@ -514,7 +514,11 @@ def evaluate(
             # user passed an explicit environment rather than using the
             # variables' preview values.
             e.add_note(
-                _uninitialized_variable_msg(e, data_op, environment, ancestor_data_op)
+                _uninitialized_variable_msg(
+                    e,
+                    ancestor_data_op if ancestor_data_op is not None else data_op,
+                    environment,
+                )
             )
         raise
     finally:
@@ -522,9 +526,8 @@ def evaluate(
             clear_results(data_op, mode=mode)
 
 
-def _uninitialized_variable_msg(error, data_op, environment, ancestor_data_op):
+def _uninitialized_variable_msg(error, data_op, environment):
     missing_name = error.name
-    data_op = ancestor_data_op if ancestor_data_op is not None else data_op
     var_names = list(named_nodes(data_op).keys())
     choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
     unused = list(
