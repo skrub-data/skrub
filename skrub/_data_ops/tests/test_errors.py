@@ -1,5 +1,6 @@
 import pickle
 import re
+import sys
 import traceback
 
 import numpy as np
@@ -640,3 +641,19 @@ def test_unhashable():
 def test_mark_as_X_missing_cv():
     with pytest.raises(TypeError, match=".*you must also provide a splitter"):
         skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
+def test_missing_var_message():
+    learner = (
+        skrub.var("a", "a value")
+        + skrub.var("var_b_name", "b value", becomes_default=True)
+        + skrub.choose_from(["?", "!"], name="c")
+    ).skb.make_learner()
+    with pytest.raises(KeyError) as exc:
+        learner.fit({"bad_key": "another value"})
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    assert "bad_key" in full_msg
+    assert "var_b_name" not in full_msg
+    assert "all values are dropped" in full_msg
+    assert "skrub.var('a', value=..., becomes_default=True)" in full_msg

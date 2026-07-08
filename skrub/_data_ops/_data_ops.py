@@ -150,6 +150,14 @@ class UninitializedVariable(KeyError):
     Evaluating a DataOp and a value has not been provided for one of the variables.
     """
 
+    def __init__(self, name):
+        self.name = name
+        self.message = f"No value has been provided for {name!r}"
+        super().__init__(name)
+
+    def __str__(self):
+        return self.message
+
 
 def _remove_shell_frames(stack):
     """
@@ -961,9 +969,7 @@ class Var(DataOpImpl):
         if mode == "preview":
             assert not environment
             if e.value is NULL:
-                raise UninitializedVariable(
-                    f"No value has been provided for {e.name!r}"
-                )
+                raise UninitializedVariable(e.name)
             return e.value
         if e.name in environment:
             return environment[e.name]
@@ -971,7 +977,7 @@ class Var(DataOpImpl):
             e.becomes_default or environment.get("_skrub_use_var_values", False)
         ) and e.value is not NULL:
             return e.value
-        raise UninitializedVariable(f"No value has been provided for {e.name!r}")
+        raise UninitializedVariable(e.name)
 
     def preview_if_available(self):
         return self.value

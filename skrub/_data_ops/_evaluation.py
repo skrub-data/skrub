@@ -26,6 +26,7 @@ from ._data_ops import (
     DataOp,
     Scoring,
     SplitX,
+    UninitializedVariable,
     Value,
     Var,
 )
@@ -429,7 +430,7 @@ def _check_environment(environment):
     # - env ⊂ variables: in some cases we could check that there are no extra
     #   keys in `environment`, ie all keys in `environment` correspond to a
     #   name in the DataOp. However in other cases we naturally end up
-    #   using a bigger environment than what is needed. For example we want tu
+    #   using a bigger environment than what is needed. For example we want to
     #   evaluate a sub-DataOp (such as the `mark_as_X()` node), and to do
     #   it we use the environment that was passed to evaluate the full
     #   DataOp. So if we want such a verification it should be a separate
@@ -486,9 +487,34 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
         )
+    except UninitializedVariable as e:
+        if hasattr(e, "add_note"):
+            e.add_note(_uninitialized_variable_msg(e, data_op, environment))
+        raise
     finally:
         if clear:
             clear_results(data_op, mode=mode)
+
+
+def _uninitialized_variable_msg(error, data_op, environment):
+    missing_name = error.name
+    var_names = list(data_op.skb.get_vars().keys())
+    choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
+    unused = list(set(environment.keys()).difference(var_names + choice_names))
+    if unused:
+        msg = (
+            "- The following keys were passed in the environment but "
+            f"have no corresponding variable in the DataOp:\n  {unused}\n"
+        )
+    else:
+        msg = ""
+    msg = msg + (
+        "- Note that all values are dropped by .skb.make_learner()\n"
+        "  by default and need to be passed explicitly in the environment.\n"
+        f"  (You can use skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
+        "  to always retain the passed value as a default.)"
+    )
+    return msg
 
 
 def _cache_pruner(data_op, mode):
