@@ -435,7 +435,10 @@ def _check_environment(environment):
     #   it we use the environment that was passed to evaluate the full
     #   DataOp. So if we want such a verification it should be a separate
     #   check done at a higher level (eg in the estimators' `fit`, `predict`
-    #   etc.) where we know we are not working with a sub-DataOp.
+    #   etc.) where we know we are not working with a sub-DataOp. We do perform
+    #   such a check when a key is missing from the env to provide a better
+    #   message, but it is only used for the content of the message rather than
+    #   enforcing no extra keys ahead of time.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the
