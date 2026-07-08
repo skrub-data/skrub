@@ -451,7 +451,14 @@ def _check_environment(environment):
 # consistent with .skb.eval() in evaluate's params
 
 
-def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=()):
+def evaluate(
+    data_op,
+    mode="preview",
+    environment=None,
+    clear=False,
+    callbacks=(),
+    ancestor_data_op=None,
+):
     """Evaluate a DataOp.
 
     Parameters
@@ -476,6 +483,14 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         Each will be called, in the provided order, after evaluating each node.
         The signature is callback(data_op, result) where data_op is the DataOp
         that was just evaluated and result is the resulting value.
+
+    ancestor_data_op : DataOp or None
+        When we are evaluating a part of a DataOp (e.g. the X node only), pass
+        this so that we can look at all the variable names of the full DataOp
+        when producing error messages about missing or extra keys in the
+        environment. It is not used for other purposes than inspecting the
+        variable an choice names it contains. In particular it is not
+        evaluated.
     """
     _check_environment(environment)
     if clear:
@@ -495,15 +510,18 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         ):
             # user passed an explicit environment rather than using the
             # variables' preview values.
-            e.add_note(_uninitialized_variable_msg(e, data_op, environment))
+            e.add_note(
+                _uninitialized_variable_msg(e, data_op, environment, ancestor_data_op)
+            )
         raise
     finally:
         if clear:
             clear_results(data_op, mode=mode)
 
 
-def _uninitialized_variable_msg(error, data_op, environment):
+def _uninitialized_variable_msg(error, data_op, environment, ancestor_data_op):
     missing_name = error.name
+    data_op = ancestor_data_op if ancestor_data_op is not None else data_op
     var_names = list(named_nodes(data_op).keys())
     choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
     unused = list(
