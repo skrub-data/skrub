@@ -144,7 +144,7 @@ class SkrubNamespace:
     def __init__(self, data_op):
         self._data_op = data_op
 
-    def _env_or_preview_data(self, environment):
+    def _get_env(self, environment=None):
         if environment is not None:
             return environment
         return self.get_data() | {IS_PREVIEW_DATA_ENV_NAME: True}
@@ -1127,7 +1127,7 @@ class SkrubNamespace:
                 f"got: '{type(environment)}'"
             )
         if environment is None:
-            environment = self._env_or_preview_data(None)
+            environment = self._get_env()
         else:
             environment = {
                 **environment,
@@ -1982,9 +1982,7 @@ class SkrubNamespace:
         if not fitted:
             return learner
         return learner.fit(
-            env_with_subsampling(
-                self._data_op, self._env_or_preview_data(None), keep_subsampling
-            )
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2115,7 +2113,7 @@ class SkrubNamespace:
                 category=FutureWarning,
             )
             split_func = splitter
-        environment = self._env_or_preview_data(environment)
+        environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
             environment,
@@ -2188,7 +2186,7 @@ class SkrubNamespace:
         >>> accuracies
         [1.0, 0.0, 1.0]
         """
-        environment = self._env_or_preview_data(environment)
+        environment = self._get_env(environment)
         yield from iter_cv_splits(
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
@@ -2302,9 +2300,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(
-                self._data_op, self._env_or_preview_data(None), keep_subsampling
-            )
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2591,9 +2587,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(
-                self._data_op, self._env_or_preview_data(None), keep_subsampling
-            )
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2814,7 +2808,7 @@ class SkrubNamespace:
         4    0.90
         Name: test_score, dtype: float64
         """
-        environment = self._env_or_preview_data(environment)
+        environment = self._get_env(environment)
 
         return cross_validate(
             self.make_learner(),
