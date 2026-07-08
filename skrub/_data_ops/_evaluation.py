@@ -501,19 +501,18 @@ def _uninitialized_variable_msg(error, data_op, environment):
     var_names = list(data_op.skb.get_vars().keys())
     choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
     unused = list(set(environment.keys()).difference(var_names + choice_names))
-    if unused:
-        msg = (
-            "- The following keys were passed in the environment but "
-            f"have no corresponding variable in the DataOp:\n  {unused}\n"
-        )
-    else:
-        msg = ""
-    msg = msg + (
-        "- Note that all values are dropped by .skb.make_learner()\n"
-        "  by default and need to be passed explicitly in the environment.\n"
+
+    msg = (
+        "- Note that all values are dropped by .skb.make_learner() "
+        "by default\n  and need to be passed explicitly in the environment.\n"
         f"  (You can use skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
         "  to always retain the passed value as a default.)"
     )
+    if unused:
+        msg += (
+            "\n- WARNING: the following keys were passed in the environment but "
+            f"have no corresponding variable in the DataOp:\n  {unused}"
+        )
     return msg
 
 
