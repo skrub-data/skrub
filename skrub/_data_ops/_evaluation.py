@@ -488,7 +488,7 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
             data_op
         )
     except UninitializedVariable as e:
-        if hasattr(e, "add_note"):
+        if hasattr(e, "add_note") and environment is not None:
             e.add_note(_uninitialized_variable_msg(e, data_op, environment))
         raise
     finally:
