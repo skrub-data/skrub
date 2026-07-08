@@ -662,6 +662,8 @@ def test_missing_var_message():
     )
     assert "skrub.var('a', value=..., becomes_default=True)" in full_msg
 
+    # Test case were we do use the preview values (no environment is passed)
+
     with pytest.raises(KeyError) as exc:
         (data_op + skrub.var("d")).skb.make_learner(fitted=True)
 
@@ -684,6 +686,8 @@ def test_missing_var_message_train_test_split():
     with pytest.raises(KeyError) as exc:
         X.skb.train_test_split()
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    print(full_msg)
+    assert "No value has been provided for 'a'" in full_msg
     assert (
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
