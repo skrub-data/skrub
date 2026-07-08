@@ -908,8 +908,14 @@ def test_train_test_split(with_y):
                 "n": 8,
                 "_skrub_X": [0, 1, 2, 3, 4, 5],
                 "_skrub_y": [8, 9, 10, 11, 12, 13],
+                "_skrub_is_preview_data_env": True,
             },
-            "test": {"n": 8, "_skrub_X": [6, 7], "_skrub_y": [14, 15]},
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_y": [14, 15],
+                "_skrub_is_preview_data_env": True,
+            },
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
             "y_train": [8, 9, 10, 11, 12, 13],
@@ -917,8 +923,16 @@ def test_train_test_split(with_y):
         }
     else:
         assert split == {
-            "train": {"n": 8, "_skrub_X": [0, 1, 2, 3, 4, 5]},
-            "test": {"n": 8, "_skrub_X": [6, 7]},
+            "train": {
+                "n": 8,
+                "_skrub_X": [0, 1, 2, 3, 4, 5],
+                "_skrub_is_preview_data_env": True,
+            },
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_is_preview_data_env": True,
+            },
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
         }
