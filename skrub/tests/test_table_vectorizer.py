@@ -27,6 +27,7 @@ from skrub._table_vectorizer import (
 )
 from skrub._to_float import ToFloat
 from skrub._to_str import ToStr
+from skrub._utils import PassThrough
 from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -1280,38 +1281,61 @@ def test_duration_to_float(df_module):
 
 
 def test_list_transformations(df_module):
-    df = df_module.make_dataframe(
-        {
-            "numbers": [1, 2, 3, 4, 5, 6, None],
-            "low_card": ["up", "up", "up", "down", "down", "up", "down"],
-            "datetime": [
-                "2026-06-01",
-                "2026-06-04",
-                "2026-07-03",
-                "2026-05-29",
-                "2026-01-08",
-                "2026-06-20",
-                None,
-            ],
-        }
-    )
+    passthrough_line = [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "indigo",
+        "violet",
+    ]
+    df_dict = {
+        "numbers": [1, 2, 3, 4, 5, 6, None],
+        "low_card": ["up", "up", "up", "down", "down", "up", "down"],
+        "datetime": [
+            "2026-06-01",
+            "2026-06-04",
+            "2026-07-03",
+            "2026-05-29",
+            "2026-01-08",
+            "2026-06-20",
+            None,
+        ],
+        "uninformative": [False, False, False, False, False, False, False],
+    }
+    for i in range(1, 12):
+        df_dict[f"passthrough_{i}"] = passthrough_line
 
-    vectorizer = TableVectorizer()
+    df = df_module.make_dataframe(df_dict)
+
+    vectorizer = TableVectorizer(
+        specific_transformers=[
+            (PassThrough(), [f"passthrough_{i}" for i in range(1, 12)])
+        ]
+    )
     _ = vectorizer.fit_transform(df)
     vectorizer_output = vectorizer.list_transformations()
     assert vectorizer_output == (
         "Columns with standardized nulls:\n\tlow_card\n\tdatetime\nColumns "
         "transformed to datetime:\n\tdatetime\n\n\nnumeric transformer is "
-        "PassThrough and was applied to:\n\tnumbers\ndatetime transformer "
-        "is DatetimeEncoder and was applied to:\n\tdatetime\nlow_cardinality "
-        "transformer is OneHotEncoder and was applied to:\n\tlow_card\n"
-        "No high_cardinality columns have been detected.\n\n\n"
+        "PassThrough and was applied to:\n\tnumbers\n\tuninformative\ndatetime "
+        "transformer is DatetimeEncoder and was applied to:\n\tdatetime\n"
+        "low_cardinality transformer is OneHotEncoder and was applied to:\n\t"
+        "low_card\nNo high_cardinality columns have been detected.\n\n\nspecific "
+        "transformer PassThrough() was applied to:\n\tpassthrough_1\n\t"
+        "passthrough_2\n\tpassthrough_3\n\tpassthrough_4\n\tpassthrough_5\n\t"
+        "passthrough_6\n\tpassthrough_7\n\tpassthrough_8\n\tpassthrough_9\n\t"
+        "passthrough_10\n\t...\n"
     )
 
-    vectorizer = Cleaner()
+    vectorizer = Cleaner(drop_if_constant=True)
     _ = vectorizer.fit_transform(df)
     cleaner_output = vectorizer.list_transformations()
     assert (
         cleaner_output == "Columns with standardized nulls:\n\tlow_card\n\t"
-        "datetime\nColumns transformed to datetime:\n\tdatetime\n"
+        "datetime\n\tpassthrough_1\n\tpassthrough_2\n\tpassthrough_3\n\t"
+        "passthrough_4\n\tpassthrough_5\n\tpassthrough_6\n\tpassthrough_7\n\t"
+        "passthrough_8\n\t...\nColumns dropped by DropUninformative:\n\t"
+        "uninformativeColumns transformed to datetime:\n\tdatetime\n"
     )

@@ -202,7 +202,6 @@ def _list_transformations(estimator):
                 if dropped:
                     message += "Columns dropped by DropUninformative:" + "\n\t"
                     message += "\n\t".join(limit_cols(dropped))
-                    message += f"Used inputs: {transformer.used_inputs_}" + "\n"
             # case ToFloat():
             #    if transformer not in post:
             #       message += "Columns transformed to float:" + "\n"
@@ -1233,8 +1232,9 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         if self.specific_transformers:
             for t in self.specific_transformers:
                 specific_transformations += (
-                    f"specific transformer {t} was applied to {limit_cols(specific)}"
+                    f"specific transformer {t[0]} was applied to:" + "\n\t"
                 )
+                specific_transformations += "\n\t".join(limit_cols(specific)) + "\n"
 
         return (
             preprocessing_transformations
@@ -1243,12 +1243,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             + "\n\n"
             + specific_transformations
         )
-
-
-def repr_format(s):
-    without_spaces = repr(s).replace("  ", "")
-    without_lineskip = without_spaces.replace("\n", "")
-    return without_lineskip
 
 
 def limit_cols(col_names, max_cols=10):
