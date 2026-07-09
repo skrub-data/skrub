@@ -676,13 +676,16 @@ def test_missing_var_message():
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
 def test_missing_var_message_train_test_split():
-    X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + skrub.var(
-        "b"
-    )
+    b = skrub.var("b")
+    X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
     # 'z' is extra but not 'b', even though 'b' is not needed for collecting X
     # it still exists in the DataOp as a whole.
     with pytest.raises(KeyError, match=r"\['z'\]"):
         X.skb.train_test_split({"z": 0, "b": 1})
+    # check that we still get the correct error when the env contains int (ID)
+    # keys
+    with pytest.raises(KeyError, match=r"\['z'\]") as exc:
+        X.skb.train_test_split({"z": 0, b.skb.id: 1})
     with pytest.raises(KeyError) as exc:
         X.skb.train_test_split()
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))

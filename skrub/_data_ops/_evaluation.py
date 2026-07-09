@@ -427,18 +427,15 @@ def _check_environment(environment):
         )
     # Notes about checking the env keys:
     #
-    # - env ⊂ variables: in some cases we could check that there are no extra
-    #   keys in `environment`, ie all keys in `environment` correspond to a
-    #   name in the DataOp. However in other cases we naturally end up
-    #   using a bigger environment than what is needed. For example we want to
-    #   evaluate a sub-DataOp (such as the `mark_as_X()` node), and to do
-    #   it we use the environment that was passed to evaluate the full
-    #   DataOp. So if we want such a verification it should be a separate
-    #   check done at a higher level (eg in the estimators' `fit`, `predict`
-    #   etc.) where we know we are not working with a sub-DataOp. We do perform
-    #   such a check when a key is missing from the env to provide a better
-    #   message, but it is only used for the content of the message rather than
-    #   enforcing no extra keys ahead of time.
+    # - env ⊂ variables: we could check that there are no extra keys in
+    #   `environment`, i.e. all keys in `environment` correspond to a name in
+    #   the DataOp. However in some cases we naturally end up using a bigger
+    #   environment than what is needed. For example we want to evaluate a
+    #   sub-DataOp (such as the result of `.skb.find()` or `.skb.find_X_y()`),
+    #   and to do it we use the environment created to evaluate the full
+    #   DataOp. We do perform this check when a key is missing from the env to
+    #   provide a better error message, but it is only used for the content of
+    #   the message rather than enforcing no extra keys ahead of time.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the
@@ -531,9 +528,11 @@ def _uninitialized_variable_msg(error, data_op, environment):
     var_names = list(named_nodes(data_op).keys())
     choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
     unused = list(
-        {k for k in environment.keys() if not k.startswith("_skrub_")}.difference(
-            var_names + choice_names
-        )
+        {
+            k
+            for k in environment.keys()
+            if isinstance(k, str) and not k.startswith("_skrub_")
+        }.difference(var_names + choice_names)
     )
 
     msg = (
