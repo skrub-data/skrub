@@ -925,7 +925,10 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             return (result, {}) if return_predictions else result
         env = self._get_env(X, y)
         scorers = evaluate(
-            score_node._skrub_impl.scorers, mode="fit_transform", environment=env
+            score_node._skrub_impl.scorers,
+            mode="fit_transform",
+            environment=env,
+            ancestor_data_op=self.data_op,
         )
         all_scores = []
         cache = dict(env.get("_skrub_predictions", {}))
@@ -982,7 +985,13 @@ def _compute_X_y_and_cv(data_op, environment):
             # the estimator requests a y so some node must have been
             # marked as y
             raise ValueError('DataOp should have a node marked with "mark_as_y()"')
-    values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
+    values = evaluate(
+        nodes,
+        mode="fit_transform",
+        environment=environment,
+        clear=True,
+        ancestor_data_op=data_op,
+    )
     if "y" in nodes:
         msg = (
             "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"

@@ -42,6 +42,7 @@ from ._evaluation import (
     find_node_by_name,
     find_node_by_uuid,
     find_X_y_and_cv,
+    named_nodes,
     nodes,
 )
 from ._inspection import (
@@ -51,7 +52,7 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import NULL, attribute_error
+from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, attribute_error
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -142,6 +143,11 @@ class SkrubNamespace:
 
     def __init__(self, data_op):
         self._data_op = data_op
+
+    def _get_env(self, environment=None):
+        if environment is not None:
+            return environment
+        return self.get_data() | {IS_PREVIEW_DATA_ENV_NAME: True}
 
     def _apply(
         self,
@@ -1121,7 +1127,7 @@ class SkrubNamespace:
                 f"got: '{type(environment)}'"
             )
         if environment is None:
-            environment = self.get_data()
+            environment = self._get_env()
         else:
             environment = {
                 **environment,
@@ -1482,18 +1488,13 @@ class SkrubNamespace:
         SkrubLearner(data_op=<BinOp: add>)
         """
         from ._data_ops import Var
-        from ._evaluation import nodes
 
-        named_nodes = {
-            name: op
-            for op in nodes(self._data_op)
-            if (name := op._skrub_impl.name) is not None
-        }
+        found_nodes = named_nodes(self._data_op)
         if all_named_ops:
-            return named_nodes
+            return found_nodes
         return {
             name: op
-            for name, op in named_nodes.items()
+            for name, op in found_nodes.items()
             if isinstance(op._skrub_impl, Var)
         }
 
@@ -1981,7 +1982,7 @@ class SkrubNamespace:
         if not fitted:
             return learner
         return learner.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2112,8 +2113,7 @@ class SkrubNamespace:
                 category=FutureWarning,
             )
             split_func = splitter
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
             environment,
@@ -2186,8 +2186,7 @@ class SkrubNamespace:
         >>> accuracies
         [1.0, 0.0, 1.0]
         """
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
         yield from iter_cv_splits(
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
@@ -2301,7 +2300,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2588,7 +2587,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2809,8 +2808,7 @@ class SkrubNamespace:
         4    0.90
         Name: test_score, dtype: float64
         """
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
 
         return cross_validate(
             self.make_learner(),
