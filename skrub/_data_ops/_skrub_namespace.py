@@ -2013,16 +2013,16 @@ class SkrubNamespace:
             ``split_func`` is not provided,
 
             - If a cross-validation splitter has been set with
-              :meth:`DataOp.skb.mark_as_X`, that splitter is used.
+              :meth:`~DataOp.skb.mark_as_X`, that splitter is used.
               In this case the only accepted kwarg in ``split_func_kwargs`` is
               ``'split_index'``, which indicates which split to use. By default
               ``'split_index'`` is -1, i.e. the last split is used.
-            - Otherwise :func:`~sklearn.model_selection.train_test_split` is
+            - Otherwise :func:`sklearn.model_selection.train_test_split` is
               used (and ``split_func_kwargs`` are forwarded to it).
 
         split_func_kwargs
             Additional named arguments to pass to the splitting function. When
-            relying on the splitter passed to :meth:`DataOp.skb.mark_as_X`,
+            relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
             the only accepted kwarg is ``'split_index'`` which indicates which
             split to use.
             Kwargs for the ``split()`` method itself should be passed to
@@ -2055,7 +2055,7 @@ class SkrubNamespace:
               the test environment, if there is one (may not be the case for
               unsupervised learning).
 
-            If relying on the splitter passed to :meth:`DataOp.skb.mark_as_X`,
+            If relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
             the following keys are added:
 
             - row_indices_train: the row indices (in X and y) of the training samples.
