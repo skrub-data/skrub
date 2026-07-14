@@ -30,6 +30,7 @@ from sklearn.model_selection import (
     GridSearchCV,
     KFold,
     LeaveOneGroupOut,
+    TimeSeriesSplit,
     cross_validate,
     train_test_split,
 )
@@ -916,6 +917,8 @@ def test_train_test_split(with_y):
                 "_skrub_y": [14, 15],
                 "_skrub_is_preview_data_env": True,
             },
+            "X": list(range(8)),
+            "y": list(range(8, 16)),
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
             "y_train": [8, 9, 10, 11, 12, 13],
@@ -933,6 +936,7 @@ def test_train_test_split(with_y):
                 "_skrub_X": [6, 7],
                 "_skrub_is_preview_data_env": True,
             },
+            "X": list(range(8)),
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
         }
@@ -941,6 +945,8 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {"n": 4, "_skrub_X": [0, 1, 2], "_skrub_y": [4, 5, 6]},
             "test": {"n": 4, "_skrub_X": [3], "_skrub_y": [7]},
+            "X": list(range(4)),
+            "y": list(range(4, 8)),
             "X_train": [0, 1, 2],
             "X_test": [3],
             "y_train": [4, 5, 6],
@@ -953,6 +959,7 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {"n": 4, "_skrub_X": [0, 1, 2]},
             "test": {"n": 4, "_skrub_X": [3]},
+            "X": list(range(4)),
             "X_train": [0, 1, 2],
             "X_test": [3],
         }
@@ -974,6 +981,89 @@ def test_train_test_split_X_y_aligned():
     data_op = X.skb.apply(Ridge(), y=y)
     split = data_op.skb.train_test_split()
     assert (split["X_train"]["a"].to_numpy() == split["y_train"].to_numpy()).all()
+
+
+@pytest.mark.parametrize("with_y", [False, True])
+def test_train_test_split_split_index(with_y):
+    """
+    train_test_split using the mark_as_X() splitter allows selecting the split
+    index.
+    """
+    X = np.arange(20)[:, None] * 10
+    y = X[:, 0]
+
+    data_op = skrub.var("X", X).skb.mark_as_X(cv=TimeSeriesSplit())
+    if with_y:
+        data_op = data_op.skb.apply(
+            DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y()
+        )
+
+    # by default we get the last split
+    assert list(data_op.skb.train_test_split()["X_test"].ravel()) == [170, 180, 190]
+    # we also get the row indices
+    assert list(data_op.skb.train_test_split()["row_indices_test"]) == [17, 18, 19]
+
+    # we can ask for a specific split.
+    assert list(
+        data_op.skb.train_test_split(split_index=0)["X_test"].ravel(),
+    ) == [50, 60, 70]
+    assert list(
+        data_op.skb.train_test_split(split_index=1)["X_test"].ravel(),
+    ) == [80, 90, 100]
+
+    # we can still override the split function and pass the kwargs our
+    # function expects.
+    assert list(
+        data_op.skb.train_test_split(
+            split_func=train_test_split,
+            test_size=5,
+            shuffle=True,
+            random_state=0,
+        )["X_test"].ravel()
+    ) == [180, 10, 190, 80, 100]
+
+
+def test_train_test_split_bad_kwarg():
+    """
+    Check error message when an unrecognized kwarg is passed to
+    skb.train_test_split() when using the mark_as_X splitter.
+    """
+    X = np.arange(20)[:, None]
+    y = X[:, 0]
+
+    pred = (
+        skrub.var("X", X)
+        .skb.mark_as_X(cv=TimeSeriesSplit())
+        .skb.apply(DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y())
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(?s).*using the splitter passed to \.skb.mark_as_X\(\)"
+        r".*Got extra kwargs: \['random_state'\]",
+    ):
+        pred.skb.train_test_split(random_state=0)
+
+
+def test_train_test_split_bad_split_index():
+    """
+    Check error message when a bad split_index is passed to
+    skb.train_test_split() when using the mark_as_X splitter.
+    """
+    X = np.arange(20)[:, None]
+    y = X[:, 0]
+
+    pred = (
+        skrub.var("X", X)
+        .skb.mark_as_X(cv=TimeSeriesSplit())
+        .skb.apply(DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y())
+    )
+    with pytest.raises(TypeError, match="split_index should be an int"):
+        pred.skb.train_test_split(split_index=None)
+    with pytest.raises(
+        IndexError,
+        match="split_index 100 out of range.*TimeSeriesSplit.* with 5 splits",
+    ):
+        pred.skb.train_test_split(split_index=100)
 
 
 def test_iter_cv_splits():
@@ -1081,8 +1171,8 @@ def test_mark_as_X_splitter():
     assert pred_with_groups.skb.make_grid_search(fitted=True).n_splits_ == 2
 
     split = pred_with_groups.skb.train_test_split()
-    assert list(split["X_train"]["x"]) == train[0]
-    assert list(split["X_test"]["x"]) == test[0]
+    assert list(split["X_train"]["x"]) == train[-1]
+    assert list(split["X_test"]["x"]) == test[-1]
 
     # Override with another splitter
     cv_results = pred_with_groups.skb.cross_validate(return_indices=True, cv=7)
