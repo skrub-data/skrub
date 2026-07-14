@@ -13,12 +13,28 @@ Release 0.10.0
 New Features
 ------------
 
-
 Changes
 -------
 - The error message when a key is missing from the environment passed to a
   :class:`DataOp` or :class:`SkrubLearner` has been improved.
   :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
+- When a cross-validation splitter has been passed to
+  :meth:`DataOp.skb.mark_as_X`, it it now possible to select a specific split
+  from it when calling :meth:`DataOp.skb.train_test_split` by passing
+  ``split_index``; for example ``data_op.skb.train_test_split(split_index=3)``
+  to get the third split.
+
+  The split that is returned by default when ``split_index`` is not specified is
+  now the *last* split produced by the splitter (it was the first before).
+
+  Moreover, the keys ``row_indices_train`` and ``row_indices_test`` are added to
+  the returned dictionary when using the ``mark_as_X`` splitter. And the keys
+  ``X`` (and ``y`` when it exists) are added to the dictionaries returned by
+  :meth:`DataOp.skb.train_test_split` and :meth:`DataOp.skb.iter_cv_splits`,
+  containing the full X and y before splitting.
+
+  :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Bugfixes
 --------
