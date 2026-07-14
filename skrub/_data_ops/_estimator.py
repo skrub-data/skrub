@@ -1242,7 +1242,7 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
     X, y, splitter = _compute_cv_data(data_op, environment, cv)
     cv = check_cv(splitter)
     for train_idx, test_idx in cv.split(X, y):
-        X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
+        X_train, X_test = _safe_indexing(X, train_idx), _safe_indexing(X, test_idx)
         train_env = {**environment, X_NAME: X_train}
         test_env = {**environment, X_NAME: X_test}
         split_info = {
