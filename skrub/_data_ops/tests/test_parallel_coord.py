@@ -126,7 +126,7 @@ def test_column_preparation(is_log_scale, is_int):
         prepared["values"],
         [prepared["tickvals"][0], expected_value, prepared["tickvals"][0]],
     )
-    assert prepared["ticktext"] == ["NaN", "2"]
+    assert prepared["ticktext"] == ["NaN", "2" if is_int else "2.0"]
 
     # All nans
     column = pd.Series(np.array([np.nan, np.nan, np.nan]), name="test")
@@ -144,7 +144,7 @@ def test_column_preparation(is_log_scale, is_int):
     prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
     jittered = _add_jitter(prepared)
 
-    assert prepared["ticktext"] == ["1"]
+    assert prepared["ticktext"] == ["1" if is_int else "1.0"]
     if is_log_scale:
         assert np.all(prepared["values"] == np.log(1.0))
         assert np.all(jittered["values"] == np.log(1.0))
