@@ -28,6 +28,20 @@ def test_column_associations(df_module):
     )
 
 
+def test_column_associations_without_pearson(df_module):
+    df = df_module.make_dataframe({"x": [0, 1], "y": [0, 1]})
+
+    associations = column_associations(df, compute_pearson=False)
+
+    assert sbd.column_names(associations) == [
+        "left_column_name",
+        "left_column_idx",
+        "right_column_name",
+        "right_column_idx",
+        "cramer_v",
+    ]
+
+
 @skip_polars_installed_without_pyarrow
 def test_infinite(df_module):
     # non-regression test for https://github.com/skrub-data/skrub/issues/1133
