@@ -192,6 +192,10 @@ extra-index-urls = [
   # pyarrow
   "https://pypi.fury.io/arrow-nightlies",
 ]
+# Fallback to pyarrow channel if e.g. scikit-learn not found in anaconda
+# TODO remove once scikit-learn is available again in
+# https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/
+index-strategy = "unsafe-first-match"
 
 [tool.pixi.feature.nightly-dependencies.pypi-dependencies]
 # Have to repeat dependencies here because otherwise pixi pulls from conda channels
