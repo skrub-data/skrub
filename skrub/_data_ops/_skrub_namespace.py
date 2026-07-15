@@ -2017,6 +2017,13 @@ class SkrubNamespace:
               In this case the only accepted kwarg in ``split_func_kwargs`` is
               ``'split_index'``, which indicates which split to use. By default
               ``'split_index'`` is -1, i.e. the last split is used.
+
+              Note: the default is the last one because for time series
+              splitter it typically is the one that uses the most data, which
+              is particularly important if the train part will be further
+              subdivided e.g. for hyperparameter search. (For other splitters
+              split ordering is usually arbitrary.)
+
             - Otherwise :func:`sklearn.model_selection.train_test_split` is
               used (and ``split_func_kwargs`` are forwarded to it).
 
@@ -2060,6 +2067,10 @@ class SkrubNamespace:
 
             - row_indices_train: the row indices (in X and y) of the training samples.
             - row_indices_test: the row indices (in X and y) of the testing samples.
+
+            Those are not available otherwise, as
+            :func:`sklearn.model_selection.train_test_split` only returns
+            X_train, X_test, etc. data, not the indices.
 
 
         See Also

@@ -1038,6 +1038,10 @@ class _Splitter:
             )
         if split_index < 0:
             split_index = n_splits + split_index
+        # Get the (train_idx, test_idx) pair at position split_index without
+        # materializing the sequence in memory. islice() iterates over all
+        # items starting from split_index and next() gets the first item from
+        # that.
         return next(itertools.islice(self.split(X, y), split_index, None))
 
 
