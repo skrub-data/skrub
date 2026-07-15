@@ -5,7 +5,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 
 import skrub
-from skrub._data_ops._parallel_coord import _add_jitter, _prepare_column
+from skrub._data_ops._parallel_coord import _add_jitter, _pick_format, _prepare_column
 
 
 def _has_plotly():
@@ -240,3 +240,10 @@ def test_bad_filtering_params(classif_grid_search):
         classif_grid_search.plot_results(
             show_choices=["choose_float(1.0, 2.0, n_steps=3)"]
         )
+
+
+def test_pick_format():
+    vals = np.array([0.001, 0.01, 0.1, 1.0])
+    fmt = _pick_format(vals)
+    assert list(map(fmt.format, vals)) == ["0.001", "0.010", "0.100", "1.000"]
+    assert _pick_format(vals[:1]) == "{}"
