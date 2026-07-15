@@ -130,6 +130,7 @@ def _pick_format(vals):
     if len(set(map(fmt.format, vals))) == len(vals):
         return fmt
     # if still getting duplicate strings, revert to default representation
+    # normally this should not happen.
     return "{}"
 
 

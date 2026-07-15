@@ -242,8 +242,24 @@ def test_bad_filtering_params(classif_grid_search):
         )
 
 
-def test_pick_format():
+def test_pick_format(monkeypatch):
     vals = np.array([0.001, 0.01, 0.1, 1.0])
-    fmt = _pick_format(vals)
-    assert list(map(fmt.format, vals)) == ["0.001", "0.010", "0.100", "1.000"]
+    assert list(map(_pick_format(vals).format, vals)) == [
+        "0.001",
+        "0.010",
+        "0.100",
+        "1.000",
+    ]
+
     assert _pick_format(vals[:1]) == "{}"
+
+    vals = np.array([0.005, 0.015])
+    assert list(map(_pick_format(vals).format, vals)) == ["0.005", "0.015"]
+
+    # hack to cover corner case that should not normally happen
+
+    class _array(list):
+        def __len__(self):
+            return 100
+
+    assert _pick_format(_array(vals)) == "{}"
