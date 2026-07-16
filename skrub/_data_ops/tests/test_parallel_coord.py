@@ -242,7 +242,7 @@ def test_bad_filtering_params(classif_grid_search):
         )
 
 
-def test_pick_format(monkeypatch):
+def test_pick_format():
     vals = np.array([0.001, 0.01, 0.1, 1.0])
     assert list(map(_pick_format(vals).format, vals)) == [
         "0.001",
