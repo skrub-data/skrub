@@ -5,7 +5,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 
 import skrub
-from skrub._data_ops._parallel_coord import _add_jitter, _prepare_column
+from skrub._data_ops._parallel_coord import _add_jitter, _pick_format, _prepare_column
 
 
 def _has_plotly():
@@ -126,7 +126,7 @@ def test_column_preparation(is_log_scale, is_int):
         prepared["values"],
         [prepared["tickvals"][0], expected_value, prepared["tickvals"][0]],
     )
-    assert prepared["ticktext"] == ["NaN", "2"]
+    assert prepared["ticktext"] == ["NaN", "2" if is_int else "2.0"]
 
     # All nans
     column = pd.Series(np.array([np.nan, np.nan, np.nan]), name="test")
@@ -144,7 +144,7 @@ def test_column_preparation(is_log_scale, is_int):
     prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
     jittered = _add_jitter(prepared)
 
-    assert prepared["ticktext"] == ["1"]
+    assert prepared["ticktext"] == ["1" if is_int else "1.0"]
     if is_log_scale:
         assert np.all(prepared["values"] == np.log(1.0))
         assert np.all(jittered["values"] == np.log(1.0))
@@ -240,3 +240,26 @@ def test_bad_filtering_params(classif_grid_search):
         classif_grid_search.plot_results(
             show_choices=["choose_float(1.0, 2.0, n_steps=3)"]
         )
+
+
+def test_pick_format():
+    vals = np.array([0.001, 0.01, 0.1, 1.0])
+    assert list(map(_pick_format(vals).format, vals)) == [
+        "0.001",
+        "0.010",
+        "0.100",
+        "1.000",
+    ]
+
+    assert _pick_format(vals[:1]) == "{}"
+
+    vals = np.array([0.005, 0.015])
+    assert list(map(_pick_format(vals).format, vals)) == ["0.005", "0.015"]
+
+    # hack to cover corner case that should not normally happen
+
+    class _array(list):
+        def __len__(self):
+            return 100
+
+    assert _pick_format(_array(vals)) == "{}"

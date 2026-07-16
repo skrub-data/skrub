@@ -38,6 +38,9 @@ Changes
 
 Bugfixes
 --------
+- The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
+  have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
