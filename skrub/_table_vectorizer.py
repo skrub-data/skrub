@@ -200,18 +200,23 @@ def _list_transformations(estimator):
             case DropUninformative():
                 dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
                 if dropped:
-                    message += "Columns dropped by DropUninformative:" + "\n\t"
-                    message += "\n\t".join(limit_cols(dropped))
+                    message += f"DropUninformative ({len(dropped)} columns):" + "\n\t- "
+                    message += "\n\t- ".join(limit_cols(dropped)) + "\n\n"
             # case ToFloat():
             #    if transformer not in post:
             #       message += "Columns transformed to float:" + "\n"
             #       message += "\n\t".join(transformer.used_inputs_)
             case ToDatetime():
-                message += "Columns transformed to datetime:" + "\n\t"
-                message += "\n\t".join(limit_cols(transformer.used_inputs_)) + "\n"
+                message += (
+                    f"Datetime ({len(transformer.used_inputs_)} columns):" + "\n\t- "
+                )
+                message += "\n\t- ".join(limit_cols(transformer.used_inputs_)) + "\n\n"
             case CleanNullStrings():
-                message += "Columns with standardized nulls:" + "\n\t"
-                message += "\n\t".join(limit_cols(transformer.used_inputs_)) + "\n"
+                message += (
+                    f"Null values cleaned ({len(transformer.used_inputs_)} columns):"
+                    + "\n\t- "
+                )
+                message += "\n\t- ".join(limit_cols(transformer.used_inputs_)) + "\n\n"
     return message
 
 
@@ -1207,8 +1212,10 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         preprocessing step, each of the `numeric`, `datetime`, `low cardinality`
         and `high cardinality` transformations and any specific transformer.
         """
-        preprocessing_transformations = _list_transformations(self)
-        vectorize_transformations = ""
+        preprocessing_transformations = (
+            "Preprocessors\n=============\n\n" + _list_transformations(self)
+        )
+        vectorize_transformations = "\n\nProcessors by type\n==================\n\n"
         specific_transformations = ""
 
         all_transformers = self.kind_to_columns_.copy()
@@ -1217,24 +1224,27 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         for transformer_type, transformer_cols in all_transformers.items():
             if transformer_cols:
                 vectorize_transformations += (
-                    f"{transformer_type} transformer is "
                     f"{getattr(self, transformer_type).__class__.__name__} "
-                    f"and was applied to:" + "\n\t"
+                    f"({transformer_type} - {len(transformer_cols)} columns): "
+                    + "\n\t- "
                 )
                 vectorize_transformations += (
-                    "\n\t".join(limit_cols(transformer_cols)) + "\n"
+                    "\n\t- ".join(limit_cols(transformer_cols)) + "\n\n"
                 )
             else:
                 vectorize_transformations += (
-                    f"No {transformer_type} columns have been detected." + "\n"
+                    f"No {transformer_type} columns have been detected." + "\n\n"
                 )
 
         if self.specific_transformers:
+            specific_transformations = (
+                "\n\nSpecific transformers\n=====================\n\n"
+            )
             for t in self.specific_transformers:
                 specific_transformations += (
-                    f"specific transformer {t[0]} was applied to:" + "\n\t"
+                    f"specific transformer {t[0]} was applied to:" + "\n\t- "
                 )
-                specific_transformations += "\n\t".join(limit_cols(specific)) + "\n"
+                specific_transformations += "\n\t- ".join(limit_cols(specific)) + "\n\n"
 
         return (
             preprocessing_transformations
