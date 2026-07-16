@@ -26,10 +26,11 @@ from ._data_ops import (
     DataOp,
     Scoring,
     SplitX,
+    UninitializedVariable,
     Value,
     Var,
 )
-from ._utils import NULL, X_NAME, Y_NAME, simple_repr
+from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, X_NAME, Y_NAME, simple_repr
 
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
 
@@ -426,15 +427,15 @@ def _check_environment(environment):
         )
     # Notes about checking the env keys:
     #
-    # - env ⊂ variables: in some cases we could check that there are no extra
-    #   keys in `environment`, ie all keys in `environment` correspond to a
-    #   name in the DataOp. However in other cases we naturally end up
-    #   using a bigger environment than what is needed. For example we want tu
-    #   evaluate a sub-DataOp (such as the `mark_as_X()` node), and to do
-    #   it we use the environment that was passed to evaluate the full
-    #   DataOp. So if we want such a verification it should be a separate
-    #   check done at a higher level (eg in the estimators' `fit`, `predict`
-    #   etc.) where we know we are not working with a sub-DataOp.
+    # - env ⊂ variables: we could check that there are no extra keys in
+    #   `environment`, i.e. all keys in `environment` correspond to a name in
+    #   the DataOp. However in some cases we naturally end up using a bigger
+    #   environment than what is needed. For example we want to evaluate a
+    #   sub-DataOp (such as the result of `.skb.find()` or `.skb.find_X_y()`),
+    #   and to do it we use the environment created to evaluate the full
+    #   DataOp. We do perform this check when a key is missing from the env to
+    #   provide a better error message, but it is only used for the content of
+    #   the message rather than enforcing no extra keys ahead of time.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the
@@ -450,7 +451,14 @@ def _check_environment(environment):
 # consistent with .skb.eval() in evaluate's params
 
 
-def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=()):
+def evaluate(
+    data_op,
+    mode="preview",
+    environment=None,
+    clear=False,
+    callbacks=(),
+    ancestor_data_op=None,
+):
     """Evaluate a DataOp.
 
     Parameters
@@ -475,6 +483,14 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         Each will be called, in the provided order, after evaluating each node.
         The signature is callback(data_op, result) where data_op is the DataOp
         that was just evaluated and result is the resulting value.
+
+    ancestor_data_op : DataOp or None
+        When we are evaluating a part of a DataOp (e.g. the X node only), pass
+        this so that we can look at all the variable names of the full DataOp
+        when producing error messages about missing or extra keys in the
+        environment. It is not used for other purposes than inspecting the
+        variable an choice names it contains. In particular it is not
+        evaluated.
     """
     _check_environment(environment)
     if clear:
@@ -486,9 +502,55 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
         )
+    except UninitializedVariable as e:
+        if (
+            hasattr(e, "add_note")
+            and environment is not None
+            and not environment.get(IS_PREVIEW_DATA_ENV_NAME)
+        ):
+            # user passed an explicit environment rather than using the
+            # variables' preview values.
+            e.add_note(
+                _uninitialized_variable_msg(
+                    e,
+                    ancestor_data_op if ancestor_data_op is not None else data_op,
+                    environment,
+                )
+            )
+        raise
     finally:
         if clear:
             clear_results(data_op, mode=mode)
+
+
+def _uninitialized_variable_msg(error, data_op, environment):
+    missing_name = error.name
+    var_names = list(named_nodes(data_op).keys())
+    choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
+    unused = list(
+        {
+            k
+            for k in environment.keys()
+            if isinstance(k, str) and not k.startswith("_skrub_")
+        }.difference(var_names + choice_names)
+    )
+
+    msg = (
+        "- Note that preview values passed to initialize skrub variables\n"
+        "  are ignored by default whenever we pass "
+        "an explicit 'environment' dictionary,\n"
+        "  for example when calling SkrubLearner.fit({'X': ..., 'y': ...}).\n"
+        f"  Please pass a value for {missing_name!r} in the environment.\n"
+        "  You can also use "
+        f"skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
+        "  to always retain the initialization value as a default."
+    )
+    if unused:
+        msg += (
+            "\n- WARNING: the following keys were passed in the environment but "
+            f"have no corresponding variable in the DataOp:\n  {unused}"
+        )
+    return msg
 
 
 def _cache_pruner(data_op, mode):
@@ -673,6 +735,12 @@ def graph(data_op):
 
 def nodes(data_op):
     return list(graph(data_op)["nodes"].values())
+
+
+def named_nodes(data_op):
+    return {
+        name: op for op in nodes(data_op) if (name := op._skrub_impl.name) is not None
+    }
 
 
 def clear_results(data_op, mode=None):

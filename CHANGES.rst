@@ -16,6 +16,9 @@ New Features
 
 Changes
 -------
+- The error message when a key is missing from the environment passed to a
+  :class:`DataOp` or :class:`SkrubLearner` has been improved.
+  :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
