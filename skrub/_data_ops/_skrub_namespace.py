@@ -2009,11 +2009,31 @@ class SkrubNamespace:
             default subsampling is not applied and all the data is used.
 
         split_func : function, optional, default=None
-            The function used to split X and y once they have been computed. By
-            default, :func:`~sklearn.model_selection.train_test_split` is used.
+            The function used to split X and y once they have been computed. If
+            ``split_func`` is not provided,
+
+            - If a cross-validation splitter has been set with
+              :meth:`~DataOp.skb.mark_as_X`, that splitter is used.
+              In this case the only accepted kwarg in ``split_func_kwargs`` is
+              ``'split_index'``, which indicates which split to use. By default
+              ``'split_index'`` is -1, i.e. the last split is used.
+
+              Note: the default split is the last one because when using a
+              time series splitter it typically is the one that uses the most data;
+              this is particularly important if the train part will be further
+              subdivided e.g. for hyperparameter search. (For other splitters
+              split ordering is usually arbitrary.)
+
+            - Otherwise :func:`sklearn.model_selection.train_test_split` is
+              used (and ``split_func_kwargs`` are forwarded to it).
 
         split_func_kwargs
-            Additional named arguments to pass to the splitting function.
+            Additional named arguments to pass to the splitting function. When
+            relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
+            the only accepted kwarg is ``'split_index'`` which indicates which
+            split to use.
+            Kwargs for the ``split()`` method itself should be passed to
+            ``mark_as_X``.
 
         Returns
         -------
@@ -2023,6 +2043,12 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
+            - X: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_X()` in ``environment``, before splitting.
+            - y: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_y()` in ``environment``, before
+              splitting, if there is one (may not be the case for unsupervised
+              learning).
             - X_train: the value of the variable marked with
               :func:`~DataOp.skb.mark_as_X()` in the train environment
             - X_test: the value of the variable marked with
@@ -2035,6 +2061,17 @@ class SkrubNamespace:
               :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+
+            If relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
+            the following keys are added:
+
+            - row_indices_train: the row indices (in X and y) of the training samples.
+            - row_indices_test: the row indices (in X and y) of the testing samples.
+
+            Those are not available otherwise, as
+            :func:`sklearn.model_selection.train_test_split` only returns
+            X_train, X_test, etc. data, not the indices.
+
 
         See Also
         --------
@@ -2070,7 +2107,7 @@ class SkrubNamespace:
 
         >>> split = delayed.skb.train_test_split(random_state=0, test_size=0.2)
         >>> split.keys()
-        dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
+        dict_keys(['X_train', 'X_test', 'y_train', 'y_test', 'train', 'test', 'X', 'y'])
         >>> learner = delayed.skb.make_learner()
         >>> learner.fit(split["train"])
         SkrubLearner(data_op=<Apply DummyClassifier>)
@@ -2086,11 +2123,9 @@ class SkrubNamespace:
         0.0
 
         If :func:`~skrub.DataOp.skb.mark_as_X` was defined to use a specific
-        splitting function, the splitter will be used by ``train_test_split``.
-
-        Note that if a ``cv`` is passed to ``train_test_split``, the splitter
-        defined in ``mark_as_X`` is ignored, and the one passed to ``train_test_split``
-        is used instead.
+        cross-validation splitter, that splitter will be used by ``train_test_split``,
+        which will return a split produced by the splitter. By default it is
+        the last; that can be controlled by passing ``split_index``.
 
         >>> from sklearn.model_selection import LeaveOneOut
         >>> X = orders.skb.drop("delayed").skb.mark_as_X(cv=LeaveOneOut())
@@ -2100,8 +2135,17 @@ class SkrubNamespace:
         ... )
         >>> split = delayed.skb.train_test_split()
         >>> split["y_test"]
-        0    False
+        3    False
         Name: delayed, dtype: bool
+
+        >>> split = delayed.skb.train_test_split(split_index=2)
+        >>> split["y_test"]
+        2    True
+        Name: delayed, dtype: bool
+
+        Note that if a ``split_func`` is passed to ``train_test_split``, it
+        overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
+        ignored, and the function passed to ``train_test_split`` is used instead.
         """
         if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
             warnings.warn(
@@ -2150,6 +2194,12 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
+            - X: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_X()` in ``environment``, before splitting.
+            - y: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_y()` in ``environment``, before
+              splitting, if there is one (may not be the case for unsupervised
+              learning).
             - X_train: the value of the variable marked with
               :func:`~DataOp.skb.mark_as_X()` in the train environment
             - X_test: the value of the variable marked with
@@ -2956,21 +3006,21 @@ class SkrubNamespace:
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> split = pred.skb.train_test_split()
 
-        The train set only contains data from the "supermarket.com" seller.
+        The train set only contains data from the "bestproducts.com" seller.
 
         >>> split["X_train"]
-           description  price
-        0       screen    100
-        2     keyboard     20
-        5  screwdriver     12
-
-        The test set only contains data from the "bestproducts.com" seller.
-
-        >>> split["X_test"]
           description  price
         1      hammer     15
         3     usb key      9
         4     charger     13
+
+        The test set only contains data from the "supermarket.com" seller.
+
+        >>> split["X_test"]
+           description  price
+        0       screen    100
+        2     keyboard     20
+        5  screwdriver     12
         """
         if cv is None:
             if split_kwargs is not None:
