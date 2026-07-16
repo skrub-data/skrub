@@ -253,6 +253,7 @@ check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_da
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 test-user-guide = { cmd = "pytest doc/**/*.rst" }
+test-docstrings = { cmd = "pytest -doctest-modules skrub doc/modules --ignore-glob=\"*/test_*.py\" --doctest-glob=\"*.rst\"" }
 
 [tool.pixi.environments]
 lint = ["lint"]
@@ -367,7 +368,7 @@ filterwarnings = [
   # Ignore polars warning about horizontal concatenation being deprecated
   # We always expect dataframes to concatenate to have the same length, so the
   # intended behavior starting from version 1.42 is already what we want
-  "ignore:the default behavior of `how='horizontal'`.*:DeprecationWarning"
+  "ignore:the default behavior of `how='horizontal'`.*:DeprecationWarning",
 ]
 log_cli_level = "INFO"
 xfail_strict = true

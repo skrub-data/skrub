@@ -1,5 +1,6 @@
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
+import itertools
 import numbers
 from functools import partial
 
@@ -14,7 +15,6 @@ from sklearn.model_selection import check_cv
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
-from .. import _dataframe as sbd
 from .. import _join_utils
 from .._base import SkrubBaseEstimator
 from .._sklearn_compat import _safe_indexing, _VisualBlock
@@ -1027,15 +1027,22 @@ class _Splitter:
         del groups
         return self.splitter.get_n_splits(X, y, **self.split_kwargs)
 
-    def __call__(self, X, y=None):
-        # Can be used as a callable to get a single train/test split (the first
-        # CV split)
-        train, test = next(iter(self.split(X, y)))
-        X_train, X_test = _safe_indexing(X, train), _safe_indexing(X, test)
-        if y is None:
-            return X_train, X_test
-        y_train, y_test = _safe_indexing(y, train), _safe_indexing(y, test)
-        return X_train, X_test, y_train, y_test
+    def get_single_split(self, X, y=None, split_index=-1):
+        if not isinstance(split_index, numbers.Integral):
+            raise TypeError(f"split_index should be an int, got: {split_index!r}")
+        n_splits = self.get_n_splits(X, y)
+        if not -n_splits <= split_index < n_splits:
+            raise IndexError(
+                f"split_index {split_index} out of range for splitter "
+                f"{self.splitter} with {n_splits} splits."
+            )
+        if split_index < 0:
+            split_index = n_splits + split_index
+        # Get the (train_idx, test_idx) pair at position split_index without
+        # materializing the sequence in memory. islice() iterates over all
+        # items starting from split_index and next() gets the first item from
+        # that.
+        return next(itertools.islice(self.split(X, y), split_index, None))
 
 
 def _compute_cv_data(data_op, environment, cv):
@@ -1049,24 +1056,6 @@ def _compute_cv_data(data_op, environment, cv):
             _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
         )
     return data["X"], data["y"], None
-
-
-def _compute_train_test_split_data(data_op, environment, split_func, split_func_kwargs):
-    data = _compute_X_y_and_cv(data_op, environment)
-    if split_func is not None:
-        return data["X"], data["y"], split_func, split_func_kwargs
-    if "cv" in data:
-        return (
-            data["X"],
-            data["y"],
-            _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
-            {},
-        )
-    # kwargs fall through to the default split_func when no splitter is set and
-    # no split_func is passed. This allows something like
-    # data_op.skb.train_test_split(shuffle=False), without having to import &
-    # pass sklearn.model_selection.train_test_split explicitly.
-    return data["X"], data["y"], model_selection.train_test_split, split_func_kwargs
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):
@@ -1184,6 +1173,32 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     return pd.DataFrame(result)
 
 
+def _build_split_dict(environment, X, y, train_idx, test_idx):
+    X_train, X_test = _safe_indexing(X, train_idx), _safe_indexing(X, test_idx)
+    train_env = {**environment, X_NAME: X_train}
+    test_env = {**environment, X_NAME: X_test}
+    split_info = {
+        "train": train_env,
+        "test": test_env,
+        "X": X,
+        "X_train": X_train,
+        "X_test": X_test,
+        "row_indices_train": train_idx,
+        "row_indices_test": test_idx,
+    }
+    if y is not None:
+        y_train, y_test = (
+            _safe_indexing(y, train_idx),
+            _safe_indexing(y, test_idx),
+        )
+        train_env[Y_NAME] = y_train
+        test_env[Y_NAME] = y_test
+        split_info["y"] = y
+        split_info["y_train"] = y_train
+        split_info["y_test"] = y_test
+    return split_info
+
+
 def train_test_split(
     data_op,
     environment,
@@ -1199,27 +1214,40 @@ def train_test_split(
     details and examples.
     """
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
-    X, y, split_func, split_func_kwargs = _compute_train_test_split_data(
-        data_op, environment, split_func, split_func_kwargs
-    )
+    data = _compute_X_y_and_cv(data_op, environment)
+    X, y = data["X"], data["y"]
+    if split_func is None and "cv" in data:
+        extra_kwargs = set(split_func_kwargs).difference({"split_index"})
+        if extra_kwargs:
+            raise ValueError(
+                "When using the splitter passed to .skb.mark_as_X(),\n"
+                "the only split_func_kwarg accepted "
+                "by .skb.train_test_split() is 'split_index'.\n"
+                f"The splitter passed to .skb.mark_as_X() was:\n{data['cv']}\n"
+                f"Got extra kwargs: {list(extra_kwargs)}."
+            )
+        splitter = _Splitter(check_cv(data["cv"]), data["split_kwargs"])
+        train_idx, test_idx = splitter.get_single_split(X, y, **split_func_kwargs)
+        return _build_split_dict(environment, X, y, train_idx, test_idx)
+
+    split_func = model_selection.train_test_split if split_func is None else split_func
     if y is None:
-        X_train, X_test = split_func(X, **split_func_kwargs)
+        split = dict(zip(("X_train", "X_test"), split_func(X, **split_func_kwargs)))
     else:
-        X_train, X_test, y_train, y_test = split_func(X, y, **split_func_kwargs)
-    train_env = {**environment, X_NAME: X_train}
-    test_env = {**environment, X_NAME: X_test}
-    result = {
-        "train": train_env,
-        "test": test_env,
-        "X_train": X_train,
-        "X_test": X_test,
-    }
+        split = dict(
+            zip(
+                ("X_train", "X_test", "y_train", "y_test"),
+                split_func(X, y, **split_func_kwargs),
+            )
+        )
+    split["train"] = {**environment, X_NAME: split["X_train"]}
+    split["test"] = {**environment, X_NAME: split["X_test"]}
+    split["X"] = X
     if y is not None:
-        train_env[Y_NAME] = y_train
-        test_env[Y_NAME] = y_test
-        result["y_train"] = y_train
-        result["y_test"] = y_test
-    return result
+        split["train"][Y_NAME] = split["y_train"]
+        split["test"][Y_NAME] = split["y_test"]
+        split["y"] = y
+    return split
 
 
 def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
@@ -1233,27 +1261,7 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
     X, y, splitter = _compute_cv_data(data_op, environment, cv)
     cv = check_cv(splitter)
     for train_idx, test_idx in cv.split(X, y):
-        X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
-        train_env = {**environment, X_NAME: X_train}
-        test_env = {**environment, X_NAME: X_test}
-        split_info = {
-            "train": train_env,
-            "test": test_env,
-            "X_train": X_train,
-            "X_test": X_test,
-            "row_indices_train": train_idx,
-            "row_indices_test": test_idx,
-        }
-        if y is not None:
-            y_train, y_test = (
-                sbd.select_rows(y, train_idx),
-                sbd.select_rows(y, test_idx),
-            )
-            train_env[Y_NAME] = y_train
-            test_env[Y_NAME] = y_test
-            split_info["y_train"] = y_train
-            split_info["y_test"] = y_test
-        yield split_info
+        yield _build_split_dict(environment, X, y, train_idx, test_idx)
 
 
 class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
