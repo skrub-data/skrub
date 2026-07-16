@@ -12,7 +12,10 @@ Release 0.10.0
 
 New Features
 ------------
-
+- The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
+  :method:`list_transformations` method that outputs a human-readable
+  summary of the columns transformed by each of its steps.
+  :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
