@@ -1317,25 +1317,26 @@ def test_list_transformations(df_module):
     _ = vectorizer.fit_transform(df)
     vectorizer_output = vectorizer.list_transformations()
     assert vectorizer_output == (
-        "Columns with standardized nulls:\n\tlow_card\n\tdatetime\nColumns "
-        "transformed to datetime:\n\tdatetime\n\n\nnumeric transformer is "
-        "PassThrough and was applied to:\n\tnumbers\n\tuninformative\ndatetime "
-        "transformer is DatetimeEncoder and was applied to:\n\tdatetime\n"
-        "low_cardinality transformer is OneHotEncoder and was applied to:\n\t"
-        "low_card\nNo high_cardinality columns have been detected.\n\n\nspecific "
-        "transformer PassThrough() was applied to:\n\tpassthrough_1\n\t"
-        "passthrough_2\n\tpassthrough_3\n\tpassthrough_4\n\tpassthrough_5\n\t"
-        "passthrough_6\n\tpassthrough_7\n\tpassthrough_8\n\tpassthrough_9\n\t"
-        "passthrough_10\n\t...\n"
+        "Preprocessors\n=============\n\nNull values cleaned (2 columns):"
+        "\n\t- low_card\n\t- datetime\n\nDatetime (1 columns):\n\t- datetime"
+        "\n\n\n\n\n\nProcessors by type\n==================\n\nPassThrough "
+        "(numeric - 2 columns): \n\t- numbers\n\t- uninformative\n\n"
+        "DatetimeEncoder (datetime - 1 columns): \n\t- datetime\n\nOneHotEncoder"
+        " (low_cardinality - 1 columns): \n\t- low_card\n\nNo high_cardinality"
+        " columns have been detected.\n\n\n\n\n\nSpecific transformers\n"
+        "=====================\n\nPassThrough() (specific, 11 columns):\n\t- "
+        "passthrough_1\n\t- passthrough_2\n\t- passthrough_3\n\t- "
+        "passthrough_4\n\t- passthrough_5\n\t- passthrough_6\n\t- passthrough_7"
+        "\n\t- passthrough_8\n\t- passthrough_9\n\t- passthrough_10\n\t- ...\n\n"
     )
 
     vectorizer = Cleaner(drop_if_constant=True)
     _ = vectorizer.fit_transform(df)
     cleaner_output = vectorizer.list_transformations()
     assert (
-        cleaner_output == "Columns with standardized nulls:\n\tlow_card\n\t"
-        "datetime\n\tpassthrough_1\n\tpassthrough_2\n\tpassthrough_3\n\t"
-        "passthrough_4\n\tpassthrough_5\n\tpassthrough_6\n\tpassthrough_7\n\t"
-        "passthrough_8\n\t...\nColumns dropped by DropUninformative:\n\t"
-        "uninformativeColumns transformed to datetime:\n\tdatetime\n"
+        cleaner_output == "Null values cleaned (13 columns):\n\t- low_card\n\t"
+        "- datetime\n\t- passthrough_1\n\t- passthrough_2\n\t- passthrough_3\n\t"
+        "- passthrough_4\n\t- passthrough_5\n\t- passthrough_6\n\t- passthrough_7"
+        "\n\t- passthrough_8\n\t- ...\n\nDropUninformative (1 columns):\n\t- "
+        "uninformative\n\nDatetime (1 columns):\n\t- datetime\n\n"
     )
