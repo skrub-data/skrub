@@ -2018,9 +2018,9 @@ class SkrubNamespace:
               ``'split_index'``, which indicates which split to use. By default
               ``'split_index'`` is -1, i.e. the last split is used.
 
-              Note: the default is the last one because for time series
-              splitter it typically is the one that uses the most data, which
-              is particularly important if the train part will be further
+              Note: the default split is the last one because when using a
+              time series splitter it typically is the one that uses the most data; 
+              this is particularly important if the train part will be further
               subdivided e.g. for hyperparameter search. (For other splitters
               split ordering is usually arbitrary.)
 
