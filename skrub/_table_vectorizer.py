@@ -1242,7 +1242,8 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             )
             for t in self.specific_transformers:
                 specific_transformations += (
-                    f"{t[0]} (specific, {len(specific)} columns):" + "\n\t- "
+                    f"{t[0].__class__.__name__} (specific, {len(specific)} columns):"
+                    + "\n\t- "
                 )
                 specific_transformations += "\n\t- ".join(limit_cols(specific)) + "\n\n"
 

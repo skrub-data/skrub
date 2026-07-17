@@ -1324,7 +1324,7 @@ def test_list_transformations(df_module):
         "DatetimeEncoder (datetime - 1 columns): \n\t- datetime\n\nOneHotEncoder"
         " (low_cardinality - 1 columns): \n\t- low_card\n\nNo high_cardinality"
         " columns have been detected.\n\n\n\n\n\nSpecific transformers\n"
-        "=====================\n\nPassThrough() (specific, 11 columns):\n\t- "
+        "=====================\n\nPassThrough (specific, 11 columns):\n\t- "
         "passthrough_1\n\t- passthrough_2\n\t- passthrough_3\n\t- "
         "passthrough_4\n\t- passthrough_5\n\t- passthrough_6\n\t- passthrough_7"
         "\n\t- passthrough_8\n\t- passthrough_9\n\t- passthrough_10\n\t- ...\n\n"
