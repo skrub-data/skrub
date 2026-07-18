@@ -35,6 +35,14 @@ Changes
 
   :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
 
+- Added support in :func:`tabular_pipeline` for estimators instantiated from either
+  :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
+  default parameters of :class:`TableVectorizer` as the first step, and the estimator
+  as the second step.
+
+  :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
+  :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Bugfixes
 --------
