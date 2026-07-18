@@ -16,11 +16,10 @@ _CATEGORICAL_THRESHOLD = 30
 def column_associations(df, *, compute_pearson=True):
     """Get measures of statistical associations between all pairs of columns.
 
-    Reported metrics include Cramer's V statistic and, unless disabled,
-    Pearson's Correlation Coefficient. The result is returned as a dataframe
-    that contains the column name and idx for the left and right table and the
-    requested associations; results are sorted in descending order by Cramer's
-    V association.
+    Reported metrics include Cramer's V statistic and Pearson's Correlation
+    Coefficient. The result is returned as a dataframe that contains the column
+    name and idx for the left and right table and the requested associations;
+    results are sorted in descending order by Cramer's V association.
 
     Parameters
     ----------
@@ -29,7 +28,8 @@ def column_associations(df, *, compute_pearson=True):
     compute_pearson : bool, default=True
         Whether to compute Pearson's Correlation Coefficient. Setting this to
         ``False`` avoids converting Polars dataframes to pandas and therefore
-        does not require PyArrow.
+        does not require PyArrow. This parameter is set to ``False`` when the
+        dataframe is Polars and PyArrow is not available.
 
     Returns
     -------
@@ -41,8 +41,9 @@ def column_associations(df, *, compute_pearson=True):
     The result is returned as a dataframe with columns:
 
     ``['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v', 'pearson_corr']``. When
-    ``compute_pearson=False``, the ``'pearson_corr'`` column is omitted.
+    'right_column_idx', 'cramer_v', 'pearson_corr']``.
+
+    When ``compute_pearson=False``, the ``'pearson_corr'`` column is omitted.
 
     As the function is commutative, each pair of columns appears only once
     (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
@@ -110,6 +111,12 @@ def column_associations(df, *, compute_pearson=True):
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
     """  # noqa: E501
+    if compute_pearson and sbd.is_polars(df):
+        try:
+            import pyarrow  # noqa: F401
+        except ImportError:
+            compute_pearson = False
+
     cramer_v_table = _stack_symmetric_associations(
         _cramer_v_matrix(df),
         df,

@@ -38,6 +38,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropSimilar` and :func:`column_associations` now work with Polars
+  dataframes when PyArrow is not installed. In that case, Pearson's correlation
+  is omitted from the computed associations.
+  :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
+
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.

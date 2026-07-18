@@ -1,3 +1,5 @@
+import builtins
+import sys
 import warnings
 
 import numpy as np
@@ -32,6 +34,31 @@ def test_column_associations_without_pearson(df_module):
     df = df_module.make_dataframe({"x": [0, 1], "y": [0, 1]})
 
     associations = column_associations(df, compute_pearson=False)
+
+    assert sbd.column_names(associations) == [
+        "left_column_name",
+        "left_column_idx",
+        "right_column_name",
+        "right_column_idx",
+        "cramer_v",
+    ]
+
+
+def test_column_associations_polars_without_pyarrow(monkeypatch):
+    """Pearson correlation is disabled by default when PyArrow is unavailable."""
+    pl = pytest.importorskip("polars")
+    df = pl.DataFrame({"x": [0, 1], "y": [0, 1]})
+    monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pyarrow" or name.startswith("pyarrow."):
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+
+    associations = column_associations(df)
 
     assert sbd.column_names(associations) == [
         "left_column_name",
