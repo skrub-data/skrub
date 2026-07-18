@@ -15,6 +15,12 @@ New Features
 
 Changes
 -------
+- :class:`TextEncoder` now accepts an integer ``verbose`` parameter instead of
+  a boolean, for consistency with other estimators such as :class:`GapEncoder`
+  and :class:`TableReport`. Passing a boolean still works as before. The
+  documented default, which incorrectly stated ``True``, has been corrected to
+  ``0``.
+  :pr:`2223` by :user:`Jay Spark <jaysparkx>`.
 - The error message when a key is missing from the environment passed to a
   :class:`DataOp` or :class:`SkrubLearner` has been improved.
   :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
