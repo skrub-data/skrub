@@ -279,7 +279,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             cardinality_threshold=10,
             datetime=DatetimeEncoder(periodic_encoding="spline"),
         )
-        is_estimator_from_tabicl = True
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
     steps = [vectorizer]
