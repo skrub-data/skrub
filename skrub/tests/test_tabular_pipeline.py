@@ -59,6 +59,8 @@ def test_bad_learner():
 
 
 def test_sklearn_incompatible_learner_fails():
+    """Test that a TypeError is raised when the estimator does not have a
+    `set_params` attribute"""
     sklearn_incompatible_learner = type("", (), {"get_params": 123})()
     with pytest.raises(
         TypeError, match=".*expects a scikit-learn compatible estimator"
@@ -67,6 +69,8 @@ def test_sklearn_incompatible_learner_fails():
 
 
 def test_sklearn_compatible_learner_succeeds(monkeypatch):
+    """Test that no error is raised when the estimate have both `get_params`
+    and `set_params` attributes"""
     sklearn_compatible_learner = type("", (), {"get_params": 123, "set_params": 456})()
     monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
     _ = tabular_pipeline(sklearn_compatible_learner)
@@ -95,6 +99,8 @@ def test_tree_learner():
 
 
 def test_tree_ensemble_treatment_for_any_random_forest(monkeypatch):
+    """Test that special treatment for tree ensemble models is applied when
+    substring 'RandomForest' appears in estimator class name"""
     IAmARandomForestEstimator = type(
         "IAmARandomForestEstimator", (), {"get_params": 123, "set_params": 456}
     )
@@ -109,10 +115,46 @@ def test_tree_ensemble_treatment_for_any_random_forest(monkeypatch):
 
 
 def test_tree_ensemble_treatment_for_xgboost(monkeypatch):
+    """Test that special treatment for tree ensemble models is applied when
+    substring 'XGB' appears in estimator class name"""
     IAmXGB = type("IAmXGB", (), {"get_params": 123, "set_params": 456})
     original_learner = IAmXGB()
     monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
     p = tabular_pipeline(original_learner)
+    tv, learner = (e for _, e in p.steps)
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
+
+
+def test_no_tree_ensemble_treatment_for_arbitrary_name(monkeypatch):
+    """Test that special treatment for tree ensemble models is not applied
+    when no relevant substring appears in estimator class name"""
+    NothingToSeeHere = type(
+        "NothingToSeeHere", (), {"get_params": 123, "set_params": 456}
+    )
+    original_learner = NothingToSeeHere()
+    monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
+    p = tabular_pipeline(original_learner)
+    tv, scaler, learner = (e for _, e in p.steps)
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OneHotEncoder)
+    assert isinstance(scaler, SquashingScaler)
+    assert tv.datetime.periodic_encoding == "spline"
+
+
+def test_tree_ensemble_treatment_when_requested(monkeypatch):
+    """Test that special treatment for tree ensemble models is applied when
+    called with `is_tree_ensemble_estimator=True`, even when no relevant substring
+    appears in estimator class name"""
+    NothingToSeeHere = type(
+        "NothingToSeeHere", (), {"get_params": 123, "set_params": 456}
+    )
+    original_learner = NothingToSeeHere()
+    monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
+    p = tabular_pipeline(original_learner, is_tree_ensemble_estimator=True)
     tv, learner = (e for _, e in p.steps)
     assert learner is original_learner
     assert isinstance(tv.high_cardinality, StringEncoder)
