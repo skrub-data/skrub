@@ -20,7 +20,7 @@ def fake_get_tags(_):
     `if not get_tags(estimator).input_tags.allow_nan:` check for tests"""
 
     class fake_input_tags:
-        allow_nan = None
+        allow_nan = True
 
     class fake_estimator:
         input_tags = fake_input_tags()
@@ -86,6 +86,32 @@ def test_linear_learner():
 
 def test_tree_learner():
     original_learner = ensemble.RandomForestClassifier()
+    p = tabular_pipeline(original_learner)
+    tv, learner = (e for _, e in p.steps)
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
+
+
+def test_tree_ensemble_treatment_for_any_random_forest(monkeypatch):
+    IAmARandomForestEstimator = type(
+        "IAmARandomForestEstimator", (), {"get_params": 123, "set_params": 456}
+    )
+    original_learner = IAmARandomForestEstimator()
+    monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
+    p = tabular_pipeline(original_learner)
+    tv, learner = (e for _, e in p.steps)
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
+
+
+def test_tree_ensemble_treatment_for_xgboost(monkeypatch):
+    IAmXGB = type("IAmXGB", (), {"get_params": 123, "set_params": 456})
+    original_learner = IAmXGB()
+    monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
     p = tabular_pipeline(original_learner)
     tv, learner = (e for _, e in p.steps)
     assert learner is original_learner

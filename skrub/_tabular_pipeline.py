@@ -10,15 +10,12 @@ from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
-_HGBT_CLASSES = (
-    ensemble.HistGradientBoostingClassifier,
-    ensemble.HistGradientBoostingRegressor,
-)
-_TREE_ENSEMBLE_CLASSES = (
-    ensemble.HistGradientBoostingClassifier,
-    ensemble.HistGradientBoostingRegressor,
-    ensemble.RandomForestClassifier,
-    ensemble.RandomForestRegressor,
+_HGBT_CLASS_NAME_SUBSTRINGS = ("HistGradientBoosting",)
+_TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS = (
+    "HistGradientBoosting",
+    "RandomForest",
+    "XGB",
+    "LGBM",
 )
 
 
@@ -264,15 +261,24 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         "TabICLClassifier",
         "TabICLRegressor",
     )
+    is_hgbt_estimator = any(
+        x.lower() in estimator.__class__.__name__.lower()
+        for x in _HGBT_CLASS_NAME_SUBSTRINGS
+    )
+    is_tree_ensemble_estimator = any(
+        x.lower() in estimator.__class__.__name__.lower()
+        for x in _TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS
+    )
+
     if (
-        isinstance(estimator, _HGBT_CLASSES)
+        is_hgbt_estimator
         and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
             high_cardinality=StringEncoder(),
         )
-    elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+    elif is_tree_ensemble_estimator:
         vectorizer.set_params(
             low_cardinality=OrdinalEncoder(
                 handle_unknown="use_encoded_value",
@@ -293,7 +299,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not is_estimator_from_tabicl:
         if not get_tags(estimator).input_tags.allow_nan:
             steps.append(SimpleImputer(add_indicator=True))
-        if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+        if not is_tree_ensemble_estimator:
             steps.append(SquashingScaler(max_absolute_value=5))
 
     steps.append(estimator)
