@@ -1,0 +1,146 @@
+import builtins
+import sys
+
+import pytest
+
+from skrub import _dataframe as sbd
+from skrub._drop_similar import DropSimilar, _filter_associations
+from skrub.conftest import skip_polars_installed_without_pyarrow
+
+_THRESHOLD_ERROR = "Threshold must be a number between 0 and 1"
+_TYPE_ERROR = "Threshold must be a number"
+_PYARROW_ERROR = "DropSimilar requires the Pyarrow package to run on Polars dataframes."
+
+
+@pytest.fixture
+def table_with_associations(df_module):
+    return df_module.make_dataframe(
+        {
+            "letters": [
+                "a",
+                "b",
+                "c",
+                "a",
+                "b",
+                "c",
+                "a",
+                "b",
+                "c",
+                "a",
+            ],
+            "ranks": [
+                "first",
+                "second",
+                "third",
+                "fourth",
+                "second",
+                "third",
+                "fourth",
+                "first",
+                "second",
+                "first",
+            ],
+            "words": [
+                "None",
+                "None",
+                "None",
+                "Other",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None",
+            ],
+            "more_words": [
+                "None",
+                "None",
+                "None",
+                "Other",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None",
+            ],
+        }
+    )
+
+
+@skip_polars_installed_without_pyarrow
+@pytest.mark.parametrize(
+    "threshold, result",
+    [
+        (1.0, ["letters", "ranks", "words"]),
+        (0.8, ["letters", "ranks", "words"]),
+        (0.5, ["letters"]),
+        (0, ["letters"]),
+    ],
+)
+def test_drop_similar(table_with_associations, threshold, result):
+    ds = DropSimilar(threshold=threshold)
+    res = ds.fit_transform(table_with_associations)
+    resulting_columns = list(res.columns)
+    kept_cols = list(ds.get_feature_names_out())
+    assert kept_cols == resulting_columns
+    assert resulting_columns == result
+
+
+@skip_polars_installed_without_pyarrow
+def test_fit_transform(table_with_associations):
+    ds = DropSimilar()
+    res_fit_transform = ds.fit_transform(table_with_associations)
+    ds.fit(table_with_associations)
+    res_transform = ds.transform(table_with_associations)
+    fit_transform_columns = sbd.column_names(res_fit_transform)
+    transform_columns = sbd.column_names(res_transform)
+    assert fit_transform_columns == transform_columns
+
+
+def test_filter_associations():
+    with pytest.raises(TypeError):
+        _ = _filter_associations(None)
+
+
+@skip_polars_installed_without_pyarrow
+@pytest.mark.parametrize(
+    "threshold, error",
+    [
+        (-0.5, _THRESHOLD_ERROR),
+        (3, _THRESHOLD_ERROR),
+        (False, _TYPE_ERROR),
+        ("lower", _TYPE_ERROR),
+    ],
+)
+def test_wrong_threshold(df_module, threshold, error):
+    ds = DropSimilar(threshold=threshold)
+    with pytest.raises(ValueError, match=error):
+        ds.fit_transform(df_module.make_dataframe({}))
+
+
+def test_without_pyarrow(monkeypatch):
+    """
+    DropSimilar requires Pandas dataframes. If the user is working with Polars
+    but does not have the Pyarrow module to convert their dataframe to Pandas,
+    it is expected that `DropSimilar.fit_transform` should fail.
+
+    This test forces this specific import configuration using monkeypatch and
+    a custom `import` function, and checks that the method does indeed fail.
+    """
+    pl = pytest.importorskip("polars")
+    example_dataframe = pl.DataFrame({"a": [1, 2, 3]})
+    monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
+    assert "pyarrow" not in sys.modules
+    ds = DropSimilar()
+
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pyarrow":
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+    with pytest.raises(ImportError, match=_PYARROW_ERROR):
+        ds.fit_transform(example_dataframe)

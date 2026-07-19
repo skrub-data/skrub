@@ -1,3 +1,17 @@
+"""
+IMPORTANT NOTE:
+
+huggingface_hub when downloading a model has a blanket try/except that catches
+everything and turns it into an OSError saying the model failed to download.
+This masks the real issue.
+
+Our pytest config turns DeprecationWarning and FutureWarning into exceptions,
+which then get shown as OSError and are hard to debug.
+If you see tests in this module failing with ModelNotFound errors, try
+disabling the filterwarnings in pyproject.toml to see if any deprecation
+warnings are being raised.
+"""
+
 import pickle
 import sys
 

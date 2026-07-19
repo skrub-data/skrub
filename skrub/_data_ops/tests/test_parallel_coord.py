@@ -5,7 +5,7 @@ from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 
 import skrub
-from skrub._data_ops._parallel_coord import _add_jitter, _prepare_column
+from skrub._data_ops._parallel_coord import _add_jitter, _pick_format, _prepare_column
 
 
 def _has_plotly():
@@ -126,7 +126,7 @@ def test_column_preparation(is_log_scale, is_int):
         prepared["values"],
         [prepared["tickvals"][0], expected_value, prepared["tickvals"][0]],
     )
-    assert prepared["ticktext"] == ["NaN", "2"]
+    assert prepared["ticktext"] == ["NaN", "2" if is_int else "2.0"]
 
     # All nans
     column = pd.Series(np.array([np.nan, np.nan, np.nan]), name="test")
@@ -144,7 +144,7 @@ def test_column_preparation(is_log_scale, is_int):
     prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
     jittered = _add_jitter(prepared)
 
-    assert prepared["ticktext"] == ["1"]
+    assert prepared["ticktext"] == ["1" if is_int else "1.0"]
     if is_log_scale:
         assert np.all(prepared["values"] == np.log(1.0))
         assert np.all(jittered["values"] == np.log(1.0))
@@ -153,7 +153,9 @@ def test_column_preparation(is_log_scale, is_int):
         assert np.all(jittered["values"] == 1.0)
 
 
-def test_multi_scoring():
+@pytest.fixture(scope="module", params=[False, True])
+def classif_grid_search(request):
+    use_with_scoring = request.param
     pytest.importorskip("plotly")
 
     X, y = make_classification()
@@ -162,21 +164,102 @@ def test_multi_scoring():
     X, y = skrub.X(X), skrub.y(y)
 
     cols = skrub.choose_from([["0"], ["1"]], name="cols")
-    pred = X[cols].skb.apply(DummyClassifier(), y=y)
-    search = pred.skb.make_grid_search(
-        fitted=True,
-        scoring=["accuracy", "neg_brier_score"],
-        refit="accuracy",
-    )
-    fig = search.plot_results()
+    add = skrub.choose_float(0.0, 1.0, name="add", n_steps=3)
+    mul = skrub.choose_float(1.0, 2.0, n_steps=3)  # no name
+    pred = ((X[cols] + add) * mul).skb.apply(DummyClassifier(), y=y)
+    if use_with_scoring:
+        return pred.skb.with_scoring(
+            ["accuracy", "neg_brier_score"]
+        ).skb.make_grid_search(
+            fitted=True,
+            refit="accuracy",
+        )
+    else:
+        return pred.skb.make_grid_search(
+            fitted=True,
+            scoring=["accuracy", "neg_brier_score"],
+            refit="accuracy",
+        )
 
+
+@pytest.mark.parametrize(
+    "show_scores, show_choices, show_times, expected",
+    [
+        (
+            None,
+            None,
+            None,
+            [
+                "cols",
+                "add",
+                "choose_float(1.0,<br>\n2.0, n_steps=3)",
+                "score time",
+                "fit time",
+                "mean_test_neg_brier_<br>\nscore",
+                "mean_test_accuracy",
+            ],
+        ),
+        (
+            "accuracy",
+            ["cols", "add"],
+            "fit",
+            [
+                "cols",
+                "add",
+                "fit time",
+                "mean_test_accuracy",
+            ],
+        ),
+        (
+            [],
+            "add",
+            [],
+            [
+                "add",
+            ],
+        ),
+    ],
+)
+def test_multi_scoring_and_filtering(
+    classif_grid_search, show_scores, show_choices, show_times, expected
+):
+    fig = classif_grid_search.plot_results(
+        show_scores=show_scores, show_choices=show_choices, show_times=show_times
+    )
     dimensions = fig.data[0]["dimensions"]
-    assert [d["label"].replace("<br>\n", "") for d in dimensions] == [
-        "cols",
-        "score time",
-        "fit time",
-        "std_test_neg_brier_score",
-        "std_test_accuracy",
-        "mean_test_neg_brier_score",
-        "mean_test_accuracy",
+    assert [d["label"] for d in dimensions] == expected
+
+
+def test_bad_filtering_params(classif_grid_search):
+    # Ask for a score that is not available, available scores are shown
+    with pytest.raises(ValueError, match="['accuracy', 'neg_brier_score']"):
+        classif_grid_search.plot_results(show_scores=["roc_auc"])
+    # Only choices with an actual name can be selected. Here we ask for a
+    # choice name that does not exist, available ones are shown.
+    with pytest.raises(ValueError, match="['cols', 'add']"):
+        classif_grid_search.plot_results(
+            show_choices=["choose_float(1.0, 2.0, n_steps=3)"]
+        )
+
+
+def test_pick_format():
+    vals = np.array([0.001, 0.01, 0.1, 1.0])
+    assert list(map(_pick_format(vals).format, vals)) == [
+        "0.001",
+        "0.010",
+        "0.100",
+        "1.000",
     ]
+
+    assert _pick_format(vals[:1]) == "{}"
+
+    vals = np.array([0.005, 0.015])
+    assert list(map(_pick_format(vals).format, vals)) == ["0.005", "0.015"]
+
+    # hack to cover corner case that should not normally happen
+
+    class _array(list):
+        def __len__(self):
+            return 100
+
+    assert _pick_format(_array(vals)) == "{}"

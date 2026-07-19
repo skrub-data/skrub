@@ -1,5 +1,6 @@
 import pytest
 from sklearn import ensemble
+from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
@@ -74,3 +75,35 @@ def test_from_dtype():
         ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype")
     )
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
+
+
+class TabICLClassifier(BaseEstimator):
+    """Dummy class which pretends to be `tabicl.TabICLClassifier`"""
+
+    pass
+
+
+class TabICLRegressor(BaseEstimator):
+    """Dummy class which pretends to be `tabicl.TabICLRegressor`"""
+
+    pass
+
+
+@pytest.fixture(
+    scope="module",
+    params=[pytest.param(TabICLClassifier()), pytest.param(TabICLRegressor())],
+    ids=["TabICLClassifier-instance", "TabICLRegressor-instance"],
+)
+def tabicl_estimator(request):
+    return request.param
+
+
+def test_tabicl_pipeline(tabicl_estimator):
+    p = tabular_pipeline(tabicl_estimator)
+    tv, learner = (e for _, e in p.steps)
+    assert isinstance(tv, TableVectorizer)
+
+    assert tv.low_cardinality == "passthrough"
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert tv.cardinality_threshold == 10
+    assert tv.datetime.periodic_encoding == "spline"

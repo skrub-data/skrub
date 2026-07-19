@@ -1,9 +1,10 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
+.. |DropSimilar| replace:: :class:`~skrub.DropSimilar`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_associations:
 
-How to find correlated columns in a datarame
+How to find correlated columns in a dataframe
 ============================================
 
 In addition to |TableReport|'s **Associations** tab, you can compute associations
@@ -13,11 +14,12 @@ associations.
 Reported metrics include `Cramer’s V statistic <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
 and `Pearson’s Correlation Coefficient <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_.
 The result is returned as a dataframe that contains the column name and idx for the
-left and right table and both associations; results are sorted in descending order
+left and the right table, and both associations; results are sorted in descending order
 by Cramer’s V association.
 
 This can be useful to have access to the information used in the |TableReport|
-for later use (e.g., to select which columns to drop).
+for later use (e.g., to select which columns to drop). These associations are
+also used by the |DropSimilar| transformer to select which columns should be dropped.
 
 .. code-block::
 

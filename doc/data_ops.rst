@@ -1,36 +1,72 @@
 .. _user_guide_data_ops_index:
 
-Complex multi-table pipelines with Data Ops
-===========================================
+.. currentmodule:: skrub
 
-Skrub provides an easy way to build complex, flexible machine learning pipelines.
-There are several needs that are not easily addressed with standard scikit-learn
-tools such as :class:`~sklearn.pipeline.Pipeline` and
-:class:`~sklearn.compose.ColumnTransformer`, and for which the skrub DataOps offer
-a solution:
+Building complete pipelines with DataOps
+========================================
 
-- Multiple tables: We often have several tables of different shapes (for
-  example, "Customers", "Orders", and "Products" tables) that need to be
-  processed and assembled into a design matrix ``X``. The target ``y`` may also
-  be the result of some data processing. Standard scikit-learn estimators do not
-  support this, as they expect right away a single design matrix ``X`` and a
-  target array ``y``, with one row per observation.
-- DataFrame wrangling: Performing typical DataFrame operations such as
-  projections, joins, and aggregations should be possible and allow leveraging
-  the powerful and familiar APIs of `Pandas <https://pandas.pydata.org>`_ or
-  `Polars <https://docs.pola.rs/>`_.
-- Hyperparameter tuning: Choices of estimators, hyperparameters, and even
-  the pipeline architecture can be guided by validation scores. Specifying
-  ranges of possible values outside of the pipeline itself (as in
-  :class:`~sklearn.model_selection.GridSearchCV`) is difficult in complex
-  pipelines.
-- Iterative development: Building a pipeline step by step while inspecting
-  intermediate results allows for a short feedback loop and early discovery of
-  errors.
+A skrub DataOp is a complete machine learning pipeline —from data loading and
+wrangling to the final prediction— in a single object that can be fitted, tuned,
+cross-validated, and saved in a file like any scikit-learn estimator.
 
-In this section we cover all about the skrub Data Ops, from starting out with a
-simple example, to more advanced concepts like parameter tuning and and pipeline
-validation.
+By integrating the whole data processing, DataOps help to validate pipelines
+while **avoiding data leakage**, to **tune complex modelling choices**, and to keep
+track of important **fitted (learned) state**.
+
+To solve a machine-learning task we often need to combine multiple operations
+such as loading and filtering data, joining tables and computing aggregations,
+extracting numerical features, and fitting a classifier or regressor.
+
+**Storing state**  Each of those operations may need to be fitted: to learn some
+information from training data and reuse it to apply consistent transformations
+to new data. This is the case for transformers like the
+:class:`~sklearn.preprocessing.StandardScaler` and :class:`TableVectorizer` and
+estimators like :class:`~sklearn.ensemble.RandomForestClassifier`.
+
+**Tuning**  Moreover, each processing step may involve decisions that need to be
+tuned (*tuning* means finding the value that gives the best predictive
+performance), for example: what weather forecast features should I include to
+predict the load on an electric grid? How should I encode a product description
+to help predict the product's category? What learning rate to set on a
+:class:`~sklearn.ensemble.HistGradientBoostingRegressor`?
+
+**Validation**  Finally, the quality of predictions must be evaluated on
+held-out data (with a train/test split or cross-validation), taking care to
+**avoid leakage** of test data into the training set.
+
+Separating the data wrangling from the fitted estimator prevents correctly
+handling the tasks above. Skrub DataOps help by binding an arbitrary set of
+transformations of any number of inputs in a single estimator. These
+transformations can be easily parametrized with tunable choices. The resulting
+objects have built-in methods for cross-validation and tuning with either Optuna
+or scikit-learn, and for inspecting runs and intermediate results. Once fitted,
+they can be saved in a file, loaded, applied to new data as easily as a single
+:class:`~sklearn.linear_model.LogisticRegression`.
+
+.. dropdown:: Going beyond the scikit-learn Pipeline
+  :color: primary
+
+  To some extent, the DataOps exist for the same reasons as the simpler
+  scikit-learn :class:`sklearn.pipeline.Pipeline` used in other parts of this
+  documentation. However the Pipeline is too limited for many real-world problems:
+  it can only represent a linear sequence of scikit-learn transformers, the design
+  matrix and target variables must be constructed and divided into training and
+  testing sets outside of the pipeline and the number of rows cannot change, only
+  a single table can be handled, hyperparameter choices are difficult to define,
+  etc. . Skrub DataOps remove those limitations and add several useful features
+  such as interactive previews and integration with Optuna.
+
+A quick overview of DataOps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This tutorial walks through the main components of the DataOps on a simple
+example:
+
+.. toctree::
+   :maxdepth: 1
+
+   auto_tutorials/1111_data_ops_quick_tour
+
 
 Data Ops basic concepts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +76,6 @@ Data Ops basic concepts
 
    modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
-   auto_tutorials/1110_data_ops_intro
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods
    modules/data_ops/basics/control_flow

@@ -79,7 +79,7 @@ class TextEncoder(SingleColumnTransformer):
 
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
-        See :func:`skrub.datasets._utils.get_data_dir`.
+        See :func:`skrub.datasets.get_data_dir`.
         Note that when unpickling ``TextEncoder`` on another machine,
         the ``cache_folder`` path needs to be accessible to store the downloaded model.
 

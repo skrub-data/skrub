@@ -29,9 +29,13 @@ def test_repr():
     >>> s.Filter(lambda c, x: c[2] == x, args=(3,), selector_repr='my_filter()')
     my_filter()
     >>> s.NameFilter(lambda c_n, n: c_n.lower() == n,
-    ...              args=('col',),
-    ...              selector_repr='lower_check()')
+    ... args=('col',),
+    ... selector_repr='lower_check()')
     lower_check()
+    >>> import pandas as pd
+    >>> s.drop(pd.DataFrame({"ID":[1],"Name":["A"],"Age":[1]}), s.cols("ID","Name"))
+       Age
+    0    1
     """
 
 
@@ -47,6 +51,16 @@ def test_select(df_module):
     df = df_module.example_dataframe
     df_module.assert_frame_equal(
         s.select(df, s.cols("float-col", "str-col")), df[["float-col", "str-col"]]
+    )
+
+
+def test_drop(df_module):
+    df = df_module.example_dataframe
+    df_module.assert_frame_equal(
+        s.drop(df, s.cols("float-col", "str-col")),
+        df[
+            [col for col in sbd.column_names(df) if col not in ["float-col", "str-col"]]
+        ],
     )
 
 

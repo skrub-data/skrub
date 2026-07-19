@@ -115,6 +115,8 @@ class JSONEncoder(json.JSONEncoder):
                 return int(value)
             if isinstance(value, np.floating):
                 return float(value)
+            if isinstance(value, np.ndarray):
+                return value.tolist()
             raise
 
 

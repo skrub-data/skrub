@@ -1,5 +1,6 @@
 import warnings
 
+import pandas as pd
 from pandas._libs.tslibs.parsing import (
     guess_datetime_format as pd_guess_datetime_format,
 )
@@ -437,6 +438,8 @@ class ToDatetime(SingleColumnTransformer):
         if self.format is not None:
             return self.format
         not_null = sbd.drop_nulls(column)
+        if len(not_null) == 0:
+            return None
         sample = sbd.sample(
             not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]), seed=0
         )
@@ -459,20 +462,40 @@ def _guess_datetime_format(column):
         month_first_formats = column.apply(
             pd_guess_datetime_format, dayfirst=False
         ).unique()
-        if len(month_first_formats) == 1 and month_first_formats[0] is not None:
-            return str(month_first_formats[0])
+        first_month = month_first_formats[0]
+        # new versions of pandas return pd.NA instead of None
+        if (
+            len(month_first_formats) == 1
+            and first_month is not pd.NA
+            and first_month is not None
+        ):
+            return str(first_month)
 
         day_first_formats = column.apply(
             pd_guess_datetime_format, dayfirst=True
         ).unique()
-        if len(day_first_formats) == 1 and day_first_formats[0] is not None:
-            return str(day_first_formats[0])
+        first_day = day_first_formats[0]
+        # new versions of pandas return pd.NA instead of None
+        if (
+            len(day_first_formats) == 1
+            and first_day is not pd.NA
+            and first_day is not None
+        ):
+            return str(first_day)
 
     return None
 
 
 def to_datetime(data, format=None):
-    """Convert DataFrame or column to Datetime dtype.
+    """Convert a dataframe or series to Datetime dtype.
+
+    This function tries to convert the given dataframe or series from string to datetime,
+    by either testing common datetime formats or using the ``format`` specified
+    by the user. Columns that cannot be parsed are returned unchanged.
+
+    Note that this transformation is stateless, so it should not be used in a
+    pipeline that is fitted on a training set and then applied to a test set.
+    Use the :class:`ToDatetime` transformer instead.
 
     .. caution ::
 
@@ -484,7 +507,7 @@ def to_datetime(data, format=None):
     Parameters
     ----------
     data : pandas or polars ``{DataFrame, Series}``
-        The dataframe or series to transform.
+        The dataframe or series to convert to Datetime.
 
     format : str or None, optional, default=None
         Format string to use to parse datetime strings.
