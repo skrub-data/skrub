@@ -139,7 +139,7 @@ class DropSimilar(TransformerMixin, SkrubBaseEstimator):
                 f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
 
-        association_df = column_associations(X)
+        association_df = column_associations(X, compute_pearson=False)
         self.column_associations_ = s.select(
             association_df, ["left_column_name", "right_column_name", "cramer_v"]
         )

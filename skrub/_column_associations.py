@@ -28,8 +28,7 @@ def column_associations(df, *, compute_pearson=True):
     compute_pearson : bool, default=True
         Whether to compute Pearson's Correlation Coefficient. Setting this to
         ``False`` avoids converting Polars dataframes to pandas and therefore
-        does not require PyArrow. This parameter is set to ``False`` when the
-        dataframe is Polars and PyArrow is not available.
+        does not require PyArrow.
 
     Returns
     -------
@@ -111,12 +110,6 @@ def column_associations(df, *, compute_pearson=True):
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
     """  # noqa: E501
-    if compute_pearson and sbd.is_polars(df):
-        try:
-            import pyarrow  # noqa: F401
-        except ImportError:
-            compute_pearson = False
-
     cramer_v_table = _stack_symmetric_associations(
         _cramer_v_matrix(df),
         df,
