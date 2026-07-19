@@ -1,3 +1,4 @@
+import base64
 import datetime
 import html
 import io
@@ -5,11 +6,13 @@ import numbers
 import re
 import shutil
 import sys
+import uuid
 import webbrowser
 from pathlib import Path
 
 import jinja2
 import numpy as np
+import pydot
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -38,6 +41,7 @@ def _get_jinja_env():
         autoescape=True,
     )
     env.filters["format_duration"] = format_duration
+    env.globals["uuid"] = str(uuid.uuid4())
     return env
 
 
@@ -256,11 +260,20 @@ def _make_full_report(
 
 
 class GraphDrawing:
-    def __init__(self, graph):
+    def __init__(self, graph, force_js_rendering=False):
         self.graph = graph
+        self.force_js_rendering = force_js_rendering
+
+    def _use_js(self):
+        return self.force_js_rendering or not _utils.has_graphviz()
+
+    def _base64(self):
+        dot = self.graph.create_dot()
+        return base64.b64encode(dot).decode("ascii")
 
     @property
     def svg(self):
+        _utils.check_graphviz()
         svg = self.graph.create_svg(encoding="utf-8")
         svg = re.sub(b"<title>.*?</title>", b"", svg)
         if "google.colab" in sys.modules:
@@ -271,15 +284,28 @@ class GraphDrawing:
 
     @property
     def png(self):
+        _utils.check_graphviz()
         return self.graph.create_png(encoding="utf-8")
 
     def _repr_html_(self):
-        return self.svg.decode("utf-8")
+        if self._use_js():
+            return _get_template("render_dot_iframe.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return self.svg.decode("utf-8")
+
+    @property
+    def html(self):
+        if self._use_js():
+            return _get_template("render_dot.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
 
     def open(self):
-        open_in_browser(
-            _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
-        )
+        open_in_browser(self.html)
 
     def _repr_png_(self):
         return self.png
@@ -334,12 +360,6 @@ def _dot_id(n):
 
 
 def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
-    # TODO if pydot or graphviz not available fallback on some other plotting
-    # solution eg a vendored copy of mermaid? outputting html instead of svg
-    _utils.check_graphviz()
-
-    import pydot
-
     g = graph(data_op)
     dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
