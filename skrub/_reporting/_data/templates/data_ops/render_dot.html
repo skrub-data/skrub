@@ -5,17 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        <div id="graph">Loading graph …</div>
-        <script type="module">
-         import { Graphviz } from "https://cdn.jsdelivr.net/npm/@hpcc-js/wasm-graphviz@1/dist/index.js";
-         const dot = new TextDecoder().decode(Uint8Array.from(atob("{{ dot_base64 }}"), c => c.charCodeAt(0)));
-         try {
-             const graphviz = await Graphviz.load();
-             document.getElementById("graph").innerHTML = graphviz.dot(dot);
-         } catch (err) {
-             document.getElementById("graph").textContent = "Error: " + err.message;
-         }
-         parent.postMessage({ "{{ uuid }}_h": document.body.scrollHeight + 20, "{{ uuid }}_w": document.body.scrollWidth + 20}, "*");
-        </script>
+        {% include "render_dot_fragment.html" %}
     </body>
 </html>

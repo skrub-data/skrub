@@ -149,7 +149,6 @@ def _make_full_report(
     overwrite=False,
     title=None,
 ):
-    _utils.check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full DataOps plan
@@ -170,7 +169,7 @@ def _make_full_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
+    svg = draw_data_op_graph(data_op, url=make_url).html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {"svg": svg, "node_status": node_status, "report_title": title}
@@ -290,6 +289,15 @@ class GraphDrawing:
     def _repr_html_(self):
         if self._use_js():
             return _get_template("render_dot_iframe.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return self.svg.decode("utf-8")
+
+    @property
+    def html_fragment(self):
+        if self._use_js():
+            return _get_template("render_dot_fragment.html").render(
                 {"dot_base64": self._base64()}
             )
         else:
