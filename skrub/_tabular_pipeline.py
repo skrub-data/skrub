@@ -1,5 +1,4 @@
 from sklearn import ensemble
-from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
@@ -26,7 +25,7 @@ _TREE_ENSEMBLE_CLASSES = (
 def tabular_pipeline(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
-    Given either a scikit-learn estimator or one of the special-cased strings
+    Given either a scikit-learn compatible estimator or one of the special-cased strings
     ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
     function creates a scikit-learn pipeline that extracts numeric features, imputes
     missing values and scales the data if necessary, then applies the estimator.
@@ -47,7 +46,9 @@ def tabular_pipeline(estimator, *, n_jobs=None):
 
     Parameters
     ----------
-    estimator : {"regressor", "regression", "classifier", "classification"} or sklearn.base.BaseEstimator
+    estimator : {"regressor", "regression", "classifier", "classification"} or scikit-learn
+        compatible estimator
+
         The estimator to use as the final step in the pipeline. Based on the type of
         estimator, the previous preprocessing steps and their respective parameters are
         chosen. The possible values are:
@@ -58,7 +59,8 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         - ``'classifier'`` or ``'classification'``: a
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
-        - a scikit-learn estimator: the provided estimator is used as the final step.
+        - a scikit-learn compatible estimator: the provided estimator is used as the final
+          step.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
@@ -240,16 +242,22 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             "If ``estimator`` is a string it should be 'regressor', 'regression',"
             " 'classifier' or 'classification'."
         )
-    if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
+
+    if isinstance(estimator, type):
         raise TypeError(
-            "tabular_pipeline expects a scikit-learn estimator as its first"
-            f" argument. Pass an instance of {estimator.__name__} rather than the class"
-            " itself."
+            "tabular_pipeline expects a scikit-learn compatible estimator instance as"
+            " its first argument, but you have passed a type. Pass an instance of the"
+            " estimator rather than the class itself."
         )
-    if not isinstance(estimator, BaseEstimator):
+
+    is_scikit_learn_compatible = hasattr(estimator, "get_params") and hasattr(
+        estimator, "set_params"
+    )
+    if not is_scikit_learn_compatible:
         raise TypeError(
-            "tabular_pipeline expects a scikit-learn estimator, 'regressor',"
-            " or 'classifier' as its first argument."
+            "tabular_pipeline expects a scikit-learn compatible estimator as its first"
+            " argument. The estimator object must have 'get_params' and 'set_params'"
+            " attributes."
         )
 
     is_estimator_from_tabicl = estimator.__class__.__name__ in (

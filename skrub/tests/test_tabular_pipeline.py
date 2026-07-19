@@ -36,12 +36,28 @@ def test_bad_learner():
         match=".*should be 'regressor', 'regression', 'classifier' or 'classification'",
     ):
         tabular_pipeline("bad")
-    with pytest.raises(
-        TypeError, match=".*Pass an instance of HistGradientBoostingRegressor"
-    ):
+    with pytest.raises(TypeError, match=".*Pass an instance"):
         tabular_pipeline(ensemble.HistGradientBoostingRegressor)
-    with pytest.raises(TypeError, match=".*expects a scikit-learn estimator"):
+    with pytest.raises(
+        TypeError, match=".*expects a scikit-learn compatible estimator"
+    ):
         tabular_pipeline(object())
+
+
+def test_sklearn_incompatible_learner_fails():
+    sklearn_incompatible_learner = type("", (), {"get_params": 123})()
+    with pytest.raises(
+        TypeError, match=".*expects a scikit-learn compatible estimator"
+    ):
+        tabular_pipeline(sklearn_incompatible_learner)
+
+
+def test_no_type_error_for_sklearn_compatible_learner():
+    sklearn_compatible_learner = type("", (), {"get_params": 123, "set_params": 456})()
+    # Still fails - because this is a dummy class for testing - but not with TypeError
+    with pytest.raises(Exception) as e:
+        tabular_pipeline(sklearn_compatible_learner)
+    assert not isinstance(e.value, TypeError)
 
 
 def test_linear_learner():
