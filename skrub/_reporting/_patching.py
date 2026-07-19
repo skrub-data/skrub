@@ -24,20 +24,19 @@ def _patch(
     if not hasattr(cls, stashed_name):
         setattr(cls, stashed_name, original_method)
 
-    def _patched(df, *args, **kwargs):
+    def patched(df):
         report = TableReport(
             df,
             verbose=verbose,
             plot_distributions=plot_distributions,
             compute_associations=compute_associations,
         )
+        if not (plot_distributions or compute_associations):
+            report._set_minimal_mode()
 
-        report._set_minimal_mode()
+        return getattr(report, method_name)()
 
-        return getattr(report, method_name)(*args, **kwargs)
-
-    setattr(cls, method_name, _patched)
-
+    setattr(cls, method_name, patched)
 
 
 def _unpatch(cls, method_name):
