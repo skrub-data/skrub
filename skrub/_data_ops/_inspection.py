@@ -1,4 +1,5 @@
 import base64
+import copy
 import datetime
 import html
 import io
@@ -169,7 +170,8 @@ def _make_full_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    svg = draw_data_op_graph(data_op, url=make_url).html_fragment
+    graph_drawing = draw_data_op_graph(data_op, url=make_url)
+    svg = graph_drawing.html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {"svg": svg, "node_status": node_status, "report_title": title}
@@ -223,6 +225,16 @@ def _make_full_report(
                 estimator_html_repr = None
         else:
             estimator_html_repr = None
+        # TODO:
+        #  - edit attributes to show node status (error, skipped)
+        #  - edit instead of copy?
+        #  - rename svg to graph_drawing_fragment
+        #  - no need for highlightcurrentnode javascript function anymore
+        graph_drawing_copy = copy.deepcopy(graph_drawing)
+        dot_node = graph_drawing_copy.graph.get_node(_dot_id(i))[0]
+        dot_node.set_fillcolor("#15ed8f")
+        dot_node.set_style("filled")
+        svg = graph_drawing_copy.html_fragment
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
