@@ -5,6 +5,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
+import skrub._tabular_pipeline
 from skrub import (
     SquashingScaler,
     StringEncoder,
@@ -12,6 +13,19 @@ from skrub import (
     ToCategorical,
     tabular_pipeline,
 )
+
+
+def fake_get_tags(_):
+    """Allows dummy estimators to get past
+    `if not get_tags(estimator).input_tags.allow_nan:` check for tests"""
+
+    class fake_input_tags:
+        allow_nan = None
+
+    class fake_estimator:
+        input_tags = fake_input_tags()
+
+    return fake_estimator()
 
 
 @pytest.mark.parametrize(
@@ -52,12 +66,10 @@ def test_sklearn_incompatible_learner_fails():
         tabular_pipeline(sklearn_incompatible_learner)
 
 
-def test_no_type_error_for_sklearn_compatible_learner():
+def test_sklearn_compatible_learner_succeeds(monkeypatch):
     sklearn_compatible_learner = type("", (), {"get_params": 123, "set_params": 456})()
-    # Still fails - because this is a dummy class for testing - but not with TypeError
-    with pytest.raises(Exception) as e:
-        tabular_pipeline(sklearn_compatible_learner)
-    assert not isinstance(e.value, TypeError)
+    monkeypatch.setattr(skrub._tabular_pipeline, "get_tags", fake_get_tags)
+    _ = tabular_pipeline(sklearn_compatible_learner)
 
 
 def test_linear_learner():
