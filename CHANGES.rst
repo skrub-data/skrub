@@ -15,6 +15,10 @@ New Features
 
 Changes
 -------
+- :func:`patch_display` now uses a minimal, faster TableReport without plots or
+  column associations by default. The old behavior can still be achieved by calling
+  ``patch_display(plot_distributions="auto", compute_associations="auto")``.
+  :pr:`2103` by :user:`Naa Ashiorkor Nortey <ashiorkornortey>`.
 - The error message when a key is missing from the environment passed to a
   :class:`DataOp` or :class:`SkrubLearner` has been improved.
   :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
