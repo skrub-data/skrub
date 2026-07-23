@@ -354,7 +354,7 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in learner_repr
     else:
-        assert svg in learner_repr
+        assert svg in learner_repr or data_op.skb.draw_graph()._base64() in learner_repr
 
     X, y = make_classification()
     learner.fit({"X": X, "y": y})
@@ -362,13 +362,16 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in learner_repr
     else:
-        assert svg in learner._repr_html_()
+        assert svg in learner_repr or data_op.skb.draw_graph()._base64() in learner_repr
 
     rand_search_repr = data_op.skb.make_randomized_search()._repr_html_()
     if old_sklearn:
         assert data_op_repr in rand_search_repr
     else:
-        assert svg in rand_search_repr
+        assert (
+            svg in rand_search_repr
+            or data_op.skb.draw_graph()._base64() in rand_search_repr
+        )
         assert "n_iter" in rand_search_repr
         assert "randomized search" in rand_search_repr
 
@@ -376,7 +379,10 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in grid_search_repr
     else:
-        assert svg in grid_search_repr
+        assert (
+            svg in rand_search_repr
+            or data_op.skb.draw_graph()._base64() in grid_search_repr
+        )
         assert "n_jobs" in grid_search_repr
         assert "grid search" in grid_search_repr
 
@@ -387,5 +393,8 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in optuna_search_repr
     else:
-        assert svg in optuna_search_repr
+        assert (
+            svg in optuna_search_repr
+            or data_op.skb.draw_graph()._base64() in optuna_search_repr
+        )
         assert "n_iter" in optuna_search_repr

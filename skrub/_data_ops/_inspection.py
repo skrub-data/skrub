@@ -279,7 +279,7 @@ class GraphDrawing:
         return self.force_js_rendering or not _utils.has_graphviz()
 
     def _base64(self):
-        dot = self.graph.create_dot()
+        dot = self.graph.to_string().encode("utf-8")
         return base64.b64encode(dot).decode("ascii")
 
     @property
