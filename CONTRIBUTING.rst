@@ -46,7 +46,7 @@ please:
    - If closed, check for one of the following:
       - A **merged pull request** may indicate the bug is fixed. Update your
         skrub version or note if the fix is pending a release.
-      - A **wontfix label** or reasoning may be provided if the issue was
+      - A **wontfix** label or reasoning may be provided if the issue was
         closed without a fix.
 2. If the issue does not exist, `create a new one <https://github.com/skrub-data/skrub/issues/new>`_.
 
