@@ -57,7 +57,7 @@ Bugfixes
   columns containing ``datetime.date`` objects. Pandas stores those in an
   ``object`` column, so they used to be rejected, whereas the equivalent polars
   ``Date`` column was accepted.
-  :pr:`2249` by :user:`Sanjay Santhanam <Sanjays2402>`.
+  :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
 
 Deprecations
 ------------
