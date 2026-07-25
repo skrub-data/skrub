@@ -53,6 +53,11 @@ Bugfixes
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
+  columns containing ``datetime.date`` objects. Pandas stores those in an
+  ``object`` column, so they used to be rejected, whereas the equivalent polars
+  ``Date`` column was accepted.
+  :pr:`2249` by :user:`Sanjay Santhanam <Sanjays2402>`.
 
 Deprecations
 ------------

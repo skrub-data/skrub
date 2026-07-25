@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import date, timezone
 from functools import partial
 
 import numpy as np
@@ -215,11 +215,7 @@ def test_to_datetime_func(df_module, datetime_col):
     df_module.assert_column_equal(
         to_datetime(datetime_col), ToDatetime().fit_transform(datetime_col)
     )
-    cols = (
-        ("datetime-col",)
-        if df_module.name == "pandas"
-        else ("datetime-col", "date-col")
-    )
+    cols = ("datetime-col", "date-col")
     df_module.assert_frame_equal(
         to_datetime(df_module.example_dataframe),
         ApplyToCols(ToDatetime(), cols=cols).fit_transform(df_module.example_dataframe),
@@ -249,3 +245,30 @@ def test_specific_time_encoding():
         pd.Timestamp(1584226801, unit="s", tz=ZoneInfo("Europe/Paris")),
     ]
     assert _get_time_zone(pd.Series(name="dt", data=col)) == "Europe/Paris"
+
+
+def test_pandas_date_objects():
+    """A pandas object column of datetime.date is parsed, not rejected.
+
+    Non-regression test for
+    https://github.com/skrub-data/skrub/issues/2084
+    """
+    col = pd.Series([date(2002, 1, 1), None, date(2003, 2, 2)], name="when")
+    assert sbd.is_object(col)
+
+    to_dt = ToDatetime()
+    out = to_dt.fit_transform(col)
+    assert sbd.is_any_date(out)
+    assert out[0] == pd.Timestamp("2002-01-01")
+    assert pd.isna(out[1])
+
+    transformed = to_dt.transform(pd.Series([date(2005, 5, 5)], name="when"))
+    assert transformed[0] == pd.Timestamp("2005-05-05")
+
+
+def test_object_column_that_is_not_dates_is_still_rejected():
+    with pytest.raises(RejectColumn, match="Could not find a datetime format"):
+        ToDatetime().fit_transform(pd.Series(["hello", "world"], name="when"))
+
+    with pytest.raises(RejectColumn):
+        ToDatetime().fit_transform(pd.Series([date(2002, 1, 1), "hello"], name="when"))
