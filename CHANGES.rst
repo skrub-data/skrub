@@ -6,7 +6,7 @@ Release history
 
 .. currentmodule:: skrub
 
-Release 0.10.0
+Ongoing development
 ===================
 
 
@@ -19,6 +19,10 @@ New Features
 
 Changes
 -------
+- :func:`patch_display` now uses a minimal, faster TableReport without plots or
+  column associations by default. The old behavior can still be achieved by calling
+  ``patch_display(plot_distributions="auto", compute_associations="auto")``.
+  :pr:`2103` by :user:`Naa Ashiorkor Nortey <ashiorkornortey>`.
 - The error message when a key is missing from the environment passed to a
   :class:`DataOp` or :class:`SkrubLearner` has been improved.
   :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -39,9 +43,20 @@ Changes
 
   :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
 
+- Added support in :func:`tabular_pipeline` for estimators instantiated from either
+  :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
+  default parameters of :class:`TableVectorizer` as the first step, and the estimator
+  as the second step.
+
+  :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
+  :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Bugfixes
 --------
+- The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
+  have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------

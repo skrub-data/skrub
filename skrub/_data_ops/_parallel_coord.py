@@ -115,13 +115,26 @@ def _prepare_obj_column(col):
 
 
 def _pick_format(vals):
-    delta = (vals.max() - vals.min()) / (len(vals) + 1)
-    if delta == 0.0 or any("e" in f"{v:g}" for v in vals):
-        # only one values, or scientific notation -- bail for simplicity
-        return "{:g}"
-    # guess the necessary number of digits
-    n = max(0, -int(np.floor(np.log10(delta))))
-    return f"{{:.{n}f}}"
+    # vals must be finite, unique and sorted.
+
+    if len(vals) < 2 or any("e" in f"{v}" for v in vals):
+        # only one value, or scientific notation: return default format for simplicity
+        return "{}"
+    delta = np.diff(vals).min()
+    # Try to guess the necessary number of digits
+    n = max(1, -int(np.floor(np.log10(delta))))
+    fmt = f"{{:.{n}f}}"
+    # Check if this format caused several values to end up with the same
+    # representation
+    if len(set(map(fmt.format, vals))) == len(vals):
+        return fmt
+    # If we got duplicate labels, add one more digit and check again
+    fmt = f"{{:.{n + 1}f}}"
+    if len(set(map(fmt.format, vals))) == len(vals):
+        return fmt
+    # If still getting duplicate strings for some reason, revert to default
+    # representation. Normally this should not happen.
+    return "{}"
 
 
 def _prepare_numeric_column(col, *, is_log_scale, is_int):
