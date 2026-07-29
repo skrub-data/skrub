@@ -19,6 +19,21 @@ _TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS = (
 )
 
 
+def is_scikit_learn_compatible_estimator(estimator) -> tuple[bool, str | None]:
+    """Determine whether a candidate object is a valid scikit learn-compatiable
+    estimator. Return True or False, plus an optional string stating the failure
+    reason."""
+
+    REQUIRED_METHOD_NAMES = ["get_params", "set_params", "fit", "predict"]
+    for method_name in REQUIRED_METHOD_NAMES:
+        if not hasattr(estimator, method_name):
+            return False, f"The estimator must have a {method_name} attribute."
+    for method_name in REQUIRED_METHOD_NAMES:
+        if not callable(getattr(estimator, method_name)):
+            return False, f"The estimator's {method_name} attribute must be callable."
+    return True, None
+
+
 def tabular_pipeline(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
@@ -247,14 +262,13 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             " estimator rather than the class itself."
         )
 
-    is_scikit_learn_compatible = hasattr(estimator, "get_params") and hasattr(
-        estimator, "set_params"
+    is_scikit_learn_compatible, incompatable_reason = (
+        is_scikit_learn_compatible_estimator(estimator)
     )
     if not is_scikit_learn_compatible:
         raise TypeError(
             "tabular_pipeline expects a scikit-learn compatible estimator as its first"
-            " argument. The estimator object must have 'get_params' and 'set_params'"
-            " attributes."
+            " argument. " + incompatable_reason
         )
 
     is_estimator_from_tabicl = estimator.__class__.__name__ in (
@@ -297,8 +311,14 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
     steps = [vectorizer]
     if not is_estimator_from_tabicl:
-        if not get_tags(estimator).input_tags.allow_nan:
+        # Check whether we need imputation
+        try:
+            allow_nan = get_tags(estimator).input_tags.allow_nan
+        except AttributeError:
+            allow_nan = False
+        if not allow_nan:
             steps.append(SimpleImputer(add_indicator=True))
+        # Check whether we need squashing scalar
         if not is_tree_ensemble_estimator:
             steps.append(SquashingScaler(max_absolute_value=5))
 
