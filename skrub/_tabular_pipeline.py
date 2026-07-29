@@ -19,9 +19,7 @@ _TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS = (
 )
 
 
-def tabular_pipeline(
-    estimator, *, n_jobs=None, is_tree_ensemble_estimator=None, is_hgbt_estimator=None
-):
+def tabular_pipeline(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
     Given either a scikit-learn compatible estimator or one of the special-cased strings
@@ -65,16 +63,6 @@ def tabular_pipeline(
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
         means 1 unless in a joblib ``parallel_backend`` context. ``-1`` means using all
         processors.
-
-    is_tree_ensemble_estimator : bool, default=None
-        Set to ``True`` to override the default class-name based heuristic and enforce
-        tree ensemble estimator treatment. The default heuristic should catch most common
-        tree ensembles; this parameter can be used otherwise.
-
-    is_hgbt_estimator : bool, default=None
-        Set to ``True`` to override the default class-name based heuristic and enforce
-        histogram-based gradient boosting model treatment. The default heuristic should
-        catch most common HBGTs; this parameter can be used otherwise.
 
     Returns
     -------
@@ -273,24 +261,24 @@ def tabular_pipeline(
         "TabICLClassifier",
         "TabICLRegressor",
     )
-    _is_hgbt_estimator = any(
+    is_hgbt_estimator = any(
         x.lower() in estimator.__class__.__name__.lower()
         for x in _HGBT_CLASS_NAME_SUBSTRINGS
-    ) or (is_hgbt_estimator is True)
-    _is_tree_ensemble_estimator = any(
+    )
+    is_tree_ensemble_estimator = any(
         x.lower() in estimator.__class__.__name__.lower()
         for x in _TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS
-    ) or (is_tree_ensemble_estimator is True)
+    )
 
     if (
-        _is_hgbt_estimator
+        is_hgbt_estimator
         and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
             high_cardinality=StringEncoder(),
         )
-    elif _is_tree_ensemble_estimator:
+    elif is_tree_ensemble_estimator:
         vectorizer.set_params(
             low_cardinality=OrdinalEncoder(
                 handle_unknown="use_encoded_value",
@@ -311,7 +299,7 @@ def tabular_pipeline(
     if not is_estimator_from_tabicl:
         if not get_tags(estimator).input_tags.allow_nan:
             steps.append(SimpleImputer(add_indicator=True))
-        if not _is_tree_ensemble_estimator:
+        if not is_tree_ensemble_estimator:
             steps.append(SquashingScaler(max_absolute_value=5))
 
     steps.append(estimator)
