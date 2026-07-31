@@ -74,7 +74,7 @@ def patch_display(
     plot_distributions=False,
     compute_associations=False,
 ):
-    """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
+    """Replace the default DataFrame HTML displays with :class:``skrub.TableReport``.
 
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
