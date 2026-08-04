@@ -98,13 +98,14 @@ def patch_display(
         - ``True``: always generate plots, regardless of column count.
         - ``False``: never generate plots.
         - ``"auto"``: generate plots only when the number of columns
-          does not exceed the configured ``plots_threshold`` (see :func:`set_config`).
+          does not exceed the configured ``table_report_plots_threshold``
+          (see :func:`set_config`).
     compute_associations : bool or "auto", default=False
         Whether to compute associations in :class:`~skrub.TableReport`.
         - ``True``: always compute associations, regardless of column count.
         - ``False``: never compute associations.
         - ``"auto"``: compute associations only when the number of
-          columns does not exceed the configured ``associations_threshold``
+          columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
 
     See Also
