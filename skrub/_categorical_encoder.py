@@ -60,7 +60,12 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
     1    0.0    0.0                     1.0  ...
     """
 
-    def __init__(self, max_categories=10, one_hot_encoder=None, target_encoder=None):
+    def __init__(
+        self,
+        max_categories=10,
+        one_hot_encoder=None,
+        target_encoder=None,
+    ):
         self.max_categories = max_categories
         self.one_hot_encoder = one_hot_encoder
         self.target_encoder = target_encoder
@@ -101,10 +106,11 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
             self.target_encoder_ = clone(self.target_encoder)
 
         col_name = sbd.name(column) or "categorical_enc"
-        X_frame = sbd.to_frame(column)
-        X_pandas = sbd.to_pandas(X_frame)
+        X_pandas = sbd.to_pandas(column).to_frame()
 
-        if sbd.is_dataframe(y) or sbd.is_column(y):
+        if sbd.is_dataframe(y):
+            y_pandas = sbd.to_pandas(sbd.col_by_idx(y, 0))
+        elif sbd.is_column(y):
             y_pandas = sbd.to_pandas(y)
         else:
             y_pandas = y
@@ -149,8 +155,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
             self, ["one_hot_encoder_", "target_encoder_", "all_outputs_"]
         )
 
-        X_frame = sbd.to_frame(column)
-        X_pandas = sbd.to_pandas(X_frame)
+        X_pandas = sbd.to_pandas(column).to_frame()
 
         ohe_res = self.one_hot_encoder_.transform(X_pandas)
         te_res = self.target_encoder_.transform(X_pandas)
