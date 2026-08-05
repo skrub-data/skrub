@@ -17,6 +17,7 @@ from pathlib import Path as _Path
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_to_cols import ApplyToCols
+from ._categorical_encoder import CategoricalEncoder
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._data_ops import (
@@ -37,7 +38,6 @@ from ._data_ops import (
     var,
     y,
 )
-from ._categorical_encoder import CategoricalEncoder
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import deduplicate
 from ._drop_similar import DropSimilar

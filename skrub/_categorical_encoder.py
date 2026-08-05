@@ -87,9 +87,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
             DataFrame containing one-hot and target-encoded features.
         """
         if y is None:
-            raise ValueError(
-                "Target y must be provided to fit CategoricalEncoder."
-            )
+            raise ValueError("Target y must be provided to fit CategoricalEncoder.")
 
         if self.one_hot_encoder is None:
             self.one_hot_encoder_ = OneHotEncoder(
@@ -123,9 +121,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         if te_res.ndim == 1:
             te_res = te_res.reshape(-1, 1)
 
-        ohe_names = list(
-            self.one_hot_encoder_.get_feature_names_out([col_name])
-        )
+        ohe_names = list(self.one_hot_encoder_.get_feature_names_out([col_name]))
         te_names = list(self.target_encoder_.get_feature_names_out([col_name]))
 
         ohe_df = sbd.make_dataframe_like(column, dict(zip(ohe_names, ohe_res.T)))
@@ -151,9 +147,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         res_df : Pandas or Polars DataFrame
             Transformed features.
         """
-        check_is_fitted(
-            self, ["one_hot_encoder_", "target_encoder_", "all_outputs_"]
-        )
+        check_is_fitted(self, ["one_hot_encoder_", "target_encoder_", "all_outputs_"])
 
         X_pandas = sbd.to_pandas(column).to_frame()
 
