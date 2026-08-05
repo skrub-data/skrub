@@ -37,6 +37,7 @@ from ._data_ops import (
     var,
     y,
 )
+from ._categorical_encoder import CategoricalEncoder
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import deduplicate
 from ._drop_similar import DropSimilar
@@ -78,6 +79,7 @@ __all__ = [
     "TableReport",
     "tabular_pipeline",
     "ApplyToCols",
+    "CategoricalEncoder",
     "DatetimeEncoder",
     "DurationToFloat",
     "ToDatetime",
