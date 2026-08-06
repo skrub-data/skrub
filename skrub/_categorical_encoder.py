@@ -119,6 +119,12 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         if y_vec.ndim > 1:
             y_vec = y_vec.ravel()
 
+        if y_vec.dtype == object:
+            try:
+                y_vec = y_vec.astype(float)
+            except (ValueError, TypeError):
+                pass
+
         ohe_res = self.one_hot_encoder_.fit_transform(X_pandas)
         te_res = self.target_encoder_.fit_transform(X_pandas, y_vec)
 
