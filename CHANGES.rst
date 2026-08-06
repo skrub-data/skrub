@@ -15,7 +15,7 @@ New Features
 - Added :class:`CategoricalEncoder`, a single column transformer that combines
   :class:`~sklearn.preprocessing.OneHotEncoder` and
   :class:`~sklearn.preprocessing.TargetEncoder`.
-  :issue:`2065` by :user:`Tomasz <faithlesstomas@gmail.com>`.
+  :pr:`2244` by :user:`Tomasz Kazimierczak <faithlesstomas>`.
 
 Changes
 -------

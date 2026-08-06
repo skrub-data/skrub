@@ -107,14 +107,20 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         X_pandas = sbd.to_pandas(column).to_frame()
 
         if sbd.is_dataframe(y):
-            y_pandas = sbd.to_pandas(sbd.col_by_idx(y, 0))
-        elif sbd.is_column(y):
-            y_pandas = sbd.to_pandas(y)
+            y_col = sbd.col_by_idx(y, 0)
         else:
-            y_pandas = y
+            y_col = y
+
+        if sbd.is_column(y_col):
+            y_vec = sbd.to_numpy(y_col)
+        else:
+            y_vec = np.asarray(y_col)
+
+        if y_vec.ndim > 1:
+            y_vec = y_vec.ravel()
 
         ohe_res = self.one_hot_encoder_.fit_transform(X_pandas)
-        te_res = self.target_encoder_.fit_transform(X_pandas, y_pandas)
+        te_res = self.target_encoder_.fit_transform(X_pandas, y_vec)
 
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
