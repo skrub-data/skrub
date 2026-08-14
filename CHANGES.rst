@@ -25,6 +25,12 @@ Changes
 
 Bugfixes
 --------
+- Left joins performed on polars dataframes (for example by the
+  :class:`Joiner` and :class:`AggJoiner`) now request that polars preserve the
+  row order of the left table, so the output keeps the order of the main table.
+  When the installed polars is older than 1.17.0 (which lacks the
+  ``maintain_order`` join parameter) a warning is emitted instead. :pr:`1871` by
+  :user:`Saba Siddique <sabasiddique1>`.
 
 
 Deprecations

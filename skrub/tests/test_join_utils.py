@@ -1,4 +1,5 @@
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -197,3 +198,69 @@ def test_error_do_left_join():
         _join_utils._do_left_join(
             np.array([1]), right=None, left_on=None, right_on=None
         )
+
+
+def test_left_join_preserves_row_order(df_module):
+    # Non-monotonic left keys with duplicates: the join must return rows in the
+    # exact order of the left table (both pandas and polars).
+    left = df_module.make_dataframe(
+        {"left_key": [3, 1, 2, 1, 3], "left_col": [30, 10, 20, 11, 31]}
+    )
+    right = df_module.make_dataframe(
+        {"right_key": [1, 2, 3], "right_col": ["a", "b", "c"]}
+    )
+    joined = _join_utils.left_join(
+        left, right=right, left_on="left_key", right_on="right_key"
+    )
+    assert sbd.to_list(sbd.col(joined, "left_col")) == [30, 10, 20, 11, 31]
+    expected = df_module.make_dataframe(
+        {
+            "left_key": [3, 1, 2, 1, 3],
+            "left_col": [30, 10, 20, 11, 31],
+            "right_col": ["c", "a", "b", "a", "c"],
+        }
+    )
+    df_module.assert_frame_equal(joined, expected)
+
+
+def test_left_join_polars_maintain_order_supported(pl_module, monkeypatch):
+    # When polars exposes `maintain_order`, skrub passes "left" and does not warn.
+    # Skip when the installed polars is too old to accept the argument (e.g. the
+    # min-deps CI job pins polars 1.5.0), to avoid a spurious TypeError.
+    if not _join_utils._polars_join_maintains_order():
+        pytest.skip("Installed polars does not support `maintain_order`.")
+    monkeypatch.setattr(_join_utils, "_polars_join_maintains_order", lambda: True)
+
+    left = pl_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
+    right = pl_module.make_dataframe({"right_key": [2, 1], "right_col": ["b", "a"]})
+
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        joined = _join_utils.left_join(
+            left, right=right, left_on="left_key", right_on="right_key"
+        )
+    assert not any("maintain_order" in str(w.message) for w in record)
+
+    expected = pl_module.make_dataframe(
+        {"left_key": [1, 2, 2], "left_col": [10, 20, 30], "right_col": ["a", "b", "b"]}
+    )
+    pl_module.assert_frame_equal(joined, expected)
+
+
+def test_left_join_polars_maintain_order_unsupported_warns(pl_module, monkeypatch):
+    # When polars lacks `maintain_order`, skrub warns and falls back to a plain
+    # (coalesce-only) join, which is supported on every version >= 1.5.0.
+    monkeypatch.setattr(_join_utils, "_polars_join_maintains_order", lambda: False)
+
+    left = pl_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
+    right = pl_module.make_dataframe({"right_key": [2, 1], "right_col": ["b", "a"]})
+
+    with pytest.warns(UserWarning, match="maintain_order"):
+        joined = _join_utils.left_join(
+            left, right=right, left_on="left_key", right_on="right_key"
+        )
+
+    expected = pl_module.make_dataframe(
+        {"left_key": [1, 2, 2], "left_col": [10, 20, 30], "right_col": ["a", "b", "b"]}
+    )
+    pl_module.assert_frame_equal(joined, expected)

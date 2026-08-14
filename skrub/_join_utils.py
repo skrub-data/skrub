@@ -1,7 +1,9 @@
 """Utilities specific to the JOIN operations."""
 
+import functools
 import inspect
 import re
+import warnings
 
 from skrub import _dataframe as sbd
 from skrub import _utils
@@ -278,18 +280,33 @@ def _do_left_join_pandas(left, right, left_on, right_on):
     )
 
 
+@functools.lru_cache(maxsize=1)
+def _polars_join_maintains_order():
+    """Whether ``polars.DataFrame.join`` supports the ``maintain_order`` argument.
+
+    ``maintain_order`` was added to ``polars.DataFrame.join`` in polars 1.17.0
+    (pola-rs/polars#20026). skrub's minimum supported polars version is 1.5.0,
+    where it is not available, so it must be feature-detected. ``coalesce`` on
+    the other hand predates 1.5.0 and can be passed unconditionally.
+    """
+    import polars as pl
+
+    return "maintain_order" in inspect.signature(pl.DataFrame.join).parameters
+
+
 @_do_left_join.specialize("polars", argument_type="DataFrame")
 def _do_left_join_polars(left, right, left_on, right_on):
-    if "coalesce" in inspect.signature(left.join).parameters:
-        kw = {"coalesce": True}
+    kw = {"coalesce": True}
+    if _polars_join_maintains_order():
+        kw["maintain_order"] = "left"
     else:
-        kw = {}
-        join_params = inspect.signature(left.join).parameters
-        kw = {}
-        if "coalesce" in join_params:
-            kw["coalesce"] = True
-        if "maintain_order" in join_params:
-            kw["maintain_order"] = "left"
+        warnings.warn(
+            "This version of polars does not support the `maintain_order`"
+            " parameter of `DataFrame.join` (added in polars 1.17.0), so the row"
+            " order of the left table may not be preserved by this join. Upgrade"
+            " to polars >= 1.17.0 to ensure the left table's row order is kept.",
+            stacklevel=2,
+        )
     return left.join(
         right, left_on=left_on, right_on=right_on, how="left", suffix="", **kw
     )
