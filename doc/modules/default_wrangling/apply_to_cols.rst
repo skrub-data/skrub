@@ -25,18 +25,18 @@ to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
 be done with the :class:`~sklearn.compose.ColumnTransformer`.
 
-Skrub provides the |ApplyToCols| transformer to achieve the same results with
-a larger degree of control over which columns are being transformed.
+Skrub provides the |ApplyToCols| transformer and the
+:ref:`selectors<user_guide_selectors>` to achieve the same results with a larger
+degree of control over which columns are being transformed.
 |ApplyToCols| maps a transformer to columns in a dataframe, so that all
-columns that satisfy a certain condition are transformed, while the others are
-left untouched.
+columns that satisfy the condition given by the user are transformed, while the
+others are left untouched.
 
 .. tip::
 
     If a skrub transformer has a ``cols`` parameter to specify a column list,
     that can be a selector as well. Selectors give more control over which columns
-    are being transformed: they are discussed at length in the
-    :ref:`selectors user guide<user_guide_selectors>`.
+    are being transformed.
 
 
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
@@ -131,10 +131,11 @@ to be errors:
     birthday    city
 0  29/01/2024  London
 >>> to_datetime = ApplyToCols(ToDatetime())
->>> to_datetime.fit_transform(df)
+>>> to_datetime.fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
 
 However, setting ``allow_reject=True`` gives the transformer itself some
 control over which columns it should be applied to. For example, we can try to

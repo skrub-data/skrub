@@ -3,17 +3,19 @@ ApplyToCols selects the correct transformer between ApplyToEachCol and ApplyToSu
 based on the type of the transformer passed to it.
 """
 
-from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
+from sklearn.base import TransformerMixin, check_is_fitted
 
 from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
+from ._base import SkrubBaseEstimator
+from ._sklearn_compat import _VisualBlock
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToCols(TransformerMixin, BaseEstimator):
+class ApplyToCols(TransformerMixin, SkrubBaseEstimator):
     """
     Apply a transformer to selected columns in a dataframe.
 
@@ -33,11 +35,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         The transformer to apply to the selected columns.
 
     cols : str, sequence of str, or skrub selector, optional
-        The columns to attempt to transform. Only the selected columns will have
-        the transformer applied. Columns outside this selection are passed
-        through unchanged (``fit_transform`` is not called on them) and remain
-        unmodified in the output. The default is to attempt transforming all
-        columns.
+        The columns to attempt to transform. The transformer is applied to the
+        columns matched by ``cols`` and not matched by ``exclude_cols``.
+        Columns outside this selection are passed through unchanged
+        (``fit_transform`` is not called on them) and remain unmodified in the
+        output. The default is to attempt transforming all columns.
+
+    exclude_cols : str, sequence of str, or skrub selector, optional
+        Columns to exclude from transformation. The transformed columns are the
+        ones matched by ``cols`` and not matched by ``exclude_cols``.
 
     allow_reject : bool, default=False
         Whether to allow refusing to transform columns for which the provided
@@ -104,8 +110,9 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Notes
     -----
-    All columns not listed in ``cols`` remain unmodified in the output.
-    Moreover, if ``allow_reject`` is ``True`` and the transformers'
+    All columns not selected by ``cols`` or matched by ``exclude_cols`` remain
+    unmodified in the output. Moreover, if ``allow_reject`` is ``True`` and
+    the transformers'
     ``fit_transform`` raises a :class:`~core.RejectColumn` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, :class:`~core.RejectColumn` exceptions are propagated, like other errors
@@ -175,6 +182,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     0  Paris 2024-05-13 12:05:36 -1.0 -1.0 -1.0
     1   Rome 2024-05-15 13:46:02  1.0  1.0  1.0
 
+    We can also exclude columns from a broader selection. For example, if we want
+    to scale numeric columns, but exclude an integer ID, we can do:
+
+    >>> df_id = pd.DataFrame(dict(id=[1000, 2000], A=[-10., 10.], B=[-10., 0.], C=[19, 20]))
+    >>> exc_scaler = ApplyToCols(StandardScaler(), exclude_cols="id")
+    >>> exc_scaler.fit_transform(df_id)
+        id    A    B    C
+    0  1000 -1.0 -1.0 -1.0
+    1  2000  1.0  1.0  1.0
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
     columns it cannot handle. For example, the :class:`DatetimeEncoder` cannot handle
@@ -194,12 +210,32 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     an error since the transformer cannot handle the columns "A", "B", and "C":
 
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=False)
-    >>> datetime.fit_transform(df)
+    >>> datetime.fit_transform(df) #  doctest: +SKIP
     Traceback (most recent call last):
         ...
-    ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'...
+    skrub.core.RejectColumn: Column 'A' does not have Date or Datetime dtype.
+    Transformer DatetimeEncoder.fit_transform failed on column 'A'. See above for the full traceback.
 
-    ** Accessing fitted transformers **
+    It is often useful to wrap a :class:`TableVectorizer` or :class:`Cleaner` in
+    ``ApplyToCols`` to select or exclude columns based on patterns. For example,
+    to apply a :class:`TableVectorizer` to all columns except those ending with "_id",
+    we can do:
+
+    >>> import skrub.selectors as s
+    >>> from skrub import ApplyToCols, TableVectorizer
+
+    >>> df = pd.DataFrame(dict(
+    ...     user_id=["A001", "A002"],
+    ...     age=[25, 30],
+    ...     department=["Engineering", "Sales"],
+    ... ))
+    >>> tv = ApplyToCols(TableVectorizer(), exclude_cols=s.glob("*_id"))
+    >>> tv.fit_transform(df)
+        user_id   age   department_Sales
+    0    A001  25.0               0.0
+    1    A002  30.0               1.0
+
+    **Accessing fitted transformers**
 
     Depending on the transformer, the fitted transformers
     are stored in different attributes. For single-column transformers, the fitted
@@ -274,13 +310,14 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
           A      B  A_scaled  B_scaled
     0 -10.0    0.0      -1.0      -1.0
     1  10.0  100.0       1.0       1.0
-    """
+    """  # noqa: E501
 
     def __init__(
         self,
         transformer,
         cols=_SELECT_ALL_COLUMNS,
         *,
+        exclude_cols=None,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -288,6 +325,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     ):
         self.transformer = transformer
         self.cols = cols
+        self.exclude_cols = exclude_cols
         self.n_jobs = n_jobs
         self.allow_reject = allow_reject
         self.keep_original = keep_original
@@ -350,7 +388,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
-            self.cols,
+            cols=self.cols,
+            exclude_cols=self.exclude_cols,
             allow_reject=self.allow_reject,
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
@@ -412,6 +451,20 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
+
+    def _sk_visual_block_(self):
+        # This is needed because cases like ApplyToCols(TableVectorizer())
+        # would show the TableVectorizer as a parallel block, which would not
+        # add the documentation link. With this override the problem is fixed.
+        # The same problem happens for ApplyToCols(ApplyToCols(...)) (not that
+        # someone should do that, but it is possible)
+
+        return _VisualBlock(
+            "serial",
+            [self.transformer],
+            names=[self.transformer.__class__.__name__],
+            name_details=[str(self.transformer)],
+        )
 
     def __getattr__(self, name):
         if name == "transformers_" and isinstance(

@@ -309,7 +309,7 @@ def test_describe_steps():
     ( Var 'a' )*
     ( Var 'a' )*
     BinOp: add
-    Concat: 2 dataframes
+    Concat: 2 tables
     Value BoolChoice
     BinOp: add
     Var 'X'

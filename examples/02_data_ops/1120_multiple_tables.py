@@ -44,6 +44,10 @@ import pandas as pd
 import skrub
 import skrub.datasets
 
+# Small display detail: open the graphs by default in the visualizations shown
+# in the rest of this notebook.
+skrub.set_config(data_ops_open_graph_dropdown=True)
+
 dataset = skrub.datasets.fetch_credit_fraud(split="train")
 
 # %%

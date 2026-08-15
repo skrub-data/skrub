@@ -1,7 +1,10 @@
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
+import itertools
+import numbers
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import sklearn
 from sklearn import model_selection
@@ -12,21 +15,20 @@ from sklearn.model_selection import check_cv
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
-from .. import _dataframe as sbd
 from .. import _join_utils
-from .._sklearn_compat import _safe_indexing
+from .._base import SkrubBaseEstimator
+from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
+from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
     evaluate,
     find_first_apply,
-    find_node,
-    find_node_by_name,
-    find_X,
-    find_y,
+    find_scoring_node,
+    find_X_y_and_cv,
     get_params,
     param_grid,
     set_params,
@@ -98,6 +100,18 @@ def _get_default_sklearn_tags():
 _DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
 
 
+class _SklearnParamsReprHtml:
+    """
+    Helper for adding the dataop graph to the sklearn estimator diagram.
+    """
+
+    def __init__(self, html):
+        self.html = html
+
+    def _repr_html_inner(self):
+        return self.html
+
+
 class _DataOpWrapperMixin(_CloudPickle):
     """
     Mixin for learners and estimators that wrap a DataOp.
@@ -147,21 +161,31 @@ class _DataOpWrapperMixin(_CloudPickle):
         except AttributeError:
             attribute_error(self, "classes_")
 
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph instead of just the default which
+        # would be 'data_op: repr(self.data_op)'
 
-def _find_scoring_node(data_op):
-    return find_node(
-        data_op,
-        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
-    )
+        data_op_html = self.data_op._repr_html_()
+        sklearn_params = super()._get_params_html()
+        sklearn_params.pop("data_op")
+        if sklearn_params:
+            sklearn_html = sklearn_params._repr_html_inner()
+            html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        else:
+            html = f"<div>{data_op_html}</div>"
+        return _SklearnParamsReprHtml(html)
 
 
 @set_module("skrub")
-class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
+class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
-    DataOp.
+    DataOp, or by accessing the ``best_learner_`` attribute of a :class:`ParamSearch`
+    after fitting it.
     """
 
     def __init__(self, data_op):
@@ -245,6 +269,11 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> predict_results['result']  # doctest: +SKIP
         array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
+        if mode == "score" and find_scoring_node(self.data_op) is not None:
+            raise NotImplementedError(
+                "Creating the report for 'score' mode when .skb.with_scoring() "
+                "has been used is not implemented yet."
+            )
         from ._inspection import full_report
 
         if mode not in _FITTING_METHODS:
@@ -259,14 +288,17 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         self._set_is_fitted(mode)
         return result
 
-    def _score(self, environment):
-        score_node = _find_scoring_node(self.data_op)
+    def _score(self, environment, return_predictions=False):
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
-            return self._eval_in_mode("score", environment)
+            result = self._eval_in_mode("score", environment)
+            return (result, {}) if return_predictions else result
         estimator = self.__skrub_to_Xy_pipeline__(environment)
         cv_data = _compute_X_y_and_cv(self.data_op, environment)
         X, y = cv_data["X"], cv_data.get("y")
-        return estimator._score(X, y, cast_to_float=False)
+        return estimator._score(
+            X, y, cast_to_float=False, return_predictions=return_predictions
+        )
 
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
@@ -281,12 +313,218 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
+    def get_named_params(self):
+        """
+        Get the outcomes that have been set for named choices in the DataOp.
+
+        The returned dictionary can be used with :meth:`SkrubLearner.set_named_params`.
+        Only choices that have been given an explicit name are included in the result.
+
+        Returns
+        -------
+        dict
+            The choices set on this SkrubLearner. The key is the choice name.
+            For discrete choices (created with :func:`skrub.choose_from`,
+            :func:`skrub.choose_bool`, ...) the value is the index of the
+            selected outcome in the outcome list (not its value).
+
+        See Also
+        --------
+        SkrubLearner.set_named_params
+            Set the choices returned by ``get_named_params`` on a learner.
+
+        SkrubLearner.describe_params
+            Get a dictionary describing all choices. It cannot be used to set
+            parameters but is more helpful for manual inspection.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        See the documentation for :meth:`SkrubLearner.set_named_params` for
+        examples.
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        return {
+            name: v
+            for k, v in get_params(self.data_op).items()
+            if (name := data_op_choices[k].name) is not None
+        }
+
     def get_params(self, deep=True):
         params = super().get_params(deep=deep)
         if not deep:
             return params
         params.update({f"data_op__{k}": v for k, v in get_params(self.data_op).items()})
         return params
+
+    def set_named_params(self, **params):
+        """
+        Set the tunable parameters (choices), indexed by choice name.
+
+        Typically, the passed dictionary is created by
+        :meth:`SkrubLearner.get_named_params`.
+
+        The choice outcomes are set in-place, i.e. the input SkrubLearner is
+        modified.
+
+        Parameters
+        ----------
+        params : dict
+           The key is the name of a skrub choice.
+
+           - For numeric choices (:func:`choose_int` and :func:`choose_bool`),
+             the value is the choice outcome i.e. the number that will be used
+             e.g. 0.05.
+           - For enumerated choices (:func:`choose_from`, :func:`choose_bool`,
+             :func:`optional`), the value is an int: the **index (position)**
+             of the outcome to select from the outcome list (or dict). The list
+             can be checked with ``choice.outcomes``.
+
+        See Also
+        --------
+        SkrubLearner.get_named_params
+            Get the dictionary of choices, which can be used to set them on
+            another learner.
+
+        Notes
+        -----
+        This is similar to the standard scikit-learn
+        `interface <https://scikit-learn.org/stable/developers/develop.html#get-params-and-set-params>`_
+        implemented by :meth:`SkrubLearner.get_params` and
+        :meth:`SkrubLearner.set_params`, but a more robust way to transfer
+        hyperparameters to another DataOp with a different topology, as relies
+        on choice names rather than indices.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.decomposition import PCA
+        >>> from sklearn.preprocessing import StandardScaler, MinMaxScaler
+        >>> from sklearn.linear_model import Ridge
+        >>> from sklearn.datasets import make_regression
+
+        >>> X, y = make_regression(random_state=0)
+        >>> scaler = skrub.choose_from(
+        ...     [MinMaxScaler(), StandardScaler(), skrub.SquashingScaler()],
+        ...     name="scaler",
+        ... )
+        >>> transform = (
+        ...     skrub.X(X)
+        ...     .skb.apply(scaler)
+        ...     .skb.apply(
+        ...         PCA(n_components=skrub.choose_int(10, 30, name="n_components"))
+        ...     )
+        ... )
+        >>> pred = transform.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.1, 10.0, log=True)), y=skrub.y(y)
+        ... )
+        >>> best_learner = pred.skb.make_randomized_search(
+        ...     fitted=True, random_state=0
+        ... ).best_learner_
+
+        We can inspect the best hyperparameters found by the search:
+
+        >>> best_learner.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11, 'choose_float(0.1, 10.0, log=True)': 0.351...}
+
+        Now suppose we want to transfer them to a learner for a different DataOp, for
+        example one that only does the transformation:
+
+        >>> transformer = transform.skb.make_learner()
+
+        This transformer has no values set, it uses the default parameters:
+
+        >>> transformer.describe_params()
+        {'scaler': 'MinMaxScaler()', 'n_components': 20}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 20)
+
+        We can get the params out of our best learner:
+
+        >>> best_learner.get_named_params()
+        {'scaler': 2, 'n_components': np.int64(11)}
+
+        Note that the ridge's ``alpha`` does not appear, as it has no name.
+
+        Also note that the value for the scaler is the outcome's **index**,
+        rather than its value. Here the SquashingScaler is the third item in the
+        outcome list:
+
+        >>> scaler.outcomes
+        [MinMaxScaler(), StandardScaler(), SquashingScaler()]
+
+        So we get ``'scaler': 2`` in the named params.
+
+        >>> transformer.set_named_params(**best_learner.get_named_params())
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 11}
+
+        (note that our ``transformer`` has been modified in-place.)
+
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 11)
+
+        We can also set parameters manually:
+
+        >>> transformer.set_named_params(n_components=7)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'SquashingScaler()', 'n_components': 7}
+        >>> transformer.fit_transform({"X": X}).shape
+        (100, 7)
+
+        Here also, note that for enumerated choices we must use the index:
+
+        >>> transformer.set_named_params(scaler=1)
+        SkrubLearner(data_op=<Apply PCA>)
+        >>> transformer.describe_params()
+        {'scaler': 'StandardScaler()', 'n_components': 7}
+
+        trying to set a value directly results in an error:
+
+        >>> best_learner.set_named_params(scaler=StandardScaler())
+        Traceback (most recent call last):
+            ...
+        TypeError: For enumerated choices, the value must be a positional index (int). Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
+        """  # noqa: E501
+        data_op_choices = _evaluation.choices(self.data_op)
+        name_to_id = {
+            c.name: c_id for c_id, c in data_op_choices.items() if c.name is not None
+        }
+
+        # Check that values are indices in the list of outcomes
+        for name, value in params.items():
+            c = data_op_choices[name_to_id[name]]
+            if hasattr(c, "outcomes"):
+                # This is an enumerated choice (NumericChoices don't have `.outcomes`)
+                # In this case the value must be an index into the list of outcomes.
+                if not isinstance(value, numbers.Integral) or isinstance(
+                    value, (bool, np.bool_)
+                ):
+                    raise TypeError(
+                        "For enumerated choices, the value must be a positional "
+                        f"index (int) in the list of outcomes. Got value {value!r} of "
+                        f"type {value.__class__.__name__} for choice {c!r}."
+                    )
+                if not 0 <= value < len(c.outcomes):
+                    raise IndexError(
+                        "For enumerated choices, the value must be a positional "
+                        "index (int) in the list of outcomes. "
+                        f"Got index {value} out of range for choice {c!r} "
+                        f"with {len(c.outcomes)} outcomes: {c.outcomes}."
+                    )
+
+        set_params(self.data_op, {name_to_id[k]: v for k, v in params.items()})
+        return self
 
     def set_params(self, **params):
         if "data_op" in params:
@@ -318,35 +556,52 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
             new_grid.append(subgrid)
         return new_grid
 
-    def find_fitted_estimator(self, name):
+    def find_fitted_estimator(self, what):
         """
         Find the scikit-learn estimator that has been fitted in a ``.skb.apply()`` step.
 
         This can be useful for example to inspect the fitted attributes of the
-        estimator. The ``apply`` step must have been given a name with
-        ``.skb.set_name()`` (see examples below).
+        estimator.
 
         Parameters
         ----------
-        name : str
-            The name of the ``.skb.apply()`` step in which an estimator has
-            been fitted.
+        what : str, int or callable
+
+            Indicates which (Apply) node to look for and extract the estimator
+            from.
+
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the step we want to find.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is used.
 
         Returns
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub._apply_to_each_col.ApplyToEachCol``
+            may be wrapped in a :class:`ApplyToCols`
             or ``skrub._apply_to_sub_frame.ApplyToSubFrame``,
             see examples below.
 
         See also
         --------
+        DataOp.skb.find
+            Search for a node directly from a DataOp.
+
         skrub.DataOp.skb.set_name :
             Give a name to this DataOp.
 
         skrub.DataOp.skb.apply :
             Apply a scikit-learn estimator to a dataframe or numpy array.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
 
         Examples
         --------
@@ -378,14 +633,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         DummyClassifier()
 
         Depending on the parameters passed to :meth:`DataOp.skb.apply`, the
-        estimator we provide can be wrapped in a skrub transformer that applies
-        it to several columns in the input, or to a subset of the columns in a
-        dataframe. In other cases it may be applied without any wrapping. We
-        provide examples for those 3 different cases below.
+        estimator we provide may or may not be wrapped in a
+        :class:`ApplyToCols` transformer.
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToEachCol` which independently fits a separate instance of the
+        :class:`ApplyToCols` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -397,13 +650,13 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToEachCol`) happens when the estimator is a skrub
+        This case happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
-        attribute), we pass ``.skb.apply(how='cols')`` or we pass
-        ``.skb.apply(allow_reject=True)``.
+        attribute), the input is a DataFrame and we pass ``no_wrap=False`` (the
+        default).
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a :class:`ApplyToSubFrame` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToCols` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
@@ -415,9 +668,9 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in :class:`ApplyToSubFrame`) happens when the estimator is a
-        scikit-learn transformer but not a single-column transformer, or we
-        pass ``.skb.apply(how='frame')``.
+        This case happens when the estimator is a scikit-learn transformer but
+        not a single-column transformer, the input is a DataFrame and we pass
+        ``no_wrap=False`` (the default).
 
         The ``DummyRegressor`` is a scikit-learn predictor. In the learner it gets
         applied directly to the input dataframe without any wrapping.
@@ -430,25 +683,25 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
 
         This case (no wrapping) happens when the estimator is a scikit-learn predictor
         (not a transformer), the input is not a dataframe (e.g. it is a numpy array), or
-        we pass ``.skb.apply(how='no_wrap')``.
+        we pass ``.skb.apply(no_wrap=True)``.
         """  # noqa: E501
-        node = find_node_by_name(self.data_op, name)
+        node = self.data_op.skb.find(what)
         if node is None:
-            raise KeyError(name)
+            raise ValueError(f"No node matching {what!r} could be found.")
         impl = node._skrub_impl
         if not isinstance(impl, Apply):
             raise TypeError(
-                f"Node {name!r} does not represent "
-                f"the application of an estimator: {node!r}"
+                f"Node {node!r} does not represent "
+                f"the application of an estimator (not created with .skb.apply())."
             )
         if not hasattr(impl, "estimator_"):
             raise NotFittedError(
-                f"Node {name!r} has not been fitted. Call fit() on the learner "
+                f"Node {node!r} has not been fitted. Call fit() on the learner "
                 "before attempting to retrieve fitted sub-estimators."
             )
         return node._skrub_impl.estimator_
 
-    def truncated_after(self, name):
+    def truncated_after(self, what):
         """Extract the part of the learner that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -456,18 +709,37 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         task but then extract only the part of the learner that performs
         feature extraction.
 
-        The target step must have been given a name with ``.skb.set_name()``.
-
         Parameters
         ----------
-        name : str
-            The name of the intermediate step we want to extract.
+        what : str, int or callable
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the step we want to extract.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is returned.
 
         Returns
         -------
         SkrubLearner
             A skrub learner that performs all the transformations leading up to
             (and including) the required step.
+
+        See Also
+        --------
+        DataOp.skb.find
+            Search for a node directly from a DataOp rather than a SkrubLearner.
+
+        DataOp.skb.find_X_y
+            Find the nodes that have been marked with
+            :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
 
         Examples
         --------
@@ -516,9 +788,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> learner.find_fitted_estimator("vectorizer")
         ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
-        node = find_node_by_name(self.data_op, name)
+        node = self.data_op.skb.find(what)
         if node is None:
-            raise KeyError(name)
+            raise ValueError(f"No node matching {what!r} could be found.")
+        if not isinstance(node, DataOp):
+            # If the found node is a choice, wrap it in a DataOp
+            node = as_data_op(node)
         new = self.__class__(node)
         _copy_attr(self, new, ["_is_fitted"])
         return new
@@ -643,54 +918,80 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
                     name = "score"
         return [(name, scorer_output)]
 
-    def _score(self, X, y=None, cast_to_float=True):
-        score_node = _find_scoring_node(self.data_op)
+    def _score(self, X, y=None, cast_to_float=True, return_predictions=False):
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
-            return self._eval_in_mode("score", X, y)
+            result = self._eval_in_mode("score", X, y)
+            return (result, {}) if return_predictions else result
         env = self._get_env(X, y)
         scorers = evaluate(
-            score_node._skrub_impl.scorers, mode="fit_transform", environment=env
+            score_node._skrub_impl.scorers,
+            mode="fit_transform",
+            environment=env,
+            ancestor_data_op=self.data_op,
         )
         all_scores = []
+        cache = dict(env.get("_skrub_predictions", {}))
+        caching_estimator = _CachingXyPipeline(
+            self.data_op, self.environment, X_id=id(X), cache=cache
+        )
+        _copy_attr(self, caching_estimator, ["_is_fitted"])
         for scorer_info in scorers:
             scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
-            scorer_output = scorer(self, X, y)
+            scorer_output = scorer(caching_estimator, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
-        if cast_to_float and len(result) == 1:
+        if cast_to_float and len(result) == 1 and not return_predictions:
             # If there is a single score stick to scikit-learn interface which
             # returns a number.
             return next(iter(result.values()))
-        return result
+        return (result, caching_estimator.cache) if return_predictions else result
 
 
-def _find_X_y_and_cv(data_op):
-    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
-    x_node = find_X(data_op)
-    if x_node is None:
-        raise ValueError('DataOp should have a node marked with "mark_as_X()"')
-    result = {"X": x_node}
-    if isinstance(x_node._skrub_impl, SplitX):
-        result["cv"] = x_node._skrub_impl.cv
-        result["split_kwargs"] = x_node._skrub_impl.split_kwargs
-    if (y_node := find_y(data_op)) is not None:
-        result["y"] = y_node
-    else:
-        first = find_first_apply(data_op)
-        if first is None:
-            return result
-        if getattr(first._skrub_impl, "y", None) is not None:
-            # the estimator requests a y so some node must have been
-            # marked as y
-            raise ValueError('DataOp should have a node marked with "mark_as_y()"')
-    return result
+class _CachingXyPipeline(_XyPipeline):
+    def __init__(self, data_op, environment, X_id, cache):
+        super().__init__(data_op, environment)
+        self.X_id = X_id
+        self.cache = cache
+
+    def _eval_in_mode(self, mode, X, y=None):
+        if y is not None or id(X) != self.X_id:
+            # Only use caching for methods like predict, predict_proba etc.
+            # (for which y is None), and when they are called on the "main" X,
+            # the X that was passed to SkrubLearner.score . For example if a
+            # scorer computes a metric on a subsample of the dataset (e.g. a
+            # group for fairness etc.), we do not use the cached result for
+            # that different input.
+            return super()._eval_in_mode(mode, X, y=y)
+        if mode not in self.cache:
+            self.cache[mode] = super()._eval_in_mode(mode, X, y=y)
+        return self.cache[mode]
+
+    def _score(self, X, y=None):
+        # If a scorer calls score(), eval in "score" mode (i.e. ignoring
+        # with_scoring) rather than going into infinite recursion.
+        return super()._eval_in_mode("score", X, y=y)
 
 
 def _compute_X_y_and_cv(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-    nodes = _find_X_y_and_cv(data_op.skb.clone())
-    values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
+    nodes = find_X_y_and_cv(data_op.skb.clone())
+    if "X" not in nodes:
+        raise ValueError('DataOp should have a node marked with "mark_as_X()"')
+    if "y" not in nodes:
+        first = find_first_apply(data_op)
+        if first is not None and getattr(first._skrub_impl, "y", None) is not None:
+            # the estimator requests a y so some node must have been
+            # marked as y
+            raise ValueError('DataOp should have a node marked with "mark_as_y()"')
+    values = evaluate(
+        nodes,
+        mode="fit_transform",
+        environment=environment,
+        clear=True,
+        ancestor_data_op=data_op,
+    )
     if "y" in nodes:
         msg = (
             "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
@@ -726,15 +1027,22 @@ class _Splitter:
         del groups
         return self.splitter.get_n_splits(X, y, **self.split_kwargs)
 
-    def __call__(self, X, y=None):
-        # Can be used as a callable to get a single train/test split (the first
-        # CV split)
-        train, test = next(iter(self.split(X, y)))
-        X_train, X_test = _safe_indexing(X, train), _safe_indexing(X, test)
-        if y is None:
-            return X_train, X_test
-        y_train, y_test = _safe_indexing(y, train), _safe_indexing(y, test)
-        return X_train, X_test, y_train, y_test
+    def get_single_split(self, X, y=None, split_index=-1):
+        if not isinstance(split_index, numbers.Integral):
+            raise TypeError(f"split_index should be an int, got: {split_index!r}")
+        n_splits = self.get_n_splits(X, y)
+        if not -n_splits <= split_index < n_splits:
+            raise IndexError(
+                f"split_index {split_index} out of range for splitter "
+                f"{self.splitter} with {n_splits} splits."
+            )
+        if split_index < 0:
+            split_index = n_splits + split_index
+        # Get the (train_idx, test_idx) pair at position split_index without
+        # materializing the sequence in memory. islice() iterates over all
+        # items starting from split_index and next() gets the first item from
+        # that.
+        return next(itertools.islice(self.split(X, y), split_index, None))
 
 
 def _compute_cv_data(data_op, environment, cv):
@@ -748,24 +1056,6 @@ def _compute_cv_data(data_op, environment, cv):
             _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
         )
     return data["X"], data["y"], None
-
-
-def _compute_train_test_split_data(data_op, environment, split_func, split_func_kwargs):
-    data = _compute_X_y_and_cv(data_op, environment)
-    if split_func is not None:
-        return data["X"], data["y"], split_func, split_func_kwargs
-    if "cv" in data:
-        return (
-            data["X"],
-            data["y"],
-            _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
-            {},
-        )
-    # kwargs fall through to the default split_func when no splitter is set and
-    # no split_func is passed. This allows something like
-    # data_op.skb.train_test_split(shuffle=False), without having to import &
-    # pass sklearn.model_selection.train_test_split explicitly.
-    return data["X"], data["y"], model_selection.train_test_split, split_func_kwargs
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):
@@ -787,8 +1077,8 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
-    DataOp with :func:`DataOp.skb.make_learner`, :func:`DataOp.skb.make_grid_search` or
-    :func:`DataOp.skb.make_randomized_search`.
+    DataOp with :func:`~DataOp.skb.make_learner`, :func:`~DataOp.skb.make_grid_search`
+    or :func:`~DataOp.skb.make_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
@@ -803,7 +1093,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`DataOp.skb.subsample`), use a subsample of the data. By
+        :meth:`~DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     cv : int, cross-validation iterator or iterable, default=None
@@ -829,13 +1119,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     :func:`sklearn.model_selection.cross_validate`:
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
-    :func:`skrub.DataOp.skb.make_learner`:
+    :func:`~skrub.DataOp.skb.make_learner`:
         Get a skrub learner for this DataOp.
 
-    :func:`skrub.DataOp.skb.make_grid_search`:
+    :func:`~skrub.DataOp.skb.make_grid_search`:
         Find the best parameters with grid search.
 
-    :func:`skrub.DataOp.skb.make_randomized_search`:
+    :func:`~skrub.DataOp.skb.make_randomized_search`:
         Find the best parameters with grid search.
 
     Examples
@@ -883,6 +1173,32 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     return pd.DataFrame(result)
 
 
+def _build_split_dict(environment, X, y, train_idx, test_idx):
+    X_train, X_test = _safe_indexing(X, train_idx), _safe_indexing(X, test_idx)
+    train_env = {**environment, X_NAME: X_train}
+    test_env = {**environment, X_NAME: X_test}
+    split_info = {
+        "train": train_env,
+        "test": test_env,
+        "X": X,
+        "X_train": X_train,
+        "X_test": X_test,
+        "row_indices_train": train_idx,
+        "row_indices_test": test_idx,
+    }
+    if y is not None:
+        y_train, y_test = (
+            _safe_indexing(y, train_idx),
+            _safe_indexing(y, test_idx),
+        )
+        train_env[Y_NAME] = y_train
+        test_env[Y_NAME] = y_test
+        split_info["y"] = y
+        split_info["y_train"] = y_train
+        split_info["y_test"] = y_test
+    return split_info
+
+
 def train_test_split(
     data_op,
     environment,
@@ -898,27 +1214,40 @@ def train_test_split(
     details and examples.
     """
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
-    X, y, split_func, split_func_kwargs = _compute_train_test_split_data(
-        data_op, environment, split_func, split_func_kwargs
-    )
+    data = _compute_X_y_and_cv(data_op, environment)
+    X, y = data["X"], data["y"]
+    if split_func is None and "cv" in data:
+        extra_kwargs = set(split_func_kwargs).difference({"split_index"})
+        if extra_kwargs:
+            raise ValueError(
+                "When using the splitter passed to .skb.mark_as_X(),\n"
+                "the only split_func_kwarg accepted "
+                "by .skb.train_test_split() is 'split_index'.\n"
+                f"The splitter passed to .skb.mark_as_X() was:\n{data['cv']}\n"
+                f"Got extra kwargs: {list(extra_kwargs)}."
+            )
+        splitter = _Splitter(check_cv(data["cv"]), data["split_kwargs"])
+        train_idx, test_idx = splitter.get_single_split(X, y, **split_func_kwargs)
+        return _build_split_dict(environment, X, y, train_idx, test_idx)
+
+    split_func = model_selection.train_test_split if split_func is None else split_func
     if y is None:
-        X_train, X_test = split_func(X, **split_func_kwargs)
+        split = dict(zip(("X_train", "X_test"), split_func(X, **split_func_kwargs)))
     else:
-        X_train, X_test, y_train, y_test = split_func(X, y, **split_func_kwargs)
-    train_env = {**environment, X_NAME: X_train}
-    test_env = {**environment, X_NAME: X_test}
-    result = {
-        "train": train_env,
-        "test": test_env,
-        "X_train": X_train,
-        "X_test": X_test,
-    }
+        split = dict(
+            zip(
+                ("X_train", "X_test", "y_train", "y_test"),
+                split_func(X, y, **split_func_kwargs),
+            )
+        )
+    split["train"] = {**environment, X_NAME: split["X_train"]}
+    split["test"] = {**environment, X_NAME: split["X_test"]}
+    split["X"] = X
     if y is not None:
-        train_env[Y_NAME] = y_train
-        test_env[Y_NAME] = y_test
-        result["y_train"] = y_train
-        result["y_test"] = y_test
-    return result
+        split["train"][Y_NAME] = split["y_train"]
+        split["test"][Y_NAME] = split["y_test"]
+        split["y"] = y
+    return split
 
 
 def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
@@ -932,30 +1261,10 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
     X, y, splitter = _compute_cv_data(data_op, environment, cv)
     cv = check_cv(splitter)
     for train_idx, test_idx in cv.split(X, y):
-        X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
-        train_env = {**environment, X_NAME: X_train}
-        test_env = {**environment, X_NAME: X_test}
-        split_info = {
-            "train": train_env,
-            "test": test_env,
-            "X_train": X_train,
-            "X_test": X_test,
-            "row_indices_train": train_idx,
-            "row_indices_test": test_idx,
-        }
-        if y is not None:
-            y_train, y_test = (
-                sbd.select_rows(y, train_idx),
-                sbd.select_rows(y, test_idx),
-            )
-            train_env[Y_NAME] = y_train
-            test_env[Y_NAME] = y_test
-            split_info["y_train"] = y_train
-            split_info["y_test"] = y_test
-        yield split_info
+        yield _build_split_dict(environment, X, y, train_idx, test_idx)
 
 
-class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
+class _BaseParamSearch(_DataOpWrapperMixin, SkrubBaseEstimator):
     """Base class for hyperparameter search objects.
 
     It defines some default implementations for getting results, plotting, and
@@ -976,7 +1285,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
         f.__name__ = name
         return f
 
-    def _call_predictor_method(self, name, environment):
+    def _call_predictor_method(self, name, environment, **kwargs):
         check_is_fitted(self, "cv_results_")
         if not hasattr(self, "best_learner_"):
             raise AttributeError(
@@ -985,7 +1294,7 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
                 "Please pass another value to `refit` or fit a learner manually "
                 "using the `best_params_` or `cv_results_` attributes."
             )
-        return getattr(self.best_learner_, name)(environment)
+        return getattr(self.best_learner_, name)(environment, **kwargs)
 
     @property
     def results_(self):
@@ -1011,6 +1320,20 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
         except NotFittedError:
             attribute_error(self, "results_")
 
+    def _get_score_names(self):
+        return [
+            k.removeprefix("mean_test_")
+            for k in self.cv_results_.keys()
+            if k.startswith("mean_test_")
+        ]
+
+    def _get_choice_names(self):
+        return [
+            n
+            for c in choice_graph(self.data_op)["choices"].values()
+            if (n := c.name) is not None
+        ]
+
     def _get_cv_results_table(self, detailed=False):
         check_is_fitted(self, "cv_results_")
         data_op_choices = choice_graph(self.data_op)
@@ -1023,22 +1346,23 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
         table = pd.DataFrame(
             all_rows, columns=list(data_op_choices["choice_display_names"].values())
         )
-        metric_names = [
-            k.removeprefix("mean_test_")
-            for k in self.cv_results_.keys()
-            if k.startswith("mean_test_")
-        ]
+        columns_metadata = []
+        for c_id, display_name in data_op_choices["choice_display_names"].items():
+            c = data_op_choices["choices"][c_id]
+            columns_metadata.append({"type": "choice", "name": c.name})
+        score_names = self._get_score_names()
+
         if isinstance(self.refit_, str):
-            metric_names.insert(0, metric_names.pop(metric_names.index(self.refit_)))
+            score_names.insert(0, score_names.pop(score_names.index(self.refit_)))
         result_keys = [
-            *(f"mean_test_{n}" for n in metric_names),
-            *(f"std_test_{n}" for n in metric_names),
+            *(f"mean_test_{n}" for n in score_names),
+            *(f"std_test_{n}" for n in score_names),
             "mean_fit_time",
             "std_fit_time",
             "mean_score_time",
             "std_score_time",
-            *(f"mean_train_{n}" for n in metric_names),
-            *(f"std_train_{n}" for n in metric_names),
+            *(f"mean_train_{n}" for n in score_names),
+            *(f"std_train_{n}" for n in score_names),
         ]
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
@@ -1048,12 +1372,15 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
             renaming[c] for c in metadata["log_scale_columns"]
         ]
         if detailed:
-            for k in result_keys[len(metric_names) :][::-1]:
+            for k in result_keys[len(score_names) :][::-1]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
-        for k in result_keys[: len(metric_names)][::-1]:
+                    columns_metadata.append({"type": "score", "name": k})
+        for k in result_keys[: len(score_names)][::-1]:
             table.insert(table.shape[1], k, self.cv_results_[k])
-        metadata["col_score"] = f"mean_test_{metric_names[0]}"
+            columns_metadata.append({"type": "score", "name": k})
+        metadata["col_score"] = f"mean_test_{score_names[0]}"
+        metadata["columns_metadata"] = dict(zip(table.columns, columns_metadata))
         table = table.sort_values(
             metadata["col_score"],
             ascending=False,
@@ -1062,7 +1389,15 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
         )
         return table, metadata
 
-    def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
+    def plot_results(
+        self,
+        *,
+        colorscale=DEFAULT_COLORSCALE,
+        min_score=None,
+        show_scores=None,
+        show_choices=None,
+        show_times=None,
+    ):
         """Create a parallel coordinate plot of the cross-validation results.
 
         Plotly must be installed to use this method.
@@ -1079,29 +1414,94 @@ class _BaseParamSearch(_DataOpWrapperMixin, BaseEstimator):
             perform well, to make the plot less cluttered and to make better
             use of the colorscale's range.
 
+        show_scores : list of str, optional
+            List of score names to show
+            (e.g. "accuracy" in ``.skb.with_scoring(["roc_auc", "accuracy"])``).
+            By default all are shown.
+
+        show_choices : list of str, optional
+            List of choice names to show
+            (e.g. "alpha" in ``choose_float(0.0, 1.0, name="alpha")``).
+            Only choices that were given an explicit name (with the ``name``
+            parameter, as above) can be selected by the filter.
+            By default there is no filtering and all choices (even those
+            without names) are shown.
+
+        show_times : list of str, optional
+            List of durations to show. Available times are ["fit", "score"].
+            By default both are shown.
+
         Returns
         -------
         Plotly Figure
         """
+
+        check_is_fitted(self, "cv_results_")
+
+        # Check that requested show_scores, show_choices, and show_times
+        # (if any) are available
+
+        def _check(requested, available, name):
+            if isinstance(requested, str):
+                requested = [requested]
+            if requested is not None:
+                missing = set(requested).difference(available)
+                if missing:
+                    raise ValueError(
+                        f"The following {name} were requested in show_{name} "
+                        f"but do not exist in the results:\n{missing}.\n"
+                        f"The available {name} are:\n{available}."
+                    )
+            return requested
+
+        show_scores = _check(show_scores, self._get_score_names(), "scores")
+        show_choices = _check(show_choices, self._get_choice_names(), "choices")
+        show_times = _check(show_times, ["fit", "score"], "times")
+
+        # Prepare the figure data
+
         cv_results, metadata = self._get_cv_results_table(detailed=True)
-        cv_results = cv_results.drop(
-            [
-                "std_test_score",
-                "std_fit_time",
-                "std_score_time",
-                "mean_train_score",
-                "std_train_score",
-            ],
-            axis="columns",
-            errors="ignore",
-        )
+
+        # Find columns to show based on show_scores, show_choices and show_times
+
+        to_drop = set()
+        for col_name, col_meta in metadata["columns_metadata"].items():
+            if col_meta["type"] == "score":
+                if col_meta["name"].startswith("std_") or col_meta["name"].startswith(
+                    "mean_train_"
+                ):
+                    to_drop.add(col_name)
+                if (
+                    show_scores is not None
+                    and col_meta["name"].removeprefix("mean_test_") not in show_scores
+                ):
+                    to_drop.add(col_name)
+            if col_meta["type"] == "choice":
+                if show_choices is not None and col_meta["name"] not in show_choices:
+                    to_drop.add(col_name)
+        for meth in ["fit", "score"]:
+            if show_times is None or meth in show_times:
+                to_drop.discard(f"mean_{meth}_time")
+            else:
+                to_drop.add(f"mean_{meth}_time")
+        to_show = set(cv_results.columns) - to_drop
+
+        # Find rows to show based on min_score
 
         if min_score is not None:
             col_score = metadata["col_score"]
             cv_results = cv_results[cv_results[col_score] >= min_score]
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
-        return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+
+        # Make the figure
+
+        return plot_parallel_coord(
+            cv_results=cv_results,
+            show_columns=to_show,
+            metadata=metadata,
+            colorscale=colorscale,
+        )
 
 
 def _get_results_metadata(data_op_choices):
@@ -1132,8 +1532,8 @@ class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
-    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    objects are created by calling :meth:`~DataOp.skb.make_grid_search()` or
+    :meth:`~DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
     def __init__(self, data_op, search):
@@ -1167,6 +1567,32 @@ class ParamSearch(_BaseParamSearch):
             # refit is set to False, there is no best_estimator_
             pass
         return self
+
+    def _sk_visual_block_(self):
+        # Function called by scikit-learn to get the kind of estimator to
+        # display (nested in parallel or sequentially, or not nested). We
+        # override it to not display the inner search object and add detail to
+        # the title.
+        name = self.__class__.__name__
+        if hasattr(self.search, "param_grid"):
+            name += " (grid search)"
+        else:
+            name += " (randomized search)"
+        return _VisualBlock("single", self, names=name, name_details=repr(self))
+
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph and the search parameters (n_iter etc.)
+
+        data_op_html = self.data_op._repr_html_()
+        search_params = self.search._get_params_html()
+        search_params.pop("estimator")
+        search_params.pop("param_grid", None)
+        search_params.pop("param_distributions", None)
+        sklearn_html = search_params._repr_html_inner()
+        html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        return _SklearnParamsReprHtml(html)
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):

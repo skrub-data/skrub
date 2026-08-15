@@ -2,6 +2,7 @@ import codecs
 import functools
 import json
 import numbers
+import warnings
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -12,40 +13,40 @@ from skrub import selectors as s
 
 from .. import _config
 from .. import _dataframe as sbd
-from ._html import to_html
+from ._html import to_html, to_markdown
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
-def _check_max_cols(max_plot_columns, max_association_columns):
-    max_plot_columns = (
-        max_plot_columns
-        if max_plot_columns is not None
-        else _config.get_config()["max_plot_columns"]
-    )
-    if (max_plot_columns != "all") and not (
-        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
-    ):
+def _validate_plot_and_association(plot_distributions, compute_associations, n_columns):
+    if plot_distributions is None:
+        plot_distributions = "auto"
+    if compute_associations is None:
+        compute_associations = "auto"
+
+    if plot_distributions not in (True, False, "auto"):
         raise ValueError(
-            "'max_plot_columns' must be a positive scalar or 'all', got"
-            f" {max_plot_columns!r}."
-        )
-    max_association_columns = (
-        max_association_columns
-        if max_association_columns is not None
-        else _config.get_config()["max_association_columns"]
-    )
-    if (max_association_columns != "all") and not (
-        isinstance(max_association_columns, numbers.Real)
-        and max_association_columns >= 0
-    ):
-        raise ValueError(
-            "'max_association_columns' must be a positive scalar or 'all', got "
-            f"{max_association_columns!r}."
+            "'plot_distributions' must be True, False, or 'auto', got"
+            f" {plot_distributions!r}."
         )
 
-    return max_plot_columns, max_association_columns
+    if compute_associations not in (True, False, "auto"):
+        raise ValueError(
+            "'compute_associations' must be True, False, or 'auto', got"
+            f" {compute_associations!r}."
+        )
+
+    if plot_distributions == "auto":
+        plot_distributions = (
+            _config.get_config()["table_report_plots_threshold"] >= n_columns
+        )
+    if compute_associations == "auto":
+        compute_associations = (
+            _config.get_config()["table_report_associations_threshold"] >= n_columns
+        )
+
+    return plot_distributions, compute_associations
 
 
 def _check_col_filter(name, cols, df):
@@ -99,21 +100,31 @@ class TableReport:
 
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
-    column. Numpy arrays are converted to pandas DataFrame or Series.
+    column. Numpy arrays are converted to pandas DataFrame or Series. The computed
+    statistics can be accessed interactively in a Jupyter notebook or web browser.
+    Alternatively, it can be saved or exported in JSON, Markdown, or HTML format
+    for programmatic access or for inclusion in documents.
 
     Parameters
     ----------
     dataframe : pandas or polars Series or DataFrame
         The dataframe or series to summarize.
-    n_rows : int, default=10
+    n_rows : int, default=None
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
         (tail). Note this is only for display. Summary statistics, histograms
         etc. are computed using the whole dataframe.
-    order_by : str
-        Column name to use for sorting. Other numerical columns will be plotted
-        as function of the sorting column. Must be of numerical or datetime
-        type.
+
+        The default value ``None`` uses the global configuration (see
+        :func:`set_config`), which then defaults to 10.
+
+    order_by : str, deprecated
+        Deprecated. Column name to use for sorting. Other numerical columns
+        will be plotted as function of the sorting column. Must be of
+        numerical or datetime type.
+
+        .. deprecated:: 0.10.0
+
     title : str
         Title for the report.
     column_filters : dict
@@ -123,45 +134,42 @@ class TableReport:
         formats for the filter values are a list of column names,
         a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
-    verbose : int, default = 1
+    verbose : int, default = None
         Whether to print progress information while the report is being generated.
 
+        * verbose = ``None`` uses the global configuration (see :func:`set_config`),
+          which then defaults to 1.
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    max_plot_columns : int, default=30
-        Maximum number of columns for which plots should be generated.
-        If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If "all", all columns will be plotted.
+    plot_distributions : bool or "auto", default="auto"
+        Whether to plot the distributions of the columns.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
+        - ``True``: always generate plots, regardless of column count.
+        - ``False``: never generate plots.
+        - ``"auto"`` (default): generate plots only when the number of columns
+          does not exceed the configured ``table_report_plots_threshold``
+          (see :func:`set_config`).
 
-        >>> from skrub import set_config
-        >>> set_config(max_plot_columns=30)
+    compute_associations : bool or "auto", default="auto"
+        Whether to compute associations between columns.
 
-        You can also enable this default more permanently via an environment variable:
+        - ``True``: always compute associations, regardless of column count.
+        - ``False``: never compute associations.
+        - ``"auto"`` (default): compute associations only when the number of
+          columns does not exceed the configured ``table_report_associations_threshold``
+          (see :func:`set_config`).
 
-        .. code:: shell
+    max_plot_columns : int or "all", deprecated
+        Deprecated in favor of ``plot_distributions``. This parameter overrides
+        the value chosen for ``plot_distributions`` when it is not None.
 
-            export SKB_MAX_PLOT_COLUMNS=30
+        .. deprecated:: 0.9.0
 
-    max_association_columns : int, default=30
-        Maximum number of columns for which associations should be computed.
-        If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If "all", the associations
-        for all columns will be computed.
+    max_association_columns : int or "all", deprecated
+        Deprecated in favor of ``compute_associations``. This parameter overrides
+        the value chosen for ``compute_associations`` when it is not None.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
-
-        >>> from skrub import set_config
-        >>> set_config(max_association_columns=30)
-
-        You can also enable this default more permanently via an environment variable:
-
-        .. code:: shell
-
-            export SKB_MAX_ASSOCIATION_COLUMNS=30
+        .. deprecated:: 0.9.0
 
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
@@ -199,7 +207,7 @@ class TableReport:
     output.
 
     >>> report
-    <TableReport: use .open() to display>
+    <TableReport: use .open() or .markdown() to display>
 
     (Note that above we only see the string representation, not the report itself,
     because we are not in a notebook.)
@@ -208,7 +216,8 @@ class TableReport:
     full page in a separate browser tab with its ``open`` method:
     ``report.open()``.
 
-    You can also get the HTML report as a string.
+    You can also get the HTML report as a string with the ``html`` method or the
+    ``html_snippet`` method.
     For a full, standalone web page:
 
     >>> report.html()
@@ -219,31 +228,60 @@ class TableReport:
     >>> report.html_snippet()
     '\n<div id="report_...-wrapper" hidden>\n    <template id="report_...'
 
+    If you want a summary of the report in plain-text format, you can use the
+    ``markdown`` method to get a Markdown string that can be rendered in the
+    notebook or used in Markdown documents. The string includes the summary
+    statistics for all columns, so it can be quite long for
+    dataframes with many columns.
+
+    >>> md = report.markdown()
+    >>> print(md)
+    # DataFrame Report...
+
+    The report can also be obtained in JSON format with :meth:`json`, which can
+    be useful for programmatic access to the report data. The schema of the
+    JSON data is reported in :ref:`table_report_json_schema`.
+
+    Note that the resulting JSON includes the plots in SVG format, which can be
+    quite verbose: plots can be disabled by setting ``plot_distributions=False``
+    when generating the report:
+
+    >>> j = TableReport(df, plot_distributions=False).json()
+    >>> print(j)
+    {"dataframe_module": "pandas", "n_rows": 2, "n_columns": 3, "columns": ...
+
+
     Advanced configuration: you can add custom column filters that will appear
-    in the report's dropdown menu.
+    in the report's dropdown menu, allowing you to select a subset of columns to
+    display in the report.
 
     >>> filters = {
-    ...         "display_name": ["a", "b"],
+    ...         "my_filter": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
     With the code above, in addition to the default filters such as "All
-    columns", "Numeric columns", etc., the added "Columns with at least 2
-    unique values" will be available in the report, selecting columns "a" and
-    "b".
+    columns", "Numeric columns", etc., the added "my_filter" will be available
+    in the report, selecting both columns "a" and "b".
+    Filters may be specified as a list of column names, a list of column indices,
+    or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
+
     """
 
     def __init__(
         self,
         dataframe,
-        n_rows=10,
+        n_rows=None,
         order_by=None,
         title=None,
         column_filters=None,
         verbose=None,
+        plot_distributions="auto",
+        compute_associations="auto",
+        open_tab="table",
+        # Deprecated parameters kept for backward compatibility
         max_plot_columns=None,
         max_association_columns=None,
-        open_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -260,7 +298,10 @@ class TableReport:
                     "TableReport only supports 1D and 2D arrays"
                 )
 
+        if n_rows is None:
+            n_rows = _config.get_config()["table_report_n_rows"]
         n_rows = max(1, n_rows)
+
         if verbose is None:
             self.verbose = _config.get_config()["table_report_verbosity"]
         else:
@@ -274,6 +315,15 @@ class TableReport:
             )
         self.open_tab = open_tab
 
+        # Deprecate order_by parameter on TableReport; prefer pre-sorted dataframes
+        if order_by is not None:
+            warnings.warn(
+                "'order_by' parameter of TableReport is deprecated and will be"
+                " removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
@@ -283,13 +333,42 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = _check_column_filters(column_filters, dataframe)
-        self.max_plot_columns, self.max_association_columns = _check_max_cols(
-            max_plot_columns, max_association_columns
-        )
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
+
+        if max_plot_columns is not None:
+            warnings.warn(
+                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            plot_distributions = (
+                max_plot_columns == "all" or max_plot_columns >= self.n_columns
+            )
+
+        if max_association_columns is not None:
+            warnings.warn(
+                "'max_association_columns' is deprecated. Use 'compute_associations'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            compute_associations = (
+                max_association_columns == "all"
+                or max_association_columns >= self.n_columns
+            )
+
+        (
+            self.plot_distributions,
+            self.compute_associations,
+        ) = _validate_plot_and_association(
+            plot_distributions,
+            compute_associations,
+            self.n_columns,
+        )
 
     def _set_minimal_mode(self):
         """Put the report in minimal mode.
@@ -309,8 +388,8 @@ class TableReport:
         except AttributeError:
             pass
         self._to_html_kwargs["minimal_report_mode"] = True
-        self.max_association_columns = 0
-        self.max_plot_columns = 0
+        self.compute_associations = False
+        self.plot_distributions = False
         # In minimal mode, fall back to 'table' if user selected unavailable tabs
         if self.open_tab in ["distributions", "associations"]:
             self.open_tab = "table"
@@ -319,22 +398,14 @@ class TableReport:
         self._summary["is_subsampled"] = True
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}: use .open() to display>"
+        return f"<{self.__class__.__name__}: use .open() or .markdown() to display>"
 
     @functools.cached_property
     def _summary(self):
-        with_plots = (
-            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
-        )
-        with_associations = (
-            self.max_association_columns == "all"
-            or self.max_association_columns >= self.n_columns
-        )
-
         return summarize_dataframe(
             self.dataframe,
-            with_plots=with_plots,
-            with_associations=with_associations,
+            with_plots=self.plot_distributions,
+            with_associations=self.compute_associations,
             title=self.title,
             **self._summary_kwargs,
         )
@@ -374,6 +445,13 @@ class TableReport:
     def json(self):
         """Get the report data in JSON format.
 
+        By default, the JSON output includes the plots in SVG format, which can
+        be quite verbose. Plots can be disabled by setting
+        ``plot_distributions=False`` when generating the report.
+
+        The schema of the JSON data is reported in :ref:`table_report_json_schema`.
+
+
         Returns
         -------
         str :
@@ -382,6 +460,37 @@ class TableReport:
         to_remove = ["dataframe", "sample_table"]
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
+
+    def dict(self):
+        """Get the report data in Python Dictionary format.
+
+        Returns
+        -------
+        dict :
+            The report data
+        """
+        return json.loads(self.json())
+
+    def markdown(self):
+        """Get the report as a Markdown string.
+
+        This can be useful for displaying the report in environments that support
+        Markdown for formatted text, to include the report in Markdown documents,
+        or to get a quick text summary of the report.
+
+        .. warning::
+
+            The Markdown output can be provided to AI agents, but it does **not**
+            perform any truncation or sanitization of the data. Therefore, it should
+            not be used with untrusted data or in contexts where the data may be too
+            large, as it could lead to performance issues or security risks.
+
+        Returns
+        -------
+        str :
+            The Markdown report.
+        """
+        return to_markdown(self._summary)
 
     def _repr_mimebundle_(self, include=None, exclude=None):
         del include, exclude

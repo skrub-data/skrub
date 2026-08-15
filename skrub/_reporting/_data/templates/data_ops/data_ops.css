@@ -3,6 +3,20 @@ html {
     --current-node-color: #15ed8f;
 }
 
+h1,h2,h3,h4 {
+    margin-top: 0.6em;
+    margin-bottom: 0.2em;
+    margin-left: 0;
+    margin-right: 0;
+}
+h1 {
+    margin-top: 0;
+}
+
+ul {
+    margin: 0.1em;
+}
+
 * *::before, *::after {
     box-sizing: border-box;
 }

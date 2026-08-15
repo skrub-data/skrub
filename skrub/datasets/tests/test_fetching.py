@@ -1,3 +1,4 @@
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -85,7 +86,6 @@ def test_fetch_employee_salaries():
         ("midwest_survey", (2494, 29)),
         ("open_payments", (73558, 6)),
         ("traffic_violations", (1578154, 43)),
-        ("toxicity", (1000, 2)),
         ("videogame_sales", (16572, 11)),
         ("bike_sharing", (17379, 11)),
     ],
@@ -94,6 +94,12 @@ def test_datasets_without_splitting(dataset_name, shape):
     "Test datasets that do not have a split argument in their fetching function."
     data = getattr(_fetching, f"fetch_{dataset_name}")()
     assert data[dataset_name].shape == shape
+
+
+@xfail_with_download_error
+def test_toxicity():
+    data = _fetching.fetch_toxicity()
+    assert data.toxicity.shape == (1000, 2)
 
 
 @xfail_with_download_error
@@ -169,3 +175,29 @@ def test_cant_download(monkeypatch):
     with TemporaryDirectory() as temp_dir:
         with pytest.raises(OSError, match="Can't download"):
             _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+
+
+@xfail_with_download_error
+def test_electricity_forecasting():
+    files = set(
+        [
+            "weather_bayonne.csv",
+            "weather_brest.csv",
+            "weather_lille.csv",
+            "weather_limoges.csv",
+            "weather_lyon.csv",
+            "weather_marseille.csv",
+            "weather_nantes.csv",
+            "weather_paris.csv",
+            "weather_strasbourg.csv",
+            "weather_toulouse.csv",
+            "Total Load - Day Ahead _ Actual_202501010000-202601010000.csv",
+            "Total Load - Day Ahead _ Actual_202401010000-202501010000.csv",
+            "Total Load - Day Ahead _ Actual_202301010000-202401010000.csv",
+            "Total Load - Day Ahead _ Actual_202201010000-202301010000.csv",
+            "Total Load - Day Ahead _ Actual_202101010000-202201010000.csv",
+        ]
+    )
+    path = _fetching.fetch_electricity_forecasting()
+    downloaded = [f.name for f in Path(path).iterdir() if f.is_file()]
+    assert set(downloaded) == files

@@ -2,11 +2,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
+from ._base import SkrubBaseEstimator
 from ._dispatch import dispatch
 
 __all__ = ["CheckInputDataFrame", "cast_column_names_to_strings"]
@@ -19,14 +20,6 @@ def cast_column_names_to_strings(df):
 
 
 def _column_names_to_strings(column_names):
-    non_string = [c for c in column_names if not isinstance(c, str)]
-    if not non_string:
-        return column_names
-    warnings.warn(
-        f"Some dataframe column names are not strings: {non_string}.\n"
-        "All dataframe column names must be strings in skrub pipelines; "
-        "converting to strings."
-    )
     return list(map(str, column_names))
 
 
@@ -72,7 +65,7 @@ def _check_is_dataframe(df):
     return df
 
 
-class CheckInputDataFrame(TransformerMixin, BaseEstimator):
+class CheckInputDataFrame(TransformerMixin, SkrubBaseEstimator):
     """Check the dataframe entering a skrub pipeline.
 
     This transformer ensures that:
@@ -160,12 +153,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 "Input should be a DataFrame. Found an array with incompatible shape:"
                 f" {X.shape}."
             )
-        warnings.warn(
-            "Only pandas and polars DataFrames are supported, but input is a Numpy"
-            " array. Please convert Numpy arrays to DataFrames before passing them to"
-            " skrub transformers. Converting to pandas DataFrame with columns"
-            " ['0', '1', …]."
-        )
         import pandas as pd
 
         columns = list(map(str, range(X.shape[1])))

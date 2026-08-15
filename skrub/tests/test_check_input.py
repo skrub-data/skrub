@@ -21,15 +21,13 @@ def test_input_is_an_array():
     check = CheckInputDataFrame()
 
     # 2D array in fit
-    with pytest.warns(UserWarning, match="Only .* DataFrames are supported"):
-        d = check.fit_transform(a)
+    d = check.fit_transform(a)
     assert sbd.is_pandas(d)
     assert sbd.is_dataframe(d)
     assert sbd.column_names(d) == ["0", "1"]
 
     # 2D array in transform
-    with pytest.warns(UserWarning, match="Only .* DataFrames are supported"):
-        d = check.transform(a)
+    d = check.transform(a)
     assert sbd.is_pandas(d)
     assert sbd.is_dataframe(d)
     assert sbd.column_names(d) == ["0", "1"]
@@ -55,9 +53,8 @@ def test_column_names_to_unique_strings():
     df = pd.DataFrame(np.ones((2, 4)), columns=["a", 0, "0", "a"])
     assert df.columns.tolist() == ["a", 0, "0", "a"]
     check = CheckInputDataFrame()
-    with pytest.warns(UserWarning, match="Some dataframe column names are not strings"):
-        with pytest.warns(UserWarning, match="Found duplicated column names"):
-            out = check.fit_transform(df)
+    with pytest.warns(UserWarning, match="Found duplicated column names"):
+        out = check.fit_transform(df)
     assert out.shape == (2, 4)
     out_cols = out.columns.tolist()
     assert out_cols[:2] == ["a", "0"]

@@ -37,7 +37,9 @@ import re
 import textwrap
 import traceback
 import types
+import uuid
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -45,6 +47,7 @@ from sklearn.base import BaseEstimator
 from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
+from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
@@ -146,6 +149,14 @@ class UninitializedVariable(KeyError):
     """
     Evaluating a DataOp and a value has not been provided for one of the variables.
     """
+
+    def __init__(self, name):
+        self.name = name
+        self.message = f"No value has been provided for {name!r}"
+        super().__init__(name)
+
+    def __str__(self):
+        return self.message
 
 
 def _remove_shell_frames(stack):
@@ -251,6 +262,14 @@ class DataOpImpl:
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
+            # The uuid is like an auto-generated name. It behaves like the name
+            # (must be unique within a dataop, is preserved by clone, ...) and
+            # is used for the same things (find a node, inject a value for its
+            # output in the environment). It is less explicit / reliable but
+            # always available.
+            # It is not used internally for example to discover the graph
+            # topology: we rely on actual Python object ids for this.
+            self.uuid = uuid.uuid4().int
             self.description = None
             self.checked = False
 
@@ -263,6 +282,7 @@ class DataOpImpl:
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
+        new.uuid = self.uuid
         new.description = self.description
         new.checked = False
         return new
@@ -394,12 +414,12 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         if allow_skipping and not _config.get_config().get("eager_data_ops", True):
             return data_op
 
-        if not data_op._skrub_impl.checked:
-            try:
-                func_name = data_op._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
+        try:
+            func_name = data_op._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
 
+        if not data_op._skrub_impl.checked:
             conflicts = find_conflicts(data_op)
             if conflicts is not None:
                 raise ValueError(conflicts["message"])
@@ -730,13 +750,18 @@ class DataOp:
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
             graph = strip_xml_declaration(graph)
+            has_graph = True
         except Exception:
-            graph = (
-                "Please install Pydot and GraphViz to display the computation graph."
-            )
+            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
+            has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            return f"<div>{graph}</div>"
+            if has_graph:
+                return f"<div>{graph}</div>"
+            return (
+                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
+                f"</div><div>{graph}</div></div>"
+            )
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"
@@ -751,11 +776,17 @@ class DataOp:
             f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
             f"<br />{repr_rest}\n"
         )
-        summary = "<samp>Show graph</samp>"
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        details_open_or_not = (
+            "open"
+            if _config.get_config().get("data_ops_open_graph_dropdown", False)
+            else ""
+        )
         prefix = (
             f"{title}{name_line}"
-            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"<details {details_open_or_not}>\n"
+            f"<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
             f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
             "</samp></strong>"
@@ -807,10 +838,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
+    if exclude_cols is not None:
+        msg = f"`exclude_cols` must be None (the default) when {reason}"
     elif how not in ["auto", "no_wrap"]:
         msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
@@ -843,33 +876,25 @@ def _check_estimator_type(estimator):
     )
 
 
-def _check_apply_how(how):
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X):
+    """
+    Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
+    """
+    if not isinstance(no_wrap, bool):
+        raise TypeError(
+            "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
+            f"got: {no_wrap!r}."
+        )
     valid = ["auto", "cols", "frame", "no_wrap"]
-    if how in valid:
-        return how
-
-    # TODO remove when the old names are completely dropped in 0.7.0
-    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
-    if how in translate:
-        new = translate[how]
+    if how not in valid:
+        raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+    if how != "auto":
         warnings.warn(
-            (
-                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
-                " instead."
-            ),
+            "The 'how' parameter of .skb.apply() has been deprecated "
+            "and will  be removed in a future release. "
+            f"Use the 'no_wrap' parameter instead. Got how={how!r}",
             FutureWarning,
         )
-        return new
-
-    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-
-
-def _wrap_estimator(estimator, cols, how, allow_reject, X):
-    """
-    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
-    needed.
-    """
-    how = _check_apply_how(how)
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -877,8 +902,11 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, how, allow_reject, reason)
 
+    if no_wrap:
+        _check("`no_wrap` is True")
+        return estimator
     if how == "no_wrap":
         _check("`how` is 'no_wrap'")
         return estimator
@@ -888,9 +916,17 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
+    if how == "auto":
+        return ApplyToCols(
+            estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
+        )
+    columnwise = {"cols": True, "frame": False}[how]
     return wrap_transformer(
-        estimator, cols, allow_reject=allow_reject, columnwise=columnwise
+        estimator,
+        cols=cols,
+        exclude_cols=exclude_cols,
+        allow_reject=allow_reject,
+        columnwise=columnwise,
     )
 
 
@@ -927,30 +963,36 @@ def _check_var_value(value):
 class Var(DataOpImpl):
     "A `skrub.var()` DataOp."
 
-    _fields = ["name", "value"]
+    _fields = ["name", "value", "becomes_default"]
 
     def compute(self, e, mode, environment):
         if mode == "preview":
             assert not environment
             if e.value is NULL:
-                raise UninitializedVariable(
-                    f"No value has been provided for {e.name!r}"
-                )
+                raise UninitializedVariable(e.name)
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if environment.get("_skrub_use_var_values", False) and e.value is not NULL:
+        if (
+            e.becomes_default or environment.get("_skrub_use_var_values", False)
+        ) and e.value is not NULL:
             return e.value
-        raise UninitializedVariable(f"No value has been provided for {e.name!r}")
+        raise UninitializedVariable(e.name)
 
     def preview_if_available(self):
         return self.value
 
     def __repr__(self):
-        return f"<Var {self.name!r}>"
+        default_type = (
+            "" if not self.becomes_default else f" {self.value.__class__.__name__}"
+        )
+        return f"<{self.__class__.__name__} {self.name!r}{default_type}>"
+
+    def __skrub_preview_heading__(self):
+        return "Result (also the default value)" if self.becomes_default else "Result"
 
 
-def var(name, value=NULL):
+def var(name, value=NULL, *, becomes_default=False):
     """Create a skrub variable.
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
@@ -971,6 +1013,11 @@ def var(name, value=NULL):
         available, it is used to provide a preview of the learner's results,
         to detect errors in the learner early, and to provide better help and
         tab-completion in interactive Python shells.
+    becomes_default : bool, default = False
+        If True, the provided ``value`` is not only used for previews but also
+        becomes the default value for this variable when creating a learner
+        (for example with :meth:`DataOp.skb.make_learner`). Thus passing this
+        variable in the environment is always optional.
 
     Returns
     -------
@@ -1034,7 +1081,7 @@ def var(name, value=NULL):
     ―――――――
     5
 
-    The values are also used as defaults for ``eval()``:
+    The values are also used for ``eval()`` when no environment is provided:
 
     >>> c.skb.eval()
     5
@@ -1045,12 +1092,38 @@ def var(name, value=NULL):
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
 
+    When passing ``becomes_default=True``, the preview value is treated as a
+    default value for that variable. It is kept when cloning the DataOp or
+    creating a Learner, and is always optional (does not need to be present) in
+    the provided environment.
+
+    >>> c = skrub.var('a', 0, becomes_default=True) + skrub.var('b', 1)
+    >>> c.skb.get_data()
+    {'a': 0, 'b': 1}
+    >>> c.skb.clone().skb.get_data()
+    {'a': 0}
+
+    For the learner 'b' is mandatory but 'a' is optional and has default value
+    0.
+
+    >>> c.skb.make_learner().fit_transform({'b': 10})
+    10
+    >>> c.skb.make_learner().fit_transform({'b': 10, 'a': 100})
+    110
+
     Much more information about skrub variables is provided in the examples
     gallery.
     """
     check_name(name, is_var=True)
     _check_var_value(value)
-    return DataOp(Var(name, value=value))
+    if not isinstance(becomes_default, bool):
+        raise TypeError(
+            "becomes_default should be a Boolean, "
+            f"got object of type {type(becomes_default)}: {becomes_default!r}"
+        )
+    if becomes_default and value is NULL:
+        raise TypeError("value must be provided when becomes_default is True.")
+    return DataOp(Var(name, value=value, becomes_default=becomes_default))
 
 
 def X(value=NULL):
@@ -1067,9 +1140,9 @@ def X(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1111,7 +1184,7 @@ def X(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("X", value=value)).skb.mark_as_X()
+    return DataOp(Var("X", value=value, becomes_default=False)).skb.mark_as_X()
 
 
 def y(value=NULL):
@@ -1129,9 +1202,9 @@ def y(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1173,7 +1246,7 @@ def y(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("y", value=value)).skb.mark_as_y()
+    return DataOp(Var("y", value=value, becomes_default=False)).skb.mark_as_y()
 
 
 class Value(DataOpImpl):
@@ -1347,6 +1420,8 @@ class Apply(DataOpImpl):
         "estimator",
         "y",
         "cols",
+        "exclude_cols",
+        "no_wrap",
         "how",
         "allow_reject",
         "unsupervised",
@@ -1384,11 +1459,15 @@ class Apply(DataOpImpl):
 
         if "fit" in method_name:
             cols = yield self.cols
+            exclude_cols = yield self.exclude_cols
+            no_wrap = yield self.no_wrap
             how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
+                no_wrap=no_wrap,
                 how=how,
                 allow_reject=allow_reject,
                 X=X,
@@ -1397,10 +1476,33 @@ class Apply(DataOpImpl):
 
         # 2. Call the appropriate estimator method
 
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()`. This is done even if the transformer is the
+            # last estimator, as it can make things easier for downstream nodes
+            # if we are building a transformer rather than a predictor.
+            method_name = "fit_transform"
+
+        if "transform" not in method_name:
+            # We are evaluating in another mode than transform or fit_transform
+            # and the current estimator has the corresponding method. We check
+            # if we are the last estimator: if we are not, we want to transform
+            # instead so that subsequent steps get the transformed data rather
+            # than, for example, a fitted estimator or a score.
+            #
+            # An example situation where this arises is are in score mode and
+            # we have an internal transformer such as PCA that has a score()
+            # method.
+            from ._evaluation import HasRunningApplyAncestor
+
+            has_running_apply_ancestor = yield HasRunningApplyAncestor()
+            if has_running_apply_ancestor:
+                method_name = "fit_transform" if "fit" in method_name else "transform"
+
         if "transform" in method_name and not hasattr(self.estimator_, method_name):
-            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
-            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
-            # with `.predict()`
+            # We are a predictor and need to do 'transform' or 'fit_transform'
+            # (as in `.skb.preview()` or `.skb.eval()`). We replace
+            # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
                 self.estimator_.fit(X, y, **fit_kwargs)
@@ -1409,11 +1511,6 @@ class Apply(DataOpImpl):
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
-
-        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
-            # We are a transformer in 'fit' mode. Rather than `fit()` we call
-            # `fit_transform()` so that subsequent steps can be fitted as well.
-            method_name = "fit_transform"
 
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
@@ -1503,7 +1600,11 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
+        if estimator.__class__.__name__ in [
+            "ApplyToEachCol",
+            "ApplyToSubFrame",
+            "ApplyToCols",
+        ]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
@@ -1868,35 +1969,45 @@ class Concat(DataOpImpl):
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
-        if not sbd.is_dataframe(e.first):
-            raise TypeError(
-                "`concat` can only be used with dataframes. "
-                "`.skb.concat` was accessed on an object of type "
-                f"{e.first.__class__.__name__!r}"
-            )
-        if sbd.is_dataframe(e.others):
-            raise TypeError(
-                "`concat` should be passed a list of dataframes. "
-                "If you have a single dataframe, wrap it in a list: "
-                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
-            )
-        idx, non_df = next(
-            ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
-            (None, None),
-        )
-        if non_df is not None:
-            raise TypeError(
-                "`concat` should be passed a list of dataframes: "
-                "`table_0.skb.concat([table_1, ...], axis=...)`. "
-                f"An object of type {non_df.__class__.__name__!r} "
-                f"was found at index {idx}."
-            )
-
         if e.axis not in (0, 1):
             raise ValueError(
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
-
+        if isinstance(e.others, np.ndarray) or sbd.is_dataframe(e.others):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes. "
+                "If you have a single array or dataframe, wrap it in a list: "
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
+            )
+        if not isinstance(e.others, Iterable):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes."
+                f"Got object of type {e.others.__class__.__name__!r}"
+            )
+        if not (isinstance(e.first, np.ndarray) or sbd.is_dataframe(e.first)):
+            raise TypeError(
+                "`concat` can only be used on a numpy array or a dataframe. "
+                "`.skb.concat` was accessed on an object of type "
+                f"{e.first.__class__.__name__!r}"
+            )
+        if isinstance(e.first, np.ndarray):
+            for idx, obj in enumerate(e.others):
+                if not isinstance(obj, np.ndarray):
+                    raise TypeError(
+                        "When accessed on a numpy array, `concat` should be passed a "
+                        "list of arrays: `array_0.skb.concat([array_1, ...], "
+                        f"axis=...)`. An object of type {obj.__class__.__name__!r} "
+                        f"was found at index {idx}."
+                    )
+            return np.concatenate([e.first, *e.others], axis=e.axis)
+        for idx, obj in enumerate(e.others):
+            if not sbd.is_dataframe(obj):
+                raise TypeError(
+                    "When accessed on a dataframe, `concat` should be passed a list "
+                    "of dataframes: `table_0.skb.concat([table_1, ...], axis=...)`. "
+                    f"An object of type {obj.__class__.__name__!r} "
+                    f"was found at index {idx}."
+                )
         if e.axis == 1:
             first = _check_column_names(e.first)
             others = list(map(_check_column_names, e.others))
@@ -1916,7 +2027,7 @@ class Concat(DataOpImpl):
 
     def __repr__(self):
         try:
-            detail = f": {len(self.others) + 1} dataframes"
+            detail = f": {len(self.others) + 1} tables"
         except Exception:
             detail = ""
         return f"<{self.__class__.__name__}{detail}>"
@@ -1958,7 +2069,7 @@ def eval_mode():
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      DataOp is defined or when we call ``.skb.eval()`` without
+      DataOp is defined or when we call :func:`DataOp.skb.eval()` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.

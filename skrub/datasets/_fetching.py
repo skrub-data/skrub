@@ -4,7 +4,7 @@ Fetching functions to retrieve example datasets from GitHub and OSF.
 
 from pathlib import Path
 
-from ._utils import load_dataset_files, load_simple_dataset
+from ._utils import download_dataset, load_dataset_files, load_simple_dataset
 
 
 def fetch_employee_salaries(data_home=None, split="all"):
@@ -352,7 +352,11 @@ def fetch_toxicity(data_home=None):
         path : str
             The path to the toxicity CSV file.
     """
-    return load_simple_dataset("toxicity", data_home)
+    result = load_simple_dataset("toxicity_v1", data_home)
+    result["toxicity"] = result.pop("toxicity_v1")
+    result["toxicity_path"] = result.pop("toxicity_v1_path")
+
+    return result
 
 
 def fetch_videogame_sales(data_home=None):
@@ -602,3 +606,44 @@ def fetch_california_housing(data_home=None):
             The path to the california housing CSV file.
     """
     return load_simple_dataset("california_housing", data_home)
+
+
+def fetch_electricity_forecasting(data_home=None):
+    """Fetches the electricity usage dataset (forecasting), available at \
+        https://github.com/skrub-data/skrub-data-files
+
+    Description of the dataset:
+        This dataset was generated from data obtained from the
+        ENTSOE Open Data portal under the open source license (CC-BY 4.0):
+        https://transparencyplatform.zendesk.com/hc/article_attachments/40921869376401
+
+        and the Open Meteo Historical Weather API:
+        https://open-meteo.com/en/docs/historical-forecast-api
+        in accordance with the licence described:
+        https://open-meteo.com/en/licence
+
+        This is a time-series forecasting use case. This dataset gives the total
+        electricity load in MW in France, covering a time range from
+        March 23, 2021 to May 31, 2025. In addition, the dataset contains
+        weather data for several cities within France.
+
+        It can be downloaded/loaded using the
+        sklearn.datasets.fetch_electricity_forecasting function.
+        Size on disk: 26MB.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    Path : PosixPath
+         The path to the electricity usage CSV files
+
+    References
+    ----------
+    .. [1] For more detailed instructions on how to use this dataset, please refer
+           to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
+    """
+    return download_dataset("electricity_forecasting", data_home=data_home)

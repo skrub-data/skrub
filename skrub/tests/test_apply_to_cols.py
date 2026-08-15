@@ -1,14 +1,16 @@
 import datetime
+import sys
 
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._to_datetime import ToDatetime
+from skrub.core import RejectColumn
 
 
 def test_single_column_transformer_becomes_apply_to_each_col(df_module):
@@ -33,10 +35,10 @@ def test_invalid_parameters():
 
     X = None  # Placeholder for the dataframe, not used in this test
 
-    with pytest.raises((TypeError, ValueError), match=r"allow_reject.*bool"):
+    with pytest.raises(TypeError, match=r"allow_reject.*bool"):
         at = ApplyToCols(ToDatetime(), allow_reject="yes")
         at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError), match=r"keep_original.*bool"):
+    with pytest.raises(TypeError, match=r"keep_original.*bool"):
         at = ApplyToCols(ToDatetime(), keep_original="no")
         at.fit_transform(X)
 
@@ -85,6 +87,52 @@ def test_column_selection_with_selector(df_module):
     assert np.array_equal(sbd.col(X_transformed, "numeric2"), [10.0, 20.0, 30.0])
 
 
+def test_exclude_single_column(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols="col2")
+    X = df_module.make_dataframe({"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]})
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+
+
+def test_exclude_multiple_columns(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols=["col2", "col3"])
+    X = df_module.make_dataframe(
+        {
+            "col1": ["a", "b", "c"],
+            "col2": ["x", "y", "z"],
+            "col3": ["m", "n", "o"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+    assert sbd.to_list(sbd.col(X_transformed, "col3")) == ["m", "n", "o"]
+
+
+def test_cols_selector_with_excluded_column(df_module):
+    at = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="id")
+    X = df_module.make_dataframe(
+        {
+            "id": [1, 2],
+            "value1": [10.0, 20.0],
+            "value2": [100.0, 300.0],
+            "name": ["a", "b"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "id")), [1, 2])
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value1")), [-1.0, 1.0])
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value2")), [-1.0, 1.0])
+    assert sbd.to_list(sbd.col(X_transformed, "name")) == ["a", "b"]
+
+
 def test_fit_and_transform_separate(df_module):
     """Test that fit and transform can be called separately."""
     at = ApplyToCols(OrdinalEncoder(), cols=s.string())
@@ -117,8 +165,9 @@ def test_reject_column(df_module):
 
     df_module.assert_frame_equal(X_transformed, X_expected)
 
-    # A RejectColumn exception should be raised
-    with pytest.raises(ValueError):
+    # TODO simplify after dropping support for python 3.10
+    err_t = RuntimeError if sys.version_info < (3, 11) else RejectColumn
+    with pytest.raises(err_t):
         at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=False)
         X = df_module.make_dataframe(
             {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}

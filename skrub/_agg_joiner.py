@@ -10,7 +10,7 @@ from itertools import product
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
@@ -18,6 +18,7 @@ from skrub import _join_utils, _utils
 from skrub import selectors as s
 from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
+from ._base import SkrubBaseEstimator
 from ._check_input import CheckInputDataFrame
 
 try:
@@ -168,7 +169,7 @@ def check_other_inputs(operations, suffix):
     return operations, suffix
 
 
-class AggJoiner(TransformerMixin, BaseEstimator):
+class AggJoiner(TransformerMixin, SkrubBaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
@@ -177,7 +178,21 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     If `cols` is not provided, `cols` are all columns from `aux_table`,
     except `aux_key`.
 
-    Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
+    Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
+
+    .. warning::
+        The auxiliary table is stored in memory as part of the state of the transformer,
+        which can lead to high memory usage if the auxiliary table is large.
+
+        Additionally, the auxiliary table is frozen in memory after fitting, which
+        means that if the auxiliary table is modified after fitting, the changes will
+        not be reflected in the transformed output. If you need to update the
+        auxiliary table, you will need to refit the transformer.
+
+        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`
+        and a standard dataframe library (Pandas or Polars) to perform the
+        aggregation instead.
+
 
     Parameters
     ----------
@@ -393,7 +408,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         return self.all_outputs_
 
 
-class AggTarget(TransformerMixin, BaseEstimator):
+class AggTarget(TransformerMixin, SkrubBaseEstimator):
     """Aggregate a target `y` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.

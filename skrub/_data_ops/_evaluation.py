@@ -25,10 +25,12 @@ from ._data_ops import (
     Apply,
     DataOp,
     Scoring,
+    SplitX,
+    UninitializedVariable,
     Value,
     Var,
 )
-from ._utils import NULL, X_NAME, Y_NAME, simple_repr
+from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, X_NAME, Y_NAME, simple_repr
 
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
 
@@ -88,6 +90,24 @@ class _CurrentNodeDuration:
     """
 
 
+class HasRunningApplyAncestor:
+    """
+    Whether there is an Apply node, other than the currently running one, on the stack.
+
+    A `_DataOpTraversal.handle_*()` method can yield an instance of this class
+    to know if there is an Apply node lower on the stack, i.e. if there is an
+    estimator downstream waiting for the result of the currently running node.
+
+    This is used to know if the current estimator is the 'last step in the
+    pipeline'. The 'last step' is treated differently: regardless of the
+    evaluation mode, previous steps should do a transform(). For example when
+    we call score() on a SkrubLearner, we need to call score() on the last
+    estimator it contains, but transform() on the transformers that are
+    evaluated before (even if they have a score() method, as some transformers
+    do).
+    """
+
+
 class _DataOpTraversal:
     """Base class for objects that manipulate DataOps."""
 
@@ -124,6 +144,12 @@ class _DataOpTraversal:
         # Used to detect circular references.
         running = set()
 
+        # IDs of Apply nodes that are the target of a _Computation currently on
+        # the stack.
+        # Allows distinguishing the last estimator in the pipeline from
+        # previous ones (see HasRunningApplyAncestor docstring).
+        running_apply = set()
+
         # Total time spent evaluating each node (not counting time spent
         # evaluating its children)
         node_durations = defaultdict(float)
@@ -144,12 +170,15 @@ class _DataOpTraversal:
             generator = handler(top)
             stack.append(_Computation(top_id, generator))
             running.add(top_id)
+            if isinstance(top, DataOp) and isinstance(top._skrub_impl, Apply):
+                running_apply.add(top_id)
 
         def pop():
             "Pop an item off the stack."
             top = stack.pop()
             if isinstance(top, _Computation):
                 running.remove(top.target_id)
+                running_apply.discard(top.target_id)
             return top
 
         def step():
@@ -181,6 +210,9 @@ class _DataOpTraversal:
             elif isinstance(top, _CurrentNodeDuration):
                 pop()
                 last_result = node_durations[stack[-1].target_id]
+            elif isinstance(top, HasRunningApplyAncestor):
+                pop()
+                last_result = bool(running_apply - {stack[-1].target_id})
             elif isinstance(top, DataOp):
                 push_computation(self.handle_data_op)
 
@@ -303,6 +335,8 @@ class _Evaluator(_DataOpTraversal):
             env_key, fetch = X_NAME, True
         elif impl.is_y and Y_NAME in self.environment:
             env_key, fetch = Y_NAME, True
+        elif impl.uuid in self.environment:
+            env_key, fetch = impl.uuid, True
         elif impl.name is not None and impl.name in self.environment:
             env_key = impl.name
 
@@ -393,15 +427,15 @@ def _check_environment(environment):
         )
     # Notes about checking the env keys:
     #
-    # - env ⊂ variables: in some cases we could check that there are no extra
-    #   keys in `environment`, ie all keys in `environment` correspond to a
-    #   name in the DataOp. However in other cases we naturally end up
-    #   using a bigger environment than what is needed. For example we want tu
-    #   evaluate a sub-DataOp (such as the `mark_as_X()` node), and to do
-    #   it we use the environment that was passed to evaluate the full
-    #   DataOp. So if we want such a verification it should be a separate
-    #   check done at a higher level (eg in the estimators' `fit`, `predict`
-    #   etc.) where we know we are not working with a sub-DataOp.
+    # - env ⊂ variables: we could check that there are no extra keys in
+    #   `environment`, i.e. all keys in `environment` correspond to a name in
+    #   the DataOp. However in some cases we naturally end up using a bigger
+    #   environment than what is needed. For example we want to evaluate a
+    #   sub-DataOp (such as the result of `.skb.find()` or `.skb.find_X_y()`),
+    #   and to do it we use the environment created to evaluate the full
+    #   DataOp. We do perform this check when a key is missing from the env to
+    #   provide a better error message, but it is only used for the content of
+    #   the message rather than enforcing no extra keys ahead of time.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the
@@ -417,7 +451,14 @@ def _check_environment(environment):
 # consistent with .skb.eval() in evaluate's params
 
 
-def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=()):
+def evaluate(
+    data_op,
+    mode="preview",
+    environment=None,
+    clear=False,
+    callbacks=(),
+    ancestor_data_op=None,
+):
     """Evaluate a DataOp.
 
     Parameters
@@ -442,6 +483,14 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         Each will be called, in the provided order, after evaluating each node.
         The signature is callback(data_op, result) where data_op is the DataOp
         that was just evaluated and result is the resulting value.
+
+    ancestor_data_op : DataOp or None
+        When we are evaluating a part of a DataOp (e.g. the X node only), pass
+        this so that we can look at all the variable names of the full DataOp
+        when producing error messages about missing or extra keys in the
+        environment. It is not used for other purposes than inspecting the
+        variable an choice names it contains. In particular it is not
+        evaluated.
     """
     _check_environment(environment)
     if clear:
@@ -453,9 +502,55 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
         )
+    except UninitializedVariable as e:
+        if (
+            hasattr(e, "add_note")
+            and environment is not None
+            and not environment.get(IS_PREVIEW_DATA_ENV_NAME)
+        ):
+            # user passed an explicit environment rather than using the
+            # variables' preview values.
+            e.add_note(
+                _uninitialized_variable_msg(
+                    e,
+                    ancestor_data_op if ancestor_data_op is not None else data_op,
+                    environment,
+                )
+            )
+        raise
     finally:
         if clear:
             clear_results(data_op, mode=mode)
+
+
+def _uninitialized_variable_msg(error, data_op, environment):
+    missing_name = error.name
+    var_names = list(named_nodes(data_op).keys())
+    choice_names = [n for c in choices(data_op).values() if (n := c.name) is not None]
+    unused = list(
+        {
+            k
+            for k in environment.keys()
+            if isinstance(k, str) and not k.startswith("_skrub_")
+        }.difference(var_names + choice_names)
+    )
+
+    msg = (
+        "- Note that preview values passed to initialize skrub variables\n"
+        "  are ignored by default whenever we pass "
+        "an explicit 'environment' dictionary,\n"
+        "  for example when calling SkrubLearner.fit({'X': ..., 'y': ...}).\n"
+        f"  Please pass a value for {missing_name!r} in the environment.\n"
+        "  You can also use "
+        f"skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
+        "  to always retain the initialization value as a default."
+    )
+    if unused:
+        msg += (
+            "\n- WARNING: the following keys were passed in the environment but "
+            f"have no corresponding variable in the DataOp:\n  {unused}"
+        )
+    return msg
 
 
 def _cache_pruner(data_op, mode):
@@ -536,7 +631,11 @@ class _Cloner(_DataOpTraversal):
             return self._replace[id(data_op)]
         impl = data_op._skrub_impl
         new_impl = impl.__replace__(**evaluated_attributes)
-        if isinstance(new_impl, Var) and self.drop_preview_data:
+        if (
+            isinstance(new_impl, Var)
+            and not new_impl.becomes_default
+            and self.drop_preview_data
+        ):
             new_impl.value = NULL
         clone = DataOp(new_impl)
         self._replace[id(data_op)] = clone
@@ -636,6 +735,12 @@ def graph(data_op):
 
 def nodes(data_op):
     return list(graph(data_op)["nodes"].values())
+
+
+def named_nodes(data_op):
+    return {
+        name: op for op in nodes(data_op) if (name := op._skrub_impl.name) is not None
+    }
 
 
 def clear_results(data_op, mode=None):
@@ -1109,6 +1214,35 @@ def find_node_by_name(data_op, name):
     return find_node(data_op, pred)
 
 
+def find_node_by_uuid(data_op, uuid):
+    def pred(obj):
+        if isinstance(obj, DataOp):
+            return obj._skrub_impl.uuid == uuid
+        return False
+
+    return find_node(data_op, pred)
+
+
+def find_X_y_and_cv(data_op):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
+    result = {}
+    if (x_node := find_X(data_op)) is not None:
+        result["X"] = x_node
+        if isinstance(x_node._skrub_impl, SplitX):
+            result["cv"] = x_node._skrub_impl.cv
+            result["split_kwargs"] = x_node._skrub_impl.split_kwargs
+    if (y_node := find_y(data_op)) is not None:
+        result["y"] = y_node
+    return result
+
+
+def find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
+
+
 def needs_eval(obj, return_node=False):
     """
     Whether a python object contains any object that requires evaluation such
@@ -1129,6 +1263,7 @@ class _FindConflicts(_DataOpTraversal):
 
     def __init__(self):
         self._names = {}
+        self._uuids = {}
         self._x = {}
         self._y = {}
         self._score_nodes = {}
@@ -1136,15 +1271,16 @@ class _FindConflicts(_DataOpTraversal):
     def handle_data_op(self, e):
         self._add(
             e,
-            getattr(e._skrub_impl, "name", None),
-            e._skrub_impl.is_X,
-            e._skrub_impl.is_y,
-            isinstance(e._skrub_impl, Scoring),
+            name=getattr(e._skrub_impl, "name", None),
+            uuid=e._skrub_impl.uuid,
+            is_X=e._skrub_impl.is_X,
+            is_y=e._skrub_impl.is_y,
+            is_score=isinstance(e._skrub_impl, Scoring),
         )
         yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None), False, False, False)
+        self._add(choice, name=getattr(choice, "name", None))
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
@@ -1170,22 +1306,30 @@ class _FindConflicts(_DataOpTraversal):
                 f"first scoring node:\n{first}\n"
                 f"second scoring node:\n{second}\n"
             )
-        assert conflict["reason"] == "name", conflict["reason"]
-        name = conflict["name"]
-        msg = (
-            f"Choice and node names must be unique. The name {name!r} was used "
-            "for 2 different objects:\n"
-            f"first object using the name {name!r}:\n{first}\n"
-            f"second object using the name {name!r}:\n{second}"
-        )
-        if repr(first) == repr(second):
-            msg += (
-                "\nIs it possible that you accidentally added a transformation twice, "
-                "for example by re-running a Jupyter notebook cell that rebinds a "
-                "Python variable to a new skrub data_op "
-                "(eg `data_op = data_op.skb.apply(...)`)?"
+        if conflict["reason"] == "name":
+            name = conflict["key"]
+            msg = (
+                f"Choice and node names must be unique. The name {name!r} was used "
+                "for 2 different objects:\n"
+                f"first object using the name {name!r}:\n{first}\n"
+                f"second object using the name {name!r}:\n{second}"
             )
-        return msg
+            if repr(first) == repr(second):
+                msg += (
+                    "\nIs it possible that you accidentally "
+                    "added a transformation twice, "
+                    "for example by re-running a Jupyter notebook cell that rebinds a "
+                    "Python variable to a new skrub data_op "
+                    "(eg `data_op = data_op.skb.apply(...)`)?"
+                )
+            return msg
+        assert conflict["reason"] == "uuid", conflict["reason"]
+        uuid = conflict["key"]
+        return (
+            f"Node IDs must be unique. The id {uuid} was used for 2 different objects. "
+            "Is it possible you used a DataOp _and_ a copy of it generated with "
+            "clone() or set_name() in the same DataOp?"
+        )
 
     def _add_to_dict(self, d, key, val, reason):
         if key is None:
@@ -1196,11 +1340,13 @@ class _FindConflicts(_DataOpTraversal):
             return
         if other is val:
             return
-        conflict = {"name": key, "nodes": (other, val), "reason": reason}
+        conflict = {"key": key, "nodes": (other, val), "reason": reason}
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y, is_score):
+    def _add(
+        self, obj, *, name=None, uuid=None, is_X=False, is_y=False, is_score=False
+    ):
         if is_X:
             self._add_to_dict(self._x, "X", obj, "is_X")
         if is_y:
@@ -1208,6 +1354,7 @@ class _FindConflicts(_DataOpTraversal):
         if is_score:
             self._add_to_dict(self._score_nodes, "score", obj, "is_score")
         self._add_to_dict(self._names, name, obj, "name")
+        self._add_to_dict(self._uuids, uuid, obj, "uuid")
 
 
 def find_conflicts(data_op):

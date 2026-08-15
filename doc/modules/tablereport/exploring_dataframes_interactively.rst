@@ -28,9 +28,25 @@ The |TableReport| of a table can be generated as follows:
 ...     "value": [10, 20, 30],
 ... })
 >>> TableReport(df)  # from a notebook cell
-<TableReport: use .open() to display>
+<TableReport: use .open() or .markdown() to display>
 
 The command ``TableReport(df).open()`` opens the report in a browser window.
+
+It is also possible to export the |TableReport| in JSON or Markdown format with
+:meth:`~skrub.TableReport.json()`  :meth:`~skrub.TableReport.markdown()` respectively.
+
+The generated JSON includes the plots in SVG format, which can be
+quite verbose: plots can be disabled by setting ``plot_distributions=False``
+when generating the report.
+Similarly, the Markdown string includes information about all columns in the dataframe,
+so it can be quite lengthy for dataframes that include many columns.
+
+.. warning::
+
+    The Markdown output can be fed to AI agents to obtain insight in the data,
+    but it is **not** sanitized by the |TableReport|. Therefore, it should not be
+    used with untrusted data or for dataframes that are too large, as it could lead
+    to security risks or performance issues.
 
 A demo of the |TableReport|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

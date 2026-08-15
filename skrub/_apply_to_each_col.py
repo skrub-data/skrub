@@ -1,11 +1,12 @@
 import itertools
 
 from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _utils, selectors
+from ._base import SkrubBaseEstimator
 from ._join_utils import pick_column_names
 from ._single_column_transformer import RejectColumn, is_single_column_transformer
 
@@ -15,7 +16,7 @@ __all__ = ["ApplyToEachCol"]
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToEachCol(BaseEstimator, TransformerMixin):
+class ApplyToEachCol(TransformerMixin, SkrubBaseEstimator):
     """
     Map a transformer to columns in a dataframe.
 
@@ -179,10 +180,11 @@ class ApplyToEachCol(BaseEstimator, TransformerMixin):
     to be errors:
 
     >>> to_datetime = ApplyToEachCol(ToDatetime())
-    >>> to_datetime.fit_transform(df)
+    >>> to_datetime.fit_transform(df)  # doctest: +SKIP
     Traceback (most recent call last):
         ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+    skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+    Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
 
     However, setting ``allow_reject=True`` gives the transformer itself some
     control over which columns it should be applied to. For example, whether a
@@ -440,10 +442,15 @@ def _fit_transform_column(
     except allowed:
         return col_name, [column], None
     except Exception as e:
-        raise ValueError(
+        msg = (
             f"Transformer {transformer.__class__.__name__}.fit_transform "
             f"failed on column {col_name!r}. See above for the full traceback."
-        ) from e
+        )
+        if hasattr(e, "add_note"):
+            # TODO: simplify (remove hasattr check) after python 3.10 support is dropped
+            e.add_note(msg)
+            raise
+        raise RuntimeError(msg) from e
     output = _utils.check_output(transformer, transformer_input, output)
     output_cols = sbd.to_column_list(output)
     return col_name, output_cols, transformer
@@ -456,10 +463,15 @@ def _transform_column(column, transformer, kwargs):
     try:
         output = transformer.transform(transformer_input, **kwargs)
     except Exception as e:
-        raise ValueError(
+        msg = (
             f"Transformer {transformer.__class__.__name__}.transform "
             f"failed on column {sbd.name(column)!r}. See above for the full traceback."
-        ) from e
+        )
+        if hasattr(e, "add_note"):
+            # TODO: simplify (remove hasattr check) after python 3.10 support is dropped
+            e.add_note(msg)
+            raise
+        raise RuntimeError(msg) from e
     # we do not call `_utils.check_output` here, assuming that if the output
     # had a correct type (e.g. polars dataframe) in `fit_transform` it will
     # have the same (correct) type in `transform`.
