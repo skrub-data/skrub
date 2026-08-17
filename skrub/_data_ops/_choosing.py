@@ -871,7 +871,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
     >>> print(skrub.choose_float(0,2).as_data_op().skb.describe_param_grid())
     - choose_float(0, 2): choose_float(0, 2)
     >>> skrub.choose_float(0,2).default()
-    np.float64(1.0)
+    1.0
 
     We can set the default to another value:
 
@@ -955,7 +955,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     >>> print(skrub.choose_int(0,2).as_data_op().skb.describe_param_grid())
     - choose_int(0, 2): choose_int(0, 2)
     >>> skrub.choose_int(0,2).default()
-    np.int64(1)
+    1
 
     We can set the default to another value:
 
