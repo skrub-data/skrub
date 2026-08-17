@@ -870,7 +870,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
     >>> import skrub
     >>> print(skrub.choose_float(0,2).as_data_op().skb.describe_param_grid())
     - choose_float(0, 2): choose_float(0, 2)
-    >>> skrub.choose_float().default()
+    >>> skrub.choose_float(0,2).default()
     np.float64(1.0)
 
     We can set the default to another value:
