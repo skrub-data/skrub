@@ -960,7 +960,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     We can set the default to another value:
 
     >>> skrub.choose_int(0, 2, default=0).default()
-    1.5
+    0
     """
     if n_steps is None:
         return NumericChoice(
