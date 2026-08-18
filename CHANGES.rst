@@ -50,6 +50,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
+  installed by avoiding the unused Pearson's correlation computation.
+  :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
+
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
