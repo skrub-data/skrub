@@ -1,3 +1,4 @@
+import datetime
 import warnings
 
 import pandas as pd
@@ -80,6 +81,28 @@ def _convert_time_zone_polars(col, time_zone):
             if col.dtype == pl.Date:
                 col = col.cast(pl.Datetime)
             return col.dt.replace_time_zone("UTC").dt.convert_time_zone(time_zone)
+
+
+def _cast_date_objects(column):
+    """Convert a pandas object column holding ``datetime.date`` to Datetime.
+
+    Pandas has no dedicated dtype for ``datetime.date``, so such a column has
+    the ``object`` dtype and is neither a date nor a string column. Polars, on
+    the other hand, stores them as ``pl.Date``. Casting them here makes the
+    handling of the two dataframe libraries consistent. Columns that do not
+    contain only dates are returned unchanged.
+    """
+    if not (sbd.is_pandas(column) and sbd.is_object(column)):
+        return column
+    not_null = sbd.drop_nulls(column)
+    if sbd.shape(not_null)[0] == 0:
+        return column
+    if not all(type(value) is datetime.date for value in not_null.head(_SAMPLE_SIZE)):
+        return column
+    try:
+        return pd.to_datetime(column)
+    except Exception:
+        return column
 
 
 class ToDatetime(SingleColumnTransformer):
@@ -390,6 +413,7 @@ class ToDatetime(SingleColumnTransformer):
 
         self.all_outputs_ = [sbd.name(column)]
 
+        column = _cast_date_objects(column)
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)
