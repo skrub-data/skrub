@@ -53,6 +53,12 @@ Bugfixes
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- Left joins performed on polars dataframes (for example by the
+  :class:`Joiner` and :class:`AggJoiner`) now request that polars preserve the
+  row order of the left table, so the output keeps the order of the main table.
+  When the installed polars is older than 1.17.0 (which lacks the
+  ``maintain_order`` join parameter) a warning is emitted instead. :pr:`1871` by
+  :user:`Saba Siddique <sabasiddique1>`.
 
 Deprecations
 ------------
