@@ -26,9 +26,7 @@ def column_associations(df, *, compute_pearson=True):
     df : dataframe
         The dataframe whose columns will be compared to each other.
     compute_pearson : bool, default=True
-        Whether to compute Pearson's Correlation Coefficient. Setting this to
-        ``False`` avoids converting Polars dataframes to pandas and therefore
-        does not require PyArrow.
+        Whether to compute Pearson's Correlation Coefficient. Currently, computing Pearson correlations for polars DataFrames requires PyArrow to be installed and internally converts the dataframe to pandas.
 
     Returns
     -------
