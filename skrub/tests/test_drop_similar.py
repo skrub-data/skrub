@@ -9,7 +9,6 @@ from skrub.conftest import skip_polars_installed_without_pyarrow
 
 _THRESHOLD_ERROR = "Threshold must be a number between 0 and 1"
 _TYPE_ERROR = "Threshold must be a number"
-_PYARROW_ERROR = "DropSimilar requires the Pyarrow package to run on Polars dataframes."
 
 
 @pytest.fixture
@@ -120,27 +119,19 @@ def test_wrong_threshold(df_module, threshold, error):
 
 
 def test_without_pyarrow(monkeypatch):
-    """
-    DropSimilar requires Pandas dataframes. If the user is working with Polars
-    but does not have the Pyarrow module to convert their dataframe to Pandas,
-    it is expected that `DropSimilar.fit_transform` should fail.
-
-    This test forces this specific import configuration using monkeypatch and
-    a custom `import` function, and checks that the method does indeed fail.
-    """
+    """DropSimilar works with Polars without importing PyArrow."""
     pl = pytest.importorskip("polars")
-    example_dataframe = pl.DataFrame({"a": [1, 2, 3]})
+    example_dataframe = pl.DataFrame({"original": [1, 2, 3], "duplicate": [1, 2, 3]})
     monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
-    assert "pyarrow" not in sys.modules
-    ds = DropSimilar()
-
     builtin_import = builtins.__import__
 
     def _import(name, *args, **kwargs):
-        if name == "pyarrow":
+        if name == "pyarrow" or name.startswith("pyarrow."):
             raise ImportError(name)
         return builtin_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _import)
-    with pytest.raises(ImportError, match=_PYARROW_ERROR):
-        ds.fit_transform(example_dataframe)
+
+    result = DropSimilar().fit_transform(example_dataframe)
+
+    assert result.columns == ["original"]

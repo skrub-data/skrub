@@ -139,16 +139,7 @@ class DropSimilar(TransformerMixin, SkrubBaseEstimator):
                 f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
 
-        if sbd.is_polars(X):
-            try:
-                import pyarrow  # noqa F401
-            except ImportError:
-                raise ImportError(
-                    "DropSimilar requires the Pyarrow package to run on Polars"
-                    " dataframes."
-                )
-
-        association_df = column_associations(X)
+        association_df = column_associations(X, compute_pearson=False)
         self.column_associations_ = s.select(
             association_df, ["left_column_name", "right_column_name", "cramer_v"]
         )
