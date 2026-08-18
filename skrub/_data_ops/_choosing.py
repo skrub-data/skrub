@@ -864,6 +864,19 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
 
     optional :
         Choose between executing an operation or not.
+
+    Examples
+    --------
+    >>> import skrub
+    >>> print(skrub.choose_float(0,2).as_data_op().skb.describe_param_grid())
+    - choose_float(0, 2): choose_float(0, 2)
+    >>> print(skrub.choose_float(0,2).default())
+    1.0
+
+    We can set the default to another value:
+
+    >>> print(skrub.choose_float(0, 2, default=1.5).default())
+    1.5
     """
     if n_steps is None:
         return NumericChoice(
@@ -935,6 +948,19 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
 
     optional :
         Choose between executing an operation or not.
+
+    Examples
+    --------
+    >>> import skrub
+    >>> print(skrub.choose_int(0,2).as_data_op().skb.describe_param_grid())
+    - choose_int(0, 2): choose_int(0, 2)
+    >>> print(skrub.choose_int(0,2).default())
+    1
+
+    We can set the default to another value:
+
+    >>> print(skrub.choose_int(0, 2, default=0).default())
+    0
     """
     if n_steps is None:
         return NumericChoice(
