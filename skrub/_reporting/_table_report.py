@@ -127,13 +127,15 @@ class TableReport:
 
     title : str
         Title for the report.
+
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
         Each key is the filter named to be displayed in the dropdown menu
-        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
-        formats for the filter values are a list of column names,
-        a list of column indices, or a Selector object.
+        (e.g. ``"first_10"``), and the value is the desired filter. Filters
+        may be specified as a list of column names, a list of column indices,
+        or a :ref:`skrub selectors <user_guide_selectors>` object.
         See the end of the "Examples" section below for details.
+
     verbose : int, default = None
         Whether to print progress information while the report is being generated.
 
@@ -141,6 +143,7 @@ class TableReport:
           which then defaults to 1.
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
+
     plot_distributions : bool or "auto", default="auto"
         Whether to plot the distributions of the columns.
 
@@ -202,9 +205,8 @@ class TableReport:
     >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two'], c=[11.1, 11.1]))
     >>> report = TableReport(df)
 
-    If you are in a Jupyter notebook, to display the report just have it be the
-    last expression evaluated in a cell so that it is displayed in the cell's
-    output.
+    To display the report in a Jupyter notebook, simply evaluate the last line above
+    in a cell.
 
     >>> report
     <TableReport: use .open() or .markdown() to display>
@@ -263,9 +265,6 @@ class TableReport:
     With the code above, in addition to the default filters such as "All
     columns", "Numeric columns", etc., the added "my_filter" will be available
     in the report, selecting both columns "a" and "b".
-    Filters may be specified as a list of column names, a list of column indices,
-    or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
-
     """
 
     def __init__(
