@@ -162,24 +162,24 @@ def test_svg_anchor_google_colab(monkeypatch):
     assert re.search(rb'<a target="_blank" xlink:title=".*SOME TEXT', svg)
 
 
-def test_no_pydot(monkeypatch):
-    monkeypatch.delitem(sys.modules, "pydot", raising=False)
+def test_no_pygraphviz(monkeypatch):
+    monkeypatch.delitem(sys.modules, "pygraphviz", raising=False)
     builtin_import = builtins.__import__
 
     def _import(name, *args, **kwargs):
-        if name == "pydot":
+        if name == "pygraphviz":
             raise ImportError(name)
         return builtin_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _import)
-    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
+    with pytest.raises(RuntimeError, match="please install pygraphviz and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
 
 
 def test_no_graphviz(monkeypatch):
-    pydot = pytest.importorskip("pydot")
-    monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
-    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
+    pygraphviz = pytest.importorskip("pygraphviz")
+    monkeypatch.setattr(pygraphviz.AGraph, "layout", Mock(side_effect=Exception()))
+    with pytest.raises(RuntimeError, match="please install pygraphviz and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
 
 

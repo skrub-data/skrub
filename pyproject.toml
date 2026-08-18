@@ -38,7 +38,7 @@ dependencies = [
   "jinja2>=3.1.2",
   "matplotlib>=3.6.1",
   "requests>=2.27.1",
-  "pydot",
+  "pygraphviz>=2.0.1",
 ]
 
 [tool.setuptools.dynamic]
@@ -104,14 +104,12 @@ scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.6.1"
-pydot = "*"
 requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
 jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
-pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 sphinx-design = "*"
@@ -167,6 +165,11 @@ jupyterlab = "*"
 
 [tool.pixi.pypi-dependencies]
 skrub = { path = ".", editable = true }
+pygraphviz = ">=2.0.1"
+
+# [tool.pixi.target.win-64.pypi-dependencies]
+# pygraphviz = ">=2.0.1"
+
 
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
@@ -175,7 +178,6 @@ scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.6.1"
-pydot = "*"
 requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
@@ -207,7 +209,6 @@ scikit-learn = "*"
 scipy = "*"
 jinja2 = "*"
 matplotlib = "*"
-pydot = "*"
 requests = "*"
 pyarrow = "*"
 polars = "*"

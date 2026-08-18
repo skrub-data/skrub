@@ -261,7 +261,7 @@ class GraphDrawing:
 
     @property
     def svg(self):
-        svg = self.graph.create_svg(encoding="utf-8")
+        svg = self.graph.draw(format="svg")
         svg = re.sub(b"<title>.*?</title>", b"", svg)
         if "google.colab" in sys.modules:
             # Fix for #1589
@@ -271,7 +271,7 @@ class GraphDrawing:
 
     @property
     def png(self):
-        return self.graph.create_png(encoding="utf-8")
+        return self.graph.draw(format="png")
 
     def _repr_html_(self):
         return self.svg.decode("utf-8")
@@ -334,24 +334,27 @@ def _dot_id(n):
 
 
 def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
-    # TODO if pydot or graphviz not available fallback on some other plotting
-    # solution eg a vendored copy of mermaid? outputting html instead of svg
     _utils.check_graphviz()
 
-    import pydot
+    import pygraphviz as pgv
 
     g = graph(data_op)
-    dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
+    pgv_graph = pgv.AGraph(directed=True, rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
         kwargs = _node_kwargs(e, url=url, show_ids=show_ids)
-        kwargs["id"] = _dot_id(node_id)
-        node = pydot.Node(_dot_id(node_id), **kwargs)
-        dot_graph.add_node(node)
+        d_id = _dot_id(node_id)
+        kwargs["id"] = d_id
+        pgv_graph.add_node(d_id)
+        pgv_node = pgv.Node(pgv_graph, d_id)
+        pgv_node.attr.update(kwargs)
     for c, children in g["children"].items():
         for child in children:
-            dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c), arrowsize=0.7))
-
-    return GraphDrawing(dot_graph)
+            edge_id = _dot_id(child), _dot_id(c)
+            pgv_graph.add_edge(*edge_id)
+            edge = pgv.Edge(pgv_graph, *edge_id)
+            edge.attr["arrowsize"] = 0.7
+    pgv_graph.layout(prog="dot")
+    return GraphDrawing(pgv_graph)
 
 
 def describe_params(params, data_op_choices):
