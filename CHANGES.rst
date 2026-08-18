@@ -53,6 +53,11 @@ Bugfixes
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DatetimeEncoder` no longer raises ``UnboundLocalError`` when
+  ``resolution=None`` is combined with ``periodic_encoding="circular"`` or
+  ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
+  ``resolution`` is finer than ``"hour"``. :pr:`2240` by
+  :user:`Achraf Ez <Hrafz>`.
 
 Deprecations
 ------------
