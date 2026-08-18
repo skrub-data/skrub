@@ -646,7 +646,7 @@ def test_to_categorical(df_module):
         import polars as pl
 
         assert s.dtype == pl.Categorical
-        assert list(s.cat.get_categories()) == list("ab")
+        assert list(s.unique()) == list("ab")
     if df_module.description == "pandas-numpy-dtypes":
         import pandas as pd
 
