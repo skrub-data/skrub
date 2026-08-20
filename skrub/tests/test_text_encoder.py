@@ -15,6 +15,7 @@ warnings are being raised.
 import pickle
 import sys
 
+import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
@@ -135,6 +136,40 @@ def test_wrong_parameters(encoder):
 
     with pytest.raises(ValueError, match="Got model_name=1"):
         clone(encoder).set_params(model_name=1)._check_params()
+
+    with pytest.raises(ValueError, match="Got verbose=-1"):
+        clone(encoder).set_params(verbose=-1)._check_params()
+
+    with pytest.raises(ValueError, match="Got verbose='yes'"):
+        clone(encoder).set_params(verbose="yes")._check_params()
+
+
+def test_verbose_default():
+    """The default verbose level is 0 (silent), consistent with the rest of
+    skrub (e.g. GapEncoder, TableReport)."""
+    assert TextEncoder().verbose == 0
+
+
+@pytest.mark.parametrize(
+    "verbose, expected_show_progress_bar",
+    [(0, False), (1, True), (2, True), (False, False), (True, True)],
+)
+def test_verbose_controls_progress_bar(df_module, verbose, expected_show_progress_bar):
+    """``verbose`` (int or bool) is forwarded to sentence-transformers as the
+    boolean ``show_progress_bar`` flag."""
+    calls = []
+
+    class FakeEstimator:
+        def encode(self, X, **kwargs):
+            calls.append(kwargs["show_progress_bar"])
+            return np.zeros((len(X), 3))
+
+    X = df_module.make_column("", ["hello", "hola"])
+    encoder = TextEncoder(n_components=None, verbose=verbose)
+    encoder._estimator = FakeEstimator()
+    encoder.fit_transform(X)
+
+    assert calls == [expected_show_progress_bar]
 
 
 def test_wrong_model_name(encoder):
