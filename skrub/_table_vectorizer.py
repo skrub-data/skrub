@@ -186,12 +186,7 @@ def _get_preprocessors(
 
 def _list_transformations(estimator, max_cols=10):
     message = ""
-
-    match estimator:
-        case TableVectorizer():
-            post = estimator._postprocessors
-        case _:
-            post = []
+    post = estimator._postprocessors if hasattr(estimator, "_postprocessors") else []
 
     template = "{} ({} columns):\n\t- {}\n"
 
@@ -199,30 +194,21 @@ def _list_transformations(estimator, max_cols=10):
         if step == "checkinputdataframe":
             continue
         transformer = estimator._pipeline.named_steps[step]
-        transformer_name = transformer.transformer.__class__.__name__
+        label = transformer.transformer.__class__.__name__
+        all_cols = transformer.used_inputs_
         match transformer.transformer:
             case DropUninformative():
-                dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
-                if not dropped:
-                    continue
-                label = transformer_name
-                n_cols = len(dropped)
-                columns = _limit_cols(list(dropped), max_cols=max_cols)
-            case ToFloat() if transformer not in post:
-                label = transformer_name
-                n_cols = len(transformer.used_inputs_)
-                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
-            case ToDatetime():
-                label = transformer_name
-                n_cols = len(transformer.used_inputs_)
-                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
+                all_cols = set(transformer.all_inputs_) - set(transformer.all_outputs_)
             case CleanNullStrings():
                 label = "Null values cleaned"
-                n_cols = len(transformer.used_inputs_)
-                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
+            case ToFloat() if transformer in post:
+                all_cols = []
             case _:
                 continue
-        message += template.format(label, n_cols, "\n\t- ".join(columns))
+        n_cols = len(all_cols)
+        if n_cols > 0:
+            columns = _limit_cols(all_cols, max_cols=max_cols)
+            message += template.format(label, n_cols, "\n\t- ".join(columns))
     return message
 
 
