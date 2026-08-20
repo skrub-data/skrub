@@ -269,7 +269,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 )
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
-        self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
+        self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], unq_X[lookup])
         # Init the activations unq_H of each unique input string
         unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_components)))
         # Update self.H_dict_ with unique input strings and their activations
