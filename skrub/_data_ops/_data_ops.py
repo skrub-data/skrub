@@ -34,6 +34,7 @@ import itertools
 import operator
 import pathlib
 import re
+import sys
 import textwrap
 import traceback
 import types
@@ -195,6 +196,28 @@ def _format_data_op_creation_stack():
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
     return traceback.format_list(stack)
+
+
+def _unpack_arity():
+    """Number of targets in the unpacking assignment being executed, if any.
+
+    Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
+    """
+    if (getframe := getattr(sys, "_getframe", None)) is None:
+        return None
+    try:
+        # skip the frames of this function and of DataOp.__iter__
+        frame = getframe(2)
+        for instruction in dis.get_instructions(frame.f_code):
+            if instruction.offset == frame.f_lasti:
+                if instruction.opname == "UNPACK_SEQUENCE":
+                    return instruction.arg
+                return None
+    except Exception:
+        # this is best-effort introspection: anything unexpected must fall back
+        # on refusing to iterate, not raise something else.
+        pass
+    return None
 
 
 class DataOpImpl:
@@ -700,6 +723,13 @@ class DataOp:
         )
 
     def __iter__(self):
+        # Unpacking (`a, b = data_op`) is supported: we know how many values are
+        # expected, so we can create a node for each of them. Any other kind of
+        # iteration would need the length of the result, which is unknown until
+        # the DataOp is evaluated.
+        if (arity := _unpack_arity()) is not None:
+            values = unpack(self, arity)
+            return iter([values[i] for i in range(arity)])
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -1660,6 +1690,33 @@ class GetItem(DataOpImpl):
 
     def pretty_repr(self):
         return f"[{_get_preview(self.key)!r}]"
+
+
+class AsTuple(DataOpImpl):
+    """Node created by unpacking a DataOp, e.g. ``a, b = data_op``."""
+
+    _fields = ["iterable", "expected_length"]
+
+    def compute(self, e, mode, environment):
+        # converting to a tuple (rather than indexing into the result directly)
+        # allows unpacking any iterable, and makes sure an iterator is consumed
+        # only once even though each target indexes into this node.
+        result = tuple(e.iterable)
+        expected, got = e.expected_length, len(result)
+        if got != expected:
+            problem = "not enough" if got < expected else "too many"
+            raise ValueError(
+                f"{problem} values to unpack (expected {expected}, got {got})"
+            )
+        return result
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {short_repr(self.iterable)}>"
+
+
+@checked_data_op_constructor
+def unpack(iterable, expected_length):
+    return DataOp(AsTuple(iterable, expected_length))
 
 
 class Call(DataOpImpl):

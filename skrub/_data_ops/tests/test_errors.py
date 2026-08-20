@@ -2,6 +2,7 @@ import pickle
 import re
 import sys
 import traceback
+import types
 
 import numpy as np
 import pytest
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 import skrub
+from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -26,6 +28,83 @@ def test_for():
     ):
         for _item in a:
             pass
+
+
+def test_star_unpacking():
+    # unlike `a, b = data_op`, iteration with a starred target does not tell us
+    # how many values are expected so it remains unsupported.
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, *_rest = a
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        (lambda *args: None)(*a)
+
+
+def test_unpacking_wrong_number_of_targets():
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*too many values to unpack \(expected 2, got 3\)",
+    ):
+        _first, _second = a
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*not enough values to unpack \(expected 4, got 3\)",
+    ):
+        _first, _second, _third, _fourth = a
+
+
+def _bytecode_inspection_failure(code):
+    raise RuntimeError("cannot inspect bytecode")
+
+
+@pytest.mark.parametrize(
+    "module_name, replacement",
+    [
+        # a Python implementation that does not provide sys._getframe
+        pytest.param("sys", types.SimpleNamespace(), id="no_getframe"),
+        # inspecting the bytecode fails
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=_bytecode_inspection_failure),
+            id="inspection_error",
+        ),
+        # the instruction being executed is not found in the bytecode
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=lambda code: iter(())),
+            id="instruction_not_found",
+        ),
+    ],
+)
+def test_unpacking_without_bytecode_inspection(monkeypatch, module_name, replacement):
+    # `a, b = data_op` relies on finding the UNPACK_SEQUENCE instruction that is
+    # being executed. When that is not possible we fall back on refusing to
+    # iterate, as users can always index into the result instead.
+    monkeypatch.setattr(_data_ops, module_name, replacement)
+    a = skrub.var("a", [1, 2])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, _second = a
+
+
+def test_unpacking_wrong_number_of_targets_at_runtime():
+    # without a value for 'a' the length is only known when the plan runs
+    a = skrub.var("a")
+    first, _second = a
+    if sys.version_info < (3, 11):
+        err_t, err_msg = RuntimeError, "Evaluation of node <AsTuple"
+    else:
+        err_t, err_msg = ValueError, "too many values to unpack"
+    with pytest.raises(err_t, match=err_msg):
+        first.skb.eval({"a": [1, 2, 3]})
 
 
 def test_if():

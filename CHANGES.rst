@@ -12,6 +12,10 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to unpack a :class:`DataOp` that evaluates to several
+  values, for example ``train, test = data_op``. Each target becomes a DataOp
+  that extracts one of the values.
+  :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
 
 Changes
 -------
