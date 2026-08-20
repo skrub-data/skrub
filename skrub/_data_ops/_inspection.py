@@ -1,3 +1,5 @@
+import base64
+import copy
 import datetime
 import html
 import io
@@ -5,11 +7,13 @@ import numbers
 import re
 import shutil
 import sys
+import uuid
 import webbrowser
 from pathlib import Path
 
 import jinja2
 import numpy as np
+import pydot
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -38,6 +42,7 @@ def _get_jinja_env():
         autoescape=True,
     )
     env.filters["format_duration"] = format_duration
+    env.globals["uuid"] = str(uuid.uuid4())
     return env
 
 
@@ -145,7 +150,6 @@ def _make_full_report(
     overwrite=False,
     title=None,
 ):
-    _utils.check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full DataOps plan
@@ -166,7 +170,8 @@ def _make_full_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
+    graph_drawing = draw_data_op_graph(data_op, url=make_url)
+    svg = graph_drawing.html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {"svg": svg, "node_status": node_status, "report_title": title}
@@ -220,6 +225,16 @@ def _make_full_report(
                 estimator_html_repr = None
         else:
             estimator_html_repr = None
+        # TODO:
+        #  - edit attributes to show node status (error, skipped)
+        #  - edit instead of copy?
+        #  - rename svg to graph_drawing_fragment
+        #  - no need for highlightcurrentnode javascript function anymore
+        graph_drawing_copy = copy.deepcopy(graph_drawing)
+        dot_node = graph_drawing_copy.graph.get_node(_dot_id(i))[0]
+        dot_node.set_fillcolor("#15ed8f")
+        dot_node.set_style("filled")
+        svg = graph_drawing_copy.html_fragment
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -256,11 +271,20 @@ def _make_full_report(
 
 
 class GraphDrawing:
-    def __init__(self, graph):
+    def __init__(self, graph, force_js_rendering=False):
         self.graph = graph
+        self.force_js_rendering = force_js_rendering
+
+    def _use_js(self):
+        return self.force_js_rendering or not _utils.has_graphviz()
+
+    def _base64(self):
+        dot = self.graph.to_string().encode("utf-8")
+        return base64.b64encode(dot).decode("ascii")
 
     @property
     def svg(self):
+        _utils.check_graphviz()
         svg = self.graph.create_svg(encoding="utf-8")
         svg = re.sub(b"<title>.*?</title>", b"", svg)
         if "google.colab" in sys.modules:
@@ -271,15 +295,37 @@ class GraphDrawing:
 
     @property
     def png(self):
+        _utils.check_graphviz()
         return self.graph.create_png(encoding="utf-8")
 
     def _repr_html_(self):
-        return self.svg.decode("utf-8")
+        if self._use_js():
+            return _get_template("render_dot_iframe.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return self.svg.decode("utf-8")
+
+    @property
+    def html_fragment(self):
+        if self._use_js():
+            return _get_template("render_dot_fragment.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return self.svg.decode("utf-8")
+
+    @property
+    def html(self):
+        if self._use_js():
+            return _get_template("render_dot.html").render(
+                {"dot_base64": self._base64()}
+            )
+        else:
+            return _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
 
     def open(self):
-        open_in_browser(
-            _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
-        )
+        open_in_browser(self.html)
 
     def _repr_png_(self):
         return self.png
@@ -334,12 +380,6 @@ def _dot_id(n):
 
 
 def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
-    # TODO if pydot or graphviz not available fallback on some other plotting
-    # solution eg a vendored copy of mermaid? outputting html instead of svg
-    _utils.check_graphviz()
-
-    import pydot
-
     g = graph(data_op)
     dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():

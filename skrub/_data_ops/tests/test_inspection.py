@@ -172,15 +172,13 @@ def test_no_pydot(monkeypatch):
         return builtin_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _import)
-    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
-        skrub.as_data_op(0).skb.draw_graph()
+    assert "Graphviz.load" in skrub.as_data_op(0).skb.draw_graph().html
 
 
 def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
-    with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
-        skrub.as_data_op(0).skb.draw_graph()
+    assert "Graphviz.load" in skrub.as_data_op(0).skb.draw_graph().html
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
