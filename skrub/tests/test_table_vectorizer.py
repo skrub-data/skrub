@@ -1354,7 +1354,7 @@ def test_list_transformations(df_module):
     expected_vectorizer_output = (
         "Preprocessors\n=============\n"
         + list_category("Null values cleaned", "null")
-        + list_category("Datetime", "datetime")
+        + list_category("ToDatetime", "datetime")
         + list_category("ToFloat", "float")
         + "\nProcessors by type\n==================\n"
         + list_category("PassThrough", "float", column_type="numeric")
@@ -1415,7 +1415,7 @@ def test_list_transformations(df_module):
     expected_cleaner_output = (
         list_category("Null values cleaned", "null", with_specific=False)
         + list_category("DropUninformative", "uninformative", with_specific=False)
-        + list_category("Datetime", "datetime", with_specific=False)
+        + list_category("ToDatetime", "datetime", with_specific=False)
     )
     """
     Expected output for the cleaner:

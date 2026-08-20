@@ -187,56 +187,42 @@ def _get_preprocessors(
 def _list_transformations(estimator, max_cols=10):
     message = ""
 
-    if isinstance(estimator, TableVectorizer):
-        post = estimator._postprocessors
-    else:
-        post = []
+    match estimator:
+        case TableVectorizer():
+            post = estimator._postprocessors
+        case _:
+            post = []
+
+    template = "{} ({} columns):\n\t- {}\n"
 
     for step in estimator._pipeline.named_steps:
         if step == "checkinputdataframe":
             continue
         transformer = estimator._pipeline.named_steps[step]
+        transformer_name = transformer.transformer.__class__.__name__
         match transformer.transformer:
             case DropUninformative():
                 dropped = set(transformer.all_inputs_) - set(transformer.all_outputs_)
-                if dropped:
-                    message += f"DropUninformative ({len(dropped)} columns):" + "\n\t- "
-                    message += (
-                        "\n\t- ".join(_limit_cols(list(dropped), max_cols=max_cols))
-                        + "\n"
-                    )
-            case ToFloat():
-                if transformer not in post:
-                    message += (
-                        f"ToFloat ({len(transformer.used_inputs_)} columns):" + "\n\t- "
-                    )
-                    message += (
-                        "\n\t- ".join(
-                            _limit_cols(transformer.used_inputs_, max_cols=max_cols)
-                        )
-                        + "\n"
-                    )
+                if not dropped:
+                    continue
+                label = transformer_name
+                n_cols = len(dropped)
+                columns = _limit_cols(list(dropped), max_cols=max_cols)
+            case ToFloat() if transformer not in post:
+                label = transformer_name
+                n_cols = len(transformer.used_inputs_)
+                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
             case ToDatetime():
-                message += (
-                    f"Datetime ({len(transformer.used_inputs_)} columns):" + "\n\t- "
-                )
-                message += (
-                    "\n\t- ".join(
-                        _limit_cols(transformer.used_inputs_, max_cols=max_cols)
-                    )
-                    + "\n"
-                )
+                label = transformer_name
+                n_cols = len(transformer.used_inputs_)
+                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
             case CleanNullStrings():
-                message += (
-                    f"Null values cleaned ({len(transformer.used_inputs_)} columns):"
-                    + "\n\t- "
-                )
-                message += (
-                    "\n\t- ".join(
-                        _limit_cols(transformer.used_inputs_, max_cols=max_cols)
-                    )
-                    + "\n"
-                )
+                label = "Null values cleaned"
+                n_cols = len(transformer.used_inputs_)
+                columns = _limit_cols(list(transformer.used_inputs_), max_cols=max_cols)
+            case _:
+                continue
+        message += template.format(label, n_cols, "\n\t- ".join(columns))
     return message
 
 
