@@ -57,6 +57,9 @@ Bugfixes
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`GapEncoder` with ``init="k-means"`` raised an error when the input
+  column contained missing values. This has been fixed in :pr:`2238` by
+  :user:`Achraf Ez <Hrafz>`.
 
 Deprecations
 ------------

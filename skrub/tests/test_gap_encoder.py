@@ -217,7 +217,8 @@ def test_score(generate_data):
     assert score_1 == score_2
 
 
-def test_missing_values(df_module):
+@pytest.mark.parametrize("init", ["k-means++", "random", "k-means"])
+def test_missing_values(df_module, init):
     """Test what happens when missing values are in the data."""
     if df_module.name == "pandas":
         m1, m2 = pd.NA, np.nan
@@ -225,7 +226,7 @@ def test_missing_values(df_module):
         m1, m2 = None, None
     observations = ["alice", "bob", None, "alice", m1, m2]
     observations = df_module.make_column("", observations)
-    enc = GapEncoder(n_components=3)
+    enc = GapEncoder(n_components=3, init=init)
     enc.fit_transform(observations)
     enc.transform(observations)
     enc.partial_fit(observations)
