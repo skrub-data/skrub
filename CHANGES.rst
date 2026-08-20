@@ -15,6 +15,13 @@ New Features
 
 Changes
 -------
+- :class:`TextEncoder`'s ``verbose`` parameter is now an ``int`` instead of a
+  ``bool``, for consistency with :class:`GapEncoder`, :class:`TableReport` and
+  :func:`patch_display`, where ``verbose=0`` silences the progress bar and
+  ``verbose>=1`` shows it. The default is now ``0`` (it used to be ``False``,
+  while the docstring incorrectly documented it as ``True``). Passing a
+  boolean is still accepted for backward compatibility.
+  :pr:`2249` by :user:`Jayant-kernel <Jayant-kernel>`.
 - :func:`patch_display` now uses a minimal, faster TableReport without plots or
   column associations by default. The old behavior can still be achieved by calling
   ``patch_display(plot_distributions="auto", compute_associations="auto")``.
