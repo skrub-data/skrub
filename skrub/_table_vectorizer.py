@@ -570,6 +570,22 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         return np.asarray(self.all_outputs_)
 
     def list_transformations(self, max_cols=10):
+        """Returns a string reporting the transformations applied by the \
+        TableVectorizer and the columns they are each applied to.
+
+        Parameters
+        ----------
+        max_cols : int
+            The maximum amount of columns to list per transformer. Any overflow is
+            represented by `...`
+
+        Returns
+        -------
+        full_list : string
+            An ASCII formatted message sorting transformers by category
+            (preprocessing, specific processors, etc.) and listing the columns
+            to which each of these transformers is applied.
+        """
         return _list_transformations(self, max_cols=max_cols)
 
 
@@ -1199,10 +1215,13 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         return np.asarray(self.all_outputs_)
 
     def list_transformations(self, max_cols=10):
-        """Returns a string reporting the transformations applied by the table
-        vectorizer, and the columns they are each applied to. This covers every
-        preprocessing step, each of the `numeric`, `datetime`, `low cardinality`
-        and `high cardinality` transformations and any specific transformer.
+        """Returns a string reporting the transformations applied by the \
+            TableVectorizer and the columns they are each applied to.
+
+        This covers every preprocessing step, each of the `numeric`, `datetime`, \
+        `low cardinality` and `high cardinality` transformations and any \
+        specific transformer. Post-processors being always the same \
+        (ToFloat applied to every numeric column), they are not mentioned.
 
         Parameters
         ----------
@@ -1233,13 +1252,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         for transformer_type, transformer_cols in all_transformers.items():
             if transformer_cols:
                 cols_to_print = list(transformer_cols)
-                """
-                For each column type (numeric, datetime etc.), there is a
-                dedicated transformer in the TableVectorizer that must be
-                displayed (for instance, self.numeric = Passthrough()).
-                The corresponding attribute is therefore fetched
-                and its class name printed.
-                """
+                # For each column type (numeric, datetime etc.), there is a
+                # dedicated transformer in the TableVectorizer that must be
+                # displayed (for instance, self.numeric = Passthrough()).
+                # The corresponding attribute is therefore fetched
+                # and its class name printed.
                 vectorize_transformations += (
                     f"{getattr(self, transformer_type).__class__.__name__} "
                     f"({transformer_type} - {len(cols_to_print)} columns):" + "\n\t- "
@@ -1265,12 +1282,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
                     "\n\t- ".join(_limit_cols(specific, max_cols=max_cols)) + "\n"
                 )
 
-        t_post = self._postprocessors[0]
-        postprocessing_transformations += (
-            f"ToFloat postprocessing ({len(t_post.used_inputs_)} columns):"
-            "\n\tAll float columns"
-        )
-
         full_list = (
             preprocessing_transformations
             + "\n"
@@ -1284,7 +1295,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
 
 
 def _limit_cols(col_names, max_cols=10):
-    list_cols = col_names[:max_cols]
-    if len(col_names) > max_cols:
-        list_cols += ["..."]
+    list_cols = (
+        col_names[:max_cols] + ["..."] if len(col_names) > max_cols else col_names
+    )
     return list_cols
