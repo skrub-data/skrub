@@ -27,6 +27,7 @@ from skrub._table_vectorizer import (
 )
 from skrub._to_float import ToFloat
 from skrub._to_str import ToStr
+from skrub._utils import PassThrough
 from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -1277,3 +1278,158 @@ def test_duration_to_float(df_module):
     vectorizer = Cleaner()
     transformed = vectorizer.fit_transform(df)
     df_module.assert_column_equal(transformed["duration"], df["duration"])
+
+
+def test_list_transformations(df_module):
+    def list_category(line_name, key, column_type="", with_specific=True, max_cols=3):
+        expected_dict = {
+            "null": ["low_card", "datetime"]
+            + [f"passthrough_{i}" for i in range(1, 6)],
+            "uninformative": ["uninformative"],
+            "datetime": ["datetime"],
+            "float": ["numbers", "uninformative"],
+            "low_card": ["low_card"],
+            "high_card": [],
+            "specific": [f"passthrough_{i}" for i in range(1, 6)],
+        }
+        col_list = expected_dict[key]
+        if with_specific:
+            col_list = [x for x in col_list if x not in expected_dict["specific"]]
+
+        disp_list = col_list[:max_cols]
+
+        if len(col_list) != len(disp_list):
+            disp_list.append("...")
+
+        joiner = ""
+        if column_type:
+            joiner += " - "
+
+        full_list = ""
+        if col_list == []:
+            header = f"No {column_type} columns have been detected."
+        else:
+            header = f"{line_name} ({column_type}{joiner}{len(col_list)} columns):"
+            full_list = "\n\t- " + "\n\t- ".join(disp_list) + "\n"
+
+        return header + full_list
+
+    passthrough_line = [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "indigo",
+        "violet",
+    ]
+
+    df_dict = {
+        "numbers": [1, 2, 3, 4, 5, 6, None],
+        "low_card": ["up", "up", "up", "down", "down", "up", "down"],
+        "datetime": [
+            "2026-06-01",
+            "2026-06-04",
+            "2026-07-03",
+            "2026-05-29",
+            "2026-01-08",
+            "2026-06-20",
+            None,
+        ],
+        "uninformative": [False, False, False, False, False, False, False],
+    }
+    for i in range(1, 6):
+        df_dict[f"passthrough_{i}"] = passthrough_line
+
+    df = df_module.make_dataframe(df_dict)
+
+    vectorizer = TableVectorizer(
+        specific_transformers=[
+            (PassThrough(), [f"passthrough_{i}" for i in range(1, 6)])
+        ]
+    )
+    _ = vectorizer.fit_transform(df)
+    vectorizer_output = vectorizer.list_transformations(max_cols=3)
+
+    expected_vectorizer_output = (
+        "Preprocessors\n=============\n"
+        + list_category("Null values cleaned", "null")
+        + list_category("ToDatetime", "datetime")
+        + list_category("ToFloat", "float")
+        + "\nProcessors by type\n==================\n"
+        + list_category("PassThrough", "float", column_type="numeric")
+        + list_category("DatetimeEncoder", "datetime", column_type="datetime")
+        + list_category("OneHotEncoder", "low_card", column_type="low_cardinality")
+        + list_category("StringEncoder", "high_card", column_type="high_cardinality")
+        + "\n\nSpecific transformers\n=====================\n"
+        + list_category(
+            "PassThrough", "specific", column_type="specific", with_specific=False
+        )
+        + "\nPostprocessors\n==============\n"
+        + "ToFloat postprocessing (7 columns):"
+        + "\n\tAll float columns"
+    )
+    """
+    Expected output for the TableVectorizer:
+
+    Preprocessors
+    =============
+    Null values cleaned (2 columns):
+            - low_card
+            - datetime
+    Datetime (1 columns):
+            - datetime
+    ToFloat (2 columns):
+            - numbers
+            - uninformative
+
+    Processors by type
+    ==================
+    PassThrough (numeric - 2 columns):
+            - numbers
+            - uninformative
+    DatetimeEncoder (datetime - 1 columns):
+            - datetime
+    OneHotEncoder (low_cardinality - 1 columns):
+            - low_card
+    No high_cardinality columns have been detected.
+
+    Specific transformers
+    =====================
+    PassThrough (specific - 5 columns):
+            - passthrough_1
+            - passthrough_2
+            - passthrough_3
+            - ...
+
+    Postprocessors
+    ==============
+    ToFloat postprocessing (7 columns):
+            All float columns"""
+    assert vectorizer_output == expected_vectorizer_output
+
+    vectorizer = Cleaner(drop_if_constant=True)
+    _ = vectorizer.fit_transform(df)
+
+    cleaner_output = vectorizer.list_transformations(max_cols=3)
+    expected_cleaner_output = (
+        list_category("Null values cleaned", "null", with_specific=False)
+        + list_category("DropUninformative", "uninformative", with_specific=False)
+        + list_category("ToDatetime", "datetime", with_specific=False)
+    )
+    """
+    Expected output for the cleaner:
+    Null values cleaned (7 columns):
+            - low_card
+            - datetime
+            - passthrough_1
+            - passthrough_2
+            - passthrough_3
+            - passthrough_4
+            - passthrough_5
+    DropUninformative (1 columns):
+            - uninformative
+    Datetime (1 columns):
+            - datetime
+    """
+    assert cleaner_output == expected_cleaner_output
