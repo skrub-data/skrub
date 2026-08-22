@@ -5,6 +5,7 @@ The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
+from skrub import selectors as s
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
@@ -98,7 +99,8 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
 
         If set to `None`, `cols` is set to a list of lists. For each table
         in `aux_tables`, the corresponding list will be all columns of that table,
-        except the `aux_keys` associated with that table.
+        except the `aux_keys` associated with that table, in the order in which
+        they appear in that table.
 
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
@@ -360,11 +362,12 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
             or if `cols` is not of a valid type, of if all `cols`
             are not present in the corresponding aux_table.
         """
-        # If no `cols` provided, all columns but `aux_keys` are used.
+        # If no `cols` provided, all columns but `aux_keys` are used, in the
+        # order in which they appear in each aux table.
         cols = self.cols
         if cols is None:
             cols = [
-                list(set(table.columns) - set(key))
+                (~s.cols(*key)).expand(table)
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         else:
