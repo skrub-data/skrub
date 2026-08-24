@@ -325,11 +325,11 @@ def test_all_outputs_choice(datetime_cols, params, all_outputs):
 def test_periodic_encoders_match_extracted_features(
     datetime_cols, resolution, periodic_encoding
 ):
-    # A periodic encoder is only ever applied to a feature that was extracted, so
-    # fitting one for any other feature is wasted work. The levels to encode are
-    # therefore taken from ``extracted_features_``; deriving them by slicing
-    # ``_DEFAULT_ENCODING_PERIODS`` with an index into ``_TIME_LEVELS`` does not work,
-    # because the two are not ordered the same.
+    # A periodic encoder is only ever applied to a feature that was extracted, so we
+    # check that no unnecessary features are encoded. The levels to encode are
+    # therefore taken from ``extracted_features_``. When ``resolution`` is ``None``,
+    # the only periodic feature that should be encoded is ``weekday`` if the flag is
+    # set.
     for column in (datetime_cols.datetime, datetime_cols.date):
         for add_weekday in (False, True):
             enc = DatetimeEncoder(
