@@ -57,8 +57,8 @@ def fetch_employee_salaries(data_home=None, split="all"):
     --------
     >>> from skrub.datasets import fetch_employee_salaries
     >>> data = fetch_employee_salaries()
-    >>> data.x.shape
-    (9228, 7)
+    >>> data.X.shape
+    (9228, 8)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -250,7 +250,7 @@ def fetch_traffic_violations(data_home=None):
     >>> from skrub.datasets import fetch_traffic_violations
     >>> data = fetch_traffic_violations()
     >>> data.y.shape
-    (1578154, 1)
+    (1578154,)
     """
     return load_simple_dataset("traffic_violations", data_home)
 
@@ -338,7 +338,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
     >>> from skrub.datasets import fetch_credit_fraud
     >>> data = fetch_credit_fraud()
     >>> data.baskets.shape
-    (92790, 2)
+    (61241, 2)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -719,7 +719,8 @@ def fetch_california_housing(data_home=None):
     >>> from skrub.datasets import fetch_california_housing
     >>> data = fetch_california_housing()
     >>> print(data.keys())
-    dict_keys(['california_housing', 'X', 'y', 'metadata', 'path'])
+    dict_keys(['path', 'california_housing', 'california_housing_path', 'metadata',
+    'metadata_path', 'X', 'y'])
     """
     return load_simple_dataset("california_housing", data_home)
 
@@ -760,7 +761,7 @@ def fetch_electricity_forecasting(data_home=None):
 
     Examples
     --------
-    >>> import pandas as pdf
+    >>> import pandas as pd
     >>> from pathlib import Path
     >>> from skrub.datasets import fetch_electricity_forecasting
     >>> path = fetch_electricity_forecasting()
