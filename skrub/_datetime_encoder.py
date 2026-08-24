@@ -398,9 +398,11 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
-            if self.add_weekday:
-                encoding_levels += ["weekday"]
+            encoding_levels = [
+                feature
+                for feature in self.extracted_features_
+                if feature in _DEFAULT_ENCODING_PERIODS
+            ]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(

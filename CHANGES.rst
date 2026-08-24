@@ -65,6 +65,11 @@ Bugfixes
 - :class:`GapEncoder` with ``init="k-means"`` raised an error when the input
   column contained missing values. This has been fixed in :pr:`2238` by
   :user:`Achraf Ez <Hrafz>`.
+- :class:`DatetimeEncoder` no longer raises ``UnboundLocalError`` when
+  ``resolution=None`` is combined with ``periodic_encoding="circular"`` or
+  ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
+  ``resolution`` is finer than ``"hour"``. :pr:`2240` by
+  :user:`Achraf Ez <Hrafz>`.
 
 Deprecations
 ------------
