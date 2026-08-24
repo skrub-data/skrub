@@ -70,6 +70,11 @@ Bugfixes
   ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
   ``resolution`` is finer than ``"hour"``. :pr:`2240` by
   :user:`Achraf Ez <Hrafz>`.
+- When ``cols`` was not provided, :class:`AggJoiner` and :class:`MultiAggJoiner`
+  selected the columns to aggregate through a Python ``set``, so the order of the
+  aggregated output columns varied between runs. They now keep the order in which
+  the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
+  :user:`Dylan Pulver <dylanpulver>`.
 
 Deprecations
 ------------
