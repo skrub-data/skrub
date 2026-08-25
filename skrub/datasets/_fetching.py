@@ -166,8 +166,8 @@ def fetch_midwest_survey(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_midwest_survey
-    >>> data = fetch_midwest_survey()
-    >>> print(data.keys())
+    >>> data = fetch_midwest_survey()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
     dict_keys(['path', 'metadata', 'metadata_path', 'midwest_survey',
       'midwest_survey_path', 'X', 'y'])
     """
@@ -248,8 +248,8 @@ def fetch_traffic_violations(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_traffic_violations
-    >>> data = fetch_traffic_violations()
-    >>> data.y.shape
+    >>> data = fetch_traffic_violations()  # doctest: +SKIP
+    >>> data.y.shape  # doctest: +SKIP
     (1578154,)
     """
     return load_simple_dataset("traffic_violations", data_home)
