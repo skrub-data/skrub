@@ -228,6 +228,10 @@ def load_simple_dataset(dataset_name, data_home=None):
                 products.csv
                 metadata.json
 
+    Currently the docstrings for functions that call this function are skipped
+    during doctests because they require downloading the datasets, which produces
+    a print statement that disrupts the doctest output.
+
     Parameters
     ----------
     dataset_name : str
