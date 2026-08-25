@@ -56,7 +56,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
     Examples
     --------
     >>> from skrub.datasets import fetch_employee_salaries
-    >>> data = fetch_employee_salaries()
+    >>> data = fetch_employee_salaries()  # doctest: +ELLIPSIS
     >>> data.X.shape
     (9228, 8)
     """
@@ -126,7 +126,7 @@ def fetch_medical_charge(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_medical_charge
-    >>> data = fetch_medical_charge()
+    >>> data = fetch_medical_charge()  # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['path', 'medical_charge', 'medical_charge_path', 'metadata',
       'metadata_path', 'X', 'y'])
@@ -206,7 +206,7 @@ def fetch_open_payments(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_open_payments
-    >>> data = fetch_open_payments()
+    >>> data = fetch_open_payments()  # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['path', 'metadata', 'metadata_path', 'open_payments',
       'open_payments_path', 'X', 'y'])
@@ -287,7 +287,7 @@ def fetch_drug_directory(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_drug_directory
-    >>> data = fetch_drug_directory()
+    >>> data = fetch_drug_directory()  # doctest: +ELLIPSIS
     >>> data.drug_directory.shape
     (120215, 21)
     """
@@ -336,7 +336,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
     Examples
     --------
     >>> from skrub.datasets import fetch_credit_fraud
-    >>> data = fetch_credit_fraud()
+    >>> data = fetch_credit_fraud()  # doctest: +ELLIPSIS
     >>> data.baskets.shape
     (61241, 2)
     """
@@ -410,7 +410,7 @@ def fetch_toxicity(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_toxicity
-    >>> data = fetch_toxicity()
+    >>> data = fetch_toxicity()  # doctest: +ELLIPSIS
     >>> data.toxicity.shape
     (1000, 2)
     """
@@ -461,7 +461,7 @@ def fetch_videogame_sales(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_videogame_sales
-    >>> data = fetch_videogame_sales()
+    >>> data = fetch_videogame_sales()  # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['path', 'metadata', 'metadata_path',
       'videogame_sales', 'videogame_sales_path', 'X', 'y'])
@@ -506,7 +506,7 @@ def fetch_bike_sharing(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_bike_sharing
-    >>> data = fetch_bike_sharing()
+    >>> data = fetch_bike_sharing() # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['path', 'bike_sharing', 'bike_sharing_path',
       'metadata', 'metadata_path', 'X', 'y'])
@@ -548,7 +548,7 @@ def fetch_movielens(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_movielens
-    >>> data = fetch_movielens()
+    >>> data = fetch_movielens() # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['metadata', 'metadata_path', 'movies',
       'movies_path', 'ratings', 'ratings_path'])
@@ -605,7 +605,7 @@ def fetch_flight_delays(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_flight_delays
-    >>> data = fetch_flight_delays()
+    >>> data = fetch_flight_delays()  # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['airports', 'airports_path', 'flights', 'flights_path', 'metadata',
       'metadata_path', 'stations', 'stations_path', 'weather', 'weather_path'])
@@ -655,7 +655,7 @@ def fetch_country_happiness(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_country_happiness
-    >>> data = fetch_country_happiness()
+    >>> data = fetch_country_happiness()  # doctest: +ELLIPSIS
     >>> data.happiness_report.shape
     (146, 12)
     """
@@ -717,7 +717,7 @@ def fetch_california_housing(data_home=None):
     Examples
     --------
     >>> from skrub.datasets import fetch_california_housing
-    >>> data = fetch_california_housing()
+    >>> data = fetch_california_housing() # doctest: +ELLIPSIS
     >>> print(data.keys())
     dict_keys(['path', 'california_housing', 'california_housing_path', 'metadata',
     'metadata_path', 'X', 'y'])
@@ -764,7 +764,7 @@ def fetch_electricity_forecasting(data_home=None):
     >>> import pandas as pd
     >>> from pathlib import Path
     >>> from skrub.datasets import fetch_electricity_forecasting
-    >>> path = fetch_electricity_forecasting()
+    >>> path = fetch_electricity_forecasting() # doctest: +ELLIPSIS
     >>> bayonne = pd.read_csv(path / "weather_bayonne.csv")
     >>> bayonne.shape
     (38688, 7)
