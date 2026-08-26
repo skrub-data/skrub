@@ -60,8 +60,8 @@ def tabular_pipeline(estimator, *, n_jobs=None):
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
         - a scikit-learn estimator: the provided estimator is used as the final step.
-        - a scikit-learn pipeline : the whole pipeline is kept and usual pre-processing by the TableReport
-          is added on top, depending on the estimator in the last step of the pipeline.
+        - a scikit-learn pipeline : the whole pipeline is kept and usual pre-processing by the TableVectorizer
+          is added before, depending on the estimator in the last step of the pipeline.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
@@ -227,18 +227,13 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     cat_feat_kwargs = {"categorical_features": "from_dtype"}
-    if isinstance(estimator, Pipeline):
-        estimator_ = estimator[-1]
-    else:
-        estimator_ = estimator
-
-    if isinstance(estimator_, str):
-        if estimator_ in ("classifier", "classification"):
+    if isinstance(estimator, str):
+        if estimator in ("classifier", "classification"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        if estimator_ in ("regressor", "regression"):
+        if estimator in ("regressor", "regression"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
@@ -247,20 +242,30 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             "If ``estimator`` is a string it should be 'regressor', 'regression',"
             " 'classifier' or 'classification'."
         )
-    if isinstance(estimator_, type) and issubclass(estimator, BaseEstimator):
+    if isinstance(estimator, Pipeline):
+        *user_transformers, (_, estimator) = estimator.steps
+    else:
+        user_transformers = ()
+
+    if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
             "tabular_pipeline expects a scikit-learn estimator as its first"
-            f" argument. Pass an instance of {estimator_.__name__} rather than"
+            " argument, or a Pipeline containing a scikit-learn estimator. "
+            f"Pass an instance of {estimator.__name__} rather than"
             " the class itself."
         )
-    if not isinstance(estimator_, BaseEstimator):
+    if not isinstance(estimator, BaseEstimator):
         raise TypeError(
             "tabular_pipeline expects a scikit-learn estimator, 'regressor',"
             " or 'classifier' as its first argument."
         )
 
+    is_estimator_from_tabicl = estimator.__class__.__name__ in (
+        "TabICLClassifier",
+        "TabICLRegressor",
+    )
     if (
-        isinstance(estimator_, _HGBT_CLASSES)
+        isinstance(estimator, _HGBT_CLASSES)
         and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
@@ -275,17 +280,23 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             ),
             high_cardinality=StringEncoder(),
         )
+    elif is_estimator_from_tabicl:
+        vectorizer.set_params(
+            low_cardinality="passthrough",
+            high_cardinality=StringEncoder(),
+            cardinality_threshold=10,
+            datetime=DatetimeEncoder(periodic_encoding="spline"),
+        )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
 
     steps = [vectorizer]
-    if not get_tags(estimator_).input_tags.allow_nan:
-        steps.append(SimpleImputer(add_indicator=True))
-    if not isinstance(estimator_, _TREE_ENSEMBLE_CLASSES):
-        steps.append(SquashingScaler(max_absolute_value=5))
-    if isinstance(estimator, Pipeline):
-        steps_pipeline = [sp for _, sp in estimator.steps]
-        steps.extend(steps_pipeline)
-    else:
-        steps.append(estimator_)
+    if not is_estimator_from_tabicl:
+        if not get_tags(estimator).input_tags.allow_nan:
+            steps.append(SimpleImputer(add_indicator=True))
+        if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+            steps.append(SquashingScaler(max_absolute_value=5))
+
+    steps.extend([transformer for _, transformer in user_transformers])
+    steps.append(estimator)
     return make_pipeline(*steps)
