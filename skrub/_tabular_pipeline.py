@@ -291,6 +291,10 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
 
     steps = [vectorizer]
+    if not get_tags(estimator).input_tags.allow_nan:
+        steps.append(SimpleImputer(add_indicator=True))
+    if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+        steps.append(SquashingScaler(max_absolute_value=5))
     if not is_estimator_from_tabicl:
         if not get_tags(estimator).input_tags.allow_nan:
             steps.append(SimpleImputer(add_indicator=True))

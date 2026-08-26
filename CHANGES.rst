@@ -151,6 +151,18 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
+- TabularPipeline now uses the estimator when given a pipeline to determine the parameters of the TableVectorizer
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+
 
 **Misc**:
 
@@ -164,9 +176,6 @@ New Features
   ``table_report_n_rows`` parameter to globally control the default number of
   rows displayed in :class:`TableReport`.
   :pr:`2193` by :user:`Mann <m4nn2609-dot>`.
-- TabularPipeline now uses the estimator when given a pipeline to determine the parameters of the TableVectorizer
-  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
-
 
 Changes
 -------

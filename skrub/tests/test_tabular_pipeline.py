@@ -85,6 +85,16 @@ def test_from_dtype():
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
 
 
+def test_estimator_is_a_pipeline():
+    input_learner = LogisticRegression()
+    sk_pipeline = Pipeline([("pca", PCA()), ("clf", input_learner)])
+    tab_pipeline = tabular_pipeline(sk_pipeline)
+    assert len(tab_pipeline.steps) == 5
+    *_, pca, learner = tab_pipeline.named_steps.values()
+    assert learner is input_learner
+    assert isinstance(pca, PCA)
+
+
 class TabICLClassifier(BaseEstimator):
     """Dummy class which pretends to be `tabicl.TabICLClassifier`"""
 
@@ -115,16 +125,3 @@ def test_tabicl_pipeline(tabicl_estimator):
     assert isinstance(tv.high_cardinality, StringEncoder)
     assert tv.cardinality_threshold == 10
     assert tv.datetime.periodic_encoding == "spline"
-
-
-def test_estimator_is_a_pipeline():
-    input_learner = LogisticRegression()
-    sk_pipeline = Pipeline([("pca", PCA()), ("clf", input_learner)])
-    tab_pipeline = tabular_pipeline(sk_pipeline)
-    print(tab_pipeline)
-    assert len(tab_pipeline.steps) == 5
-    *_, pca, learner = tab_pipeline.named_steps.values()
-    print(tab_pipeline.named_steps.values())
-    print(pca, learner)
-    assert learner is input_learner
-    assert isinstance(pca, PCA)
