@@ -142,6 +142,16 @@ def deduplicate(
     This works best if there are a number of underlying categories that
     sometimes appear in the data with small variations and/or misspellings.
 
+    .. warning::
+        This method can be computationally expensive for large datasets, as it
+        requires computing pairwise distances between unique values and performing
+        hierarchical clustering.
+
+        Additionally, this is an unsupervised method that
+        relies on the assumption that the most common spelling in each cluster is
+        the correct one.
+        Depending on the use case, this assumption may not always hold true.
+
     Parameters
     ----------
     X : sequence of str

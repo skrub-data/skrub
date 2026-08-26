@@ -3,8 +3,8 @@
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_sharing:
-How to export and share the |TableReport|
------------------------------------------
+How to export and share the |TableReport| for use by other tools
+----------------------------------------------------------------
 
 The |TableReport| is generated as a standalone HTML file that includes the report
 data, the plots, and the Javascript necessary to provide interactivity.
@@ -29,9 +29,10 @@ It is also possible to export the raw HTML, or a HTML fragment to embed in a pag
 with :func:`~skrub.TableReport.html` and  :func:`~skrub.TableReport.html_snippet`
 respectively.
 
-Finally, it is possible to export the data in JSON format, which allows structured
+The report can be exported in JSON format, which allows structured
 access to the data and statistics used to build the report with
-:func:`~skrub.TableReport.json`.
+:func:`~skrub.TableReport.json`. The schema of the JSON data is reported in
+:ref:`table_report_json_schema`.
 
 .. code-block::
 
@@ -46,3 +47,16 @@ disabled directly when generating the table report.
 
     tr = TableReport(df, plot_distributions=False)
     json_data = tr.json()
+
+Finally, :func:`~skrub.TableReport.markdown` produces a shortened summary of the
+report in Markdown format. This summary contains the measured statistics and the
+associations (if measured): plots and table preview are skipped from this view.
+This format can be shared easily in text form, or fed to an AI agent to obtain
+insight about a given table.
+
+.. warning::
+
+  No sanitization of the input data is performed, and the report includes raw data
+  (column names and cell values). Therefore, it should not be used on untrusted data,
+  or when the resulting summary may be too large as it could lead to security risks
+  or performance problems.

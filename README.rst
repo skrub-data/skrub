@@ -17,7 +17,7 @@ skrub
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 
-**skrub** (formerly *dirty_cat*) is a Python
+**skrub** is a Python
 library that facilitates machine learning with dataframes.
 
 If you like the package, spread the word and ⭐ this repository!

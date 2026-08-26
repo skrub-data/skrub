@@ -84,6 +84,9 @@ def test_summarize(
         0.75: 33.6,
         1.0: 78.3,
     }
+    if order_by is None:
+        assert len(summary["columns"][5]["histogram_data"]["bin_counts"]) == 10
+        assert len(summary["columns"][5]["histogram_data"]["bin_edges"]) == 11
     assert summary["columns"][7]["null_count"] == 9
     assert summary["columns"][7]["nulls_level"] == "warning"
     assert summary["columns"][8]["null_count"] == 17
@@ -309,3 +312,17 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
             "Computing summary with different seeds should produce different "
             "associations."
         )
+
+
+def test_dollar_sign(df_module):
+    """
+    non-regression test for
+
+    https://github.com/skrub-data/skrub/issues/2097
+
+    without the right rcparams matplotlib interprets the $ as latex and crashes.
+    """
+    df = df_module.make_dataframe(
+        {"c": ["something with $$", "something else so column is not constant"]}
+    )
+    summarize_dataframe(df, with_plots=True, verbose=0)

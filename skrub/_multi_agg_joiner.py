@@ -2,12 +2,15 @@
 The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 """
 
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
+from skrub import selectors as s
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
+
+from ._base import SkrubBaseEstimator
 
 
 def _is_iterable_of_iterable_of_str(x):
@@ -17,38 +20,21 @@ def _is_iterable_of_iterable_of_str(x):
     )
 
 
-class MultiAggJoiner(TransformerMixin, BaseEstimator):
+class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
     """Extension of the :class:`AggJoiner` to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operations`.
-
-    If `cols` is not provided, `cols` is set to a list of lists.
-    For each table in `aux_tables`, the corresponding list will be all columns
-    of that table, except the `aux_keys` associated with that table.
-
     As opposed to the :class:`AggJoiner`, here `aux_tables` is an iterable of tables,
-    each of which will be joined on the main table. Therefore `aux_keys` is now
-    an iterable of keys, of the same length as `aux_tables`, and each entry
-    in `aux_keys` is used to join the corresponding auxiliary table. In the same way,
-    each entry in `cols` is an iterable of columns to aggregate in the corresponding
-    auxiliary table. If the keys are the same in the main table and the auxiliary
-    tables, the `keys` parameter can be used instead of `main_keys` and `aux_keys`.
+    each of which will be joined on the main table.
 
-    Therefore if we have a single table, we could either use
-
-    - the :class:`AggJoiner`: ``AggJoiner(aux_table, key="ID")``
-    - or the :class:`MultiAggJoiner`: ``MultiAggJoiner([aux_table], keys=[["ID"]])``
-
-    Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
-    an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
-    while ``["a", "b", ["c", "d"]]`` is not.
-
-    Using a column from the first auxiliary table to join the second auxiliary table
-    is not (yet) supported.
-
-    Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
+    .. warning::
+        The auxiliary table is stored in memory as part of the state of the transformer,
+        which can lead to high memory usage if the auxiliary table is large.
+        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>` and
+        a standard dataframe library (Pandas or Polars) to perform the aggregation
+        instead.
 
     Parameters
     ----------
@@ -113,7 +99,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         If set to `None`, `cols` is set to a list of lists. For each table
         in `aux_tables`, the corresponding list will be all columns of that table,
-        except the `aux_keys` associated with that table.
+        except the `aux_keys` associated with that table, in the order in which
+        they appear in that table.
 
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
@@ -125,6 +112,35 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     --------
     AggJoiner :
         Aggregate an auxiliary dataframe before joining it on a base dataframe.
+
+    Notes
+    ------
+    If `cols` is not provided, `cols` is set to a list of lists.
+    For each table in `aux_tables`, the corresponding list will be all columns
+    of that table, except the `aux_keys` associated with that table.
+
+    As opposed to the :class:`AggJoiner`, here `aux_tables` is an iterable of tables,
+    each of which will be joined on the main table. Therefore `aux_keys` is now
+    an iterable of keys, of the same length as `aux_tables`, and each entry
+    in `aux_keys` is used to join the corresponding auxiliary table. In the same way,
+    each entry in `cols` is an iterable of columns to aggregate in the corresponding
+    auxiliary table. If the keys are the same in the main table and the auxiliary
+    tables, the `keys` parameter can be used instead of `main_keys` and `aux_keys`.
+
+    Therefore if we have a single table, we could either use
+
+    - the :class:`AggJoiner`: ``AggJoiner(aux_table, key="ID")``
+    - or the :class:`MultiAggJoiner`: ``MultiAggJoiner([aux_table], keys=[["ID"]])``
+
+    Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
+    an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
+    while ``["a", "b", ["c", "d"]]`` is not.
+
+    Using a column from the first auxiliary table to join the second auxiliary table
+    is not (yet) supported.
+
+    Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
+
 
     Examples
     --------
@@ -346,11 +362,12 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             or if `cols` is not of a valid type, of if all `cols`
             are not present in the corresponding aux_table.
         """
-        # If no `cols` provided, all columns but `aux_keys` are used.
+        # If no `cols` provided, all columns but `aux_keys` are used, in the
+        # order in which they appear in each aux table.
         cols = self.cols
         if cols is None:
             cols = [
-                list(set(table.columns) - set(key))
+                (~s.cols(*key)).expand(table)
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         else:

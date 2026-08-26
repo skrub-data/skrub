@@ -23,19 +23,20 @@ def _patch(
     stashed_name = _stashed_name(method_name)
     if not hasattr(cls, stashed_name):
         setattr(cls, stashed_name, original_method)
-    setattr(
-        cls,
-        method_name,
-        lambda df: getattr(
-            TableReport(
-                df,
-                verbose=verbose,
-                plot_distributions=plot_distributions,
-                compute_associations=compute_associations,
-            ),
-            method_name,
-        )(),
-    )
+
+    def patched(df):
+        report = TableReport(
+            df,
+            verbose=verbose,
+            plot_distributions=plot_distributions,
+            compute_associations=compute_associations,
+        )
+        if not (plot_distributions or compute_associations):
+            report._set_minimal_mode()
+
+        return getattr(report, method_name)()
+
+    setattr(cls, method_name, patched)
 
 
 def _unpatch(cls, method_name):
@@ -70,16 +71,16 @@ def patch_display(
     pandas=True,
     polars=True,
     verbose=1,
-    plot_distributions="auto",
-    compute_associations="auto",
+    plot_distributions=False,
+    compute_associations=False,
 ):
-    """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
+    """Replace the default DataFrame HTML displays with :class:`skrub.TableReport`.
 
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
-    with a TableReport.
+    with a :class:`~skrub.TableReport`.
 
-    It can be undone with ``skrub.unpatch_display()``.
+    It can be undone with :func:`~skrub.unpatch_display`.
 
     Parameters
     ----------
@@ -92,18 +93,21 @@ def patch_display(
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    plot_distributions : bool or "auto", default="auto"
+    plot_distributions : bool or "auto", default=False
         Whether to plot distributions in :class:`~skrub.TableReport`.
+
         - ``True``: always generate plots, regardless of column count.
         - ``False``: never generate plots.
-        - ``"auto"`` (default): generate plots only when the number of columns
-          does not exceed the configured ``plots_threshold`` (see :func:`set_config`).
-    compute_associations : bool or "auto", default="auto"
+        - ``"auto"``: generate plots only when the number of columns
+          does not exceed the configured ``table_report_plots_threshold``
+          (see :func:`set_config`).
+    compute_associations : bool or "auto", default=False
         Whether to compute associations in :class:`~skrub.TableReport`.
+
         - ``True``: always compute associations, regardless of column count.
         - ``False``: never compute associations.
-        - ``"auto"`` (default): compute associations only when the number of
-          columns does not exceed the configured ``associations_threshold``
+        - ``"auto"``: compute associations only when the number of
+          columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
 
     See Also
@@ -127,8 +131,8 @@ def _patch_display(
     pandas=True,
     polars=True,
     verbose=1,
-    plot_distributions="auto",
-    compute_associations="auto",
+    plot_distributions=False,
+    compute_associations=False,
 ):
     _change_display(
         _patch,

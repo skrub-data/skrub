@@ -8,6 +8,7 @@ from skrub import ApplyToCols, DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._datetime_encoder import (
+    _TIME_LEVELS,
     _CircularEncoder,
     _get_dt_feature,
     _is_date,
@@ -293,6 +294,22 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
                 "weekday_circular_1",
             ],
         ),
+        (
+            dict(
+                resolution=None,
+                periodic_encoding="circular",
+            ),
+            ["total_seconds"],
+        ),
+        (
+            dict(
+                resolution=None,
+                add_weekday=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+            ),
+            ["weekday_circular_0", "weekday_circular_1"],
+        ),
     ],
 )
 def test_all_outputs_choice(datetime_cols, params, all_outputs):
@@ -301,6 +318,27 @@ def test_all_outputs_choice(datetime_cols, params, all_outputs):
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
     assert enc.get_feature_names_out() == [f"when_{f}" for f in all_outputs]
     assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
+
+
+@pytest.mark.parametrize("periodic_encoding", ["circular", "spline"])
+@pytest.mark.parametrize("resolution", [*_TIME_LEVELS, None])
+def test_periodic_encoders_match_extracted_features(
+    datetime_cols, resolution, periodic_encoding
+):
+    # A periodic encoder is only ever applied to a feature that was extracted, so we
+    # check that no unnecessary features are encoded. The levels to encode are
+    # therefore taken from ``extracted_features_``. When ``resolution`` is ``None``,
+    # the only periodic feature that should be encoded is ``weekday`` if the flag is
+    # set.
+    for column in (datetime_cols.datetime, datetime_cols.date):
+        for add_weekday in (False, True):
+            enc = DatetimeEncoder(
+                resolution=resolution,
+                periodic_encoding=periodic_encoding,
+                add_weekday=add_weekday,
+            )
+            enc.fit(column)
+            assert set(enc._periodic_encoders) <= set(enc.extracted_features_)
 
 
 def test_time_not_extracted_from_date_col(datetime_cols):

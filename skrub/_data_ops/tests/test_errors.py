@@ -1,9 +1,9 @@
 import pickle
 import re
+import sys
 import traceback
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
@@ -443,30 +443,39 @@ def test_call_method_errors():
     )
 
 
-def test_concat_horizontal_numpy():
+def test_concat_dataframe_with_numpy():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
-    with pytest.raises(Exception, match=".*can only be used with dataframes"):
+    with pytest.raises(Exception, match="should be passed a list of arrays"):
         b.skb.concat([a], axis=1)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+    with pytest.raises(Exception, match="should be passed a list of dataframes"):
         a.skb.concat([b], axis=1)
-
-
-def test_concat_vertical_numpy():
-    a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    b = skrub.var("b", np.eye(3))
-    with pytest.raises(Exception, match=".*can only be used with dataframes"):
-        b.skb.concat([a], axis=0)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat([b], axis=0)
 
 
 def test_concat_needs_wrapping_in_list():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+    with pytest.raises(
+        Exception, match="should be passed a list of numpy arrays or dataframes"
+    ):
         a.skb.concat(a, axis=1)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat(a, axis=0)
+    b = skrub.var("b", np.eye(3))
+    with pytest.raises(
+        Exception, match="should be passed a list of numpy arrays or dataframes"
+    ):
+        b.skb.concat(b, axis=1)
+
+
+def test_concat_bad_first_type():
+    with pytest.raises(
+        Exception, match="can only be used on a numpy array or a dataframe"
+    ):
+        skrub.var("a", []).skb.concat([])
+
+
+def test_concat_bad_others_type():
+    a = skrub.var("a", np.eye(3))
+    with pytest.raises(Exception, match="should be passed a list"):
+        a.skb.concat(None, axis=0)
 
 
 def test_concat_axis_undefined():
@@ -629,11 +638,60 @@ def test_unhashable():
         {skrub.choose_bool(name="b").if_else(0, 1)}
 
 
-def test_int_column_names():
-    with pytest.warns(match="Some dataframe column names are not strings"):
-        skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
-
-
 def test_mark_as_X_missing_cv():
     with pytest.raises(TypeError, match=".*you must also provide a splitter"):
         skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
+def test_missing_var_message():
+    data_op = (
+        skrub.var("a", "a value")
+        + skrub.var("var_b_name", "b value", becomes_default=True)
+        + skrub.choose_from(["?", "!"], name="c")
+    )
+    learner = data_op.skb.make_learner()
+    with pytest.raises(KeyError) as exc:
+        learner.fit({"bad_key": "another value"})
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    assert "bad_key" in full_msg
+    assert "var_b_name" not in full_msg
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        in full_msg
+    )
+    assert "skrub.var('a', value=..., becomes_default=True)" in full_msg
+
+    # Test case were we do use the preview values (no environment is passed)
+
+    with pytest.raises(KeyError) as exc:
+        (data_op + skrub.var("d")).skb.make_learner(fitted=True)
+
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        not in full_msg
+    )
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
+def test_missing_var_message_train_test_split():
+    b = skrub.var("b")
+    X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
+    # 'z' is extra but not 'b', even though 'b' is not needed for collecting X
+    # it still exists in the DataOp as a whole.
+    with pytest.raises(KeyError, match=r"\['z'\]"):
+        X.skb.train_test_split({"z": 0, "b": 1})
+    # check that we still get the correct error when the env contains int (ID)
+    # keys
+    with pytest.raises(KeyError, match=r"\['z'\]") as exc:
+        X.skb.train_test_split({"z": 0, b.skb.id: 1})
+    with pytest.raises(KeyError) as exc:
+        X.skb.train_test_split()
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    print(full_msg)
+    assert "No value has been provided for 'a'" in full_msg
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        not in full_msg
+    )

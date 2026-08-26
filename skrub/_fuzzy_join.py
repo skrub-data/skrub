@@ -24,7 +24,7 @@ def fuzzy_join(
     drop_unmatched=False,
     metric="euclidean",
 ):
-    """Fuzzy (approximate) join.
+    """Perform a fuzzy (approximate) join between the left and right tables.
 
     Rows in the left table are joined to their closest match from the right
     table. The resulting table has the same rows (in the same order) as the
@@ -34,42 +34,14 @@ def fuzzy_join(
     several equally good matching rows in the right table one of them will be
     used; which one is unspecified.
 
-    To identify the best match for each row, values from the matching columns
-    (``left_key`` and ``right_key``) are vectorized, i.e. represented by vectors of
-    continuous values. Then, distances between these vectors are computed
-    (using the specified metric) to find, for each left table row, its nearest
-    neighbor within the right table.
+    .. warning::
+        This method can be computationally expensive for large datasets, as it
+        requires vectorizing the matching columns and performing a nearest neighbor
+        search.
 
-    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
-    between vectors that are separated by a distance (strictly) greater than
-    ``max_dist`` will be rejected. We will consider that left table rows that
-    are farther than ``max_dist`` from their nearest neighbor do not have a
-    matching row in the right table, and the output will contain nulls for
-    the entries that would normally have come from the right table (as in a
-    traditional left join).
-
-    To make it easier to set a ``max_dist`` threshold, the distances are
-    rescaled by dividing them by a reference distance, which can be chosen with
-    ``ref_dist``. The default is ``'random_pairs'``. The possible choices are:
-
-    'random_pairs'
-        Pairs of rows are sampled randomly from the right table and their
-        distance is computed. The reference distance is the first quartile of
-        those distances.
-
-    'second_neighbor'
-        The reference distance is the distance to the *second* nearest neighbor
-        in the right table.
-
-    'self_join_neighbor'
-        Once the match candidate (i.e. the nearest neighbor from the right
-        table) has been found, we find its nearest neighbor in the right
-        table (excluding itself). The reference distance is the distance that
-        separates those 2 right rows.
-
-    'no_rescaling'
-        The reference distance is 1.0, i.e. no rescaling of the distances is
-        applied.
+        Additionally, the quality of the matches depends on the choice of the
+        ``string_encoder``, the distance metric and the ``ref_dist`` used for
+        rescaling the distances.
 
     Parameters
     ----------
@@ -134,6 +106,46 @@ def fuzzy_join(
     --------
     Joiner :
         Same as fuzzy_join but as a scikit-learn transformer.
+
+    Notes
+    -----
+        To identify the best match for each row, values from the matching columns
+    (``left_on`` and ``right_on``) are vectorized, i.e. represented by vectors of
+    continuous values. Then, distances between these vectors are computed
+    (using the specified metric) to find, for each left table row, its nearest
+    neighbor within the right table.
+
+    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    ``max_dist`` will be rejected. We will consider that left table rows that
+    are farther than ``max_dist`` from their nearest neighbor do not have a
+    matching row in the right table, and the output will contain nulls for
+    the entries that would normally have come from the right table (as in a
+    traditional left join).
+
+    To make it easier to set a ``max_dist`` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    ``ref_dist``. The default is ``'random_pairs'``. The possible choices are:
+
+    'random_pairs'
+        Pairs of rows are sampled randomly from the right table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
+
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the right table.
+
+    'self_join_neighbor'
+        Once the match candidate (i.e. the nearest neighbor from the right
+        table) has been found, we find its nearest neighbor in the right
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 right rows.
+
+    'no_rescaling'
+        The reference distance is 1.0, i.e. no rescaling of the distances is
+        applied.
+
 
     Examples
     --------
