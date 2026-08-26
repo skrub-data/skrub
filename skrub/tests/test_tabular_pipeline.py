@@ -90,7 +90,7 @@ def test_estimator_is_a_pipeline():
     sk_pipeline = Pipeline([("pca", PCA()), ("clf", input_learner)])
     tab_pipeline = tabular_pipeline(sk_pipeline)
     assert len(tab_pipeline.steps) == 5
-    *_, pca, learner = tab_pipeline.named_steps.values()
+    *_, pca, learner = tab_pipeline.named_steps.values()  # keep only the last two steps
     assert learner is input_learner
     assert isinstance(pca, PCA)
 

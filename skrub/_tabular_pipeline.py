@@ -243,8 +243,12 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             " 'classifier' or 'classification'."
         )
     if isinstance(estimator, Pipeline):
+        # extract all the transforms but separate the last step,
+        # which is the estimator (only keeping the second item in
+        # the tuple, the actual transformer/estimator, and not its name)
         *user_transformers, (_, estimator) = estimator.steps
     else:
+        # else just create an empty iterable
         user_transformers = ()
 
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
