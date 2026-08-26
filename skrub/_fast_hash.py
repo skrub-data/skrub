@@ -82,7 +82,10 @@ def ngram_min_hash(
 
     max_hash = MININT32
     min_hash = MAXINT32
-    for atom_len in range(ngram_range[0], ngram_range[1]):
+    # The upper bound is inclusive: all n-gram sizes such that
+    # ``min_n <= n <= max_n`` are used, matching the documented behavior and
+    # the ``murmur`` hashing path (see ``get_unique_ngrams``).
+    for atom_len in range(ngram_range[0], ngram_range[1] + 1):
         atom = gen_atom(atom_len, seed=seed)
         # np.correlate is faster than np.convolve
         # the convolution gives a hash for each ngram

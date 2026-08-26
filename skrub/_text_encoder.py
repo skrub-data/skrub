@@ -79,7 +79,7 @@ class TextEncoder(SingleColumnTransformer):
 
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
-        See :func:`skrub.datasets._utils.get_data_dir`.
+        See :func:`skrub.datasets.get_data_dir`.
         Note that when unpickling ``TextEncoder`` on another machine,
         the ``cache_folder`` path needs to be accessible to store the downloaded model.
 
@@ -108,9 +108,12 @@ class TextEncoder(SingleColumnTransformer):
         Used when the PCA dimension reduction mechanism is used, for reproducible
         results across multiple function calls.
 
-    verbose : bool, default=True
+    verbose : int, default=0
         Verbose level, controls whether to show a progress bar or not during
         ``transform``.
+
+        - verbose = 0 does not show a progress bar.
+        - verbose >= 1 shows a progress bar.
 
     Attributes
     ----------
@@ -198,7 +201,7 @@ class TextEncoder(SingleColumnTransformer):
         cache_folder=None,
         store_weights_in_pickle=False,
         random_state=None,
-        verbose=False,
+        verbose=0,
     ):
         self.model_name = model_name
         self.n_components = n_components
@@ -329,7 +332,7 @@ class TextEncoder(SingleColumnTransformer):
             unique_x,
             normalize_embeddings=False,
             batch_size=self.batch_size,
-            show_progress_bar=self.verbose,
+            show_progress_bar=bool(self.verbose),
         )[indices_x]
 
     @functools.cached_property
@@ -389,6 +392,11 @@ class TextEncoder(SingleColumnTransformer):
         if not (isinstance(self.batch_size, numbers.Integral) and self.batch_size > 0):
             raise ValueError(
                 f"Got batch_size={self.batch_size} but expected a positive integer"
+            )
+
+        if not (isinstance(self.verbose, numbers.Integral) and self.verbose >= 0):
+            raise ValueError(
+                f"Got verbose={self.verbose!r} but expected a non-negative integer"
             )
 
         if self.cache_folder is not None and not isinstance(

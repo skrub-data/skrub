@@ -259,6 +259,10 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             " or 'classifier' as its first argument."
         )
 
+    is_estimator_from_tabicl = estimator.__class__.__name__ in (
+        "TabICLClassifier",
+        "TabICLRegressor",
+    )
     if (
         isinstance(estimator_, _HGBT_CLASSES)
         and getattr(estimator, "categorical_features", None) == "from_dtype"
@@ -275,6 +279,13 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             ),
             high_cardinality=StringEncoder(),
         )
+    elif is_estimator_from_tabicl:
+        vectorizer.set_params(
+            low_cardinality="passthrough",
+            high_cardinality=StringEncoder(),
+            cardinality_threshold=10,
+            datetime=DatetimeEncoder(periodic_encoding="spline"),
+        )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
 
@@ -288,4 +299,11 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         steps.extend(steps_pipeline)
     else:
         steps.append(estimator_)
+    if not is_estimator_from_tabicl:
+        if not get_tags(estimator).input_tags.allow_nan:
+            steps.append(SimpleImputer(add_indicator=True))
+        if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+            steps.append(SquashingScaler(max_absolute_value=5))
+
+    steps.append(estimator)
     return make_pipeline(*steps)

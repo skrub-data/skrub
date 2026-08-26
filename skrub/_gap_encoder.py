@@ -88,7 +88,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     max_iter : int, default=5
         Maximum number of iterations on the input data.
     ngram_range : int 2-tuple, default=(2, 4)
-       The lower and upper boundaries of the range of n-values for different
+        The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
@@ -269,7 +269,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 )
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
-        self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
+        self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], unq_X[lookup])
         # Init the activations unq_H of each unique input string
         unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_components)))
         # Update self.H_dict_ with unique input strings and their activations

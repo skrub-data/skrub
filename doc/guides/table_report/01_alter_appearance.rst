@@ -7,7 +7,7 @@
 How to tweak the Appearance of the |TableReport|
 ------------------------------------------------
 
-The skrub global configuration includes various parameters that allow to tweak
+The skrub global configuration includes various parameters that let you tweak
 the HTML representation of the |TableReport|.
 
 For performance reasons, the |TableReport| disables the computation of

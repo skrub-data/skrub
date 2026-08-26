@@ -15,3 +15,4 @@ multiple columns.
    modules/multi_column_operations/selectors
    modules/multi_column_operations/type_of_selectors
    modules/multi_column_operations/advanced_selectors
+   modules/multi_column_operations/sessionization
