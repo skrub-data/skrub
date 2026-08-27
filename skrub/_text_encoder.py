@@ -19,7 +19,7 @@ class ModelNotFound(ValueError):
     pass
 
 
-class TextEncoder(SingleColumnTransformer):
+class LLMEncoder(SingleColumnTransformer):
     """Encode string features by applying a pretrained language model \
         downloaded from the HuggingFace Hub.
 
@@ -80,28 +80,28 @@ class TextEncoder(SingleColumnTransformer):
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
         See :func:`skrub.datasets.get_data_dir`.
-        Note that when unpickling ``TextEncoder`` on another machine,
+        Note that when unpickling ``LLMEncoder`` on another machine,
         the ``cache_folder`` path needs to be accessible to store the downloaded model.
 
     store_weights_in_pickle : bool, default=False
         Whether or not to keep the loaded sentence-transformers model
-        in the ``TextEncoder`` when pickling.
+        in the ``LLMEncoder`` when pickling.
 
         - When set to False, the ``_estimator`` property is removed from
           the object to pickle, which significantly reduces the size of
           the serialized object. Note that when the serialized object is
-          unpickled on another machine, the ``TextEncoder`` will try to download
+          unpickled on another machine, the ``LLMEncoder`` will try to download
           the sentence-transformer model again from HuggingFace Hub.
           This process could fail if, for example, the machine doesn't have
           internet access. Additionally, if you use weights stored on disk
           that are *not* on the HuggingFace Hub (by passing a path to
           ``model_name``), these weights will not be pickled either.
           Therefore you would need to copy them to the machine where you
-          unpickle the ``TextEncoder``.
+          unpickle the ``LLMEncoder``.
         - When set to True, the ``_estimator`` property is included in
           the serialized object. Users deploying fine-tuned models stored on
           disk are recommended to use this option. Note that the machine
-          where the ``TextEncoder`` is unpickled must have the same device than
+          where the ``LLMEncoder`` is unpickled must have the same device than
           the machine where it was pickled.
 
     random_state : int, RandomState instance or None, default=None
@@ -168,11 +168,11 @@ class TextEncoder(SingleColumnTransformer):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub import TextEncoder
+    >>> from skrub import LLMEncoder
 
     Let's encode video comments using only 2 embedding dimensions:
 
-    >>> enc = TextEncoder(
+    >>> enc = LLMEncoder(
     ...    model_name='intfloat/e5-small-v2', n_components=2
     ... )
     >>> X = pd.Series([
@@ -214,7 +214,7 @@ class TextEncoder(SingleColumnTransformer):
         self.verbose = verbose
 
     def fit_transform(self, column, y=None):
-        """Fit the TextEncoder from ``column``.
+        """Fit the LLMEncoder from ``column``.
 
         In practice, it loads the pre-trained model from disk and returns
         the embeddings of the column.
@@ -280,7 +280,7 @@ class TextEncoder(SingleColumnTransformer):
         return X_out
 
     def transform(self, column):
-        """Transform ``column`` using the TextEncoder.
+        """Transform ``column`` using the LLMEncoder.
 
         This method uses the embedding model loaded in memory during ``fit``
         or ``fit_transform``.
@@ -345,7 +345,7 @@ class TextEncoder(SingleColumnTransformer):
             st = import_optional_dependency(
                 "sentence_transformers",
                 extra=(
-                    "The TextEncoder requires sentence-transformers and its"
+                    "The LLMEncoder requires sentence-transformers and its"
                     " dependencies. Please see"
                     " https://skrub-data.org/stable/install.html#deep-learning-dependencies"
                     " for the installation guide."
@@ -374,7 +374,7 @@ class TextEncoder(SingleColumnTransformer):
                 "model identifier listed on 'https://huggingface.co/models'.\n "
                 "If this is a private repository, make sure to pass a token having "
                 "permission to this repo by setting this token as an environment "
-                "variable, and passing this variable to the TextEncoder as "
+                "variable, and passing this variable to the LLMEncoder as "
                 "`token_env_variable=<your_token_env_variable>`"
             ) from e
         return estimator
@@ -452,3 +452,25 @@ class TextEncoder(SingleColumnTransformer):
             f"{self.input_name_}_{str(i).zfill(num_digits)}"
             for i in range(self.n_components_)
         ]
+
+
+class TextEncoder(LLMEncoder):
+    """
+    Deprecated: Use :class:`~skrub.LLMEncoder` instead.
+
+    .. deprecated:: 0.11
+        The ``TextEncoder`` has been renamed to ``LLMEncoder``, and will be removed
+        in a future release.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        import warnings
+
+        warnings.warn(
+            "TextEncoder is deprecated and will be removed in a future release. "
+            "Use LLMEncoder instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

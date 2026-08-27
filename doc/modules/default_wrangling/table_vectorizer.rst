@@ -5,7 +5,7 @@
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
-.. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
+.. |LLMEncoder| replace:: :class:`~skrub.LLMEncoder`
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |ToCategorical| replace:: :class:`~skrub.ToCategorical`
 
@@ -59,15 +59,15 @@ using :func:`~skrub.set_config`.
 To change the encoder or alter default parameters, instantiate an encoder and pass
 it to |TableVectorizer|.
 
->>> from skrub import TableVectorizer, DatetimeEncoder, TextEncoder, SquashingScaler
+>>> from skrub import TableVectorizer, DatetimeEncoder, LLMEncoder, SquashingScaler
 
 >>> datetime_enc = DatetimeEncoder(periodic_encoding="circular")
->>> text_enc = TextEncoder()
+>>> text_enc = LLMEncoder()
 >>> num_enc = SquashingScaler()
 >>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc, numeric=num_enc)
 >>> table_vec
 TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='circular'),
-                high_cardinality=TextEncoder(), numeric=SquashingScaler())
+                high_cardinality=LLMEncoder(), numeric=SquashingScaler())
 
 
 Besides the transformers provided by skrub, the |TableVectorizer| can also take

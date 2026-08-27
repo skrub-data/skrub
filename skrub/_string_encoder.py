@@ -84,7 +84,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
         Encode string columns as a numeric array with the minhash method.
     GapEncoder :
         Encode string columns by constructing latent topics.
-    TextEncoder :
+    LLMEncoder :
         Encode string columns using pre-trained language models.
 
     Notes

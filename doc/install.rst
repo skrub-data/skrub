@@ -37,7 +37,7 @@ Install
 
 **Deep learning dependencies**
 
-Deep-learning based encoders like :class:`TextEncoder` require installing optional
+Deep-learning based encoders like :class:`LLMEncoder` require installing optional
 dependencies to use them. The following will install
 `torch <https://pypi.org/project/torch/>`_,
 `transformers <https://pypi.org/project/transformers/>`_,
@@ -62,7 +62,7 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 
 **Deep learning dependencies**
 
-Deep-learning based encoders like :class:`TextEncoder` require installing optional
+Deep-learning based encoders like :class:`LLMEncoder` require installing optional
 dependencies to use them. The following will install
 `torch <https://anaconda.org/pytorch/pytorch>`_,
 `transformers <https://anaconda.org/conda-forge/transformers>`_,
@@ -87,7 +87,7 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
 
 **Deep learning dependencies**
 
-Deep-learning based encoders like :class:`TextEncoder` require installing optional
+Deep-learning based encoders like :class:`LLMEncoder` require installing optional
 dependencies to use them. The following will install
 `torch <https://anaconda.org/pytorch/pytorch>`_,
 `transformers <https://anaconda.org/conda-forge/transformers>`_,
@@ -216,7 +216,7 @@ After that, your environment is ready for development!
 
 **Deep learning dependencies**
 
-Deep-learning based encoders like :class:`TextEncoder` require installing optional
+Deep-learning based encoders like :class:`LLMEncoder` require installing optional
 dependencies to use them. The following will install
 `torch <https://pypi.org/project/torch/>`_,
 `transformers <https://pypi.org/project/transformers/>`_,

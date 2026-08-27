@@ -14,8 +14,8 @@ available in skrub.
 .. |MinHashEncoder| replace::
      :class:`~skrub.MinHashEncoder`
 
-.. |TextEncoder| replace::
-     :class:`~skrub.TextEncoder`
+.. |LLMEncoder| replace::
+     :class:`~skrub.LLMEncoder`
 
 .. |StringEncoder| replace::
      :class:`~skrub.StringEncoder`
@@ -210,7 +210,7 @@ plot_box_results(results)
 # Remarkably, the vectors produced by the |MinHashEncoder| offer less predictive
 # power than those from the |GapEncoder| on this dataset.
 #
-# TextEncoder
+# LLMEncoder
 # ^^^^^^^^^^^
 # Let's now shift our focus to pre-trained deep learning encoders. Our previous
 # encoders are syntactic models that we trained directly on the toxicity dataset.
@@ -218,12 +218,12 @@ plot_box_results(results)
 # entries, we can instead use semantic models, such as BERT, which have been trained
 # on very large datasets.
 #
-# |TextEncoder| enables you to integrate any Sentence Transformer model from the
+# |LLMEncoder| enables you to integrate any Sentence Transformer model from the
 # Hugging Face Hub (or from your local disk) into your |pipeline| to transform a text
-# column in a dataframe. By default, |TextEncoder| uses the e5-small-v2 model.
-from skrub import TextEncoder
+# column in a dataframe. By default, |LLMEncoder| uses the e5-small-v2 model.
+from skrub import LLMEncoder
 
-text_encoder = TextEncoder(
+text_encoder = LLMEncoder(
     "sentence-transformers/paraphrase-albert-small-v2",
     device="cpu",
 )
@@ -233,14 +233,14 @@ text_encoder_pipe = make_pipeline(
     HistGradientBoostingClassifier(),
 )
 text_encoder_results = cross_validate(text_encoder_pipe, X, y, scoring="roc_auc")
-results.append(("TextEncoder", text_encoder_results))
+results.append(("LLMEncoder", text_encoder_results))
 
 plot_box_results(results)
 
 # %%
 # StringEncoder
 # ^^^^^^^^^^^^^
-# |TextEncoder| embeddings are very strong, but they are also quite expensive to
+# |LLMEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
 # which works by first performing a tf-idf (computing vectors of rescaled word
 # counts of the text `wiki <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_), and then
@@ -262,7 +262,7 @@ plot_box_results(results)
 
 
 # %%
-# The performance of the |TextEncoder| is significantly stronger than that of
+# The performance of the |LLMEncoder| is significantly stronger than that of
 # the syntactic encoders, which is expected. But how long does it take to load
 # and vectorize text on a CPU using a Sentence Transformer model? Below, we display
 # the tradeoff between predictive accuracy and training time. Note that since we are
@@ -340,7 +340,7 @@ plot_performance_tradeoff(results)
 #
 # Conclusion
 # ----------
-# In conclusion, |TextEncoder| provides powerful vectorization for text, but at
+# In conclusion, |LLMEncoder| provides powerful vectorization for text, but at
 # the cost of longer computation times and the need for additional dependencies,
 # such as torch. |StringEncoder| represents a simpler alternative that can provide
 # good performance at a fraction of the cost of more complex methods.
