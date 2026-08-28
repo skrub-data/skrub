@@ -34,7 +34,10 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
 
     target_encoder : TargetEncoder instance or None, default=None
         Custom ``TargetEncoder`` instance to use. If ``None``, a default
-        ``TargetEncoder()`` will be used.
+        ``TargetEncoder()`` will be used. Depending on the installed scikit-learn
+        version and its cross-validation defaults, repeated calls to
+        ``fit_transform`` may produce different encodings. Pass a configured
+        ``TargetEncoder`` to control the cross-validation strategy.
 
     Attributes
     ----------
@@ -44,13 +47,20 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
     target_encoder_ : TargetEncoder
         The fitted ``TargetEncoder`` instance.
 
+    one_hot_outputs_ : list of str
+        Feature names created by the one-hot encoder.
+
+    target_outputs_ : list of str
+        Feature names created by the target encoder. Deterministic ``_target``
+        suffixes are added when names would collide with one-hot features.
+
     all_outputs_ : list of str
         The list of feature names created by the transformer.
 
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._categorical_encoder import CategoricalEncoder
+    >>> from skrub import CategoricalEncoder
     >>> s = pd.Series(["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"], name="col")
     >>> y = pd.Series([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
     >>> enc = CategoricalEncoder(max_categories=3)
@@ -107,6 +117,11 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         X_pandas = sbd.to_pandas(column).to_frame()
 
         if sbd.is_dataframe(y):
+            if sbd.shape(y)[1] != 1:
+                raise ValueError(
+                    "CategoricalEncoder expects y to contain exactly one column; "
+                    f"got {sbd.shape(y)[1]}."
+                )
             y_col = sbd.col_by_idx(y, 0)
         else:
             y_col = y
@@ -116,8 +131,13 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         else:
             y_vec = np.asarray(y_col)
 
-        if y_vec.ndim > 1:
-            y_vec = y_vec.ravel()
+        if y_vec.ndim == 2 and y_vec.shape[1] == 1:
+            y_vec = y_vec[:, 0]
+        elif y_vec.ndim != 1:
+            raise ValueError(
+                "CategoricalEncoder expects y to be one-dimensional or a "
+                f"single-column dataframe; got an array with shape {y_vec.shape}."
+            )
 
         if y_vec.dtype == object:
             try:
@@ -131,16 +151,15 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
 
-        ohe_names = list(self.one_hot_encoder_.get_feature_names_out([col_name]))
-        te_names = list(self.target_encoder_.get_feature_names_out([col_name]))
+        self.one_hot_outputs_ = list(
+            self.one_hot_encoder_.get_feature_names_out([col_name])
+        )
+        target_outputs = list(self.target_encoder_.get_feature_names_out([col_name]))
+        self.target_outputs_ = _make_target_names_unique(
+            target_outputs, self.one_hot_outputs_
+        )
 
-        ohe_df = sbd.make_dataframe_like(column, dict(zip(ohe_names, ohe_res.T)))
-        ohe_df = sbd.copy_index(column, ohe_df)
-
-        te_df = sbd.make_dataframe_like(column, dict(zip(te_names, te_res.T)))
-        te_df = sbd.copy_index(column, te_df)
-
-        res_df = sbd.concat(ohe_df, te_df, axis=1)
+        res_df = self._make_output(column, ohe_res, te_res)
         self.all_outputs_ = list(sbd.column_names(res_df))
         return res_df
 
@@ -157,7 +176,16 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         res_df : Pandas or Polars DataFrame
             Transformed features.
         """
-        check_is_fitted(self, ["one_hot_encoder_", "target_encoder_", "all_outputs_"])
+        check_is_fitted(
+            self,
+            [
+                "one_hot_encoder_",
+                "target_encoder_",
+                "one_hot_outputs_",
+                "target_outputs_",
+                "all_outputs_",
+            ],
+        )
 
         X_pandas = sbd.to_pandas(column).to_frame()
 
@@ -167,12 +195,21 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
 
-        combined_res = np.hstack([ohe_res, te_res])
-        res_df = sbd.make_dataframe_like(
-            column, dict(zip(self.all_outputs_, combined_res.T))
+        return self._make_output(column, ohe_res, te_res)
+
+    def _make_output(self, column, ohe_res, te_res):
+        """Build the output without coercing the encoders' individual dtypes."""
+        ohe_df = sbd.make_dataframe_like(
+            column, dict(zip(self.one_hot_outputs_, ohe_res.T))
         )
-        res_df = sbd.copy_index(column, res_df)
-        return res_df
+        ohe_df = sbd.copy_index(column, ohe_df)
+
+        te_df = sbd.make_dataframe_like(
+            column, dict(zip(self.target_outputs_, te_res.T))
+        )
+        te_df = sbd.copy_index(column, te_df)
+
+        return sbd.concat(ohe_df, te_df, axis=1)
 
     def get_feature_names_out(self, input_features=None):
         """Return the names of all generated output features.
@@ -189,3 +226,19 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         """
         check_is_fitted(self, "all_outputs_")
         return self.all_outputs_
+
+
+def _make_target_names_unique(target_names, one_hot_names):
+    """Make target-encoded names unique with deterministic suffixes."""
+    used_names = set(one_hot_names)
+    unique_names = []
+    for name in target_names:
+        candidate = name
+        suffix_idx = 1
+        while candidate in used_names:
+            suffix = "target" if suffix_idx == 1 else f"target_{suffix_idx}"
+            candidate = f"{name}_{suffix}"
+            suffix_idx += 1
+        unique_names.append(candidate)
+        used_names.add(candidate)
+    return unique_names
