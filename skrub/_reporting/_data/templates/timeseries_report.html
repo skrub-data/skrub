@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>time series report</title>
+        <meta charset="UTF-8" />
+    <style>
+        {% include "timeseries_report.css" %}
+    </style>
+    </head>
+    <body>
+    <h1 onclick="switchTab('overview')" style="cursor: pointer;">Time Series Report</h1>
+      <div class="tab-container">
+        <div id="tab-overview" class="tab-content active">
+            <div class="main-container">
+                <div class="tab-inner">
+                    <div class="overview-stats">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="2">Dataset Statistics</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, val in overview.stats.items() %}
+                                <tr>
+                                    <td class="stat-label">{{ key }}</td>
+                                    <td class="stat-value">{{ val }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="overview-plots">
+                        <div class="at-a-glance">
+                            {% for name, formatted_name, meta, plot in overview.figs %}
+                            <div class="glance-row">
+                                <button class="glance-meta" onclick="switchTab('{{ name }}')" style="width: {{ overview.max_label_width }}px; min-width: {{ overview.max_label_width }}px;">
+                                    <div class="glance-label">{{ formatted_name | safe }}</div>
+                                    <div class="glance-meta-text">{{ meta }}</div>
+                                </button>
+                                <div class="glance-plot">{{ plot | safe }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        {% for col in columns %}
+        <div id="tab-{{ col.name }}" class="tab-content">
+            <div class="main-container">
+                <div class="tab-inner">
+                    <div class="side-nav sub-container sub-buttons">
+                        <table>
+                                <thead>
+                                    <tr>
+                                        <th>{{ col.name }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, val in col.metadata['items'].items() %}
+                                    <tr>
+                                        <td>
+                                            {% if val.has_button %}
+                                            <button class="sub-button meta-button" data-subtab="meta-{{ key }}" style="--hover-color: {{ val.color }};">{{ key }}</button>
+                                            {% else %}
+                                            <span class="meta-label">{{ key }}</span>
+                                            {% endif %}
+                                            {{ val.value }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                        </table>
+                        {% for key in col.plots.keys() %}
+                        <button class="sub-button{% if key == 'overview' %} active{% endif %}" data-subtab="{{ key }}">{{ key }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="panel-area">
+                        <!-- Base plot always visible -->
+                        <div class="sub-container sub-panel base-plot active">
+                            {{ col.metadata['base_plot'] | safe }}
+                        </div>
+
+                        <!-- Overlay metadata plots -->
+                        {% for key, val in col.metadata['items'].items() %}
+                        <div class="sub-container sub-panel sub-panel-meta-{{ key }}">
+                            {{ val.plot | safe }}
+                        </div>
+                        {% endfor %}
+
+                        <!-- Regular plots -->
+                        {% for key, val in col.plots.items() %}
+                        <div class="sub-container sub-panel sub-panel-{{ key }}{% if key == 'overview' %} active{% endif %}">
+                            {{ val | safe }}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+      <script>
+        document.querySelectorAll('.sub-buttons').forEach(function(btnGroup) {
+          btnGroup.querySelectorAll('.sub-button').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var container = btn.closest('.main-container');
+              var idx = btn.getAttribute('data-subtab');
+              var panel = container.querySelector('.sub-panel-' + idx);
+              var isMeta = btn.classList.contains('meta-button');
+              var isMinMax = idx === 'meta-min' || idx === 'meta-max';
+
+              if (isMeta) {
+                // Meta-buttons toggle themselves
+                btn.classList.toggle('active');
+                panel.classList.toggle('active');
+
+                // If min or max is being activated, deactivate overview
+                if (isMinMax && btn.classList.contains('active')) {
+                  var overviewBtn = container.querySelector('.sub-button[data-subtab="overview"]');
+                  var overviewPanel = container.querySelector('.sub-panel-overview');
+                  if (overviewBtn) overviewBtn.classList.remove('active');
+                  if (overviewPanel) overviewPanel.classList.remove('active');
+                }
+              } else {
+                // Regular buttons are exclusive
+                container.querySelectorAll('.sub-button:not(.meta-button)').forEach(function(b) {
+                  b.classList.remove('active');
+                });
+                container.querySelectorAll('.sub-panel:not(.base-plot)').forEach(function(p) {
+                  // Only deactivate non-meta panels
+                  if (!p.className.includes('meta-')) {
+                    p.classList.remove('active');
+                  }
+                });
+                btn.classList.add('active');
+                panel.classList.add('active');
+
+                // If overview is being activated, deactivate min and max
+                if (idx === 'overview') {
+                  var minBtn = container.querySelector('.sub-button[data-subtab="meta-min"]');
+                  var maxBtn = container.querySelector('.sub-button[data-subtab="meta-max"]');
+                  var minPanel = container.querySelector('.sub-panel-meta-min');
+                  var maxPanel = container.querySelector('.sub-panel-meta-max');
+                  if (minBtn) minBtn.classList.remove('active');
+                  if (maxBtn) maxBtn.classList.remove('active');
+                  if (minPanel) minPanel.classList.remove('active');
+                  if (maxPanel) maxPanel.classList.remove('active');
+                }
+              }
+            });
+          });
+        });
+        function switchTab(tabName) {
+          document.querySelectorAll('.tab-content').forEach(function(el) {
+            el.classList.remove('active');
+          });
+          document.querySelectorAll('.tab-button').forEach(function(el) {
+            el.classList.remove('active');
+          });
+          document.getElementById('tab-' + tabName).classList.add('active');
+          document.querySelector('.tab-button[onclick*="' + tabName + '"]').classList.add('active');
+        }
+      </script>
+    </body>
+</html>
