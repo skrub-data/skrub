@@ -1,8 +1,9 @@
+import numpy as np
 import pandas as pd
 import pytest
 from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder
-from sklearn.utils.validation import check_is_fitted
 
 from skrub import ApplyToCols, CategoricalEncoder
 from skrub import _dataframe as sbd
@@ -49,6 +50,48 @@ def test_categorical_encoder_custom_encoders():
     assert enc.target_encoder_ is not custom_te
 
 
+def test_categorical_encoder_dataframe_target_and_unnamed_column():
+    s = pd.Series(["a", "b", "c"] * 5, name=None)
+    y = pd.DataFrame({"target": np.asarray(["0", "1", "2"] * 5, dtype=object)})
+
+    enc = CategoricalEncoder(max_categories=2)
+    res = enc.fit_transform(s, y)
+
+    assert res.columns.tolist() == [
+        "categorical_enc_c",
+        "categorical_enc_infrequent_sklearn",
+        "categorical_enc_0.0",
+        "categorical_enc_1.0",
+        "categorical_enc_2.0",
+    ]
+    assert res.shape == (15, 5)
+    assert enc.target_encoder_.target_type_ == "multiclass"
+
+
+def test_categorical_encoder_2d_string_target_and_sparse_output():
+    s = pd.Series(["a", "b", "c"] * 5, name="col")
+    y = np.asarray(["one", "two", "three"] * 5, dtype=object).reshape(-1, 1)
+    one_hot_encoder = OneHotEncoder(
+        sparse_output=True,
+        handle_unknown="ignore",
+    )
+
+    enc = CategoricalEncoder(one_hot_encoder=one_hot_encoder)
+    res = enc.fit_transform(s, y)
+
+    assert res.columns.tolist() == [
+        "col_a",
+        "col_b",
+        "col_c",
+        "col_one",
+        "col_three",
+        "col_two",
+    ]
+    transformed = enc.transform(pd.Series(["a", "new"], name="col"))
+    assert transformed.shape == (2, 6)
+    assert transformed.columns.tolist() == res.columns.tolist()
+
+
 def test_categorical_encoder_apply_to_cols(df_module):
     df = df_module.make_dataframe(
         {
@@ -70,8 +113,10 @@ def test_categorical_encoder_apply_to_cols(df_module):
 
 def test_categorical_encoder_sklearn_compat():
     enc = CategoricalEncoder()
-    with pytest.raises(Exception):
-        check_is_fitted(enc)
+    with pytest.raises(NotFittedError):
+        enc.transform(pd.Series(["a"], name="col"))
+    with pytest.raises(NotFittedError):
+        enc.get_feature_names_out()
 
     cloned = clone(enc)
     assert cloned.max_categories == enc.max_categories

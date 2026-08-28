@@ -130,8 +130,6 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
 
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
-        if te_res.ndim == 1:
-            te_res = te_res.reshape(-1, 1)
 
         ohe_names = list(self.one_hot_encoder_.get_feature_names_out([col_name]))
         te_names = list(self.target_encoder_.get_feature_names_out([col_name]))
@@ -168,8 +166,6 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
 
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
-        if te_res.ndim == 1:
-            te_res = te_res.reshape(-1, 1)
 
         combined_res = np.hstack([ohe_res, te_res])
         res_df = sbd.make_dataframe_like(
