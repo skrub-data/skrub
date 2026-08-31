@@ -39,6 +39,8 @@ dependencies = [
   "matplotlib>=3.6.1",
   "requests>=2.27.1",
   "pydot",
+  "cloudpickle>=3.0",
+  "joblib>=1.4.0",
 ]
 
 [tool.setuptools.dynamic]
