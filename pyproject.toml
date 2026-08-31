@@ -39,6 +39,8 @@ dependencies = [
   "matplotlib>=3.6.1",
   "requests>=2.27.1",
   "pydot",
+  "cloudpickle>=3.0",
+  "joblib>=1.4.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -71,6 +73,8 @@ dev = [
   # lint
   "ruff==0.15.0",
   "pre-commit",
+  "identify>=2",
+  "virtualenv",
 
   # test
   "pytest",
@@ -133,8 +137,13 @@ optuna = "*"
 skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
+python = ">=3.13,<3.14"
 ruff = "==0.15.0"
 pre-commit = "*"
+identify = ">=2"
+
+[tool.pixi.feature.lint.pypi-dependencies]
+virtualenv = "*"
 
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
