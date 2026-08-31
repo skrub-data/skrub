@@ -99,18 +99,17 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
     Traceback (most recent call last):
         ...
-    skrub.core.RejectColumn: Column 'c' does not contain strings or accepted...
+    skrub.core.RejectColumn: Column 'c' does not contain only strings...
 
-    Unless ``accept_numeric`` is set to ``"int"`` or ``"all"``, in which case integer
-    columns are accepted in the former case, and both integer and float columns are
-    accepted in the latter:
+    Unless ``accept_int`` is set to ``True``, in which case integer
+    columns are accepted:
 
-    >>> to_cat = ToCategorical(accept_numeric="all")
-    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
-    0    1.1
-    1    2.2
+    >>> to_cat = ToCategorical(accept_int=True)
+    >>> to_cat.fit_transform(pd.Series([1, 2], name='c'))
+    0    1
+    1    2
     Name: c, dtype: category
-    Categories (2, float64): [1.1, 2.2]
+    Categories (2, int64): [1, 2]
 
     ``object`` columns that do not contain only strings are also rejected:
 
@@ -118,7 +117,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub.core.RejectColumn: Column 'c' does not contain strings or accepted...
+    skrub.core.RejectColumn: Column 'c' does not contain only strings...
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the
@@ -167,8 +166,8 @@ class ToCategorical(SingleColumnTransformer):
     True
     """
 
-    def __init__(self, accept_numeric="int"):
-        self.accept_numeric = accept_numeric
+    def __init__(self, accept_int=False):
+        self.accept_int = accept_int
         super().__init__()
 
     def fit_transform(self, column, y=None):
@@ -190,17 +189,11 @@ class ToCategorical(SingleColumnTransformer):
 
         if sbd.is_categorical(column):
             return column
-        if (
-            sbd.is_string(column)
-            or sbd.is_integer(column)
-            and self.accept_numeric in ("int", "all")
-            or sbd.is_float(column)
-            and self.accept_numeric == "all"
-        ):
+        if sbd.is_string(column) or sbd.is_integer(column) and self.accept_int is True:
             return sbd.to_categorical(column)
         raise RejectColumn(
-            f"Column {sbd.name(column)!r} does not contain strings "
-            "or accepted numeric types (if accept_numeric is 'int' or 'all')."
+            f"Column {sbd.name(column)!r} does not contain only strings "
+            "or only integers (if accept_int is True)."
         )
 
     def transform(self, column):

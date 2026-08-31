@@ -13,40 +13,35 @@ def test_to_categorical_pass(df_module):
     # categorial columns are accepted
     assert ToCategorical().fit_transform(out) is out
     assert ToCategorical().fit(out).transform(out) is out
-    # default behaviour accepts integer and string
-    # columns, but not float
+    # default behaviour accepts string columns
+    expected = sbd.to_categorical(s)
+    df_module.assert_column_equal(ToCategorical().fit_transform(s), expected)
+    df_module.assert_column_equal(ToCategorical().fit(s).transform(s), expected)
+    # also accepts int columns if accept_int is True
     i = df_module.make_column("c", [1, 2, None])
     expected = sbd.to_categorical(i)
     df_module.assert_column_equal(
-        ToCategorical(accept_numeric="int").fit_transform(i), expected
+        ToCategorical(accept_int=True).fit_transform(i), expected
     )
     df_module.assert_column_equal(
-        ToCategorical(accept_numeric="int").fit(i).transform(i), expected
+        ToCategorical(accept_int=True).fit(i).transform(i), expected
     )
-    # unless accept_numeric is "float", in which case floats are accepted
-    f = df_module.make_column("c", [1.1, 2.2, None])
-    expected = sbd.to_categorical(f)
-    df_module.assert_column_equal(
-        ToCategorical(accept_numeric="all").fit_transform(f), expected
-    )
-    df_module.assert_column_equal(
-        ToCategorical(accept_numeric="all").fit(f).transform(f), expected
-    )
-    # but once accepted during fit, transform works on any column regardless
+    # once accepted during fit, transform works on any column regardless
     # of dtype
+    f = df_module.make_column("c", [1.1, 2.2, None])
     assert sbd.is_categorical(ToCategorical().fit(s).transform(f))
 
 
 @pytest.mark.parametrize(
-    "accept_numeric,values",
+    "accept_int,values",
     [
-        ("int", [1.1, 2.2, None]),  # float rejected when accept_numeric="int"
-        (None, [1, 2, None]),  # int rejected when accept_numeric=None
-        (None, [1.1, 2.2, None]),  # float rejected when accept_numeric=None
+        (False, [1.1, 2.2, None]),  # float rejected always
+        (True, [1.1, 2.2, None]),  # float rejected always
+        (False, [1, 2, None]),  # int rejected when accept_int=False
     ],
 )
-def test_to_categorical_reject(df_module, accept_numeric, values):
-    # reject columns based on accept_numeric parameter
+def test_to_categorical_reject(df_module, accept_int, values):
+    # reject columns based on accept_int parameter
     col = df_module.make_column("c", values)
-    with pytest.raises(RejectColumn, match=".*does not contain strings or*"):
-        ToCategorical(accept_numeric=accept_numeric).fit_transform(col)
+    with pytest.raises(RejectColumn, match=".*does not contain only strings*"):
+        ToCategorical(accept_int=accept_int).fit_transform(col)
