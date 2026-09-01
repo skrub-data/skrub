@@ -49,3 +49,19 @@ To report a bug or suggest enhancements, please
 If you want to contribute directly to the library, then check the
 `how to contribute <https://skrub-data.org/stable/CONTRIBUTING.html>`_ page on
 the website for more information.
+
+Citing skrub
+------------
+
+If you use skrub in a scientific publication, please cite it using the following BibTeX entry:
+
+.. code-block:: bibtex
+
+   @software{skrub,
+     author       = {The skrub developers},
+     title        = {skrub: Machine learning with dataframes},
+     year         = {2026},
+     publisher    = {Zenodo},
+     doi          = {10.5281/zenodo.22231587},
+     url          = {https://doi.org/10.5281/zenodo.22231587}
+   }
