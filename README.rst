@@ -7,7 +7,7 @@ skrub
    :alt: skrub logo
 
 
-|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
+|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black| |zenodo|
 
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/skrub
 .. |pypi_var| image:: https://img.shields.io/pypi/v/skrub?color=informational
@@ -15,6 +15,8 @@ skrub
 .. |codecov| image:: https://img.shields.io/codecov/c/github/skrub-data/skrub/main
 .. |circleci| image:: https://img.shields.io/circleci/build/github/skrub-data/skrub/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.22231587.svg
+   :target: https://doi.org/10.5281/zenodo.22231587
 
 
 **skrub** is a Python
