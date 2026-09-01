@@ -6,12 +6,9 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
+
+Release 0.10.1
 ===================
-
-
-New Features
-------------
 
 Changes
 -------
@@ -48,7 +45,6 @@ Changes
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
   as the second step.
-
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
 
@@ -58,7 +54,6 @@ Bugfixes
 - :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
   installed by avoiding the unused Pearson's correlation computation.
   :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
-
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
@@ -75,11 +70,9 @@ Bugfixes
   aggregated output columns varied between runs. They now keep the order in which
   the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
   :user:`Dylan Pulver <dylanpulver>`.
-
-Deprecations
-------------
-
-
+- A ``cloudpickle`` import error that could happen after updating some required
+  dependencies was fixed in :pr:`2261` by :user:`Jérôme Dockès <jeromedockes>`
+  and :user:`Riccardo Cappuzzo <rcap107>`.
 
 
 Release 0.10.0
