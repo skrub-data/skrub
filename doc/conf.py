@@ -393,6 +393,7 @@ intersphinx_mapping = {
     "seaborn": ("http://seaborn.pydata.org", None),
     "sentence_transformers": ("https://sbert.net/", None),
     "optuna": ("https://optuna.readthedocs.io/en/stable/", None),
+    "tabicl": ("https://tabicl.readthedocs.io/en/stable/", None),
 }
 
 

@@ -8,15 +8,15 @@ from ._utils import download_dataset, load_dataset_files, load_simple_dataset
 
 
 def fetch_employee_salaries(data_home=None, split="all"):
-    """Fetches the employee salaries dataset (regression), available at \
+    """
+    Fetches the employee salaries dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Annual salary information including gross pay and overtime pay for all
-        active, permanent employees of Montgomery County, MD paid in calendar
-        year 2016. This dataset is a copy of https://www.openml.org/d/42125
-        where some features are dropped to avoid data leaking.
-        Size on disk: 1.3MB.
+    Annual salary information including gross pay and overtime pay for all
+    active, permanent employees of Montgomery County, MD paid in calendar
+    year 2016. This dataset is a copy of https://www.openml.org/d/42125
+    where some features are dropped to avoid data leaking.
+    Size on disk: 1.3MB.
 
     .. note::
 
@@ -31,7 +31,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     split : str, default="all"
@@ -52,6 +52,13 @@ def fetch_employee_salaries(data_home=None, split="all"):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the employee salaries CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_employee_salaries
+    >>> data = fetch_employee_salaries()  # doctest: +SKIP
+    >>> data.X.shape  # doctest: +SKIP
+    (9228, 8)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -84,20 +91,20 @@ def fetch_employee_salaries(data_home=None, split="all"):
 
 
 def fetch_medical_charge(data_home=None):
-    """Fetches the medical charge dataset (regression), available at \
+    """
+    Fetches the medical charge dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        The dataset provides information on inpatient discharges for Medicare
-        fee-for-service beneficiaries. It includes information
-        on utilization, payment (total payment and Medicare payment), and
-        hospital-specific charges for the more than 3,000 U.S. hospitals that
-        receive Medicare Inpatient Prospective Payment System (IPPS) payments.
-        Size on disk: 36MB.
+    The dataset provides information on inpatient discharges for Medicare
+    fee-for-service beneficiaries. It includes information
+    on utilization, payment (total payment and Medicare payment), and
+    hospital-specific charges for the more than 3,000 U.S. hospitals that
+    receive Medicare Inpatient Prospective Payment System (IPPS) payments.
+    Size on disk: 36MB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -115,20 +122,29 @@ def fetch_medical_charge(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the medical charge CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_medical_charge
+    >>> data = fetch_medical_charge()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'medical_charge', 'medical_charge_path', 'metadata',
+      'metadata_path', 'X', 'y'])
     """
     return load_simple_dataset("medical_charge", data_home)
 
 
 def fetch_midwest_survey(data_home=None):
-    """Fetches the midwest survey dataset (classification), available at \
+    """
+    Fetches the midwest survey dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Survey to know if people self-identify as Midwesterners. Size on disk: 504KB.
+
+    Survey to know if people self-identify as Midwesterners. Size on disk: 504KB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -146,21 +162,29 @@ def fetch_midwest_survey(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the midwest survey CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_midwest_survey
+    >>> data = fetch_midwest_survey()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path', 'midwest_survey',
+      'midwest_survey_path', 'X', 'y'])
     """
     return load_simple_dataset("midwest_survey", data_home)
 
 
 def fetch_open_payments(data_home=None):
-    """Fetches the open payments dataset (classification), available at \
+    """
+    Fetches the open payments dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Payments given by healthcare manufacturing companies to medical doctors
-        or hospitals. Size on disk: 8.7MB.
+    Payments given by healthcare manufacturing companies to medical doctors
+    or hospitals. Size on disk: 8.7MB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -178,23 +202,31 @@ def fetch_open_payments(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the open payments CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_open_payments
+    >>> data = fetch_open_payments()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path', 'open_payments',
+      'open_payments_path', 'X', 'y'])
     """
     return load_simple_dataset("open_payments", data_home)
 
 
 def fetch_traffic_violations(data_home=None):
-    """Fetches the traffic violations dataset (classification), available at \
+    """
+    Fetches the traffic violations dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        This dataset contains traffic violation information from all electronic
-        traffic violations issued in the Montgomery County, MD. Any information
-        that can be used to uniquely identify the vehicle, the vehicle owner or
-        the officer issuing the violation will not be published. Size on disk: 736MB.
+    This dataset contains traffic violation information from all electronic
+    traffic violations issued in the Montgomery County, MD. Any information
+    that can be used to uniquely identify the vehicle, the vehicle owner or
+    the officer issuing the violation will not be published. Size on disk: 736MB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -212,21 +244,28 @@ def fetch_traffic_violations(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the traffic violations CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_traffic_violations
+    >>> data = fetch_traffic_violations()  # doctest: +SKIP
+    >>> data.y.shape  # doctest: +SKIP
+    (1578154,)
     """
     return load_simple_dataset("traffic_violations", data_home)
 
 
 def fetch_drug_directory(data_home=None):
-    """Fetches the drug directory dataset (classification), available at \
+    """
+    Fetches the drug directory dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Product listing data submitted to the U.S. FDA for all unfinished,
-        unapproved drugs. Size on disk: 44MB.
+    Product listing data submitted to the U.S. FDA for all unfinished,
+    unapproved drugs. Size on disk: 44MB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -244,14 +283,21 @@ def fetch_drug_directory(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the drug directory CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_drug_directory
+    >>> data = fetch_drug_directory()  # doctest: +SKIP
+    >>> data.drug_directory.shape  # doctest: +SKIP
+    (120215, 21)
     """
     return load_simple_dataset("drug_directory", data_home)
 
 
 def fetch_credit_fraud(data_home=None, split="train"):
-    """Fetch the credit fraud dataset (classification).
-
-    Available at https://github.com/skrub-data/skrub-data-files
+    """
+    Fetch the credit fraud dataset. Available
+    at https://github.com/skrub-data/skrub-data-files
 
     This is an imbalanced binary classification use-case. This dataset consists of
     two tables:
@@ -265,7 +311,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     split : str, default="train"
@@ -286,6 +332,13 @@ def fetch_credit_fraud(data_home=None, split="train"):
             The path to the baskets CSV file.
         products_path : str
             The path to the products CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_credit_fraud
+    >>> data = fetch_credit_fraud()  # doctest: +SKIP
+    >>> data.baskets.shape  # doctest: +SKIP
+    (61241, 2)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -320,20 +373,21 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
 
 def fetch_toxicity(data_home=None):
-    """Fetch the toxicity dataset (classification) available at \
-        https://github.com/skrub-data/skrub-data-files
+    """
+    Fetch the toxicity dataset available at \
+    https://github.com/skrub-data/skrub-data-files
 
     This is a balanced binary classification use-case, where the single table
     consists in only two columns:
 
-   - ``text``: the text of the comment
-   - ``is_toxic``: whether or not the comment is toxic
+    - ``text``: the text of the comment
+    - ``is_toxic``: whether or not the comment is toxic
 
     Size on disk: 220KB.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -351,6 +405,14 @@ def fetch_toxicity(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the toxicity CSV file.
+
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_toxicity
+    >>> data = fetch_toxicity()  # doctest: +SKIP
+    >>> data.toxicity.shape  # doctest: +SKIP
+    (1000, 2)
     """
     result = load_simple_dataset("toxicity_v1", data_home)
     result["toxicity"] = result.pop("toxicity_v1")
@@ -360,7 +422,8 @@ def fetch_toxicity(data_home=None):
 
 
 def fetch_videogame_sales(data_home=None):
-    """Fetch the videogame sales dataset (regression) available at \
+    """
+    Fetch the videogame sales dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the single table contains information
@@ -376,7 +439,7 @@ def fetch_videogame_sales(data_home=None):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -394,6 +457,14 @@ def fetch_videogame_sales(data_home=None):
             A dictionary containing the name, source and target.
         path : str
             The path to the videogame sales CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_videogame_sales
+    >>> data = fetch_videogame_sales()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path',
+      'videogame_sales', 'videogame_sales_path', 'X', 'y'])
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -413,7 +484,7 @@ def fetch_bike_sharing(data_home=None):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -431,13 +502,22 @@ def fetch_bike_sharing(data_home=None):
             A dictionary containing the name and target.
         path : str
             The path to the bike sharing CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_bike_sharing
+    >>> data = fetch_bike_sharing()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'bike_sharing', 'bike_sharing_path',
+      'metadata', 'metadata_path', 'X', 'y'])
     """
 
     return load_simple_dataset("bike_sharing", data_home)
 
 
 def fetch_movielens(data_home=None):
-    """Fetch the movielens dataset (regression) available at \
+    """
+    Fetch the movielens dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict movie ratings.
@@ -446,7 +526,7 @@ def fetch_movielens(data_home=None):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -464,13 +544,21 @@ def fetch_movielens(data_home=None):
             The path to the movies CSV file.
         ratings_path : str
             The path to the ratings CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_movielens
+    >>> data = fetch_movielens()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['metadata', 'metadata_path', 'movies',
+      'movies_path', 'ratings', 'ratings_path'])
     """
 
     return load_dataset_files("movielens", data_home)
 
 
 def fetch_flight_delays(data_home=None):
-    """Fetch the flight delays dataset (regression) available at \
+    """Fetch the flight delays dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict flight delays.
@@ -478,7 +566,7 @@ def fetch_flight_delays(data_home=None):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -513,12 +601,20 @@ def fetch_flight_delays(data_home=None):
             The path to the weather CSV file.
         stations_path : str
             The path to the stations CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_flight_delays
+    >>> data = fetch_flight_delays()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['airports', 'airports_path', 'flights', 'flights_path', 'metadata',
+      'metadata_path', 'stations', 'stations_path', 'weather', 'weather_path'])
     """
     return load_dataset_files("flight_delays", data_home)
 
 
 def fetch_country_happiness(data_home=None):
-    """Fetch the happiness index dataset (regression) available at \
+    """Fetch the happiness index dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict the happiness
@@ -528,7 +624,7 @@ def fetch_country_happiness(data_home=None):
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -555,38 +651,51 @@ def fetch_country_happiness(data_home=None):
             The path to the life expectancy CSV file.
         legal_rights_index_path : str
             The path to the legal rights index CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_country_happiness
+    >>> data = fetch_country_happiness()  # doctest: +SKIP
+    >>> data.happiness_report.shape  # doctest: +SKIP
+    (146, 12)
     """
     return load_dataset_files("country_happiness", data_home)
 
 
 def fetch_california_housing(data_home=None):
-    """Fetches the california housing dataset (regression), available at \
-        https://github.com/skrub-data/skrub-data-files
+    """
+    Fetches the california housing dataset (regression), available at \
+    https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        This dataset was obtained from the StatLib repository:
-        https://www.dcc.fc.up.pt/~ltorgo/Regression/cal_housing.html
+    This dataset was obtained from the StatLib repository:
+    https://www.dcc.fc.up.pt/~ltorgo/Regression/cal_housing.html
 
-        The target variable is the median house value for California districts,
-        expressed in hundreds of thousands of dollars ($100,000).
+    The target variable is the median house value for California districts,
+    expressed in hundreds of thousands of dollars ($100,000).
 
-        This dataset was derived from the 1990 U.S. census, using one row per census
-        block group. A block group is the smallest geographical unit for which the U.S.
-        Census Bureau publishes sample data (a block group typically has a population of
-        600 to 3,000 people).
+    This dataset was derived from the 1990 U.S. census, using one row per census
+    block group. A block group is the smallest geographical unit for which the U.S.
+    Census Bureau publishes sample data (a block group typically has a population of
+    600 to 3,000 people).
 
-        A household is a group of people residing within a home. Since the average
-        number of rooms and bedrooms in this dataset are provided per household, these
-        columns may take surprisingly large values for block groups with few households
-        and many empty houses, such as vacation resorts.
+    A household is a group of people residing within a home. Since the average
+    number of rooms and bedrooms in this dataset are provided per household, these
+    columns may take surprisingly large values for block groups with few households
+    and many empty houses, such as vacation resorts.
 
-        It can be downloaded/loaded using the sklearn.datasets.fetch_california_housing
-        function.
-        Size on disk: 1.80MB.
+    It can be downloaded/loaded using the sklearn.datasets.fetch_california_housing
+    function.
+    Size on disk: 1.80MB.
+
+    .. seealso::
+
+        :func:`sklearn.datasets.fetch_california_housing`
+            Scikit-learn function to load the same California housing
+            dataset.
 
     Parameters
     ----------
-    data_home : str or path-like, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -604,32 +713,40 @@ def fetch_california_housing(data_home=None):
             A dictionary containing the name, description, source and target.
         path : str
             The path to the california housing CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_california_housing
+    >>> data = fetch_california_housing()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'california_housing', 'california_housing_path', 'metadata',
+    'metadata_path', 'X', 'y'])
     """
     return load_simple_dataset("california_housing", data_home)
 
 
 def fetch_electricity_forecasting(data_home=None):
-    """Fetches the electricity usage dataset (forecasting), available at \
+    """
+    Fetches the electricity usage dataset (forecasting), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        This dataset was generated from data obtained from the
-        ENTSOE Open Data portal under the open source license (CC-BY 4.0):
-        https://transparencyplatform.zendesk.com/hc/article_attachments/40921869376401
+    This dataset was generated from data obtained from the
+    ENTSOE Open Data portal under the open source license (CC-BY 4.0):
+    https://transparencyplatform.zendesk.com/hc/article_attachments/40921869376401
 
-        and the Open Meteo Historical Weather API:
-        https://open-meteo.com/en/docs/historical-forecast-api
-        in accordance with the licence described:
-        https://open-meteo.com/en/licence
+    and the Open Meteo Historical Weather API:
+    https://open-meteo.com/en/docs/historical-forecast-api
+    in accordance with the licence described:
+    https://open-meteo.com/en/licence
 
-        This is a time-series forecasting use case. This dataset gives the total
-        electricity load in MW in France, covering a time range from
-        March 23, 2021 to May 31, 2025. In addition, the dataset contains
-        weather data for several cities within France.
+    This is a time-series forecasting use case. This dataset gives the total
+    electricity load in MW in France, covering a time range from
+    March 23, 2021 to May 31, 2025. In addition, the dataset contains
+    weather data for several cities within France.
 
-        It can be downloaded/loaded using the
-        sklearn.datasets.fetch_electricity_forecasting function.
-        Size on disk: 26MB.
+    It can be downloaded/loaded using the
+    sklearn.datasets.fetch_electricity_forecasting function.
+    Size on disk: 26MB.
 
     Parameters
     ----------
@@ -639,11 +756,23 @@ def fetch_electricity_forecasting(data_home=None):
     Returns
     -------
     Path : PosixPath
-         The path to the electricity usage CSV files
+         The path to the electricity usage CSV file. These include the electricity load
+         and weather data for several cities in France.
 
-    References
-    ----------
-    .. [1] For more detailed instructions on how to use this dataset, please refer
-           to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from pathlib import Path
+    >>> from skrub.datasets import fetch_electricity_forecasting
+    >>> path = fetch_electricity_forecasting()  # doctest: +SKIP
+    >>> bayonne = pd.read_csv(path / "weather_bayonne.csv")  # doctest: +SKIP
+    >>> bayonne.shape  # doctest: +SKIP
+    (38688, 7)
+
+    .. seealso::
+
+    For more detailed instructions on how to use this dataset, please refer
+    to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
+
     """
     return download_dataset("electricity_forecasting", data_home=data_home)

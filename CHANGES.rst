@@ -6,6 +6,75 @@ Release history
 
 .. currentmodule:: skrub
 
+
+Release 0.10.1
+===================
+
+Changes
+-------
+- :class:`TextEncoder`'s ``verbose`` parameter is now an ``int`` instead of a
+  ``bool``, where ``verbose=0`` silences the progress bar and
+  ``verbose>=1`` shows it. The default is now ``0``. Passing a
+  boolean is still accepted.
+  :pr:`2249` by :user:`Jayant-kernel <Jayant-kernel>`.
+- :func:`patch_display` now uses a minimal, faster TableReport without plots or
+  column associations by default. The old behavior can still be achieved by calling
+  ``patch_display(plot_distributions="auto", compute_associations="auto")``.
+  :pr:`2103` by :user:`Naa Ashiorkor Nortey <ashiorkornortey>`.
+- The error message when a key is missing from the environment passed to a
+  :class:`DataOp` or :class:`SkrubLearner` has been improved.
+  :pr:`2211` by :user:`Jérôme Dockès <jeromedockes>`.
+- When a cross-validation splitter has been passed to
+  :meth:`DataOp.skb.mark_as_X`, it it now possible to select a specific split
+  from it when calling :meth:`DataOp.skb.train_test_split` by passing
+  ``split_index``; for example ``data_op.skb.train_test_split(split_index=3)``
+  to get the third split.
+
+  The split that is returned by default when ``split_index`` is not specified is
+  now the *last* split produced by the splitter (it was the first before).
+
+  Moreover, the keys ``row_indices_train`` and ``row_indices_test`` are added to
+  the returned dictionary when using the ``mark_as_X`` splitter. And the keys
+  ``X`` (and ``y`` when it exists) are added to the dictionaries returned by
+  :meth:`DataOp.skb.train_test_split` and :meth:`DataOp.skb.iter_cv_splits`,
+  containing the full X and y before splitting.
+
+  :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
+
+- Added support in :func:`tabular_pipeline` for estimators instantiated from either
+  :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
+  default parameters of :class:`TableVectorizer` as the first step, and the estimator
+  as the second step.
+  :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
+  :user:`Jérôme Dockès <jeromedockes>`.
+
+
+Bugfixes
+--------
+- :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
+  installed by avoiding the unused Pearson's correlation computation.
+  :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
+- The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
+  have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`GapEncoder` with ``init="k-means"`` raised an error when the input
+  column contained missing values. This has been fixed in :pr:`2238` by
+  :user:`Achraf Ez <Hrafz>`.
+- :class:`DatetimeEncoder` no longer raises ``UnboundLocalError`` when
+  ``resolution=None`` is combined with ``periodic_encoding="circular"`` or
+  ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
+  ``resolution`` is finer than ``"hour"``. :pr:`2240` by
+  :user:`Achraf Ez <Hrafz>`.
+- When ``cols`` was not provided, :class:`AggJoiner` and :class:`MultiAggJoiner`
+  selected the columns to aggregate through a Python ``set``, so the order of the
+  aggregated output columns varied between runs. They now keep the order in which
+  the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
+  :user:`Dylan Pulver <dylanpulver>`.
+- A ``cloudpickle`` import error that could happen after updating some required
+  dependencies was fixed in :pr:`2261` by :user:`Jérôme Dockès <jeromedockes>`
+  and :user:`Riccardo Cappuzzo <rcap107>`.
+
+
 Release 0.10.0
 ===================
 

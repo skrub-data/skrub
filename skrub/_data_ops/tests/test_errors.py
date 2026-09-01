@@ -1,5 +1,6 @@
 import pickle
 import re
+import sys
 import traceback
 
 import numpy as np
@@ -640,3 +641,57 @@ def test_unhashable():
 def test_mark_as_X_missing_cv():
     with pytest.raises(TypeError, match=".*you must also provide a splitter"):
         skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
+def test_missing_var_message():
+    data_op = (
+        skrub.var("a", "a value")
+        + skrub.var("var_b_name", "b value", becomes_default=True)
+        + skrub.choose_from(["?", "!"], name="c")
+    )
+    learner = data_op.skb.make_learner()
+    with pytest.raises(KeyError) as exc:
+        learner.fit({"bad_key": "another value"})
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    assert "bad_key" in full_msg
+    assert "var_b_name" not in full_msg
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        in full_msg
+    )
+    assert "skrub.var('a', value=..., becomes_default=True)" in full_msg
+
+    # Test case were we do use the preview values (no environment is passed)
+
+    with pytest.raises(KeyError) as exc:
+        (data_op + skrub.var("d")).skb.make_learner(fitted=True)
+
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        not in full_msg
+    )
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
+def test_missing_var_message_train_test_split():
+    b = skrub.var("b")
+    X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
+    # 'z' is extra but not 'b', even though 'b' is not needed for collecting X
+    # it still exists in the DataOp as a whole.
+    with pytest.raises(KeyError, match=r"\['z'\]"):
+        X.skb.train_test_split({"z": 0, "b": 1})
+    # check that we still get the correct error when the env contains int (ID)
+    # keys
+    with pytest.raises(KeyError, match=r"\['z'\]") as exc:
+        X.skb.train_test_split({"z": 0, b.skb.id: 1})
+    with pytest.raises(KeyError) as exc:
+        X.skb.train_test_split()
+    full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
+    print(full_msg)
+    assert "No value has been provided for 'a'" in full_msg
+    assert (
+        "ignored by default whenever we pass an explicit 'environment' dictionary"
+        not in full_msg
+    )
