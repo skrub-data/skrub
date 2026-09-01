@@ -15,8 +15,8 @@ skrub
 .. |codecov| image:: https://img.shields.io/codecov/c/github/skrub-data/skrub/main
 .. |circleci| image:: https://img.shields.io/circleci/build/github/skrub-data/skrub/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.22231587.svg
-   :target: https://doi.org/10.5281/zenodo.22231587
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.22231586.svg
+   :target: https://doi.org/10.5281/zenodo.22231586
 
 
 **skrub** is a Python
@@ -53,15 +53,5 @@ the website for more information.
 Citing skrub
 ------------
 
-If you use skrub in a scientific publication, please cite it using the following BibTeX entry:
-
-.. code-block:: bibtex
-
-   @misc{skrub,
-     author       = {The skrub developers},
-     title        = {skrub: Machine learning with dataframes},
-     year         = {2026},
-     publisher    = {Zenodo},
-     doi          = {10.5281/zenodo.22231587},
-     url          = {https://doi.org/10.5281/zenodo.22231587}
-   }
+If you use skrub in a scientific publication, please cite it via the
+[Zenodo record](https://doi.org/10.5281/zenodo.22231586).
