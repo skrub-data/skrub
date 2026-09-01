@@ -57,7 +57,7 @@ If you use skrub in a scientific publication, please cite it using the following
 
 .. code-block:: bibtex
 
-   @software{skrub,
+   @misc{skrub,
      author       = {The skrub developers},
      title        = {skrub: Machine learning with dataframes},
      year         = {2026},
