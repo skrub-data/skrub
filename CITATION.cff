@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: skrub
+abstract: Machine learning with dataframes
+license: BSD-3-Clause
+repository-code: https://github.com/skrub-data/skrub
+authors:
+  - name: Riccardo Cappuzzo
+  - name: Jerome Dockes
+  - name: Guillaume Lemaitre
+  - name: Vincent Maladiere
+  - name: Gael Varoquaux
+identifiers:
+  - type: doi
+    value: https://doi.org/10.5281/zenodo.22231587
+    description: Zenodo DOI
