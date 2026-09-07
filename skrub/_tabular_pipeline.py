@@ -1,7 +1,7 @@
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
 from ._datetime_encoder import DatetimeEncoder
@@ -48,6 +48,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or sklearn.base.BaseEstimator
+        or sklearn.pipeline.Pipeline
         The estimator to use as the final step in the pipeline. Based on the type of
         estimator, the previous preprocessing steps and their respective parameters are
         chosen. The possible values are:
@@ -59,6 +60,8 @@ def tabular_pipeline(estimator, *, n_jobs=None):
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
         - a scikit-learn estimator: the provided estimator is used as the final step.
+        - a scikit-learn pipeline : the whole pipeline is kept and usual pre-processing by the TableVectorizer
+          is added before, depending on the estimator in the last step of the pipeline.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
@@ -224,7 +227,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     cat_feat_kwargs = {"categorical_features": "from_dtype"}
-
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
             return tabular_pipeline(
@@ -240,11 +242,17 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             "If ``estimator`` is a string it should be 'regressor', 'regression',"
             " 'classifier' or 'classification'."
         )
+    if isinstance(estimator, Pipeline):
+        *user_transformers, (_, estimator) = estimator.steps
+    else:
+        user_transformers = ()
+
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
             "tabular_pipeline expects a scikit-learn estimator as its first"
-            f" argument. Pass an instance of {estimator.__name__} rather than the class"
-            " itself."
+            " argument, or a Pipeline containing a scikit-learn estimator. "
+            f"Pass an instance of {estimator.__name__} rather than"
+            " the class itself."
         )
     if not isinstance(estimator, BaseEstimator):
         raise TypeError(
@@ -281,6 +289,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
+
     steps = [vectorizer]
     if not is_estimator_from_tabicl:
         if not get_tags(estimator).input_tags.allow_nan:
@@ -288,5 +297,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
             steps.append(SquashingScaler(max_absolute_value=5))
 
+    steps.extend([transformer for _, transformer in user_transformers])
     steps.append(estimator)
     return make_pipeline(*steps)
