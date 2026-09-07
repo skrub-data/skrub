@@ -15,7 +15,7 @@
 Building robust ML baselines with |tabular_pipeline|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The |tabular_pipeline| is a function that, given a scikit-learn estimator,
+The |tabular_pipeline| is a function that, given a scikit-learn compatible estimator,
 returns a full scikit-learn |Pipeline| that contains a |TableVectorizer|
 followed by the given estimator.
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
@@ -50,8 +50,8 @@ problems, but may not beat properly tuned ad-hoc pipelines.
    :widths: 25 25 25 25
 
    * - Parameter
-     - ``RandomForest`` models
-     - ``HistGradientBoosting`` models
+     - Tree ensemble models (e.g. ``RandomForest``)
+     - ``HistGradientBoosting`` models 
      - Linear models and others
    * - Low-cardinality encoder
      - :class:`~sklearn.preprocessing.OrdinalEncoder`
