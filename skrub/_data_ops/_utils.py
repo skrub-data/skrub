@@ -6,7 +6,7 @@ import traceback
 import warnings
 from pathlib import Path
 
-from joblib.externals import cloudpickle
+import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)

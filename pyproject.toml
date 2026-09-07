@@ -39,6 +39,8 @@ dependencies = [
   "matplotlib>=3.4.3",
   "requests>=2.25.0",
   "pydot",
+  "joblib",
+  "cloudpickle",
 ]
 
 [tool.setuptools.dynamic]
@@ -101,6 +103,8 @@ jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
 pydot = "*"
 requests = ">=2.25.0"
+joblib = "*"
+cloudpickle = "*"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -209,6 +213,13 @@ python = "~=3.12.0"
 [tool.pixi.feature.py313.dependencies]
 python = "~=3.13.0"
 
+[tool.pixi.feature.joblib-lt-16.dependencies]
+# joblib 1.6 requires Python >= 3.10
+joblib = ">=1,<1.6"
+
+[tool.pixi.feature.joblib-ge-16.dependencies]
+joblib = ">=1.6"
+
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
@@ -233,23 +244,58 @@ lint = ["lint"]
 check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
+test-joblib-lt-16 = ["optional", "test", "joblib-lt-16"]
+test-joblib-ge-16 = ["optional", "test", "joblib-ge-16"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
-ci-py309-min-deps = ["py309", "min-dependencies", "test"]
+# Python 3.9: joblib 1.6 is not available (requires Python >= 3.10)
+ci-py309-min-deps = ["py309", "min-dependencies", "test", "joblib-lt-16"]
 ci-py309-min-optional-deps = [
   "py309",
   "min-dependencies",
   "min-optional-dependencies",
   "test",
+  "joblib-lt-16",
 ]
-ci-py311-transformers = ["py311", "transformers", "test"]
-ci-py312-latest-deps = ["py312", "test"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test"]
-ci-py313-latest-deps = ["py313", "test"]
-ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
-ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+ci-py311-transformers = ["py311", "transformers", "test", "joblib-ge-16"]
+ci-py311-transformers-joblib-lt-16 = [
+  "py311",
+  "transformers",
+  "test",
+  "joblib-lt-16",
+]
+ci-py312-latest-deps = ["py312", "test", "joblib-ge-16"]
+ci-py312-latest-deps-joblib-lt-16 = ["py312", "test", "joblib-lt-16"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test", "joblib-ge-16"]
+ci-py312-latest-optional-deps-joblib-lt-16 = [
+  "py312",
+  "optional",
+  "test",
+  "joblib-lt-16",
+]
+ci-py313-latest-deps = ["py313", "test", "joblib-ge-16"]
+ci-py313-latest-deps-joblib-lt-16 = ["py313", "test", "joblib-lt-16"]
+ci-py313-polars-without-pyarrow = [
+  "py313",
+  "test",
+  "polars-without-pyarrow",
+  "joblib-ge-16",
+]
+ci-py313-polars-without-pyarrow-joblib-lt-16 = [
+  "py313",
+  "test",
+  "polars-without-pyarrow",
+  "joblib-lt-16",
+]
+ci-py313-latest-optional-deps = ["py313", "optional", "test", "joblib-ge-16"]
+ci-py313-latest-optional-deps-joblib-lt-16 = [
+  "py313",
+  "optional",
+  "test",
+  "joblib-lt-16",
+]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
+ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test", "joblib-ge-16" ] }
 
 [tool.ruff]
 line-length = 88

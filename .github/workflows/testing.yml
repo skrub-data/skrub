@@ -19,9 +19,13 @@ jobs:
           - ci-py309-min-deps
           - ci-py309-min-optional-deps
           - ci-py311-transformers
+          - ci-py311-transformers-joblib-lt-16
           - ci-py313-latest-deps
+          - ci-py313-latest-deps-joblib-lt-16
           - ci-py313-latest-optional-deps
+          - ci-py313-latest-optional-deps-joblib-lt-16
           - ci-py313-polars-without-pyarrow
+          - ci-py313-polars-without-pyarrow-joblib-lt-16
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
