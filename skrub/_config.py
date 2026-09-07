@@ -40,10 +40,14 @@ def _get_default_data_dir():
     return str(data_home)
 
 
-def _get_default_cache_dir():
-    cache_dir = Path(_get_default_data_dir()) / "_cache"
-    cache_dir.mkdir(exist_ok=True)
-    return str(cache_dir)
+def get_cache_dir():
+    config = get_config()
+    cache_dir = config["cache_dir"]
+    if cache_dir is None:
+        return None
+    if cache_dir is True:
+        return Path(config["data_dir"]) / "_cache"
+    return Path(cache_dir)
 
 
 def _get_deprecated_int_env(new_var, deprecated_var, default):
@@ -403,12 +407,8 @@ def set_config(
         local_config["data_dir"] = str(data_dir)
 
     if cache_dir is not UNCHANGED:
-        if cache_dir is True:
-            local_config["cache_dir"] = _get_default_cache_dir()
-        elif cache_dir is False:
-            local_config["cache_dir"] = None
-        else:
-            local_config["cache_dir"] = cache_dir
+        local_config["cache_dir"] = cache_dir
+
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
 

@@ -300,6 +300,10 @@ class SkrubNamespace:
         score_kwargs : dict, optional, default=None
             Extra named arguments for ``score``. See the description of the
             ``fit_kwargs`` parameter.
+        no_cache : bool, default = False
+            If True, caching is forbidden for this estimator: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache_dir='/path/to/chache_dir').
 
         Returns
         -------
@@ -506,6 +510,15 @@ class SkrubNamespace:
         kwargs
             named arguments passed to ``func``.
 
+        no_cache : bool, default = False
+            If True, caching is forbidden for this call: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache_dir='/path/to/chache_dir').
+
+            Note: if your function has a keyword-only parameter named
+            ``no_cache`` and you need to pass a value for it, use
+            :func:`skrub.deferred` instead of ``apply_func``.
+
         Returns
         -------
         data_op
@@ -552,14 +565,22 @@ class SkrubNamespace:
         2
         """
         if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+            # stacklevel: 2 + the 2 decorators @checked_deferred_call_constructor
+            #                                  @checked_data_op_constructor
+            #             = 4
+            warnings.warn(
+                "A deferred function was passed to .skb.apply_func():\n"
+                f"{func!r}\nPlease pass the original, undecorated function instead. "
+                "(Note: it can be accessed from the deferred function as f.func).",
+                stacklevel=4,
+            )
             no_cache = no_cache or func._skrub_no_cache
             func = func.func
         return DataOp(
             Call(
-                **prepare_call_fields(func),
+                **prepare_call_fields(func, no_cache=no_cache),
                 args=(self._data_op, *args),
                 kwargs=kwargs,
-                no_cache=no_cache,
             )
         )
 

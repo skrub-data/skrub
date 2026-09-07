@@ -1791,7 +1791,14 @@ class CallMethod(DataOpImpl):
         return f".{_get_preview(self.method_name)}()"
 
 
-def prepare_call_fields(func):
+def prepare_call_fields(func, no_cache):
+    """
+    Prepare most fields for a Call node.
+
+    This inspects the provided func to prepare the arguments needed to build a
+    Call dataop. Only the args and kwargs for the Call need to be completed in
+    order to build the node.
+    """
     from ._evaluation import needs_eval
 
     fields = {
@@ -1800,6 +1807,7 @@ def prepare_call_fields(func):
         "closure": (),
         "defaults": (),
         "kwdefaults": {},
+        "no_cache": no_cache,
     }
 
     if not hasattr(func, "__code__"):
@@ -1855,6 +1863,11 @@ def deferred(func=None, *, no_cache=False):
     ----------
     func : function
         The function to wrap
+
+    no_cache : bool, default = False
+        If True, caching is forbidden for this function: calls will not be
+        cached even if the configuration enables caching with
+        skrub.set_config(cache_dir='/path/to/chache_dir').
 
     Returns
     -------
@@ -1912,6 +1925,27 @@ def deferred(func=None, *, no_cache=False):
     >>> e.skb.eval({'x': 3})
     INFO x = 3
     3
+
+    It is possible to pass only the ``no_cache`` argument, in which case a
+    decorator is returned.
+
+    >>> @skrub.deferred(no_cache=True)
+    ... def f(x): return x * 2
+
+    is equivalent to:
+
+    >>> def f(x): return x * 2
+    >>> f = skrub.deferred(f, no_cache=True)
+
+    The original function is available as the ``func`` attribute:
+
+    >>> f(2)  # Call the deferred function, returns a DataOp.
+    <Call 'f'>
+    Result:
+    ―――――――
+    4
+    >>> f.func(2)  # Call the original function.
+    4
 
     **Advanced examples**
 
@@ -1982,18 +2016,22 @@ def deferred(func=None, *, no_cache=False):
         return functools.partial(deferred, no_cache=no_cache)
 
     if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+        warnings.warn(
+            "skrub.deferred was applied twice to the function:\n"
+            f"{func!r}\n"
+            "deferred should only be applied once.",
+            stacklevel=2,
+        )
         no_cache = no_cache or func._skrub_no_cache
         func = func.func
 
-    prepared_call_fields = prepare_call_fields(func)
+    prepared_call_fields = prepare_call_fields(func, no_cache=no_cache)
 
     @checked_deferred_call_constructor
     @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(**prepared_call_fields, args=args, kwargs=kwargs, no_cache=no_cache)
-        )
+        return DataOp(Call(**prepared_call_fields, args=args, kwargs=kwargs))
 
     deferred_func._skrub_is_deferred = True
     deferred_func._skrub_no_cache = no_cache

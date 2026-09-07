@@ -47,7 +47,7 @@ class Memory:
         self.cached_func = {}
 
     def _check_cache_dir(self):
-        cache_dir = _config.get_config()["cache_dir"]
+        cache_dir = _config.get_cache_dir()
         if cache_dir == self.cache_dir:
             return
         self.cached_func = {}
