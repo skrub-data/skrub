@@ -4,8 +4,11 @@
 .. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
 
 
-Tuning DataOps with Optuna
-==========================
+Going further: tuning with Optuna
+=================================
+
+What is Optuna?
+---------------
 
 Optuna is a powerful hyperparameter optimization framework that
 can be used to efficiently search for the best hyperparameters for machine

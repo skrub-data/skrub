@@ -1,8 +1,12 @@
 .. currentmodule:: skrub
 .. _user_guide_data_ops_hyperparameter_tuning:
 
-Using the skrub ``choose_*`` functions to tune hyperparameters
-==============================================================
+Hyperparameter tuning on a DataOps learner
+==========================================
+
+
+The skrub ``choose_*`` tools
+----------------------------
 
 skrub provides a convenient way to declare ranges of possible values, and tune
 those choices to keep the values that give the best predictions on a validation
@@ -171,7 +175,8 @@ Optuna is in :ref:`example_optuna_choices`.
 .. _user_guide_data_ops_feature_selection:
 
 Feature selection with skrub :class:`SelectCols` and :class:`DropCols`
-=======================================================================
+----------------------------------------------------------------------
+
 It is possible to combine :class:`SelectCols` and :class:`DropCols` with
 :func:`choose_from` to perform feature selection by dropping specific columns
 and evaluating how this affects the downstream performance.
@@ -225,3 +230,153 @@ A more advanced application of this technique is used in
 `this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>`_,
 along with the feature engineering required to prepare the columns, and the
 analysis of the results.
+
+
+Validating hyperparameter search with nested cross-validation
+-------------------------------------------------------------
+
+To avoid overfitting hyperparameters, the best combination must be evaluated on
+data that has not been used to select hyperparameters. This can be done with a
+single train-test split or with nested cross-validation.
+
+Using the same examples as the previous sections:
+
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
+>>> import skrub
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
+>>> data = skrub.var("data", diabetes_df)
+>>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+>>> pred = X.skb.apply(
+...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+... )
+
+Single train-test split:
+
+>>> split = pred.skb.train_test_split()
+>>> search = pred.skb.make_randomized_search()
+>>> search.fit(split['train'])
+ParamSearch(data_op=<Apply Ridge>,
+            search=RandomizedSearchCV(estimator=None, param_distributions=None))
+>>> search.score(split['test'])  # doctest: +SKIP
+0.4922874902029253
+
+For nested cross-validation we use :func:`skrub.cross_validate`, which accepts a
+``pipeline`` parameter (as opposed to
+:meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`
+which always uses the default hyperparameters):
+
+>>> skrub.cross_validate(pred.skb.make_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
+   fit_time  score_time  test_score
+0  0.891390    0.002768    0.412935
+1  0.889267    0.002773    0.519140
+2  0.928562    0.003124    0.491722
+3  0.890453    0.002732    0.428337
+4  0.889162    0.002773    0.536168
+
+Going beyond estimator hyperparameters: nesting choices and choosing pipelines
+------------------------------------------------------------------------------
+
+Choices are not limited to scikit-learn hyperparameters: we can use choices
+wherever we use DataOps. The choice of the estimator to use, any argument of
+a DataOp's method or :func:`deferred` function call, etc. can be replaced
+with choices. We can also choose between several DataOps to compare
+different pipelines.
+
+As an example of choices outside of scikit-learn estimators, we can consider
+several ways to perform an aggregation on a pandas DataFrame:
+
+>>> import skrub
+>>> ratings = skrub.var("ratings")
+>>> agg_ratings = ratings.groupby("movieId")["rating"].agg(
+...     skrub.choose_from(["median", "mean"], name="rating_aggregation")
+... )
+>>> print(agg_ratings.skb.describe_param_grid())
+- rating_aggregation: ['median', 'mean']
+
+We can also choose between several completely different pipelines by turning a
+choice into a DataOp, via its ``as_data_op`` method (or by using
+:func:`as_data_op` on any object).
+
+>>> from sklearn.preprocessing import StandardScaler
+>>> from sklearn.ensemble import RandomForestRegressor
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
+>>> import skrub
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
+>>> data = skrub.var("data", diabetes_df)
+>>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+
+>>> ridge_pred = X.skb.apply(skrub.optional(StandardScaler())).skb.apply(
+...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+... )
+>>> rf_pred = X.skb.apply(
+...     RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴")), y=y
+... )
+>>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_data_op()
+>>> print(pred.skb.describe_param_grid())
+- choose_from({'ridge': …, 'rf': …}): 'ridge'
+  optional(StandardScaler()): [StandardScaler(), None]
+  α: choose_float(0.01, 10.0, log=True, name='α')
+- choose_from({'ridge': …, 'rf': …}): 'rf'
+  N 🌴: choose_int(5, 50, name='N 🌴')
+
+Also note that as seen above, choices can be nested arbitrarily. For example it
+is frequent to choose between several estimators, each of which contains choices
+in its hyperparameters.
+
+
+Linking choices depending on other choices
+------------------------------------------
+
+Choices can depend on another choice made with :func:`choose_from`,
+:func:`choose_bool` or :func:`optional` through those objects' ``.match()``
+method.
+
+Suppose we want to use either ridge regression, random forest or gradient
+boosting, and that we want to use imputation for ridge and random forest (only),
+and scaling for the ridge (only). We can start by choosing the kind of
+estimators and make further choices depend on the estimator kind:
+
+>>> import skrub
+>>> from sklearn.impute import SimpleImputer, KNNImputer
+>>> from sklearn.preprocessing import StandardScaler, RobustScaler
+>>> from sklearn.linear_model import Ridge
+>>> from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+
+>>> estimator_kind = skrub.choose_from(
+...     ["ridge", "random forest", "gradient boosting"], name="estimator"
+... )
+>>> imputer = estimator_kind.match(
+...     {"gradient boosting": None},
+...     default=skrub.choose_from([SimpleImputer(), KNNImputer()], name="imputer"),
+... )
+>>> scaler = estimator_kind.match(
+...     {"ridge": skrub.choose_from([StandardScaler(), RobustScaler()], name="scaler")},
+...     default=None,
+... )
+>>> predictor = estimator_kind.match(
+...     {
+...         "ridge": Ridge(),
+...         "random forest": RandomForestRegressor(),
+...         "gradient boosting": HistGradientBoostingRegressor(),
+...     }
+... )
+>>> pred = skrub.X().skb.apply(imputer).skb.apply(scaler).skb.apply(predictor)
+>>> print(pred.skb.describe_param_grid())
+- estimator: 'ridge'
+  imputer: [SimpleImputer(), KNNImputer()]
+  scaler: [StandardScaler(), RobustScaler()]
+- estimator: 'random forest'
+  imputer: [SimpleImputer(), KNNImputer()]
+- estimator: 'gradient boosting'
+
+Note that only relevant choices are included in each subgrid. For example, when
+the estimator is ``'random forest'``, the subgrid contains several options for
+imputation but not for scaling.
+
+In addition to ``match``, choices created with :func:`choose_bool` have an
+``if_else()`` method which is a convenience helper equivalent to
+``match({True: ..., False: ...})``.
