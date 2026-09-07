@@ -13,6 +13,7 @@ from .._select_cols import DropCols, SelectCols
 from ._data_ops import (
     AppliedEstimator,
     Apply,
+    Call,
     Concat,
     DataOp,
     FreezeAfterFit,
@@ -24,7 +25,8 @@ from ._data_ops import (
     check_data_op,
     check_name,
     checked_data_op_constructor,
-    deferred,
+    checked_deferred_call_constructor,
+    prepare_call_fields,
 )
 from ._estimator import (
     ParamSearch,
@@ -485,6 +487,8 @@ class SkrubNamespace:
             no_cache=no_cache,
         )
 
+    @checked_deferred_call_constructor
+    @checked_data_op_constructor
     def apply_func(self, func, *args, no_cache=False, **kwargs):
         r"""Apply the given function.
 
@@ -547,12 +551,17 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        call = deferred(func)(self._data_op, *args, **kwargs)
-        impl = call._skrub_impl
-        if hasattr(impl, "no_cache"):
-            # CallMethod nodes never use caching and do not have a no_cache attribute.
-            impl.no_cache = no_cache
-        return call
+        if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+            no_cache = no_cache or func._skrub_no_cache
+            func = func.func
+        return DataOp(
+            Call(
+                **prepare_call_fields(func),
+                args=(self._data_op, *args),
+                kwargs=kwargs,
+                no_cache=no_cache,
+            )
+        )
 
     @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):

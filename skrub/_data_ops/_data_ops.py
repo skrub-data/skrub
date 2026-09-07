@@ -465,7 +465,7 @@ def _get_preview(obj):
     return obj
 
 
-def _checked_deferred_call_constructor(f):
+def checked_deferred_call_constructor(f):
     """Warn about function calls returning None
 
     We use this check because it is quite likely that the function was called
@@ -628,7 +628,7 @@ class DataOp:
     def __getitem__(self, key):
         return DataOp(GetItem(self, key))
 
-    @_checked_deferred_call_constructor
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
@@ -1711,6 +1711,15 @@ class Call(DataOpImpl):
     ]
 
     def compute(self, e, mode, environment):
+        if getattr(e.func, "_skrub_is_deferred", False):
+            raise ValueError(
+                "A deferred function was wrapped in a DataOp, "
+                "probably by passing it (inderectly) to .skb.apply_func():\n"
+                f"{e.func!r}.\n"
+                "This results in deferring the function twice.\n"
+                "Please pass the original, undecorated function instead.\n"
+                "(Note: it can be accessed from the deferred function as f.func)."
+            )
         return _MEMORY.call_deferred_func(
             e.func,
             e.args,
@@ -1782,7 +1791,56 @@ class CallMethod(DataOpImpl):
         return f".{_get_preview(self.method_name)}()"
 
 
-def deferred(func):
+def prepare_call_fields(func):
+    from ._evaluation import needs_eval
+
+    fields = {
+        "func": func,
+        "globals": {},
+        "closure": (),
+        "defaults": (),
+        "kwdefaults": {},
+    }
+
+    if not hasattr(func, "__code__"):
+        return fields
+
+    globals_names = [
+        i.argval
+        for i in dis.get_instructions(func.__code__)
+        if i.opname == "LOAD_GLOBAL"
+    ]
+    f_globals = {
+        name: func.__globals__[name]
+        for name in globals_names
+        if name in func.__globals__
+        and not isinstance(
+            func.__globals__[name],
+            (
+                types.FunctionType,
+                types.BuiltinFunctionType,
+                type,
+                types.ModuleType,
+            ),
+        )
+        and needs_eval(func.__globals__[name])
+    }
+    closure = tuple(c.cell_contents for c in func.__closure__ or ())
+    if not f_globals and not needs_eval(
+        (closure, func.__defaults__, func.__kwdefaults__)
+    ):
+        return fields
+
+    fields.update(
+        globals=f_globals,
+        closure=closure,
+        defaults=func.__defaults__,
+        kwdefaults=func.__kwdefaults__,
+    )
+    return fields
+
+
+def deferred(func=None, *, no_cache=False):
     """Wrap function calls in a DataOp :class:`DataOp`.
 
     When this decorator is applied, the resulting function returns DataOps.
@@ -1920,77 +1978,26 @@ def deferred(func):
            [-0.87,  0.5 ],
            [-0.  ,  1.  ]])
     """  # noqa : E501
-    from ._evaluation import needs_eval
+    if func is None:
+        return functools.partial(deferred, no_cache=no_cache)
 
-    if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):
-        return func
+    if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+        no_cache = no_cache or func._skrub_no_cache
+        func = func.func
 
-    @_checked_deferred_call_constructor
+    prepared_call_fields = prepare_call_fields(func)
+
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals={},
-                closure=(),
-                defaults=(),
-                kwdefaults={},
-                no_cache=True,
-            )
+            Call(**prepared_call_fields, args=args, kwargs=kwargs, no_cache=no_cache)
         )
 
     deferred_func._skrub_is_deferred = True
-
-    if not hasattr(func, "__code__"):
-        return deferred_func
-
-    globals_names = [
-        i.argval
-        for i in dis.get_instructions(func.__code__)
-        if i.opname == "LOAD_GLOBAL"
-    ]
-    f_globals = {
-        name: func.__globals__[name]
-        for name in globals_names
-        if name in func.__globals__
-        and not isinstance(
-            func.__globals__[name],
-            (
-                types.FunctionType,
-                types.BuiltinFunctionType,
-                type,
-                types.ModuleType,
-            ),
-        )
-        and needs_eval(func.__globals__[name])
-    }
-    closure = tuple(c.cell_contents for c in func.__closure__ or ())
-    if not f_globals and not needs_eval(
-        (closure, func.__defaults__, func.__kwdefaults__)
-    ):
-        return deferred_func
-
-    @_checked_deferred_call_constructor
-    @checked_data_op_constructor
-    @functools.wraps(func)
-    def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals=f_globals,
-                closure=closure,
-                defaults=func.__defaults__,
-                kwdefaults=func.__kwdefaults__,
-                no_cache=True,
-            )
-        )
-
-    deferred_func._skrub_is_deferred = True
+    deferred_func._skrub_no_cache = no_cache
+    deferred_func.func = func
 
     return deferred_func
 
