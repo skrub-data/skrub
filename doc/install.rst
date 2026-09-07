@@ -12,7 +12,7 @@ Install
 
     <ul class="nav nav-pills nav-fill" id="installation" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="true">Using pip</a>
+            <a class="nav-link" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="false">Using pip</a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="conda-tab" data-bs-toggle="tab" data-bs-target="#conda-tab-pane" type="button" role="tab" aria-controls="conda" aria-selected="false">Using conda</a>
@@ -21,12 +21,12 @@ Install
             <a class="nav-link" id="mamba-tab" data-bs-toggle="tab" data-bs-target="#mamba-tab-pane" type="button" role="tab" aria-controls="mamba" aria-selected="false">Using mamba</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="false">From source</a>
+            <a class="nav-link" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="true">From source</a>
         </li>
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
+        <div class="tab-pane fade" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
             <hr />
 
 .. code:: console
@@ -101,7 +101,7 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
 .. raw:: html
 
         </div>
-        <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
+        <div class="tab-pane fade show active" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
 .. _installing_from_source:
