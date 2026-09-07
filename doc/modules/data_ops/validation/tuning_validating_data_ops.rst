@@ -286,7 +286,7 @@ Avoiding computing predictions multiple times
 
 This section gives a few tips to avoid recomputing predictions, which is
 particularly important for pipelines for which inference is expensive, such as
-those using the :class:`TextEncoder` or Tabular Foundation Models such as
+those using the :class:`LLMEncoder` or Tabular Foundation Models such as
 `TabICL <https://tabicl.readthedocs.io/en/latest/>`_.
 
 When :meth:`DataOp.skb.with_scoring` is used, predictions are cached during
