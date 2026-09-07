@@ -43,7 +43,7 @@ def test_nonfinite():
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
         pytest.param(
-            skrub.TextEncoder(
+            skrub.LLMEncoder(
                 model_name="sentence-transformers/paraphrase-albert-small-v2",
                 n_components=2,
                 device="cpu",

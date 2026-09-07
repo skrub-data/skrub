@@ -1,6 +1,6 @@
 
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
-.. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
+.. |LLMEncoder| replace:: :class:`~skrub.LLMEncoder`
 .. |MinHashEncoder| replace:: :class:`~skrub.MinHashEncoder`
 .. |GapEncoder| replace:: :class:`~skrub.GapEncoder`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
@@ -74,13 +74,13 @@ Choosing the right encoder for the job
   (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
   This is the default encoder used by the |TableVectorizer| and the |tabular_pipeline|.
 
-- |TextEncoder|: **language model-based, strong on text but expensive to run**:
+- |LLMEncoder|: **language model-based, strong on text but expensive to run**:
   This encoder encodes string features using pretrained language models from the
   HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
   compatible with the scikit-learn API and usable in pipelines. Best for free-flowing
   text and when columns include context found in the pretrained model (e.g., names of
   cities etc.). Note that this encoder can take a very long time to train, especially
-  on large datasets and on CPU. The |TextEncoder| has additional dependencies that
+  on large datasets and on CPU. The |LLMEncoder| has additional dependencies that
   are not included in the standard skrub installation.
   Refer to :ref:`installation_instructions` for info on how to prepare the
   environment.
@@ -110,7 +110,7 @@ Choosing the right encoder for the job
       - Good
       - Good
       -
-    * - |TextEncoder|
+    * - |LLMEncoder|
       - Very slow
       - Mediocre to good
       - Very good

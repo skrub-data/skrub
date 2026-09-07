@@ -20,7 +20,7 @@ the features we present in this example and the following ones.
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
-.. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
+.. |LLMEncoder| replace:: :class:`~skrub.LLMEncoder`
 """
 
 # %%
@@ -187,7 +187,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 
 # %%
 # If your data includes a lot of text, you may want to use the
-# |TextEncoder|,
+# |LLMEncoder|,
 # which uses pre-trained language models retrieved from the HuggingFace hub to
 # create meaningful text embeddings.
 # See :ref:`user_guide_encoders_index` for more details on all the categorical encoders

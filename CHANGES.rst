@@ -20,7 +20,9 @@ Bugfixes
 
 Deprecations
 ------------
-
+- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.10.1
 ===================
@@ -60,7 +62,6 @@ Changes
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
   as the second step.
-
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
 
