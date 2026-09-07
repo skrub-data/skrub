@@ -1,5 +1,4 @@
 import reprlib
-import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
