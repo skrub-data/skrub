@@ -66,7 +66,7 @@ labels = data["is_toxic"]
 # We mark the ``texts`` column as the input variable and the ``labels`` column as
 # the target variable.
 #
-# See `the previous example <1110_data_ops_intro.html>`_
+# See `the previous example <1111_data_ops_quick_tour.html>`_
 # for a more detailed explanation
 # of :func:`skrub.X` and :func:`skrub.y`.
 #
@@ -269,6 +269,20 @@ search.plot_results()
 # performs better than the ``RidgeClassifier`` in most cases, that the ``StringEncoder``
 # outperforms the ``MinHashEncoder``, and that the choice of the additional ``length``
 # feature does not have a significant impact on the score.
+#
+# When we have many choices in our DataOp, or when we add many scorers with
+# :meth:`.skb.with_scoring() <DataOp.skb.with_scoring>` (not shown in this
+# example), the parallel coordinate plot can get very crowded or even
+# unreadable. To avoid this, :meth:`ParamSearch.plot_results` (and
+# :meth:`OptunaParamSearch.plot_results`) allow us to filter the scores and
+# parameters to include in the plot, and whether to include fitting and scoring
+# durations or not.
+#
+# For example if we wanted to include only the encoder and classifier and hide
+# the fitting time:
+
+# %%
+search.plot_results(show_choices=["encoder", "classifier"], show_times=["score"])
 
 # %%
 # In this example, we've seen how to use skrub's ``choose_from`` objects to tune

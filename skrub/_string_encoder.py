@@ -17,8 +17,7 @@ from ._to_str import ToStr
 
 
 class StringEncoder(TransformerMixin, SingleColumnTransformer):
-    """Encode string features by using tf-idf vectorization and truncated singular \
-    value decomposition (SVD).
+    """Encode string columns as a numeric array using Latent Semantic Analysis (LSA).
 
     First, apply a tf-idf vectorization of the text, then reduce the dimensionality
     with a truncated SVD with the given number of parameters.
@@ -85,7 +84,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
         Encode string columns as a numeric array with the minhash method.
     GapEncoder :
         Encode string columns by constructing latent topics.
-    TextEncoder :
+    LLMEncoder :
         Encode string columns using pre-trained language models.
 
     Notes

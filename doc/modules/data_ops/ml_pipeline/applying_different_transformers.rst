@@ -8,7 +8,7 @@ It is possible to use skrub selectors to define which columns to apply
 transformers to, and then apply different transformers to different subsets of
 the data.
 
-For example, this can be useful to apply :class:`~skrub.TextEncoder` to columns
+For example, this can be useful to apply :class:`~skrub.LLMEncoder` to columns
 that contain free-flowing text, and :class:`~skrub.StringEncoder` to other string
 columns that contain categorical data such as country names.
 
@@ -150,4 +150,4 @@ to obtain the final result:
 
 More info on advanced column selection and manipulation be found in
 :ref:`user_guide_selectors` and example
-:ref:`sphx_glr_auto_examples_0090_apply_to_cols.py`.
+:ref:`sphx_glr_auto_examples_0010_apply_to_cols.py`.

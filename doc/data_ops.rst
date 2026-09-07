@@ -56,6 +56,18 @@ they can be saved in a file, loaded, applied to new data as easily as a single
   etc. . Skrub DataOps remove those limitations and add several useful features
   such as interactive previews and integration with Optuna.
 
+A quick overview of DataOps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This tutorial walks through the main components of the DataOps on a simple
+example:
+
+.. toctree::
+   :maxdepth: 1
+
+   auto_tutorials/1111_data_ops_quick_tour
+
+
 Data Ops basic concepts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -64,7 +76,6 @@ Data Ops basic concepts
 
    modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
-   auto_tutorials/1110_data_ops_intro
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods
    modules/data_ops/basics/control_flow

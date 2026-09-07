@@ -6,12 +6,13 @@ import traceback
 import warnings
 from pathlib import Path
 
-from joblib.externals import cloudpickle
+import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
 X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
+IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
 
 
 class Sentinels(enum.Enum):

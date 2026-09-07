@@ -173,8 +173,14 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 def _get_range(values, frac=0.2, factor=3.0):
+    if np.issubdtype(values.dtype, np.floating):
+        finite_values = values[np.isfinite(values)]
+    else:
+        finite_values = values
+    if not len(finite_values):
+        return 0, 0
     min_value, low_p, high_p, max_value = np.quantile(
-        values, [0.0, frac, 1.0 - frac, 1.0]
+        finite_values, [0.0, frac, 1.0 - frac, 1.0]
     )
     delta = high_p - low_p
     if not delta:
@@ -193,7 +199,40 @@ def _get_range(values, frac=0.2, factor=3.0):
     return low, high
 
 
+def _get_safe_hist_range(values):
+    # Get a safe min, max range for the histogram (the 'range' parameter of
+    # np.histogram).
+    #
+    # This handles a corner case where the range of the data is very narrow and
+    # there are less than 10 (the default number of bins) representable
+    # floating-point numbers between the data min and max (with the precision
+    # of the input column dtype). In this case numpy/matplotlib histogram with
+    # default parameters fails, so we pass the 'range' parameter to extend it
+    # slightly beyond the data range so that it is wide enough to contain 10
+    # bins.
+    if not len(values) or not (
+        np.issubdtype(values.dtype, np.floating)
+        or np.issubdtype(values.dtype, np.integer)
+    ):
+        # empty or non-numeric inputs (datetimes) need no special handling.
+        return None
+    vmin, vmax = values.min(), values.max()
+    delta = max(np.spacing(vmin), np.spacing(vmax))
+    if vmax - vmin > 12 * delta:
+        # Min and max are far enough to divide the data range into 10 bins, we
+        # can keep the default range=None.
+        #
+        # 12 is a bit conservative, 10 is probably enough, but there is no
+        # harm in having the plot range slightly wider than is strictly
+        # required.
+        return None
+    # Extend the range by 12 spacing steps (6 on each side) so the new range
+    # can contain the bins.
+    return vmin - 6 * delta, vmax + 6 * delta
+
+
 def _robust_hist(col, ax=None, color=None):
+    result = {}
     col = sbd.drop_nulls(col)
     if sbd.is_float(col):
         # avoid any issues with pandas nullable dtypes
@@ -211,19 +250,25 @@ def _robust_hist(col, ax=None, color=None):
         np_histogram_values = sbd.to_numpy(
             _datetime_encoder.DatetimeEncoder(resolution=None).fit_transform(col)
         ).ravel()
+        result["total_seconds_offset"] = np_histogram_values.min()
+        np_histogram_values = np_histogram_values - result["total_seconds_offset"]
     else:
         np_histogram_values = values
     low, high = _get_range(values)
     inlier_mask = (low <= values) & (values <= high)
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
-    result = {"n_low_outliers": n_low_outliers, "n_high_outliers": n_high_outliers}
+    result.update(n_low_outliers=n_low_outliers, n_high_outliers=n_high_outliers)
+    np_histogram_inliers = np_histogram_values[inlier_mask]
     result["bin_counts"], result["bin_edges"] = np.histogram(
-        np_histogram_values[inlier_mask]
+        np_histogram_inliers, range=_get_safe_hist_range(np_histogram_inliers)
     )
     if ax is None:
         return result
-    n, bins, patches = ax.hist(values[inlier_mask])
+    histogram_inliers = values[inlier_mask]
+    n, bins, patches = ax.hist(
+        histogram_inliers, range=_get_safe_hist_range(histogram_inliers)
+    )
     n_out = n_low_outliers + n_high_outliers
     if not n_out:
         return result

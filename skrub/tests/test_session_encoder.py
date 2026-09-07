@@ -1,0 +1,724 @@
+import datetime
+
+import numpy as np
+import pandas as pd
+import pytest
+from packaging.version import parse
+
+from .. import _dataframe as sbd
+from .._session_encoder import SessionEncoder, _get_session_column
+
+
+@pytest.fixture
+def example_session_data(df_module):
+    """Create example session data with multiple users and sessions."""
+    timestamps = []
+    user_ids = []
+
+    base_time = datetime.datetime(2024, 1, 1)
+
+    # User 101, alice: 3 sessions with 5 events each, 10 days apart
+    for session in range(3):
+        session_start = base_time + datetime.timedelta(days=session * 10)
+        for event in range(5):
+            timestamps.append(session_start + datetime.timedelta(minutes=event * 2))
+            user_ids.append(101)
+
+    # User 102, bob: 2 sessions with 3 events each, 2 hours apart
+    for session in range(2):
+        session_start = base_time + datetime.timedelta(days=35, hours=session * 2)
+        for event in range(3):
+            timestamps.append(session_start + datetime.timedelta(minutes=event * 5))
+            user_ids.append(102)
+
+    # User 103, charlie: 1 session with 4 events
+    session_start = base_time + datetime.timedelta(days=40)
+    for event in range(4):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 3))
+        user_ids.append(103)
+
+    df = df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+            "user_id": user_ids,
+        }
+    )
+
+    return sbd.sample(df, n=len(df), seed=42)
+
+
+@pytest.fixture
+def example_session_data_multi_by(df_module):
+    """Create example session data where a user is identified by two columns.
+
+    A user is uniquely identified by the combination of ``user_id`` and
+    ``device_id``.  The same ``user_id`` on two different devices produces
+    independent sessions, which lets us verify that ``split_by`` accepts a list of
+    column names.
+    """
+    timestamps = []
+    user_ids = []
+    device_ids = []
+
+    base_time = datetime.datetime(2024, 1, 1)
+
+    # user 1, device "mobile": 2 sessions, 10 days apart, 4 events each
+    for session in range(2):
+        session_start = base_time + datetime.timedelta(days=session * 10)
+        for event in range(4):
+            timestamps.append(session_start + datetime.timedelta(minutes=event * 3))
+            user_ids.append(1)
+            device_ids.append("mobile")
+
+    # user 1, device "desktop": 1 session, 3 events
+    # (same user_id as above but different device → separate sessions)
+    session_start = base_time + datetime.timedelta(days=5)
+    for event in range(3):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 4))
+        user_ids.append(1)
+        device_ids.append("desktop")
+
+    # user 2, device "mobile": 1 session, 5 events
+    session_start = base_time + datetime.timedelta(days=20)
+    for event in range(5):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 2))
+        user_ids.append(2)
+        device_ids.append("mobile")
+
+    return df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+            "user_id": user_ids,
+            "device_id": device_ids,
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    "by_column,expected_sessions,split_key_to_sessions",
+    [
+        ("user_id", 6, {101: 3, 102: 2, 103: 1}),
+    ],
+)
+def test_basic_functionality(
+    example_session_data, by_column, expected_sessions, split_key_to_sessions
+):
+    """Test basic sessionization grouping by user_id or username."""
+    # Apply SessionEncoder grouping by the specified column
+    se = SessionEncoder(
+        split_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(example_session_data)
+
+    # Check that we have the expected total number of sessions
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    unique_sessions = set(session_ids)
+    assert len(unique_sessions) == expected_sessions
+
+    # content of the "session_id" column after sessionization
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    # content of the "by" column (user_id or username)
+    group_values = sbd.to_list(sbd.col(result, by_column))
+
+    counted_sessions = {}
+    for group_key, session_id in zip(group_values, session_ids):
+        if group_key not in counted_sessions:
+            counted_sessions[group_key] = set()
+        counted_sessions[group_key].add(session_id)
+    for group_key, sessions in counted_sessions.items():
+        assert len(sessions) == split_key_to_sessions[group_key]
+
+    # Checking that fit then transform still works
+    result_fit = se.fit(example_session_data).transform(example_session_data)
+    # content of the "session_id" column after sessionization
+    session_ids_fit = sbd.to_list(sbd.col(result_fit, "timestamp_session_id"))
+
+    assert session_ids == session_ids_fit
+
+
+@pytest.mark.parametrize(
+    "by_column,group_keys",
+    [
+        ("user_id", [101, 102, 103]),
+    ],
+)
+def test_different_users_different_sessions(
+    example_session_data, by_column, group_keys
+):
+    """Test that different users/groups have different session IDs."""
+    # Apply SessionEncoder
+    se = SessionEncoder(
+        split_by=by_column, timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(example_session_data)
+
+    # content of the "session_id" column after sessionization
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    # content of the "by" column (user_id or username)
+    group_values = sbd.to_list(sbd.col(result, by_column))
+
+    # Verify different groups don't share session IDs
+    for i, key1 in enumerate(group_keys):
+        for key2 in group_keys[i + 1 :]:
+            # find the indices of events for each group key (user id or username)
+            indices1 = [idx for idx, v in enumerate(group_values) if v == key1]
+            indices2 = [idx for idx, v in enumerate(group_values) if v == key2]
+            # find the unique session IDs for each group key (each user)
+            sessions1 = {session_ids[idx] for idx in indices1}
+            sessions2 = {session_ids[idx] for idx in indices2}
+
+            # check that there are no shared session IDs between different users/groups
+            assert len(sessions1.intersection(sessions2)) == 0
+
+
+def test_multi_by_columns(example_session_data_multi_by):
+    """Test sessionization when a user is identified by a combination of columns.
+
+    The fixture has user_id=1 on two devices ("mobile" and "desktop").  When
+    ``group_by=["user_id", "device_id"]``, those two device contexts must be treated
+    as independent groups, producing separate session IDs even though they share
+    the same ``user_id``.
+
+    Expected sessions:
+    - (user_id=1, device_id="mobile")  → 2 sessions
+    - (user_id=1, device_id="desktop") → 1 session
+    - (user_id=2, device_id="mobile")  → 1 session
+    Total: 4 sessions
+    """
+    se = SessionEncoder(
+        split_by=["user_id", "device_id"],
+        timestamp_col="timestamp",
+        session_gap=30 * 60,
+    )
+    result = se.fit_transform(example_session_data_multi_by)
+
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    user_ids = sbd.to_list(sbd.col(result, "user_id"))
+    device_ids = sbd.to_list(sbd.col(result, "device_id"))
+
+    # 4 distinct sessions overall
+    assert len(set(session_ids)) == 4
+
+    # create a dict that groups sessions by (user_id, device_id) pair
+    group_sessions: dict = {}
+    for uid, did, sid in zip(user_ids, device_ids, session_ids):
+        key = (uid, did)
+        # Each (user_id, device_id) pair should have its own set of session IDs
+        # We use a set to track unique session IDs for each group key
+        group_sessions.setdefault(key, set()).add(sid)
+
+    # assert that each (user_id, device_id) pair has the expected number of sessions
+    assert len(group_sessions[(1, "mobile")]) == 2
+    assert len(group_sessions[(1, "desktop")]) == 1
+    assert len(group_sessions[(2, "mobile")]) == 1
+
+    # sessions belonging to different (user_id, device_id) pairs must be disjoint
+    keys = list(group_sessions)
+    # go through each pair of group keys (user_id, device_id)
+    for i, k1 in enumerate(keys):
+        for k2 in keys[i + 1 :]:
+            # check that the sets in group_sessions for different keys are disjoint
+            assert group_sessions[k1].isdisjoint(group_sessions[k2])
+
+
+def test_multiple_users(df_module):
+    """Test sessionization with multiple users interleaved."""
+    timestamps = []
+    user_ids = []
+
+    base_time = datetime.datetime(2024, 1, 1)
+
+    # Create events for two users, alternating
+    for i in range(10):
+        timestamps.append(base_time + datetime.timedelta(minutes=i))
+        user_ids.append(101 if i % 2 == 0 else 102)
+
+    df = df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+            "user_id": user_ids,
+        }
+    )
+
+    se = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(df)
+
+    # After sorting by user_id and timestamp, each user should have 1 session
+    # since all their events are within 30 minutes
+    session_ids = sbd.col(result, "timestamp_session_id")
+
+    # The encoder sorts by user_id then timestamp, so events are grouped by user
+    # Check that there are exactly 2 sessions (one per user)
+    assert len(set(session_ids)) == 2
+
+
+def test_time_gap_threshold(df_module):
+    """Test that session_gap parameter correctly determines sessionization."""
+    timestamps = [
+        datetime.datetime(2024, 1, 1, 10, 0),
+        datetime.datetime(2024, 1, 1, 10, 15),  # 15 min gap
+        datetime.datetime(2024, 1, 1, 10, 50),  # 35 min gap
+        datetime.datetime(2024, 1, 1, 11, 0),  # 10 min gap
+    ]
+    user_ids = [101, 101, 101, 101]
+
+    df = df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+            "user_id": user_ids,
+        }
+    )
+
+    # With 20-minute gap: should create 2 sessions (split at 35-min gap)
+    se_20 = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=20 * 60
+    )
+    result_20 = se_20.fit_transform(df)
+    session_ids_20 = sbd.to_list(sbd.col(result_20, "timestamp_session_id"))
+    assert len(set(session_ids_20)) == 2
+
+    # With 40-minute gap: should create 1 session (all gaps < 40 min)
+    se_40 = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=40 * 60
+    )
+    result_40 = se_40.fit_transform(df)
+    session_ids_40 = sbd.to_list(sbd.col(result_40, "timestamp_session_id"))
+    assert len(set(session_ids_40)) == 1
+
+
+def test_no_user_column(df_module):
+    """Test sessionization without a user identifier column.
+
+    When ``split_by`` is None, all events are treated as from the same "user", and
+    sessions are separated only by time gaps.
+    """
+    timestamps = [
+        datetime.datetime(2024, 1, 1, 10, 0),
+        datetime.datetime(2024, 1, 1, 10, 10),  # 10 min gap
+        datetime.datetime(2024, 1, 1, 10, 15),  # 5 min gap (within 30 min)
+        datetime.datetime(2024, 1, 1, 11, 0),  # 45 min gap (exceeds 30 min)
+        datetime.datetime(2024, 1, 1, 11, 10),  # 10 min gap (within 30 min)
+    ]
+
+    df = df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+        }
+    )
+
+    # Without 'group_by', sessions are separated only by time gaps
+    se = SessionEncoder(split_by=None, timestamp_col="timestamp", session_gap=30 * 60)
+    result = se.fit_transform(df)
+
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    # Expected: 2 sessions (events 0-2 in session 0, event 3 starts new session)
+    # Then event 4 continues session 1
+    assert len(set(session_ids)) == 2
+    assert (
+        session_ids[0] == session_ids[1] == session_ids[2]
+    )  # First 3 events in session 0
+    assert session_ids[3] == session_ids[4]  # Last 2 events in session 1
+    assert session_ids[0] != session_ids[3]  # Sessions are different
+
+
+def test_single_event(df_module):
+    """Test sessionization with single event per user."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [datetime.datetime(2024, 1, 1, 10, 0)],
+            "user_id": [101],
+        }
+    )
+
+    se = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(df)
+
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    assert len(session_ids) == 1
+    # Single event should create one session
+    assert session_ids[0] == 0
+
+
+def test_missing_values(df_module):
+    """Test that missing values in the group_by or timestamp columns result in
+    -1 session_id."""
+    df = df_module.make_dataframe(
+        {
+            "user_id": [1, 1, None, 1],  # None value in split_by column
+            "timestamp": [
+                pd.Timestamp("2024-01-01 10:00:00"),
+                None,  # None value in timestamp column
+                pd.Timestamp("2024-01-01 10:10:00"),
+                pd.Timestamp("2024-01-01 10:20:00"),
+            ],
+        }
+    )
+
+    se = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30 * 60
+    )
+    result = se.fit_transform(df)
+
+    session_ids = sbd.to_numpy(sbd.col(result, "timestamp_session_id"))
+    # Rows with None timestamp or None user_id should have -1 session_id
+    assert session_ids[1] == -1  # Row with missing timestamp
+    assert session_ids[2] == -1  # Row with missing user_id
+    # Rows with valid timestamp and user_id should have valid session ID
+    assert session_ids[0] != -1
+    assert session_ids[3] != -1
+
+
+@pytest.mark.parametrize(
+    "group_by_param,timestamp_col_param,expected_error_type,expected_error_match",
+    [
+        (
+            "wrong_column",
+            "timestamp",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            "user_id",
+            "wrong_column",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            ["wrong_column", "user_device"],
+            "timestamp",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            23,  # invalid type for 'group_by'
+            "timestamp",
+            TypeError,
+            "split_by must be a string, a list of strings, or None",
+        ),
+    ],
+)
+def test_missing_column_error(
+    df_module,
+    group_by_param,
+    timestamp_col_param,
+    expected_error_type,
+    expected_error_match,
+):
+    """Test that missing columns and invalid parameters raise appropriate errors."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [datetime.datetime(2024, 1, 1)],
+            "user_id": [101],
+            "user_device": ["mobile"],
+        }
+    )
+
+    se = SessionEncoder(
+        split_by=group_by_param,
+        timestamp_col=timestamp_col_param,
+    )
+    with pytest.raises(expected_error_type, match=expected_error_match):
+        se.fit_transform(df)
+
+
+def test_invalid_parameters(df_module):
+    """Test that invalid parameters raise appropriate errors."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [datetime.datetime(2024, 1, 1)],
+            "user_id": [101],
+        }
+    )
+
+    # Test non-numeric session_gap
+    se_non_numeric = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap="thirty"
+    )
+    with pytest.raises(TypeError, match="Expected a number"):
+        se_non_numeric.fit_transform(df)
+
+    # Test negative session_gap
+    se_negative = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=-10
+    )
+    with pytest.raises(ValueError, match="session_gap must be a positive number"):
+        se_negative.fit_transform(df)
+
+    # Test zero session_gap
+    se_zero = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=0
+    )
+    with pytest.raises(ValueError, match="session_gap must be a positive number"):
+        se_zero.fit_transform(df)
+
+    # Test invalid suffix (None)
+    se_invalid_suffix = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", suffix=None
+    )
+    with pytest.raises(TypeError, match="Expected a string as suffix"):
+        se_invalid_suffix.fit_transform(df)
+
+    # Test timestamp column with non-datetime type
+    df_invalid_timestamp = df_module.make_dataframe(
+        {
+            "timestamp": ["2024-01-01 10:00:00"],  # string instead of datetime
+            "user_id": [101],
+        }
+    )
+    se_invalid_timestamp = SessionEncoder(
+        split_by="user_id", timestamp_col="timestamp", session_gap=30
+    )
+    with pytest.raises(TypeError, match="Expected a datetime column for timestamp_col"):
+        se_invalid_timestamp.fit_transform(df_invalid_timestamp)
+
+
+def test_preserves_columns(df_module):
+    """Test that original columns are preserved in output."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),
+            ],
+            "user_id": [101, 101],
+            "extra_col": [1.5, 2.5],
+        }
+    )
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    result_cols = sbd.column_names(result)
+    assert "timestamp" in result_cols
+    assert "user_id" in result_cols
+    assert "extra_col" in result_cols
+    assert "timestamp_session_id" in result_cols
+
+
+def test_fit_and_transform(df_module):
+    """Test that fit() and transform() work separately."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),
+            ],
+            "user_id": [101, 101],
+        }
+    )
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+
+    # Test fit returns self
+    se_fitted = se.fit(df)
+    assert se_fitted is se
+
+    # Test that all_inputs_ is set after fit
+    assert hasattr(se, "all_inputs_")
+
+
+def test_get_feature_names(df_module):
+    """Test that get_feature_names returns the correct list of columns."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),
+            ],
+            "user_id": [101, 101],
+        }
+    )
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    se.fit(df)
+    feature_names = se.get_feature_names_out()
+
+    # Should include original columns plus "timestamp_session_id"
+    assert set(feature_names) == {"timestamp", "user_id", "timestamp_session_id"}
+
+
+@pytest.mark.skipif(parse(pd.__version__).major >= 3, reason="Test only for pandas < 3")
+def test_get_session_column_old_pandas(df_module):
+    """Old versions of pandas have a different branch that needs to be covered"""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ]
+        }
+    )
+    session_id = sbd.to_list(
+        _get_session_column(
+            df, [], "timestamp", 30 * 60, session_id_column="timestamp_session_id"
+        ),
+    )
+    # Expected: first two events in session 0, last two events in session 1
+    assert session_id == [0, 0, 1, 1]
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    ["timestamp", "something_else"],
+)
+@pytest.mark.parametrize(
+    "suffix",
+    [None, "session_id", "test_suffix"],
+)
+def test_proper_suffix(timestamp, suffix, df_module):
+    df = df_module.make_dataframe(
+        {
+            "user_id": [1, 1, 2, 2],
+            timestamp: [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),  # same user, 5 min gap
+                datetime.datetime(2024, 1, 1, 10, 6),  # different user, 1 min gap
+                datetime.datetime(2024, 1, 1, 10, 10),  # same user, 4 min gap
+            ],
+        }
+    )
+    if suffix is None:
+        with pytest.raises(TypeError, match="Expected a string as suffix*"):
+            SessionEncoder(
+                timestamp_col=timestamp, split_by="user_id", suffix=suffix
+            ).fit_transform(df)
+    else:
+        result = SessionEncoder(
+            timestamp_col=timestamp, split_by="user_id", suffix=suffix
+        ).fit_transform(df)
+        # SessionEncoder now returns the full dataframe with session_id added
+        expected_name = f"{timestamp}_{suffix}"
+        assert expected_name in sbd.column_names(result)
+
+
+def test_preserves_input_order(df_module):
+    """Test that the output rows are in the same order as the input rows.
+
+    The encoder sorts internally to detect sessions correctly, but the result
+    must be returned in the original input order.
+    """
+    # Deliberately unsorted: bob first, then alice, timestamps out of order
+    timestamps = [
+        datetime.datetime(2024, 1, 1, 10, 20),  # row 0: bob
+        datetime.datetime(2024, 1, 1, 10, 0),  # row 1: alice
+        datetime.datetime(2024, 1, 1, 10, 25),  # row 2: bob
+        datetime.datetime(2024, 1, 1, 10, 5),  # row 3: alice
+    ]
+    user_ids = ["bob", "alice", "bob", "alice"]
+
+    df = df_module.make_dataframe({"timestamp": timestamps, "user_id": user_ids})
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    # The user_id column must still be in the original order
+    assert sbd.to_list(sbd.col(result, "user_id")) == user_ids
+    # The timestamp column must still be in the original order
+    assert sbd.to_list(sbd.col(result, "timestamp")) == timestamps
+
+
+def test_error_dispatch():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
+        _get_session_column(
+            np.array([1]),
+            split_by_columns=[],
+            timestamp_column="timestamp",
+            session_gap=30,
+            session_id_column="timestamp_session_id",
+        )
+
+
+def test_empty_dataframe(df_module):
+    """Test sessionization with empty dataframe."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [],
+            "user_id": [],
+        }
+    )
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    assert sbd.shape(result)[0] == 0
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.column_names(result) == ["timestamp", "user_id", "timestamp_session_id"]
+
+
+def test_not_overwriting_columns(df_module):
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "timestamp_session_id": [1, 2, 3, 4],
+        }
+    )
+    encoder = SessionEncoder("timestamp")
+    result = encoder.fit_transform(df)
+
+    col_names = sbd.column_names(result)
+    assert "timestamp" in col_names
+    assert "timestamp_session_id" in col_names
+    # The original "timestamp_session_id" column should not be overwritten
+    # The new column has name "timestamp_session_id_skrub_RANDOM_SUFFIX"
+    assert col_names[2].removeprefix("timestamp_session_id").startswith("_skrub_")
+
+    # Check that this also works for a custom suffix
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "timestamp_custom_name": [1, 2, 3, 4],
+        }
+    )
+    encoder = SessionEncoder("timestamp", suffix="custom_name")
+    result = encoder.fit_transform(df)
+
+    col_names = sbd.column_names(result)
+    assert "timestamp" in col_names
+    assert "timestamp_custom_name" in col_names
+    # The original "timestamp_custom_name" column should not be overwritten
+    # The new column has name "timestamp_custom_name_skrub_RANDOM_SUFFIX"
+    assert col_names[2].removeprefix("timestamp_custom_name").startswith("_skrub_")
+
+
+def test_empty_column_name(df_module):
+    """Test that an empty string as column name is a valid split by column name."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ],
+            "": [1, 1, 1, 2],
+        }
+    )
+    encoder = SessionEncoder(timestamp_col="timestamp", split_by="")
+    result = encoder.fit_transform(df)
+    assert sbd.shape(result)[0] == 4
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "timestamp_session_id")) == [0, 0, 1, 2]
+
+    # Check that not passing the split_by parameter (default None) also works
+    # and returns the proper result
+    encoder = SessionEncoder(timestamp_col="timestamp")
+    result = encoder.fit_transform(df)
+    assert sbd.shape(result)[0] == 4
+    assert "timestamp_session_id" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "timestamp_session_id")) == [0, 0, 1, 1]

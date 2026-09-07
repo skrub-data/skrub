@@ -39,6 +39,8 @@ dependencies = [
   "matplotlib>=3.6.1",
   "requests>=2.27.1",
   "pydot",
+  "cloudpickle>=3.0",
+  "joblib>=1.4.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -69,8 +71,9 @@ dev = [
   "statsmodels",
 
   # lint
-  "ruff==0.15.0",
   "pre-commit",
+  "identify>=2",
+  "virtualenv",
 
   # test
   "pytest",
@@ -136,8 +139,12 @@ optuna = "*"
 skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
-ruff = "==0.15.0"
+python = ">=3.13,<3.14"
 pre-commit = "*"
+identify = ">=2"
+
+[tool.pixi.feature.lint.pypi-dependencies]
+virtualenv = "*"
 
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
@@ -195,6 +202,10 @@ extra-index-urls = [
   # pyarrow
   "https://pypi.fury.io/arrow-nightlies",
 ]
+# Fallback to pyarrow channel if e.g. scikit-learn not found in anaconda
+# TODO remove once scikit-learn is available again in
+# https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/
+index-strategy = "unsafe-first-match"
 
 [tool.pixi.feature.nightly-dependencies.pypi-dependencies]
 # Have to repeat dependencies here because otherwise pixi pulls from conda channels
@@ -228,7 +239,8 @@ python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
-build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+build-doc-no-plot = { cmd = "make html-no-plot", cwd = "doc" }
+build-doc-quick = { cmd = "make html-quick", cwd = "doc" }
 clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
@@ -251,6 +263,7 @@ check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_da
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 test-user-guide = { cmd = "pytest doc/**/*.rst" }
+test-docstrings = { cmd = "pytest -doctest-modules skrub doc/modules --ignore-glob=\"*/test_*.py\" --doctest-glob=\"*.rst\"" }
 
 [tool.pixi.environments]
 lint = ["lint"]
@@ -362,6 +375,10 @@ filterwarnings = [
   # We avoid turning huggingface_hub warnings into errors, because they get
   # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
   'default::DeprecationWarning:huggingface_hub',
+  # Ignore polars warning about horizontal concatenation being deprecated
+  # We always expect dataframes to concatenate to have the same length, so the
+  # intended behavior starting from version 1.42 is already what we want
+  "ignore:the default behavior of `how='horizontal'`.*:DeprecationWarning",
 ]
 log_cli_level = "INFO"
 xfail_strict = true

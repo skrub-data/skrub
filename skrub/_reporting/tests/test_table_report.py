@@ -674,3 +674,29 @@ def test_column_filters_fail(df_module, filter, expected, match):
     )
     with pytest.raises(expected, match=match):
         TableReport(df, column_filters=filter)
+
+
+def test_n_rows_parameter(df_module):
+    def n_shown_rows(report):
+        return sum(
+            len(p.get("rows", ()))
+            for p in report._summary["sample_table"]["parts"]
+            if p["name"] in ("top_slice", "bottom_slice")
+        )
+
+    df = df_module.make_dataframe({"a": list(range(20)), "b": list(range(20))})
+
+    report = TableReport(df, verbose=0)
+    assert n_shown_rows(report) == 10
+
+    report = TableReport(df, n_rows=6, verbose=0)
+    assert n_shown_rows(report) == 6
+
+    with config_context(table_report_n_rows=7):
+        report = TableReport(df, verbose=0)
+        assert n_shown_rows(report) == 7
+
+
+def test_table_report_dict(air_quality):
+    report = TableReport(air_quality)
+    assert report.dict() == json.loads(report.json())
