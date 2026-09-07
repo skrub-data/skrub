@@ -10,7 +10,6 @@ Bundled docs: ``skrub.__docs_dir__``
 Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
 Bundled examples: ``skrub.__docs_dir__ / "examples"``
 
-Online docs: https://skrub-data.org/stable/reference/index.html
 Source: https://github.com/skrub-data/skrub/
 """
 
