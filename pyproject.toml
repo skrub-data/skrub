@@ -97,6 +97,8 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.setuptools.package-data]
+# Needed to prevent pytest from executing the examples and doctests when
+# it searches for tests in the source dir
 skrub = ["_docs/**/*.rst", "_docs/**/*.py"]
 
 [tool.pixi.workspace]
