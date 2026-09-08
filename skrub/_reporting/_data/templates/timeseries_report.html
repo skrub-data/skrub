@@ -64,7 +64,7 @@
                                     <tr>
                                         <td>
                                             {% if val.has_button %}
-                                            <button class="sub-button meta-button" data-subtab="meta-{{ key }}" style="--hover-color: {{ val.color }};">{{ key }}</button>
+                                            <button class="sub-button meta-button" data-trace="{{ key }}" style="--hover-color: {{ val.color }};">{{ key }}</button>
                                             {% else %}
                                             <span class="meta-label">{{ key }}</span>
                                             {% endif %}
@@ -74,26 +74,20 @@
                                     {% endfor %}
                                 </tbody>
                         </table>
+                        <button class="sub-button active" data-subtab="metadata">overview</button>
                         {% for key in col.plots.keys() %}
-                        <button class="sub-button{% if key == 'overview' %} active{% endif %}" data-subtab="{{ key }}">{{ key }}</button>
+                        <button class="sub-button" data-subtab="{{ key }}">{{ key }}</button>
                         {% endfor %}
                     </div>
                     <div class="panel-area">
-                        <!-- Base plot always visible -->
-                        <div class="sub-container sub-panel base-plot active">
-                            {{ col.metadata['base_plot'] | safe }}
+                        <!-- Single plot with all traces (metadata + timeline) -->
+                        <div class="sub-container sub-panel sub-panel-metadata active" id="plot-{{ col.name }}">
+                            {{ col.metadata['plot'] | safe }}
                         </div>
 
-                        <!-- Overlay metadata plots -->
-                        {% for key, val in col.metadata['items'].items() %}
-                        <div class="sub-container sub-panel sub-panel-meta-{{ key }}">
-                            {{ val.plot | safe }}
-                        </div>
-                        {% endfor %}
-
-                        <!-- Regular plots -->
+                        <!-- Regular plots (trends, autocorrelation, etc.) -->
                         {% for key, val in col.plots.items() %}
-                        <div class="sub-container sub-panel sub-panel-{{ key }}{% if key == 'overview' %} active{% endif %}">
+                        <div class="sub-container sub-panel sub-panel-{{ key }}">
                             {{ val | safe }}
                         </div>
                         {% endfor %}
@@ -105,56 +99,62 @@
         {% endfor %}
 
       <script>
+        // Helper function to toggle Plotly trace visibility by name
+        function toggleTrace(plotDiv, traceName) {
+          if (!plotDiv || !plotDiv.data) {
+            console.error('Plot div not found or has no data');
+            return;
+          }
+
+          // Find trace by name
+          for (var i = 0; i < plotDiv.data.length; i++) {
+            if (plotDiv.data[i].name === traceName) {
+              var currentVisibility = plotDiv.data[i].visible;
+              var newVisibility = (currentVisibility === false || currentVisibility === 'legendonly') ? true : false;
+              Plotly.restyle(plotDiv, {visible: newVisibility}, [i]);
+              return;
+            }
+          }
+          console.warn('Trace not found: ' + traceName);
+        }
+
+        // Button click handlers
         document.querySelectorAll('.sub-buttons').forEach(function(btnGroup) {
           btnGroup.querySelectorAll('.sub-button').forEach(function(btn) {
             btn.addEventListener('click', function() {
               var container = btn.closest('.main-container');
-              var idx = btn.getAttribute('data-subtab');
-              var panel = container.querySelector('.sub-panel-' + idx);
               var isMeta = btn.classList.contains('meta-button');
-              var isMinMax = idx === 'meta-min' || idx === 'meta-max';
 
               if (isMeta) {
-                // Meta-buttons toggle themselves
+                // Meta buttons toggle Plotly traces
                 btn.classList.toggle('active');
-                panel.classList.toggle('active');
+                var traceName = btn.getAttribute('data-trace');
+                var tabId = container.closest('[id^="tab-"]').id.replace('tab-', '');
+                var plotWrapper = document.getElementById('plot-' + tabId);
+                var plotDiv = plotWrapper.querySelector('.plotly-graph-div');
 
-                // If min or max is being activated, deactivate overview
-                if (isMinMax && btn.classList.contains('active')) {
-                  var overviewBtn = container.querySelector('.sub-button[data-subtab="overview"]');
-                  var overviewPanel = container.querySelector('.sub-panel-overview');
-                  if (overviewBtn) overviewBtn.classList.remove('active');
-                  if (overviewPanel) overviewPanel.classList.remove('active');
-                }
+                toggleTrace(plotDiv, traceName);
               } else {
-                // Regular buttons are exclusive
+                // Regular buttons switch between plot views
+                var idx = btn.getAttribute('data-subtab');
+                var panel = container.querySelector('.sub-panel-' + idx);
+
+                // Make regular buttons exclusive
                 container.querySelectorAll('.sub-button:not(.meta-button)').forEach(function(b) {
                   b.classList.remove('active');
                 });
-                container.querySelectorAll('.sub-panel:not(.base-plot)').forEach(function(p) {
-                  // Only deactivate non-meta panels
-                  if (!p.className.includes('meta-')) {
-                    p.classList.remove('active');
-                  }
+                container.querySelectorAll('.sub-panel').forEach(function(p) {
+                  p.classList.remove('active');
                 });
+
                 btn.classList.add('active');
                 panel.classList.add('active');
-
-                // If overview is being activated, deactivate min and max
-                if (idx === 'overview') {
-                  var minBtn = container.querySelector('.sub-button[data-subtab="meta-min"]');
-                  var maxBtn = container.querySelector('.sub-button[data-subtab="meta-max"]');
-                  var minPanel = container.querySelector('.sub-panel-meta-min');
-                  var maxPanel = container.querySelector('.sub-panel-meta-max');
-                  if (minBtn) minBtn.classList.remove('active');
-                  if (maxBtn) maxBtn.classList.remove('active');
-                  if (minPanel) minPanel.classList.remove('active');
-                  if (maxPanel) maxPanel.classList.remove('active');
-                }
               }
             });
           });
         });
+
+        // Top-level tab switching
         function switchTab(tabName) {
           document.querySelectorAll('.tab-content').forEach(function(el) {
             el.classList.remove('active');
@@ -163,7 +163,8 @@
             el.classList.remove('active');
           });
           document.getElementById('tab-' + tabName).classList.add('active');
-          document.querySelector('.tab-button[onclick*="' + tabName + '"]').classList.add('active');
+          var tabBtn = document.querySelector('.tab-button[onclick*="' + tabName + '"]');
+          if (tabBtn) tabBtn.classList.add('active');
         }
       </script>
     </body>

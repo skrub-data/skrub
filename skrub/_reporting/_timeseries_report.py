@@ -67,6 +67,10 @@ class TimeSeriesReport:
         time = SelectCols(s.any_date()).fit_transform(df)
         self.df = df.sort(time.columns)
         self.target = target
+        self.time = SelectCols(s.any_date()).fit_transform(df)[:, 0]
+        self.time_min = self.time.min()
+        self.time_max = self.time.max()
+        self.time_range = (self.time_min, self.time_max)
 
         if numcols == "all":
             self.numcols = SelectCols(s.numeric()).fit_transform(self.df)
@@ -83,12 +87,15 @@ class TimeSeriesReport:
         else:
             self.catcols = catcols
 
-        self.time = SelectCols(s.any_date()).fit_transform(df)
-        self.time_range = (self.time[:, 0].min(), self.time[:, 0].max())
         self.ycols = SelectCols(s.all() - s.any_date()).fit_transform(df)
         self.ncols = 3
         self.nrows = (self.ycols.width + self.ncols - 1) // self.ncols
         self.colors = qualitative.Plotly
+        self.scatter_kwargs = {
+            "mode": "lines+markers",
+            "showlegend": False,
+            "visible": False,
+        }
 
         if debug:
             pass
@@ -116,20 +123,54 @@ class TimeSeriesReport:
                 y_min = y_col.min()
                 y_max = y_col.max()
 
-                # Use colors 7 and 8 for overview (avoid colors 0-6 used in metadata)
-                overview_colors = qualitative.Plotly
-                fig = self.make_overview(
-                    y_col, color_a=overview_colors[7], color_b=overview_colors[8]
-                )
-                metadata = self.get_metadata(y_col)
+                # Create the main figure with all toggleable traces
+                fig = self._make_figure(y_col, "test")
 
+                # Get metadata items (values, colors, etc.)
+                metadata = self.get_metadata(y_col)
+                # Add the plot to metadata dict
+                plotly_html = fig.to_html(full_html=False, config={"responsive": True})
+                metadata["plot"] = plotly_html
+
+                # SIZE COMPARISON (only for first column to avoid spam)
+                if i == 0:
+                    print(f"\n=== HTML Size Comparison for '{col}' ===")
+
+                    # New approach: Single Plotly HTML
+                    plotly_size = len(plotly_html.encode("utf-8"))
+
+                    # Old approach: Estimate 4 SVG embeds
+                    # Typical matplotlib SVG is ~10-15KB, but varies by complexity
+                    estimated_svg_size_each = 12 * 1024  # 12KB per SVG
+                    estimated_total_svg = estimated_svg_size_each * 4
+
+                    print(
+                        f"New (1 Plotly HTML): {plotly_size:,} bytes "
+                        f"({plotly_size / 1024:.1f} KB)"
+                    )
+                    print(
+                        f"Old (4 SVG embeds, est.): {estimated_total_svg:,} "
+                        f"bytes ({estimated_total_svg / 1024:.1f} KB)"
+                    )
+                    print(
+                        f"Difference: {plotly_size - estimated_total_svg:+,} "
+                        f"bytes ({(plotly_size - estimated_total_svg) / 1024:+.1f} KB)"
+                    )
+                    print(
+                        f"Ratio: Plotly is ~{plotly_size / estimated_total_svg:.1f}x "
+                        f"estimated SVG size"
+                    )
+                    print(
+                        "Note: Plotly includes interactivity (zoom, pan, toggle traces)"
+                    )
+                    print("=" * 50 + "\n")
+
+                # Other plot views
                 plots = {
-                    "overview": fig,
                     "trends": self.plot_avg(y_col, y_min=y_min, y_max=y_max),
                     #              "extrema": self.make_extrema(y_col),
-                    "autocorrelation": fig,  # self.plot_autocorrelation(y_col),
+                    # "autocorrelation": ...,
                     # 'periodicity': self.plot_avg(y_col),
-                    #    "correlations": fig,
                 }
                 columns.append({"name": col, "plots": plots, "metadata": metadata})
             template_data["columns"] = columns
@@ -146,7 +187,7 @@ class TimeSeriesReport:
         max_width = 0
 
         for i, col in enumerate(self.ycols[:, :10]):
-            x = self.time[:, 0].to_numpy().ravel()
+            x = self.time.to_numpy().ravel()
             y = col.to_numpy().ravel()
 
             fig, ax = plt.subplots(figsize=(6, 2))
@@ -244,10 +285,6 @@ class TimeSeriesReport:
         # sampling rate
         # data range
 
-        # Calculate y_min and y_max once for consistent ranges across all plots
-        y_min = y.min()
-        y_max = y.max()
-
         labels = [
             "mean",
             "std",
@@ -262,8 +299,8 @@ class TimeSeriesReport:
             y.mean(),
             y.std(),
             y.quantile([0.25, 0.5, 0.75])[0],
-            y_min,
-            y_max,
+            y.min(),
+            y.max(),
             y.null_count(),
             0,
         ]
@@ -271,31 +308,10 @@ class TimeSeriesReport:
         # Use qualitative colors for each metadata label
         colors = qualitative.Plotly
 
-        plots = [
-            self.make_mean_line(y, colors[0], y_min=y_min, y_max=y_max),
-            self.make_horizontal_bands(
-                y, colors[1], band_type="std", y_min=y_min, y_max=y_max
-            ),
-            self.make_horizontal_bands(
-                y, colors[2], band_type="percentile", y_min=y_min, y_max=y_max
-            ),
-            self.make_extrema(y, overlay=True, color_a=colors[3], color_b=colors[4]),
-            self.make_extrema(y, overlay=True, color_a=colors[3], color_b=colors[4]),
-            self.make_extrema(y, overlay=True, color_a=colors[5], color_b=colors[5]),
-            self.make_extrema(y, overlay=True, color_a=colors[6], color_b=colors[6]),
-        ]
-
-        # Create base plot with just the bottom timeline (no rectangles)
-        base_plot_html = self.make_plot(
-            y, (0, 1), (0, 1), ("", "", ""), bottom=True, y_min=y_min, y_max=y_max
-        )
-
         return {
-            "base_plot": base_plot_html,
             "items": {
                 label: {
                     "value": f"{values[i]:.2f}",
-                    "plot": plots[i],
                     "color": colors[i % len(colors)],
                     "has_button": label in labels,
                 }
@@ -303,17 +319,92 @@ class TimeSeriesReport:
             },
         }
 
-    def make_mean_line(self, y, color, y_min=None, y_max=None):
-        """Create transparent overlay plot with just a horizontal line at the mean."""
-        if y_min is None:
-            y_min = y.min()
-        if y_max is None:
-            y_max = y.max()
-        mean_value = y.mean()
-        print(f"{y.name} mean = {mean_value}")
-        time_min = self.time[:, 0].min()
-        time_max = self.time[:, 0].max()
+    def _add_mean(self, y, color, name="mean"):
+        mean = y.mean()
+        return go.Scatter(
+            x=[self.time_min, self.time_max],
+            y=[mean, mean],
+            name=name,
+            line=dict(color=color, width=2),
+            mode="lines",
+            visible=False,
+            showlegend=False,
+        )
 
+    def _add_std(self, y, color, name="std"):
+        lower = y.mean() - y.std()
+        upper = y.mean() + y.std()
+        band_x = [
+            self.time_min,
+            self.time_max,
+            self.time_max,
+            self.time_min,
+            self.time_min,
+        ]
+        band_y = [lower, lower, upper, upper, lower]
+
+        return self._add_bands([band_x, band_y], color, name)
+
+    def _add_percentile(self, y, color, quantile=0.25, name="percentile"):
+        lower = y.quantile(quantile)
+        upper = y.quantile(quantile + 0.50)
+        band_x = [
+            self.time_min,
+            self.time_max,
+            self.time_max,
+            self.time_min,
+            self.time_min,
+        ]
+        band_y = [lower, lower, upper, upper, lower]
+
+        return self._add_bands([band_x, band_y], color, name)
+
+    def _add_bands(self, band_corners, color, name):
+        band_x, band_y = band_corners
+
+        return go.Scatter(
+            x=band_x,
+            y=band_y,
+            name=name,
+            fill="toself",
+            fillcolor=color,
+            line=dict(width=0),
+            opacity=0.3,
+            mode="lines",
+            visible=False,
+            showlegend=False,
+        )
+
+    def _add_timeline(self, y):
+        return go.Scatter(
+            x=self.time,
+            y=y,
+            name="timeline",
+            line=dict(color="black", width=1),
+            mode="lines",
+            visible=True,
+            showlegend=False,
+        )
+
+    def _make_trace(self, x, y, name, visible=False, color="#1f77b4"):
+        return go.Scatter(
+            x=x,
+            y=y,
+            name=name,
+            mode="lines+markers",
+            visible=visible,
+            showlegend=False,
+            line=dict(width=2, color=color),
+            marker=dict(size=4, color=color),
+        )
+
+    def _make_figure(
+        self,
+        y,
+        labels,
+        titles=("A", "B", "C"),
+        color="#1f77b4",
+    ):
         fig = make_subplots(
             rows=2,
             cols=2,
@@ -322,237 +413,33 @@ class TimeSeriesReport:
                 [{"colspan": 2}, None],  # row 2: one plot spanning both columns
             ],
             row_heights=[0.75, 0.25],
-            subplot_titles=("", "", ""),
+            subplot_titles=(titles),
             vertical_spacing=0.15,
             horizontal_spacing=0.05,
         )
+        heads = self._make_trace(self.time, y, "heads", color="red", visible=True)
+        tails = self._make_trace(self.time, y, "tails", color="red", visible=True)
+        min = self._make_trace(self.time, y, "min", color="yellow")
+        max = self._make_trace(self.time, y, "max", color="yellow")
+        missingness = self._make_trace(self.time, y, "missingness", color="purple")
+        outliers = self._make_trace(self.time, y, "outliers", color="purple")
+        timeline = self._add_timeline(y)
+        mean = self._add_mean(y, "green")
+        std = self._add_std(y, "orange")
+        percentile = self._add_percentile(y, "blue")
 
-        # Top two plots - empty and invisible
-        fig.add_trace(
-            go.Scatter(
-                x=[],
-                y=[],
-                mode="lines",
-                showlegend=False,
-                visible=False,
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[],
-                y=[],
-                mode="lines",
-                showlegend=False,
-                visible=False,
-            ),
-            row=1,
-            col=2,
-        )
+        fig.add_trace(heads, row=1, col=1)
+        fig.add_trace(tails, row=1, col=2)
+        fig.add_trace(mean, row=2, col=1)
+        fig.add_trace(std, row=2, col=1)
+        fig.add_trace(percentile, row=2, col=1)
+        fig.add_trace(min, row=1, col=1)
+        fig.add_trace(max, row=1, col=2)
+        fig.add_trace(missingness, row=1, col=1)
+        fig.add_trace(outliers, row=1, col=2)
+        fig.add_trace(timeline, row=2, col=1)
 
-        # Bottom plot - just a horizontal line at the mean
-        fig.add_trace(
-            go.Scatter(
-                x=[time_min, time_max],
-                y=[mean_value, mean_value],
-                mode="lines",
-                showlegend=False,
-                line=dict(color=color, width=2),
-            ),
-            row=2,
-            col=1,
-        )
-
-        # Hide top subplot axes completely
-        fig.update_xaxes(
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=1,
-            col=1,
-        )
-        fig.update_yaxes(
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=1,
-            col=1,
-        )
-        fig.update_xaxes(
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=1,
-            col=2,
-        )
-        fig.update_yaxes(
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=1,
-            col=2,
-        )
-
-        # Match x-axis range to base plot
-        time_range = time_max - time_min
-        time_padding = time_range * 0.01
-        fig.update_xaxes(
-            range=[time_min - time_padding, time_max + time_padding],
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=2,
-            col=1,
-        )
-
-        # Hide y-axis but keep the trace visible, match range to data
-        y_range = y_max - y_min
-        y_padding = y_range * 0.05
-        fig.update_yaxes(
-            range=[y_min - y_padding, y_max + y_padding],
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=2,
-            col=1,
-        )
-
-        # Transparent background
-        fig.update_layout(
-            title_text="",
-            autosize=True,
-            margin=dict(l=40, r=40, t=40, b=40),
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-
-        return fig.to_html(full_html=False, config={"responsive": True})
-
-    def make_horizontal_bands(self, y, color, band_type="std", y_min=None, y_max=None):
-        """Create transparent overlay with horizontal bands.
-
-        band_type: 'std' for mean ± std, 'percentile' for 25th/75th percentiles
-        """
-        if y_min is None:
-            y_min = y.min()
-        if y_max is None:
-            y_max = y.max()
-        mean_value = y.mean()
-        time_min = self.time[:, 0].min()
-        time_max = self.time[:, 0].max()
-
-        if band_type == "std":
-            offset = y.std()
-            lower = mean_value - offset
-            upper = mean_value + offset
-        else:  # percentile
-            lower = y.quantile(0.25)
-            upper = y.quantile(0.75)
-
-        fig = make_subplots(
-            rows=2,
-            cols=2,
-            specs=[[{}, {}], [{"colspan": 2}, None]],
-            row_heights=[0.75, 0.25],
-            subplot_titles=("", "", ""),
-            vertical_spacing=0.15,
-            horizontal_spacing=0.05,
-        )
-
-        # Top two plots - empty and invisible
-        for col in [1, 2]:
-            fig.add_trace(
-                go.Scatter(x=[], y=[], mode="lines", showlegend=False, visible=False),
-                row=1,
-                col=col,
-            )
-
-        # Bottom plot - transparent trace
-        fig.add_trace(
-            go.Scatter(
-                x=[time_min],
-                y=[mean_value],
-                mode="markers",
-                showlegend=False,
-                marker=dict(size=0),
-            ),
-            row=2,
-            col=1,
-        )
-
-        # Add horizontal bands
-        for y0, y1 in [(lower, mean_value), (mean_value, upper)]:
-            fig.add_hrect(
-                y0=y0,
-                y1=y1,
-                fillcolor=color,
-                opacity=0.3,
-                line_width=0,
-                row=2,
-                col=1,
-            )
-
-        # Hide all axes
-        for col in [1, 2]:
-            fig.update_xaxes(
-                visible=False,
-                showticklabels=False,
-                showgrid=False,
-                zeroline=False,
-                row=1,
-                col=col,
-            )
-            fig.update_yaxes(
-                visible=False,
-                showticklabels=False,
-                showgrid=False,
-                zeroline=False,
-                row=1,
-                col=col,
-            )
-
-        # Match x and y axis ranges to base plot
-        time_range = time_max - time_min
-        time_padding = time_range * 0.01
-        fig.update_xaxes(
-            range=[time_min - time_padding, time_max + time_padding],
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=2,
-            col=1,
-        )
-
-        # Match y-axis range to data with padding
-        y_range = y_max - y_min
-        y_padding = y_range * 0.05
-        fig.update_yaxes(
-            range=[y_min - y_padding, y_max + y_padding],
-            visible=False,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            row=2,
-            col=1,
-        )
-
-        fig.update_layout(
-            title_text="",
-            autosize=True,
-            margin=dict(l=40, r=40, t=40, b=40),
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-
-        return fig.to_html(full_html=False, config={"responsive": True})
+        return fig
 
     def make_plot(
         self,
@@ -581,42 +468,12 @@ class TimeSeriesReport:
             horizontal_spacing=0.05,
         )
 
-        # Top two plots - invisible if bottom mode
-        fig.add_trace(
-            go.Scatter(
-                x=self.time[:, 0][slice(*range1)],
-                y=y[slice(*range1)],
-                mode="lines+markers",
-                showlegend=False,
-                visible=not bottom,
-                opacity=1.0,
-                line=dict(width=2, color=color_a),
-                marker=dict(size=4, color=color_a),
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=self.time[:, 0][slice(*range2)],
-                y=y[slice(*range2)],
-                mode="lines+markers",
-                showlegend=False,
-                visible=not bottom,
-                opacity=1.0,
-                line=dict(width=2, color=color_b),
-                marker=dict(size=4, color=color_b),
-            ),
-            row=1,
-            col=2,
-        )
-
         # Bottom plot trace
         # Always visible (needed for vrects and base-plot sparkline)
         # Transparent in overlay mode so base-plot shows through
         fig.add_trace(
             go.Scatter(
-                x=self.time[:, 0],
+                x=self.time,
                 y=y,
                 mode="lines",
                 showlegend=False,
@@ -630,8 +487,8 @@ class TimeSeriesReport:
         # Rectangles visible except in bottom-only mode
         if not bottom:
             fig.add_vrect(
-                x0=min(self.time[:, 0][slice(*range1)]),
-                x1=max(self.time[:, 0][slice(*range1)]),
+                x0=min(self.time[slice(*range1)]),
+                x1=max(self.time[slice(*range1)]),
                 fillcolor=color_a,
                 opacity=0.2,
                 line_width=0,
@@ -639,8 +496,8 @@ class TimeSeriesReport:
                 col=1,
             )
             fig.add_vrect(
-                x0=min(self.time[:, 0][slice(*range2)]),
-                x1=max(self.time[:, 0][slice(*range2)]),
+                x0=min(self.time[slice(*range2)]),
+                x1=max(self.time[slice(*range2)]),
                 fillcolor=color_b,
                 opacity=0.2,
                 line_width=0,
@@ -662,8 +519,8 @@ class TimeSeriesReport:
         fig.update_yaxes(range=[y_min_padded, y_max_padded], row=1, col=2)
 
         # Add padding to x-axis of bottom plot
-        time_min = self.time[:, 0].min()
-        time_max = self.time[:, 0].max()
+        time_min = self.time.min()
+        time_max = self.time.max()
         time_range = time_max - time_min
         time_padding = time_range * 0.01
         fig.update_xaxes(
@@ -813,7 +670,7 @@ class TimeSeriesReport:
             y_max = y.max()
 
         resolutions = [7, 14, 30, 90]
-        time_values = self.time[:, 0].to_numpy()
+        time_values = self.time.to_numpy()
 
         # Create 2-row layout: top for windowed averages, bottom for timeline
         fig = make_subplots(
@@ -852,7 +709,7 @@ class TimeSeriesReport:
         # --- Add bottom timeline sparkline (always visible) ---
         fig.add_trace(
             go.Scatter(
-                x=self.time[:, 0],
+                x=self.time,
                 y=y,
                 mode="lines",
                 showlegend=False,
@@ -910,8 +767,8 @@ class TimeSeriesReport:
         y_padding = y_range * 0.05
 
         # Calculate x-axis range with padding
-        time_min = self.time[:, 0].min()
-        time_max = self.time[:, 0].max()
+        time_min = self.time.min()
+        time_max = self.time.max()
         time_range = time_max - time_min
         time_padding = time_range * 0.01
 
@@ -978,12 +835,11 @@ class TimeSeriesReport:
         return fig.to_html(full_html=False, config={"responsive": True})
 
     def stats_overview(self, df):
-        time_col = self.time.columns[0]
-        deltas = self.time[time_col].diff()
+        deltas = self.time.diff()
         sampling_period = deltas.mode().item().total_seconds()
         sampling_freq = 1.0 / sampling_period
-        start_date = self.time[time_col].min()
-        end_date = self.time[time_col].max()
+        start_date = self.time_min
+        end_date = self.time_max
         period = end_date - start_date
         stats = {
             "sampling period": str(sampling_period),
