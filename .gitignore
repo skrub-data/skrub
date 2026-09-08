@@ -67,7 +67,10 @@ doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
 doc/sg_execution_times.rst
-# RST content files synced from skrub/_docs at build time (conf.py)
+# All the rst files below are ignored: they get moved to doc/ from skrub/_docs
+# whenever the docs are being built, but they are not the authoritative copy
+# and clutter the git diff.
+# See conf.py for more detail.
 doc/about.rst
 doc/column_level_featurizing.rst
 doc/data_ops.rst
@@ -83,9 +86,9 @@ doc/learning_materials.rst
 doc/multi_column_operations.rst
 doc/tutorial_example.rst
 doc/vision.rst
-doc/guides/
-doc/modules/
-doc/tutorials/
+doc/guides/*
+doc/modules/*.rst
+doc/tutorials/*
 .DS_Store
 doc/_templates/demo_table_report_generated.html
 doc/reference/*.rst
