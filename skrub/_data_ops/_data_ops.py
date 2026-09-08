@@ -1867,7 +1867,7 @@ def deferred(func=None, *, no_cache=False):
     no_cache : bool, default = False
         If True, caching is forbidden for this function: calls will not be
         cached even if the configuration enables caching with
-        skrub.set_config(cache_dir='/path/to/chache_dir').
+        skrub.set_config(cache='/path/to/chache_dir').
 
     Returns
     -------

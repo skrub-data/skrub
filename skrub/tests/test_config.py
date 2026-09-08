@@ -53,7 +53,7 @@ def test_default_config():
     expected_keys = {
         "use_table_report_data_ops",
         "data_dir",
-        "cache_dir",
+        "cache",
         "table_report_n_rows",
         "table_report_verbosity",
         "table_report_plots_threshold",
