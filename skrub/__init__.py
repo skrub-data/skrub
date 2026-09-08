@@ -4,11 +4,13 @@ skrub: Machine learning with dataframes.
 
 ``skrub`` facilitates machine learning with tabular
 data.  It helps clean, encode, and transform dataframes into features
-ready for scikit-learn or other ML frameworks.
+ready for scikit-learn Pipelines, or build lazy, stateful pipelines with
+``skrub.DataOp``.
 
 Bundled docs: ``skrub.__docs_dir__``
 Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
 Bundled examples: ``skrub.__docs_dir__ / "examples"``
+Bundled datasets: ``skrub.datasets``
 
 GitHub repo: https://github.com/skrub-data/skrub/
 
