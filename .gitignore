@@ -86,9 +86,9 @@ doc/learning_materials.rst
 doc/multi_column_operations.rst
 doc/tutorial_example.rst
 doc/vision.rst
-doc/guides/*
-doc/modules/*.rst
-doc/tutorials/*
+doc/guides/
+doc/modules/
+doc/tutorials/
 .DS_Store
 doc/_templates/demo_table_report_generated.html
 doc/reference/*.rst
