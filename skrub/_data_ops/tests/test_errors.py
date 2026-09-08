@@ -695,3 +695,44 @@ def test_missing_var_message_train_test_split():
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
     )
+
+
+def test_apply_deferred_func():
+    # Test warning / error when user erroneously combines skrub.deferred
+    # and .skb.apply_func (or applies deferred twice)
+
+    def f(x):
+        return x + 1
+
+    x = skrub.var("x")
+
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"(?s)deferred function was passed to \.skb\.apply_func\(\)"
+            r".*pass the original, undecorated function instead"
+        ),
+    ):
+        out = x.skb.apply_func(skrub.deferred(f))
+    assert out.skb.eval({"x": 10}) == 11
+
+    with pytest.warns(
+        UserWarning,
+        match=r"(?s)skrub\.deferred was applied twice.*only be applied once",
+    ):
+        deferred_f = skrub.deferred(skrub.deferred(f))
+    assert deferred_f(x).skb.eval({"x": 10}) == 11
+
+    # When a deferred function is wrapped inside a DataOp it cannot be
+    # inspected when building the graph. We only discover the mistake when
+    # evaluating the DataOp at which point it is too late to correct / unwrap,
+    # so we get an error instead of a warning.
+
+    with pytest.raises(
+        Exception,
+        match=(
+            r"(?s)deferred function was wrapped in a DataOp"
+            r".*pass the original, undecorated function instead"
+        ),
+    ):
+        x.skb.apply_func(skrub.as_data_op(skrub.deferred(f))).skb.eval({"x": 10})
