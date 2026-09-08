@@ -67,6 +67,14 @@ doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
 doc/sg_execution_times.rst
+# All the rst files below are ignored: they get moved to doc/ from skrub/_docs
+# whenever the docs are being built, but they are not the authoritative copy
+# and clutter the git diff.
+# See conf.py for more detail.
+doc/*.rst
+doc/guides/
+doc/modules/
+doc/tutorials/
 .DS_Store
 doc/_templates/demo_table_report_generated.html
 doc/reference/*.rst
