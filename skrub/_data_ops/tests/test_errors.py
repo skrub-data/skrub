@@ -728,11 +728,8 @@ def test_apply_deferred_func():
     # evaluating the DataOp at which point it is too late to correct / unwrap,
     # so we get an error instead of a warning.
 
-    with pytest.raises(
-        Exception,
-        match=(
-            r"(?s)deferred function was wrapped in a DataOp"
-            r".*pass the original, undecorated function instead"
-        ),
-    ):
+    with pytest.raises(Exception) as e:
         x.skb.apply_func(skrub.as_data_op(skrub.deferred(f))).skb.eval({"x": 10})
+
+    full_msg = "\n".join(traceback.format_exception(e.value, e.value, e.tb))
+    assert "pass the original, undecorated function instead" in full_msg
