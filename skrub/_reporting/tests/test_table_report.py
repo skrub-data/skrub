@@ -86,44 +86,6 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
-@pytest.mark.parametrize(
-    "max_plot_columns, plot_distributions",
-    [
-        (3, False),
-        (10, True),
-        ("all", True),
-    ],
-)
-def test_deprecated_max_plot_columns(df_module, max_plot_columns, plot_distributions):
-    """max_plot_columns warns and is converted to plot_distributions."""
-    df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
-
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        report = TableReport(df, max_plot_columns=max_plot_columns)
-    assert report.plot_distributions is plot_distributions
-
-
-@skip_polars_installed_without_pyarrow
-@pytest.mark.parametrize(
-    "max_association_columns, compute_associations",
-    [
-        (3, False),
-        (10, True),
-        ("all", True),
-    ],
-)
-def test_deprecated_max_association_columns(
-    df_module, max_association_columns, compute_associations
-):
-    """max_association_columns warns and is converted to compute_associations."""
-    df = df_module.make_dataframe({f"col{i}": [1, 2] for i in range(5)})
-
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        report = TableReport(df, max_association_columns=max_association_columns)
-    assert report.compute_associations is compute_associations
-
-
-@skip_polars_installed_without_pyarrow
 def test_deprecated_order_by(df_module):
     """`order_by` parameter should emit a DeprecationWarning."""
     df = df_module.make_dataframe({"a": [1, 2, 3]})

@@ -120,7 +120,7 @@ def _get_preprocessors(
     *,
     cols,
     drop_null_fraction,
-    drop_if_unique,
+    drop_if_unique=False,
     drop_if_constant,
     n_jobs,
     parse_numbers=False,

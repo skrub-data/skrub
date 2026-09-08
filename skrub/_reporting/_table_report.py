@@ -162,18 +162,6 @@ class TableReport:
           columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
 
-    max_plot_columns : int or "all", deprecated
-        Deprecated in favor of ``plot_distributions``. This parameter overrides
-        the value chosen for ``plot_distributions`` when it is not None.
-
-        .. deprecated:: 0.9.0
-
-    max_association_columns : int or "all", deprecated
-        Deprecated in favor of ``compute_associations``. This parameter overrides
-        the value chosen for ``compute_associations`` when it is not None.
-
-        .. deprecated:: 0.9.0
-
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
         Must be one of "table", "stats", "distributions", or "associations".
@@ -278,9 +266,6 @@ class TableReport:
         plot_distributions="auto",
         compute_associations="auto",
         open_tab="table",
-        # Deprecated parameters kept for backward compatibility
-        max_plot_columns=None,
-        max_association_columns=None,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -336,29 +321,6 @@ class TableReport:
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
-
-        if max_plot_columns is not None:
-            warnings.warn(
-                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            plot_distributions = (
-                max_plot_columns == "all" or max_plot_columns >= self.n_columns
-            )
-
-        if max_association_columns is not None:
-            warnings.warn(
-                "'max_association_columns' is deprecated. Use 'compute_associations'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            compute_associations = (
-                max_association_columns == "all"
-                or max_association_columns >= self.n_columns
-            )
 
         (
             self.plot_distributions,
