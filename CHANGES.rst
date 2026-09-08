@@ -11,6 +11,14 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to enable persistent caching of estimators and functions
+  used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
+  `cache` in :func:`set_config`. This caching can be turned off on a
+  node-by-node basis by using the ``no_cache`` parameter of :func:`deferred`,
+  :meth:`.skb.apply <DataOp.skb.apply>` and :meth:`.skb.apply_func
+  <DataOp.skb.apply_func>`. See the :ref:`user guide
+  <user_guide_data_ops_caching>` for more information.
+  :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
