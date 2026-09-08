@@ -40,9 +40,11 @@ Forbidding caching for specific nodes
 -------------------------------------
 
 When adding nodes to a DataOp, we can specify that their results should never be
-cached, even when caching is enabled in the configuration. This is useful if the
-result is not deterministic and should be recomputed every time (for example
-fetching some information from the network), or if we know that the function is
-very fast and caching hinders performance instead of improving it. This is
-achieved by passing ``no_cache=True`` to :func:`deferred`, :meth:`.skb.apply()
-<DataOp.skb.apply>` or :meth:`.skb.apply_func() <DataOp.skb.apply_func>`.
+cached, even when caching is enabled in the configuration. This is useful if
+caching causes errors (e.g. because the arguments or result cannot be
+serialized), if result is not deterministic and should be recomputed every time
+(for example fetching some information from the network), or if we know that the
+function is very fast and caching hinders performance instead of improving it.
+This is achieved by passing ``no_cache=True`` to :func:`deferred`,
+:meth:`.skb.apply() <DataOp.skb.apply>` or :meth:`.skb.apply_func()
+<DataOp.skb.apply_func>`.

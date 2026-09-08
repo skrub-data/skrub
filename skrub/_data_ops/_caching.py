@@ -40,6 +40,14 @@ def _call_deferred_func(func, args, kwargs, globals, closure, defaults, kwdefaul
     return func(*args, **kwargs)
 
 
+# Note: the config is stored in a thread-local variable (mostly because it has
+# been copy-pasted from scikit-learn) but there is probably no valid use-case
+# for setting the cache dir concurrently in different threads; for simplicity
+# we do not handle it here and thus the Memory is not thread-safe. The config
+# cache_dir / data_dir should not be modified concurrently by different
+# threads.
+
+
 class Memory:
     def __init__(self):
         self.cache_dir = None
