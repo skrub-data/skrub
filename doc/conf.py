@@ -24,6 +24,13 @@ from pathlib import Path
 
 import jinja2
 
+# Allow skipping jupyterlite to speed up builds (e.g. html-noplot)
+_SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
+    "1",
+    "true",
+    "yes",
+)
+
 # -- Copy files for docs --------------------------------------------------
 #
 # We avoid duplicating the information, but we do not use symlinks to be
@@ -57,6 +64,36 @@ if not os.path.exists("generated_for_index/code_block_2.html"):
 sys.path.insert(0, os.path.abspath("sphinxext"))
 from github_link import make_linkcode_resolve
 from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
+
+# -- Sync documentation source files from skrub/_docs --------------------
+#
+# skrub/_docs is the single source of truth for all guide/content RST files
+# so they are packaged with the wheel. We copy them into doc/ at build time
+# rather than using symlinks (to support Windows builds).
+#
+# CHANGES.rst, CONTRIBUTING.rst and RELEASE_PROCESS.rst are canonical in the
+# project root and are NOT stored in skrub/_docs.
+#
+# Note that building the docs then leaves the copies in the old docs/ folder.
+# .gitignore was updated to ignore these copied files.
+shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
+shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
+shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
+
+_docs_src = Path("../skrub/_docs")
+
+# Copy top-level RST content files
+_skip_toplevel = {"CHANGES.rst", "CONTRIBUTING.rst", "RELEASE_PROCESS.rst"}
+for _rst_file in _docs_src.glob("*.rst"):
+    if _rst_file.name not in _skip_toplevel:
+        shutil.copyfile(_rst_file, _rst_file.name)
+
+# Copy content subdirectories (guides, modules, reference)
+for _subdir in ["guides", "modules", "reference"]:
+    shutil.copytree(_docs_src / _subdir, _subdir, dirs_exist_ok=True)
+
+# Copy tutorials source files for sphinx-gallery
+shutil.copytree(_docs_src / "tutorials", "tutorials", dirs_exist_ok=True)
 
 # -- General configuration ------------------------------------------------
 
@@ -497,7 +534,10 @@ sphinx_gallery_conf = {
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
     "filename_pattern": ".*",
-    "examples_dirs": ["../examples", "tutorials"],
+    # examples -> gallery, tutorials -> user guide
+    # the folders are separate so that the tutorials are not rendered as part
+    # of the gallery
+    "examples_dirs": ["../skrub/_docs/examples", "tutorials"],
     "gallery_dirs": ["auto_examples", "auto_tutorials"],
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
