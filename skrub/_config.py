@@ -278,6 +278,9 @@ def set_config(
         - If True, the cache directory is in a default location (data_dir / _cache).
         - If a string (or Path), this path is used as the cache directory.
 
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
+
+
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
@@ -551,6 +554,8 @@ def config_context(
         - If False (or None), no caching is used.
         - If True, the cache directory is in a default location (data_dir / _cache).
         - If a string (or Path), this path is used as the cache directory.
+
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
 
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and

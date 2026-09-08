@@ -63,27 +63,27 @@ def test_caching(with_cache, tmp_path):
     out = learner.fit_transform({"x": 1})
     assert out == 34
     assert DummyTransformer.n_calls == {"fit_transform": 3 if with_cache else 4}
-    assert f.n_calls == 3 if with_cache else 4
+    assert f.n_calls == (3 if with_cache else 4)
     out = learner.fit_transform({"x": 2})
     assert out == 35
     assert DummyTransformer.n_calls == {"fit_transform": 5 if with_cache else 6}
-    assert f.n_calls == 5 if with_cache else 6
+    assert f.n_calls == (5 if with_cache else 6)
 
     f.n_calls = 0
     DummyTransformer.reset()
 
     out = learner.transform({"x": 2})
     assert DummyTransformer.n_calls["transform"] == 2
-    assert f.n_calls == 1 if with_cache else 2
+    assert f.n_calls == (1 if with_cache else 2)
 
     out = learner.transform({"x": 2})
-    assert DummyTransformer.n_calls["transform"] == 3 if with_cache else 4
-    assert f.n_calls == 2 if with_cache else 3
+    assert DummyTransformer.n_calls["transform"] == (3 if with_cache else 4)
+    assert f.n_calls == (2 if with_cache else 4)
 
     skrub.set_config(cache=False)
     out = learner.transform({"x": 2})
-    assert DummyTransformer.n_calls["transform"] == 5 if with_cache else 6
-    assert f.n_calls == 4 if with_cache else 5
+    assert DummyTransformer.n_calls["transform"] == (5 if with_cache else 6)
+    assert f.n_calls == (4 if with_cache else 6)
 
 
 @pytest.mark.parametrize(

@@ -1869,6 +1869,8 @@ def deferred(func=None, *, no_cache=False):
         cached even if the configuration enables caching with
         skrub.set_config(cache='/path/to/cache_dir').
 
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
+
     Returns
     -------
     A new function

@@ -305,6 +305,8 @@ class SkrubNamespace:
             cached even if the configuration enables caching with
             skrub.set_config(cache='/path/to/cache_dir').
 
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
+
         Returns
         -------
         result
@@ -518,6 +520,8 @@ class SkrubNamespace:
             Note: if your function has a keyword-only parameter named
             ``no_cache`` and you need to pass a value for it, use
             :func:`skrub.deferred` instead of ``apply_func``.
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------

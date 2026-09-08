@@ -36,6 +36,14 @@ For this to happen, we need to enable caching in the configuration, either
 or ``skrub.set_config(cache="/path/to/cache_dir/")`` to specify where to store
 the cache.
 
+.. note::
+
+   The caching mechanism discussed here is about persisting results on disk
+   across different evaluations of a DataOp, or evaluations of different
+   DataOps. Retaining intermediate results that are used in several places in a
+   single DataOp in-memory until they are no longer needed, during a single
+   evaluation of the DataOp, always happens.
+
 Forbidding caching for specific nodes
 -------------------------------------
 
