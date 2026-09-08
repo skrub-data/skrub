@@ -310,3 +310,8 @@ def test_cache_env_var(monkeypatch):
     assert _load_cache_env_var() is True
     monkeypatch.setenv("SKB_CACHE", "/tmp/cache")
     assert _load_cache_env_var() == "/tmp/cache"
+
+
+def test_unchanged():
+    # make codecov happy
+    assert repr(skrub._config.UNCHANGED) == "unchanged"
