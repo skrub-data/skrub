@@ -1714,7 +1714,7 @@ class Call(DataOpImpl):
         if getattr(e.func, "_skrub_is_deferred", False):
             raise ValueError(
                 "A deferred function was wrapped in a DataOp, "
-                "probably by passing it (inderectly) to .skb.apply_func():\n"
+                "probably by passing it (indirectly) to .skb.apply_func():\n"
                 f"{e.func!r}.\n"
                 "This results in deferring the function twice.\n"
                 "Please pass the original, undecorated function instead.\n"
@@ -1867,7 +1867,7 @@ def deferred(func=None, *, no_cache=False):
     no_cache : bool, default = False
         If True, caching is forbidden for this function: calls will not be
         cached even if the configuration enables caching with
-        skrub.set_config(cache='/path/to/chache_dir').
+        skrub.set_config(cache='/path/to/cache_dir').
 
     Returns
     -------

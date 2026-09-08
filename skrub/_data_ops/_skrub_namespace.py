@@ -303,7 +303,7 @@ class SkrubNamespace:
         no_cache : bool, default = False
             If True, caching is forbidden for this estimator: it will not be
             cached even if the configuration enables caching with
-            skrub.set_config(cache='/path/to/chache_dir').
+            skrub.set_config(cache='/path/to/cache_dir').
 
         Returns
         -------
@@ -513,7 +513,7 @@ class SkrubNamespace:
         no_cache : bool, default = False
             If True, caching is forbidden for this call: it will not be
             cached even if the configuration enables caching with
-            skrub.set_config(cache='/path/to/chache_dir').
+            skrub.set_config(cache='/path/to/cache_dir').
 
             Note: if your function has a keyword-only parameter named
             ``no_cache`` and you need to pass a value for it, use
