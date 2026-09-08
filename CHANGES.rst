@@ -29,6 +29,11 @@ Release 0.10.1
 
 Changes
 -------
+- Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
+   from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
+   instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- Removed previously deprecated features from :class:`TableVectorizer`.
+   :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 - :class:`TextEncoder`'s ``verbose`` parameter is now an ``int`` instead of a
   ``bool``, where ``verbose=0`` silences the progress bar and
   ``verbose>=1`` shows it. The default is now ``0``. Passing a
