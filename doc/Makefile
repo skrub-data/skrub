@@ -78,6 +78,6 @@ markdown-noplot:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
-	rm -rf _build/ auto_examples/ auto_tutorials/ generated/ generated_for_index/ reference/generated/
+	rm -rf _build/ auto_examples/ auto_tutorials/ generated/ generated_for_index/ reference/generated/ data_ops.rst install.rst multi_column_operations.rst
 	rm -rf modules/ tutorials/ guides/
 	rm -f reference/*.rst
