@@ -538,6 +538,9 @@ This class is usually not instantiated manually, but through one of the function
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing DataOp.
+
+Refer to the :ref:`user_guide_data_ops_index` page for more information.
+
 """
 
 _DATA_OP_INSTANCE_DOC = """Skrub DataOp.

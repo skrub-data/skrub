@@ -1,6 +1,10 @@
 """
+.. _data_ops_quick_tour:
+
 Quick overview of DataOps
 =========================
+
+
 
 .. currentmodule:: skrub
 
