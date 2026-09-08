@@ -4,15 +4,28 @@ skrub: Machine learning with dataframes.
 
 ``skrub`` facilitates machine learning with tabular
 data.  It helps clean, encode, and transform dataframes into features
-ready for scikit-learn or other ML frameworks.
+ready for scikit-learn Pipelines, or build lazy, stateful pipelines with
+``skrub.DataOp``.
 
+Bundled docs: ``skrub.__docs_dir__``
+Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
+Bundled examples: ``skrub.__docs_dir__ / "examples"``
+Bundled datasets: ``skrub.datasets``
+
+GitHub repo: https://github.com/skrub-data/skrub/
+
+Online:
 Docs: https://skrub-data.org/stable/reference/index.html
-User Guide: https://skrub-data.org/stable/documentation.html
-Source: https://github.com/skrub-data/skrub/
+User guide: https://skrub-data.org/stable/documentation.html
 Examples: https://skrub-data.org/stable/auto_examples/index.html
+
 """
 
 from pathlib import Path as _Path
+
+#: Path to the documentation bundled with the package.
+#: Use ``skrub.__docs_dir__`` to access it programmatically.
+__docs_dir__ = _Path(__file__).parent / "_docs"
 
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
@@ -120,4 +133,5 @@ __all__ = [
     "SessionEncoder",
     "core",
     "TextEncoder",
+    "__docs_dir__",
 ]
