@@ -71,21 +71,7 @@ doc/sg_execution_times.rst
 # whenever the docs are being built, but they are not the authoritative copy
 # and clutter the git diff.
 # See conf.py for more detail.
-doc/about.rst
-doc/column_level_featurizing.rst
-doc/data_ops.rst
-doc/default_wrangling.rst
-doc/development.rst
-doc/documentation.rst
-doc/exploring_a_dataframe.rst
-doc/howto.rst
-doc/index.rst
-doc/install.rst
-doc/joining_dataframes.rst
-doc/learning_materials.rst
-doc/multi_column_operations.rst
-doc/tutorial_example.rst
-doc/vision.rst
+doc/*.rst
 doc/guides/
 doc/modules/
 doc/tutorials/
