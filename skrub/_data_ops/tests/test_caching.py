@@ -17,11 +17,11 @@ class DummyTransformer(TransformerMixin, BaseEstimator):
         self.n_calls["fit"] += 1
         return self
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X, y=None, **kwargs):
         self.n_calls["fit_transform"] += 1
         return X + self.add
 
-    def transform(self, X):
+    def transform(self, X, **kwargs):
         self.n_calls["transform"] += 1
         return X + self.add
 
@@ -69,6 +69,22 @@ def test_caching(with_cache, tmp_path):
     assert DummyTransformer.n_calls == {"fit_transform": 5 if with_cache else 6}
     assert f.n_calls == 5 if with_cache else 6
 
+    f.n_calls = 0
+    DummyTransformer.reset()
+
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == 2
+    assert f.n_calls == 1 if with_cache else 2
+
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == 3 if with_cache else 4
+    assert f.n_calls == 2 if with_cache else 3
+
+    skrub.set_config(cache=False)
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == 5 if with_cache else 6
+    assert f.n_calls == 4 if with_cache else 5
+
 
 @pytest.mark.parametrize(
     "apply_func, deferred, n_calls",
@@ -85,3 +101,18 @@ def test_apply_deferred_func(apply_func, deferred, n_calls, tmp_path):
         data_op.skb.eval({"x": 0})
         data_op.skb.eval({"x": 0})
         assert f.n_calls == n_calls
+
+
+def test_pickling_error(tmp_path):
+    skrub.set_config(cache=tmp_path)
+    a = skrub.var("a", 0, becomes_default=True)
+    data_op = (
+        skrub.as_data_op(3)
+        .skb.apply(
+            DummyTransformer(), fit_transform_kwargs={"a": a}, transform_kwargs={"a": a}
+        )
+        .skb.apply_func(lambda x: x)
+    )
+    assert data_op.skb.eval() == 4
+    assert data_op.skb.eval({"a": lambda: None}) == 4
+    assert data_op.skb.make_learner(fitted=True).transform({"a": lambda: None}) == 4
