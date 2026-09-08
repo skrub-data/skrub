@@ -10,7 +10,13 @@ Bundled docs: ``skrub.__docs_dir__``
 Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
 Bundled examples: ``skrub.__docs_dir__ / "examples"``
 
-Source: https://github.com/skrub-data/skrub/
+GitHub repo: https://github.com/skrub-data/skrub/
+
+Online:
+Docs: https://skrub-data.org/stable/reference/index.html
+User guide: https://skrub-data.org/stable/documentation.html
+Examples: https://skrub-data.org/stable/auto_examples/index.html
+
 """
 
 from pathlib import Path as _Path
