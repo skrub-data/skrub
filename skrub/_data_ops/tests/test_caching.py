@@ -118,6 +118,29 @@ def test_pickling_error(tmp_path):
     assert data_op.skb.make_learner(fitted=True).transform({"a": lambda: None}) == 4
 
 
+def test_cache_reuse_across_data_ops(tmp_path):
+    # cache reused with different estimator objects in different graphs
+    skrub.set_config(cache=tmp_path)
+    skrub.var("x").skb.apply(DummyTransformer(1)).skb.apply_func(f, 10).skb.eval(
+        {"x": 1}
+    )
+    assert DummyTransformer.n_calls == {"fit_transform": 1}
+    skrub.var("x").skb.apply(DummyTransformer(1)).skb.apply_func(f, 20).skb.eval(
+        {"x": 1}
+    )
+    assert DummyTransformer.n_calls == {"fit_transform": 1}
+
+
+def test_deferred_no_cache_decorator(tmp_path):
+    # no_cache is passed in separate call: deferred(no_cache=True)(f) rather
+    # than deferred(f, no_cache=True)
+    skrub.set_config(cache=tmp_path)
+    g = skrub.deferred(no_cache=True)(f)
+    g(skrub.var("x")).skb.eval({"x": 0})
+    g(skrub.var("x")).skb.eval({"x": 0})
+    assert f.n_calls == 2
+
+
 def test_memory_cache():
     mem = skrub._data_ops._caching.Memory()
     assert not mem.has_memory()
