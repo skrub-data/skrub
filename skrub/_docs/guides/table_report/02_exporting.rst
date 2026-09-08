@@ -31,7 +31,8 @@ respectively.
 
 The report can be exported in JSON format, which allows structured
 access to the data and statistics used to build the report with
-:func:`~skrub.TableReport.json`.
+:func:`~skrub.TableReport.json`. The schema of the JSON data is reported in
+:ref:`table_report_json_schema`.
 
 .. code-block::
 
