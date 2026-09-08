@@ -79,6 +79,7 @@ Selectors based on column data types
 - :func:`~skrub.selectors.any_date`: Select columns with date or datetime data types
 - :func:`~skrub.selectors.categorical`: Select columns with categorical data types
 - :func:`~skrub.selectors.string`: Select columns with string data types
+- :func:`~skrub.selectors.object`: Select columns with the ``object`` (pandas) or ``pl.Object`` (polars) dtype
 - :func:`~skrub.selectors.boolean`: Select columns with boolean data types
 
 Selectors based on column content and properties
