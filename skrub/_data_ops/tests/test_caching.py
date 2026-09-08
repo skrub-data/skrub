@@ -116,3 +116,9 @@ def test_pickling_error(tmp_path):
     assert data_op.skb.eval() == 4
     assert data_op.skb.eval({"a": lambda: None}) == 4
     assert data_op.skb.make_learner(fitted=True).transform({"a": lambda: None}) == 4
+
+
+def test_memory_cache():
+    mem = skrub._data_ops._caching.Memory()
+    assert not mem.has_memory()
+    assert mem.cache(f) is f
