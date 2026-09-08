@@ -530,8 +530,9 @@ class _Skb:
 _DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
-Please refer to the example gallery for an introduction to skrub
-DataOps.
+A complete machine learning pipeline -- from data loading and wrangling to the final
+prediction -- in a single object that can be fitted, tuned, cross-validated, and
+saved like any scikit-learn estimator.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
