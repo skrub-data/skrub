@@ -46,8 +46,11 @@ def get_cache_dir():
     if cache in (None, False):
         return None
     if cache is True:
-        return Path(config["data_dir"]) / "_cache"
-    return Path(cache)
+        cache = Path(config["data_dir"]) / "_cache"
+    else:
+        cache = Path(cache)
+    cache.mkdir(exist_ok=True, parents=True)
+    return cache
 
 
 def _load_cache_env_var():
