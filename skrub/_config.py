@@ -42,12 +42,21 @@ def _get_default_data_dir():
 
 def get_cache_dir():
     config = get_config()
-    cache_dir = config["cache_dir"]
-    if cache_dir is None:
+    cache = config["cache"]
+    if cache in (None, False):
         return None
-    if cache_dir is True:
+    if cache is True:
         return Path(config["data_dir"]) / "_cache"
-    return Path(cache_dir)
+    return Path(cache)
+
+
+def _load_cache_env_var():
+    cache = os.environ.get("SKB_CACHE", "").strip()
+    if cache.lower() in ("", "none", "false", "0"):
+        return False
+    if cache.lower() in ("true", "1"):
+        return True
+    return cache
 
 
 def _get_deprecated_int_env(new_var, deprecated_var, default):
@@ -96,7 +105,7 @@ _global_config = {
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_dir": _get_default_data_dir(),
-    "cache_dir": None,
+    "cache": _load_cache_env_var(),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
     "data_ops_open_graph_dropdown": _parse_env_bool(
         "SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN", False
@@ -161,7 +170,7 @@ def set_config(
     float_precision=None,
     cardinality_threshold=None,
     data_dir=None,
-    cache_dir=UNCHANGED,
+    cache=UNCHANGED,
     eager_data_ops=None,
     data_ops_open_graph_dropdown=None,
 ):
@@ -258,6 +267,13 @@ def set_config(
         This configuration can also be set with the ``SKB_DATA_DIRECTORY``
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
+
+    cache : bool or str, default=False
+        Caching to use for the evaluation of DataOps.
+
+        - If False (or None), no caching is used.
+        - If True, the cache directory is in a default location (data_dir / _cache).
+        - If a string (or Path), this path is used as the cache directory.
 
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
@@ -406,8 +422,8 @@ def set_config(
         data_dir = Path(data_dir).expanduser().resolve()
         local_config["data_dir"] = str(data_dir)
 
-    if cache_dir is not UNCHANGED:
-        local_config["cache_dir"] = cache_dir
+    if cache is not UNCHANGED:
+        local_config["cache"] = cache
 
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
@@ -434,7 +450,7 @@ def config_context(
     float_precision=None,
     cardinality_threshold=None,
     data_dir=None,
-    cache_dir=UNCHANGED,
+    cache=UNCHANGED,
     eager_data_ops=None,
     data_ops_open_graph_dropdown=None,
 ):
@@ -526,6 +542,13 @@ def config_context(
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
 
+    cache : bool or str, default=False
+        Caching to use for the evaluation of DataOps.
+
+        - If False (or None), no caching is used.
+        - If True, the cache directory is in a default location (data_dir / _cache).
+        - If a string (or Path), this path is used as the cache directory.
+
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
@@ -581,7 +604,7 @@ def config_context(
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
         data_dir=data_dir,
-        cache_dir=cache_dir,
+        cache=cache,
         eager_data_ops=eager_data_ops,
         data_ops_open_graph_dropdown=data_ops_open_graph_dropdown,
     )
