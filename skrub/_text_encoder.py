@@ -456,7 +456,7 @@ class LLMEncoder(SingleColumnTransformer):
 
 
 @deprecated(
-    "LLMEncoder has been renamed to LLMEncoder andwill be removed in version 0.12."
+    "TextEncoder has been renamed to LLMEncoder and will be removed in version 0.12."
 )
-class LLMEncoder(LLMEncoder):
+class TextEncoder(LLMEncoder):
     pass
