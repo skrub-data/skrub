@@ -20,6 +20,9 @@ var/
 .installed.cfg
 *.egg
 *.pkl
+data/
+
+data/
 
 .pytest_cache/
 
