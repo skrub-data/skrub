@@ -3,8 +3,8 @@
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_sharing:
-How to export and share the |TableReport| for use by other tools
-----------------------------------------------------------------
+How to export and share the |TableReport|
+-----------------------------------------
 
 The |TableReport| is generated as a standalone HTML file that includes the report
 data, the plots, and the Javascript necessary to provide interactivity.

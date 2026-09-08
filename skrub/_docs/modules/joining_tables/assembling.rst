@@ -9,6 +9,7 @@ requires including as much information as possible, often from different sources
 Skrub allows you to join tables on keys of different types (string, numerical,
 datetime) with imprecise correspondence.
 
+
 .. warning::
 
     To be considered when using one of the joiners:
@@ -25,6 +26,7 @@ datetime) with imprecise correspondence.
     - **Dynamic Data**: If your auxiliary table changes after fitting,
       you must refit the transformer. Joiners are not suitable for continuously
       updated tables.
+
 
 Joining external tables for machine learning
 --------------------------------------------

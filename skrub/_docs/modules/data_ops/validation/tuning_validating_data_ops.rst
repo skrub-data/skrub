@@ -186,6 +186,7 @@ The train set only contains data from the "supermarket.com" seller.
 3     usb key      9
 4     charger     13
 
+
 The test set only contains data from the "bestproducts.com" seller.
 
 >>> split["X_test"]
@@ -193,6 +194,7 @@ The test set only contains data from the "bestproducts.com" seller.
 0       screen    100
 2     keyboard     20
 5  screwdriver     12
+
 
 Passing additional arguments to the scorer
 ==========================================
@@ -280,6 +282,7 @@ default corresponding key in the result is ``"score"`` (exactly like in
 
 This method can be called several times to add scorers that take different
 kwargs. See the reference documentation for details.
+
 
 Avoiding computing predictions multiple times
 =============================================
