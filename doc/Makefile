@@ -79,5 +79,5 @@ markdown-noplot:
 
 clean:
 	rm -rf _build/ auto_examples/ auto_tutorials/ generated/ generated_for_index/ reference/generated/
-	rm -rf doc/modules/*.rst doc/tutorials/* doc/guides/*
+	rm -rf modules/ tutorials/ guides/
 	rm -f reference/*.rst
