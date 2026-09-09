@@ -12,6 +12,7 @@ from skrub._dispatch import dispatch
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_datetime import (
     ToDatetime,
+    _cast_date_objects,
     _convert_time_zone,
     _get_time_zone,
     to_datetime,
@@ -264,6 +265,38 @@ def test_pandas_date_objects():
 
     transformed = to_dt.transform(pd.Series([date(2005, 5, 5)], name="when"))
     assert transformed[0] == pd.Timestamp("2005-05-05")
+
+
+def test_cast_date_objects_converts_date_objects():
+    """A pandas object column of datetime.date becomes Datetime."""
+    col = pd.Series([date(2002, 1, 1), None, date(2003, 2, 2)], name="when")
+    out = _cast_date_objects(col)
+    assert sbd.is_any_date(out)
+    assert out[0] == pd.Timestamp("2002-01-01")
+    assert pd.isna(out[1])
+
+
+def test_cast_date_objects_empty_column_unchanged():
+    """An all-null object column has nothing to sample: returned unchanged."""
+    col = pd.Series([None, None], dtype=object, name="when")
+    assert _cast_date_objects(col) is col
+
+
+def test_cast_date_objects_non_date_column_unchanged():
+    """Object columns that are not all dates are returned unchanged."""
+    col = pd.Series(["hello", "world"], name="when")
+    assert _cast_date_objects(col) is col
+
+
+def test_cast_date_objects_conversion_failure_unchanged(monkeypatch):
+    """If pd.to_datetime raises, the column is returned unchanged."""
+    col = pd.Series([date(2002, 1, 1), date(2003, 2, 2)], name="when")
+
+    def fail(*args, **kwargs):
+        raise ValueError("could not convert")
+
+    monkeypatch.setattr("skrub._to_datetime.pd.to_datetime", fail)
+    assert _cast_date_objects(col) is col
 
 
 def test_object_column_that_is_not_dates_is_still_rejected():

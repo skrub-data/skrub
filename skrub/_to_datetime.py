@@ -101,7 +101,9 @@ def _cast_date_objects(column):
         return column
     try:
         return pd.to_datetime(column)
-    except Exception:
+    except (ValueError, TypeError):
+        # e.g. OutOfBoundsDatetime on out-of-bounds dates (a ValueError).
+        # Leave the column for ToDatetime to reject downstream.
         return column
 
 
