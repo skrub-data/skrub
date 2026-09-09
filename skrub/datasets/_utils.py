@@ -201,6 +201,12 @@ def get_data_dir(name=None, data_home=None):
     data_home : str or path-like, optional
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
+
+    Returns
+    -------
+    pathlib.Path
+        The path to the requested data directory.
+
     """
     data_dir = get_data_home(data_home)
     if name is not None:
@@ -221,6 +227,10 @@ def load_simple_dataset(dataset_name, data_home=None):
                 baskets.csv
                 products.csv
                 metadata.json
+
+    Currently the docstrings for functions that call this function are skipped
+    during doctests because they require downloading the datasets, which produces
+    a print statement that disrupts the doctest output.
 
     Parameters
     ----------

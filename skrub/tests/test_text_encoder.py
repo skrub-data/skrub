@@ -15,15 +15,16 @@ warnings are being raised.
 import pickle
 import sys
 
+import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import clone
 
 import skrub._dataframe as sbd
-from skrub import TableVectorizer, TextEncoder
+from skrub import TableVectorizer
 from skrub._single_column_transformer import RejectColumn
-from skrub._text_encoder import ModelNotFound
+from skrub._text_encoder import LLMEncoder, ModelNotFound, TextEncoder
 
 
 @pytest.fixture
@@ -39,7 +40,7 @@ def encoder():
       See https://github.com/actions/runner-images/issues/9918 for more details.
     """
     pytest.importorskip("sentence_transformers")
-    return TextEncoder(
+    return LLMEncoder(
         model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
@@ -49,16 +50,16 @@ def test_missing_import_error(monkeypatch):
     """Test that a clear error is raised when sentence_transformers is missing.
 
     We mock the missing dependency by hiding it from sys.modules, then verify
-    that TextEncoder.fit() raises an ImportError with a helpful message.
+    that LLMEncoder.fit() raises an ImportError with a helpful message.
     """
     monkeypatch.setitem(sys.modules, "sentence_transformers", None)
 
-    st = TextEncoder()  # Direct creation to avoid importorskip
+    st = LLMEncoder()  # Direct creation to avoid importorskip
     x = pd.Series(["oh no"])
 
     err_msg = (
         "Missing optional dependency 'sentence_transformers'.*"
-        "TextEncoder requires sentence-transformers.*"
+        "LLMEncoder requires sentence-transformers.*"
         "install\\.html#deep-learning-dependencies"
     )
     with pytest.raises(ImportError, match=err_msg):
@@ -135,6 +136,40 @@ def test_wrong_parameters(encoder):
 
     with pytest.raises(ValueError, match="Got model_name=1"):
         clone(encoder).set_params(model_name=1)._check_params()
+
+    with pytest.raises(ValueError, match="Got verbose=-1"):
+        clone(encoder).set_params(verbose=-1)._check_params()
+
+    with pytest.raises(ValueError, match="Got verbose='yes'"):
+        clone(encoder).set_params(verbose="yes")._check_params()
+
+
+def test_verbose_default():
+    """The default verbose level is 0 (silent), consistent with the rest of
+    skrub (e.g. GapEncoder, TableReport)."""
+    assert LLMEncoder().verbose == 0
+
+
+@pytest.mark.parametrize(
+    "verbose, expected_show_progress_bar",
+    [(0, False), (1, True), (2, True), (False, False), (True, True)],
+)
+def test_verbose_controls_progress_bar(df_module, verbose, expected_show_progress_bar):
+    """``verbose`` (int or bool) is forwarded to sentence-transformers as the
+    boolean ``show_progress_bar`` flag."""
+    calls = []
+
+    class FakeEstimator:
+        def encode(self, X, **kwargs):
+            calls.append(kwargs["show_progress_bar"])
+            return np.zeros((len(X), 3))
+
+    X = df_module.make_column("", ["hello", "hola"])
+    encoder = LLMEncoder(n_components=None, verbose=verbose)
+    encoder._estimator = FakeEstimator()
+    encoder.fit_transform(X)
+
+    assert calls == [expected_show_progress_bar]
 
 
 def test_wrong_model_name(encoder):
@@ -213,3 +248,13 @@ def test_categorical_features(df_module, encoder):
 
     out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert len(sbd.column_names(out)) == 30
+
+
+def test_deprecated_text_encoder_warning(df_module):
+    # We need to define a new encoder with the proper class rather than reusing
+    # the fixture (which is a LLMEncoder)
+    with pytest.warns(FutureWarning, match="TextEncoder is deprecated.*"):
+        TextEncoder(
+            model_name="sentence-transformers/paraphrase-albert-small-v2",
+            device="cpu",
+        )

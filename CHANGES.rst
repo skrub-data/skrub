@@ -9,7 +9,6 @@ Release history
 Ongoing development
 ===================
 
-
 New Features
 ------------
 - It is now possible to unpack a :class:`DataOp` that evaluates to several
@@ -19,6 +18,26 @@ New Features
 
 Changes
 -------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+Release 0.10.1
+===================
+
+Changes
+-------
+- :class:`TextEncoder`'s ``verbose`` parameter is now an ``int`` instead of a
+  ``bool``, where ``verbose=0`` silences the progress bar and
+  ``verbose>=1`` shows it. The default is now ``0``. Passing a
+  boolean is still accepted.
+  :pr:`2249` by :user:`Jayant-kernel <Jayant-kernel>`.
 - :func:`patch_display` now uses a minimal, faster TableReport without plots or
   column associations by default. The old behavior can still be achieved by calling
   ``patch_display(plot_distributions="auto", compute_associations="auto")``.
@@ -47,21 +66,34 @@ Changes
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
   as the second step.
-
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Bugfixes
 --------
+- :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
+  installed by avoiding the unused Pearson's correlation computation.
+  :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
-
-Deprecations
-------------
-
-
+- :class:`GapEncoder` with ``init="k-means"`` raised an error when the input
+  column contained missing values. This has been fixed in :pr:`2238` by
+  :user:`Achraf Ez <Hrafz>`.
+- :class:`DatetimeEncoder` no longer raises ``UnboundLocalError`` when
+  ``resolution=None`` is combined with ``periodic_encoding="circular"`` or
+  ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
+  ``resolution`` is finer than ``"hour"``. :pr:`2240` by
+  :user:`Achraf Ez <Hrafz>`.
+- When ``cols`` was not provided, :class:`AggJoiner` and :class:`MultiAggJoiner`
+  selected the columns to aggregate through a Python ``set``, so the order of the
+  aggregated output columns varied between runs. They now keep the order in which
+  the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
+  :user:`Dylan Pulver <dylanpulver>`.
+- A ``cloudpickle`` import error that could happen after updating some required
+  dependencies was fixed in :pr:`2261` by :user:`Jérôme Dockès <jeromedockes>`
+  and :user:`Riccardo Cappuzzo <rcap107>`.
 
 
 Release 0.10.0
@@ -177,6 +209,11 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The package build has been updated to include the user guide and examples with
+  the package, so that it is now possible to access it directly from the wheel
+  rather than having to rely on the online docs. Docs and examples are now stored
+  in ``skrub/_docs``, rather than in the root of the repository.
+  :pr:`2173` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -625,7 +662,7 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_0010_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numeric columns, enabling more robust handling of numeric columns
