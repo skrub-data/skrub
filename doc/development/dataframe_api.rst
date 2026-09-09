@@ -5,7 +5,7 @@ The dispatch-based dataframe API
 
 skrub targets both pandas and polars as first-class backends.  Rather than
 scattering ``if pandas … else polars …`` branches throughout the codebase, all
-dataframe and column operations are funnelled through a thin dispatch layer that
+dataframe and column operations are funneled through a thin dispatch layer that
 selects the right implementation at call time.  This guide explains how that
 layer works and how to extend it.
 
@@ -93,9 +93,12 @@ adds a ``specialize`` attribute:
 
 The default body is the fallback that runs when no specialisation has been
 registered for the argument's type.  The idiomatic choice is to raise a
-descriptive error with ``raise_dispatch_unregistered_type``, though some
-functions use a safe no-op default (e.g. ``reset_index`` which is a pandas
-concept and simply returns ``obj`` unchanged for everything else).
+descriptive error with ``raise_dispatch_unregistered_type`` when an unsupported
+type is passed as an argument: for example, in case a pure python list is used
+instead of a Pandas series.
+In some cases, functions use a safe no-op default, rather than raising an exception
+(e.g. ``reset_index`` which is a pandas concept and simply returns ``obj`` unchanged
+for everything else).
 
 Registering specialisations with ``specialize``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,9 +115,9 @@ Registering specialisations with ``specialize``
 
 ``specialize`` takes two arguments:
 
-* **Library name** (``"pandas"`` or ``"polars"``): the concrete implementations
-  are looked up only if that library is importable; otherwise the decorator
-  is a no-op and the function is never registered.
+* **Library name** (the strings ``"pandas"`` or ``"polars"``): the concrete
+  implementations are looked up only if that library is importable; otherwise
+  the decorator is a no-op and the function is never registered.
 * **``argument_type``** (optional): one of the string keys in the type registry,
   or a tuple of them.  Omitting it registers the specialisation for *all* types
   in that library (DataFrame, Column, and LazyFrame for polars).
@@ -342,6 +345,10 @@ Functions defined this way are **not** exported from ``skrub._dataframe``; they
 are module-private helpers.  Only add a function to ``_common.py`` and its
 ``__all__`` when it is genuinely reusable across multiple parts of skrub.
 
+Specialised dispatched functions may involve complex operations with multiple
+steps depending on the situation (e.g., ``_session_encoder.py``): there is no need
+to break the operations into smaller functions if this would result in chaining
+multiple dispatched functions anyway.
 
 Rules for production code
 --------------------------

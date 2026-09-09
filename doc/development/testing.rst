@@ -5,7 +5,7 @@ Testing with the ``df_module`` fixture
 
 skrub's test suite must verify that every dataframe-aware feature works
 correctly for all supported backends and dtype configurations.  Writing the
-same test three times would be tedious and error-prone, so the suite provides a
+same test multiple times would be tedious and error-prone, so the suite provides a
 parametrised fixture, ``df_module``, that multiplies a single test across all
 configurations automatically.
 
@@ -51,7 +51,7 @@ Anatomy of ``df_module``
 ``df_module`` is defined in ``skrub/conftest.py`` and returns a
 :class:`types.SimpleNamespace` with a consistent set of attributes.  The
 attributes are designed to normalise the differences between libraries so test
-bodies need no ``if pandas / if polars`` branches (with few exceptions).
+bodies need no ``if pandas / if polars`` branches (with a few exceptions).
 
 The fixture signature:
 
@@ -227,7 +227,8 @@ be used to avoid boilerplate:
 Related fixtures
 -----------------
 
-Several narrower fixtures complement ``df_module``.
+Several narrower fixtures complement ``df_module``. These fixtures have more niche
+applications and are less common through the codebase.
 
 ``pd_module``
 ~~~~~~~~~~~~~
@@ -292,7 +293,7 @@ LazyFrames
 ~~~~~~~~~~
 
 The ``df_module`` fixture provides an ``empty_lazyframe`` attribute only for
-the polars configuration.  Most skrub functions expect an *eager* DataFrame;
+the polars configuration. skrub functions expect an *eager* DataFrame;
 passing a LazyFrame raises a ``TypeError`` with a message telling the caller
 to call ``.collect()``.  Test this behaviour explicitly if your function could
 receive a LazyFrame.
@@ -300,10 +301,13 @@ receive a LazyFrame.
 The ``skip_polars_installed_without_pyarrow`` mark
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some polars operations (some date/time conversions, functions that involve the
-computation of column associations) require pyarrow.
-A mark is available to skip those tests when polars is installed but pyarrow
-is not:
+For some operations (some date/time conversions, functions that involve the
+computation of column associations) it is not possible to rely exclusively on polars,
+because some features are not available; in such cases, the dataframe is silently
+converted to pandas and then back to polars when possible. This conversion requires
+the pyarrow package, which is an optional dependency.
+A pytest mark is available to skip tests for these operations when polars is
+installed but pyarrow is not:
 
 .. code-block:: python
 
@@ -314,6 +318,9 @@ is not:
         ...
 
 Apply this mark to tests that call polars functionality backed by pyarrow.
+
+A specific CI environment (``ci-py314-polars-without-pyarrow``) is used to test
+this situation.
 
 Where tests live
 -----------------

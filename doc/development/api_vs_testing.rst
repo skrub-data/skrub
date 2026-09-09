@@ -30,9 +30,6 @@ The two layers at a glance
 | **What it abstracts**     | *How* to perform an operation        | *How* to construct inputs and      |
 |                           | (fill nulls, get shape, cast, …)     | assert outputs in a test           |
 +---------------------------+--------------------------------------+------------------------------------+
-| **Who uses it**           | skrub transformers, encoders,        | Test functions                     |
-|                           | utility functions                    |                                    |
-+---------------------------+--------------------------------------+------------------------------------+
 | **Mechanism**             | ``functools.singledispatch`` +        | pytest ``@fixture(params=…)``      |
 |                           | ``specialize`` decorator             |                                    |
 +---------------------------+--------------------------------------+------------------------------------+
@@ -79,8 +76,8 @@ The key properties of the dataframe API:
 
 ``df_module`` solves a different problem: when a test needs to construct
 inputs, call a function, and check the output, it must do so in a way that
-works for all three configurations.  ``df_module`` provides a uniform
-interface for these test-time concerns.
+works for pandas with numpy dtypes, pandas with nullable dtypes and polars (if
+available).  ``df_module`` provides a uniform interface for these test-time concerns.
 
 A test using ``df_module`` is collected once and run three times by pytest:
 
@@ -160,17 +157,8 @@ Use this table to decide where new code or infrastructure belongs.
 | I need to write a test for code that touches  | Use ``df_module``.                |
 | a DataFrame or column.                        |                                   |
 +-----------------------------------------------+-----------------------------------+
-| I need a test that must run only for pandas.  | Use ``pd_module`` instead of      |
-|                                               | ``df_module``.                    |
-+-----------------------------------------------+-----------------------------------+
-| I need a test that must run only for polars.  | Use ``pl_module`` (auto-skips if  |
-|                                               | polars is not installed).         |
-+-----------------------------------------------+-----------------------------------+
 | I need to construct a backend-appropriate     | Use ``df_module.make_dataframe``  |
 | DataFrame in a test.                          | or ``df_module.make_column``.     |
-+-----------------------------------------------+-----------------------------------+
-| I need a dtype value in a test that works     | Use ``df_module.dtypes["float64"]``|
-| across configurations.                        | (or whichever key you need).      |
 +-----------------------------------------------+-----------------------------------+
 | I need to assert equality in a test.          | Use ``df_module.assert_frame_equal``|
 |                                               | or ``df_module.assert_column_equal``.|
@@ -205,4 +193,4 @@ In the **test fixture**:
   itself is backend-specific.
 
 The design principle is the same in both cases: write the general case once
-and isolate backend differences to dedicated, clearly labelled places.
+and isolate backend differences to dedicated, clearly labeled places.
