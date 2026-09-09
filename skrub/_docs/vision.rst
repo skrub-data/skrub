@@ -1,0 +1,64 @@
+===============================
+Vision: Where is skrub heading?
+===============================
+
+.. currentmodule:: skrub
+
+Vision Statement
+================
+
+The goal of skrub is to facilitate machine learning on tables:
+`pandas <https://pandas.pydata.org>`__
+and `polars <https://pola.rs>`__ dataframes, SQL databases, and more.
+
+|
+
+Skrub is high-level, with a philosophy and API matching that of
+`scikit-learn <http://scikit-learn.org>`_. It strives to bridge the world
+of databases and machine learning, **enabling imperfect assembly and
+representation of data when it is noisy**, using the downstream
+target to guide assembly when possible (supervised learning for
+data assembly).
+
+In the long term, as skrub is built on higher-level APIs, it will make it
+easier for data scientists to use efficient database patterns and
+backends.
+
+Skrub seeks tradeoffs in terms of flexibility: its high-level APIs are by
+construction restrictive compared to directly manipulating dataframes.
+This is by design, as skrub does not aim to replace tools such as `Pandas
+<https://pandas.pydata.org>`__, `Ibis <https://ibis-project.org>`__,
+`DuckDB <https://duckdb.org/>`_.
+
+To make things simpler, skrub uses defaults that are chosen empirically to
+give good machine learning, even though these are sometimes heuristic, as
+in the :class:`TableVectorizer`. We keep the benchmarks used to choose the defaults
+in a separate `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
+
+Roadmap
+=======
+
+In an open-source project, roadmaps can be whishful thinking: things
+happen in an iterative way, often guided by the community.
+
+We however decided to communicate on what we would like to do in the next
+6 months to give a better idea of the vision.
+
+From shorter term to longer term:
+
+- Better support for time series
+
+- Data namespaces, lazy data loading, out of core computing using
+  database engines (e.g., duckdb)
+
+- Join discovery to work in data lakes where the tables are not in a
+  clean relational database
+
+- Automatic feature synthesis in databases, building on the assembling
+  features
+
+
+Imputation is out of skrub's scope: scikit-learn implements transformers
+that perform imputation. Academic work has also shown that imputation is
+expensive and often does not improve prediction results
+(https://arxiv.org/pdf/2407.19804).
