@@ -88,8 +88,8 @@ for _rst_file in _docs_src.glob("*.rst"):
     if _rst_file.name not in _skip_toplevel:
         shutil.copyfile(_rst_file, _rst_file.name)
 
-# Copy content subdirectories (guides, modules, reference)
-for _subdir in ["guides", "modules", "reference"]:
+# Copy content subdirectories (guides, modules, reference, development)
+for _subdir in ["guides", "modules", "reference", "development"]:
     shutil.copytree(_docs_src / _subdir, _subdir, dirs_exist_ok=True)
 
 # Copy tutorials source files for sphinx-gallery

@@ -10,9 +10,11 @@ facilitate learning on databases.
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
+    :maxdepth: 2
 
     vision
     about
     CONTRIBUTING
     tutorial_example
     RELEASE_PROCESS
+    developer_guides
