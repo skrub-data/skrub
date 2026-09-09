@@ -10,7 +10,7 @@ facilitate learning on databases.
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     vision
     about

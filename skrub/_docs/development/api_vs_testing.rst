@@ -30,7 +30,7 @@ The two layers at a glance
 | **What it abstracts**     | *How* to perform an operation        | *How* to construct inputs and      |
 |                           | (fill nulls, get shape, cast, …)     | assert outputs in a test           |
 +---------------------------+--------------------------------------+------------------------------------+
-| **Mechanism**             | ``functools.singledispatch`` +        | pytest ``@fixture(params=…)``      |
+| **Mechanism**             | ``functools.singledispatch`` +       | pytest ``@fixture(params=…)``      |
 |                           | ``specialize`` decorator             |                                    |
 +---------------------------+--------------------------------------+------------------------------------+
 | **Result of abstraction** | A single call site (``sbd.fill_nulls``) | A single test body runs 3 times |
@@ -160,8 +160,10 @@ Use this table to decide where new code or infrastructure belongs.
 | I need to construct a backend-appropriate     | Use ``df_module.make_dataframe``  |
 | DataFrame in a test.                          | or ``df_module.make_column``.     |
 +-----------------------------------------------+-----------------------------------+
-| I need to assert equality in a test.          | Use ``df_module.assert_frame_equal``|
-|                                               | or ``df_module.assert_column_equal``.|
+| I need to assert equality in a test.          | Use                               |
+|                                               | ``df_module.assert_frame_equal``  |
+|                                               | or                                |
+|                                               | ``df_module.assert_column_equal``.|
 +-----------------------------------------------+-----------------------------------+
 | I am unsure whether a new operation belongs   | If other transformers would       |
 | in ``_common.py`` or should be local.         | benefit from it: ``_common.py``.  |
