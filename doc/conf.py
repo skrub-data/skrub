@@ -24,6 +24,13 @@ from pathlib import Path
 
 import jinja2
 
+# Allow skipping jupyterlite to speed up builds (e.g. html-noplot)
+_SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
+    "1",
+    "true",
+    "yes",
+)
+
 # -- Copy files for docs --------------------------------------------------
 #
 # We avoid duplicating the information, but we do not use symlinks to be
@@ -57,6 +64,36 @@ if not os.path.exists("generated_for_index/code_block_2.html"):
 sys.path.insert(0, os.path.abspath("sphinxext"))
 from github_link import make_linkcode_resolve
 from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
+
+# -- Sync documentation source files from skrub/_docs --------------------
+#
+# skrub/_docs is the single source of truth for all guide/content RST files
+# so they are packaged with the wheel. We copy them into doc/ at build time
+# rather than using symlinks (to support Windows builds).
+#
+# CHANGES.rst, CONTRIBUTING.rst and RELEASE_PROCESS.rst are canonical in the
+# project root and are NOT stored in skrub/_docs.
+#
+# Note that building the docs then leaves the copies in the old docs/ folder.
+# .gitignore was updated to ignore these copied files.
+shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
+shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
+shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
+
+_docs_src = Path("../skrub/_docs")
+
+# Copy top-level RST content files
+_skip_toplevel = {"CHANGES.rst", "CONTRIBUTING.rst", "RELEASE_PROCESS.rst"}
+for _rst_file in _docs_src.glob("*.rst"):
+    if _rst_file.name not in _skip_toplevel:
+        shutil.copyfile(_rst_file, _rst_file.name)
+
+# Copy content subdirectories (guides, modules, reference)
+for _subdir in ["guides", "modules", "reference"]:
+    shutil.copytree(_docs_src / _subdir, _subdir, dirs_exist_ok=True)
+
+# Copy tutorials source files for sphinx-gallery
+shutil.copytree(_docs_src / "tutorials", "tutorials", dirs_exist_ok=True)
 
 # -- General configuration ------------------------------------------------
 
@@ -497,7 +534,10 @@ sphinx_gallery_conf = {
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
     "filename_pattern": ".*",
-    "examples_dirs": ["../examples", "tutorials"],
+    # examples -> gallery, tutorials -> user guide
+    # the folders are separate so that the tutorials are not rendered as part
+    # of the gallery
+    "examples_dirs": ["../skrub/_docs/examples", "tutorials"],
     "gallery_dirs": ["auto_examples", "auto_tutorials"],
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
@@ -648,3 +688,81 @@ for rst_template_name, rst_target_name, kwargs in rst_templates:
     # Render the template and write to the target
     w_path = Path(".") / f"{rst_target_name}.rst"
     w_path.write_text(t.render(**kwargs), encoding="utf-8")
+
+
+# -- Per-page meta descriptions for API pages ---------------------------------
+# Inject <meta name="description"> on every generated API page using the first
+# line of each object's docstring, so search engines show a useful snippet
+# instead of picking up inherited notes or other incidental text.
+#
+# API descriptions are loaded into the _api_descriptions dictionary from the first
+# line of each object's docstring. This is done by the _capture_docstring_summary,
+# which is called by Sphinx when processing each object's docstring.
+#
+# Then, when it's time to generate the HTML for each API page, the
+# _inject_meta_description function will add the corresponding meta description
+# to the page's context.
+_api_descriptions = {}
+
+
+def _capture_docstring_summary(app, what, name, obj, options, lines):
+    """Store the first non-empty docstring line keyed by qualified name.
+
+    Only the first call for a given name is stored so that the object's own
+    docstring takes precedence over later calls made for gallery content or
+    inherited members.
+    """
+    if name in _api_descriptions:
+        return
+    for line in lines:
+        stripped = line.strip()
+        if stripped:
+            _api_descriptions[name] = stripped
+            break
+
+
+def _inject_meta_description(app, pagename, templatename, context, doctree):
+    """Add a meta description to generated API pages.
+
+    Runs before sphinxext.opengraph (priority 499 < default 500).
+
+    We write the tag directly into context['metatags'] (the HTML string of
+    RST .. meta:: nodes) so that opengraph's get_meta_description() check
+    finds it and skips writing its own gallery-derived description.
+    We also set og:description via context['meta'] so the OGP tag is correct.
+    """
+    # Only inject meta descriptions for API pages under "reference/generated/".
+    # Other pages (user guide, gallery etc.) are not affected.
+    if not pagename.startswith("reference/generated/"):
+        return
+    # pagename is e.g. "reference/generated/skrub.StringEncoder"
+    # qualname then is e.g. "skrub.StringEncoder"
+    qualname = pagename[len("reference/generated/") :]
+    description = _api_descriptions.get(qualname)
+    if not description:
+        return
+
+    import html as _html
+
+    # Prepend a <meta name="description"> to metatags so that opengraph sees
+    # it and skips fallback, which picked up the gallery's blurb
+    # (checked at line 152 of sphinxext/opengraph/__init__.py before
+    # meta_tags['description'] is set).
+    tag = (
+        f'<meta name="description" '
+        f'content="{_html.escape(description, quote=True)}" />\n'
+    )
+
+    context["metatags"] = tag + context.get("metatags", "")
+
+    # Also override og:description via context['meta']; opengraph merges any
+    # og:* keys from there into its output tags (line 248).
+    meta = dict(context.get("meta", {}) or {})
+    meta["og:description"] = description
+    context["meta"] = meta
+
+
+def setup(app):
+    app.connect("autodoc-process-docstring", _capture_docstring_summary)
+    # Priority 499 ensures this fires before sphinxext.opengraph (default 500).
+    app.connect("html-page-context", _inject_meta_description, priority=499)

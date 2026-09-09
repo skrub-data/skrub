@@ -20,7 +20,9 @@ Bugfixes
 
 Deprecations
 ------------
-
+- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.10.1
 ===================
@@ -60,7 +62,6 @@ Changes
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
   as the second step.
-
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
 
@@ -204,6 +205,11 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The package build has been updated to include the user guide and examples with
+  the package, so that it is now possible to access it directly from the wheel
+  rather than having to rely on the online docs. Docs and examples are now stored
+  in ``skrub/_docs``, rather than in the root of the repository.
+  :pr:`2173` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -652,7 +658,7 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_0010_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numeric columns, enabling more robust handling of numeric columns
