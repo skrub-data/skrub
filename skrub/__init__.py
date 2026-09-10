@@ -30,6 +30,7 @@ __docs_dir__ = _Path(__file__).parent / "_docs"
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_to_cols import ApplyToCols
+from ._categorical_encoder import CategoricalEncoder
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._data_ops import (
@@ -91,6 +92,7 @@ __all__ = [
     "TableReport",
     "tabular_pipeline",
     "ApplyToCols",
+    "CategoricalEncoder",
     "DatetimeEncoder",
     "DurationToFloat",
     "ToDatetime",
