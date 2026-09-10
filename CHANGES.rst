@@ -46,6 +46,8 @@ Changes
 
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
+- Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
+  :user:`Eloi Massoulié <emassoulie>`.
 
 
 Bugfixes
