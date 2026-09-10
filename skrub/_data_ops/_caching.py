@@ -9,9 +9,6 @@ import joblib
 
 from .. import _config
 
-# The functions meant to be cached. They are at the top because joblib
-# invalidates the cache when the line number changes.
-
 
 def _call_fitting_method(estimator, method_name, args, kwargs, estimator_id):
     result = getattr(estimator, method_name)(*args, **kwargs)
@@ -49,12 +46,30 @@ def _call_deferred_func(func, args, kwargs, globals, closure, defaults, kwdefaul
 
 
 class Memory:
+    """
+    Wrapper around joblib.Memory to handle the functions we need to cache and
+    take the skrub config into account.
+
+    For caching estimator methods,
+
+    - When fitting an estimator_id is generated from the class and arguments
+    - When predicting the estimator_id is used for hashing, rather than the
+      fitted estimator itself (which could cause spurious cache misses,
+      serialization errors and hashing computation time).
+
+    The cached function wrapped by call_deferred_func takes care of recompiling
+    a function with the evaluated globals, defaults and closure if needed.
+    """
+
     def __init__(self):
         self.cache_dir = None
         self.memory = None
         self.cached_func = {}
 
     def _check_cache_dir(self):
+        """
+        Recreate the joblib Memory if the cache configuration has changed.
+        """
         cache_dir = _config.get_cache_dir()
         if cache_dir == self.cache_dir:
             return
@@ -63,10 +78,15 @@ class Memory:
         self.cache_dir = cache_dir
 
     def has_memory(self):
+        """
+        Update self.memory based on config and return True if caching is enabled.
+        """
         self._check_cache_dir()
         return self.memory is not None
 
     def cache(self, func, ignore=()):
+        # ignore is passed to joblib.Memory.cache: parameters that are not
+        # hashed / taken into account for caching
         self._check_cache_dir()
         if self.memory is None:
             return func
@@ -100,6 +120,8 @@ class Memory:
             estimator_id = joblib.hash((estimator, method_name, args, kwargs))
             estimator, result = self.cache(
                 _call_fitting_method,
+                # those arguments are ignored for caching because their hash is
+                # already captured in the estimator_id.
                 ignore=("estimator", "method_name", "args", "kwargs"),
             )(estimator, method_name, args, kwargs, estimator_id)
             return estimator, result, estimator_id
@@ -115,6 +137,7 @@ class Memory:
         if no_cache or not self.has_memory() or estimator_id is None:
             return getattr(estimator, method_name)(*args, **kwargs)
         try:
+            # ignore estimator, rely on the hash of estimator_id instead
             return self.cache(_call_non_fitting_method, ignore=("estimator",))(
                 estimator, method_name, args, kwargs, estimator_id
             )

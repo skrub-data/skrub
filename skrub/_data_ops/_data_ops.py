@@ -1818,6 +1818,7 @@ def prepare_call_fields(func, no_cache):
         for i in dis.get_instructions(func.__code__)
         if i.opname == "LOAD_GLOBAL"
     ]
+    # find any globals that need evaluation (contain a dataop or choice).
     f_globals = {
         name: func.__globals__[name]
         for name in globals_names
@@ -1825,6 +1826,8 @@ def prepare_call_fields(func, no_cache):
         and not isinstance(
             func.__globals__[name],
             (
+                # We know that those types do not contain dataops so we skip
+                # the needs_eval() call for speed.
                 types.FunctionType,
                 types.BuiltinFunctionType,
                 type,
@@ -1928,8 +1931,7 @@ def deferred(func=None, *, no_cache=False):
     INFO x = 3
     3
 
-    It is possible to pass only the ``no_cache`` argument, in which case a
-    decorator is returned.
+    It is possible to pass ``no_cache`` with the decorator syntax as well:
 
     >>> @skrub.deferred(no_cache=True)
     ... def f(x): return x * 2

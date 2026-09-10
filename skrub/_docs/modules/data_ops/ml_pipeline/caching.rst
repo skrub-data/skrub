@@ -33,6 +33,7 @@ The transformations applied by the TableVectorizer() can be reused.
 
 For this to happen, we need to enable caching in the configuration, either
 ``skrub.set_config(cache=True)`` to store cached results in a default location
+(a ``_cache`` subdirectory inside the data dir ``get_config()["data_dir"]``)
 or ``skrub.set_config(cache="/path/to/cache_dir/")`` to specify where to store
 the cache.
 

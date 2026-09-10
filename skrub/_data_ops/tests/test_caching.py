@@ -104,6 +104,8 @@ def test_apply_deferred_func(apply_func, deferred, n_calls, tmp_path):
 
 
 def test_pickling_error(tmp_path):
+    # check that we get no error when caching fails due to arguments or
+    # function that cannot be serialized/hashed by jobib.
     skrub.set_config(cache=tmp_path)
     a = skrub.var("a", 0, becomes_default=True)
     data_op = (
@@ -111,9 +113,11 @@ def test_pickling_error(tmp_path):
         .skb.apply(
             DummyTransformer(), fit_transform_kwargs={"a": a}, transform_kwargs={"a": a}
         )
-        .skb.apply_func(lambda x: x)
+        .skb.apply_func(lambda x: x)  # the applied function cannot be serialized
     )
     assert data_op.skb.eval() == 4
+    # the value for the a parameter cannot be serialized: try fit_transform and
+    # transform.
     assert data_op.skb.eval({"a": lambda: None}) == 4
     assert data_op.skb.make_learner(fitted=True).transform({"a": lambda: None}) == 4
 
