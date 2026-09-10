@@ -699,7 +699,7 @@ def test_apply_kwargs():
 
 
 def test_apply_transformer_kwargs():
-    # check kwargs get passed correctly to the transformer for all 'how' values.
+    # check kwargs get passed correctly to the transformer for all 'no_wrap' values.
     class T(BaseEstimator):
         def fit_transform(self, X, y=None, extra_f=None):
             assert extra_f == "kwarg for fit_transform"
@@ -713,21 +713,12 @@ def test_apply_transformer_kwargs():
         "fit_transform_kwargs": {"extra_f": "kwarg for fit_transform"},
         "transform_kwargs": {"extra_t": "kwarg for transform"},
     }
-    learner = (
-        skrub.var("df")
-        .skb.apply(T(), how="no_wrap", **kwargs)
-        .skb.apply(T(), how="cols", **kwargs)
-        .skb.apply(T(), how="frame", **kwargs)
-        .skb.make_learner()
-    )
+    learner = skrub.var("df").skb.apply(T(), no_wrap=True, **kwargs).skb.make_learner()
     df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    with pytest.warns(
-        FutureWarning,
-        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-    ):
-        learner.fit({"df": df})
-        learner.fit_transform({"df": df})
-        learner.transform({"df": df})
+
+    learner.fit({"df": df})
+    learner.fit_transform({"df": df})
+    learner.transform({"df": df})
 
 
 def test_apply_kwargs_evaluation():
