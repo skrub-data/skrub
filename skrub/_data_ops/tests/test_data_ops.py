@@ -17,7 +17,6 @@ from sklearn.utils import check_random_state
 
 import skrub
 from skrub import selectors as s
-from skrub._apply_to_each_col import ApplyToEachCol
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
@@ -569,18 +568,16 @@ def test_data_op_impl():
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap", "how"])
-@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "how", "allow_reject"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap"])
+@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "allow_reject"])
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or no_wrap=True, or how='no_wrap') the estimator can only be
+    # dataframe) (or no_wrap=True) the estimator can only be
     # applied to the full input without wrapping in ApplyToCols, ApplyToEachCol
     # or ApplyToSubFrame. In this case if the user passed a parameter that
     # would require wrapping, such as passing a value for `cols` that is not
-    # `all()`, or passing how='cols' or allow_reject=True, we get an error.
+    # `all()`, or passing allow_reject=True, we get an error.
 
-    if bad_param == "how" and why_no_wrap in ["no_wrap", "how"]:
-        return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
 
@@ -591,8 +588,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
     else:
         estimator = PassThrough()
         y = None
-    how = "no_wrap" if why_no_wrap == "how" else "auto"
-    # X is a numpy array: how must be no_wrap and selecting columns is not
+    # X is a numpy array: selecting columns is not
     # allowed.
     if bad_param == "cols":
         if why_no_wrap == "numpy":
@@ -608,7 +604,6 @@ def test_apply_bad_params(why_no_wrap, bad_param):
             exclude_cols = ["col_0"]
     else:
         exclude_cols = None
-    how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
     no_wrap = True if why_no_wrap == "no_wrap" else False
 
@@ -616,41 +611,18 @@ def test_apply_bad_params(why_no_wrap, bad_param):
         (ValueError, RuntimeError),
         match=(
             r"(`cols` must be `all\(\)`|`exclude_cols` must be None|"
-            r"`how` must be 'auto'|`allow_reject` must be False)"
+            r"`allow_reject` must be False)"
         ),
     ):
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*how.*deprecated.*")
             X.skb.apply(
                 estimator,
                 y=y,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 cols=cols,
                 exclude_cols=exclude_cols,
             )
-
-
-def test_apply_how():
-    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    X = skrub.var("X", df)
-    t = PassThrough()
-    for how in ["cols", "frame", "no_wrap"]:
-        with pytest.warns(
-            FutureWarning,
-            match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-        ):
-            assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
-    assert list(X.skb.apply(t, how="auto").skb.eval().columns) == ["a", "b"]
-    with pytest.raises(RuntimeError, match="`how` must be one of"):
-        X.skb.apply(t, how="bad value")
-    with pytest.warns(
-        FutureWarning,
-        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-    ):
-        wrapper = X.skb.apply(t, how="cols").skb.applied_estimator.skb.eval()
-        assert isinstance(wrapper, ApplyToEachCol)
 
 
 def test_apply_no_wrap():
