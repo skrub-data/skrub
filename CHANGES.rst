@@ -57,13 +57,17 @@ Changes
   containing the full X and y before splitting.
 
   :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
-
 - Added support in :func:`tabular_pipeline` for estimators instantiated from either
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
   as the second step.
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
+- Expanded dtypes accepted by the encoder `ToCategorical`. Now accepts `int` columns
+  by setting the new kwarg accept_numeric to ``"int"``. `float` columns are also now
+  accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
+  setting ``accept_numeric=None``.
+  :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
 
 
 Bugfixes
