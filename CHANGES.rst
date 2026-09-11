@@ -17,6 +17,9 @@ Changes
 
 Bugfixes
 --------
+- :meth:`deduplicate` now proceeds even though the clustering of the strings fails,
+  with a possibility to display the warnings.
+  :pr:`1996` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Deprecations
 ------------
@@ -313,11 +316,13 @@ Changes
   representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
   Cappuzzo <rcap107>`.
 
+
 Bugfixes
 --------
 - An error that could arise when calling ``score`` on a ``SkrubLearner`` that
   contains an inner transformer that has a ``score`` method has been fixed.
   :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Deprecations
 ------------
