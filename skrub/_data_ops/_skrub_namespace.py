@@ -156,7 +156,6 @@ class SkrubNamespace:
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         no_wrap=False,
-        how="auto",
         allow_reject=False,
         unsupervised=False,
         kwargs=None,
@@ -171,7 +170,6 @@ class SkrubNamespace:
                 X=self._data_op,
                 y=y,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
                 kwargs=kwargs,
@@ -188,7 +186,6 @@ class SkrubNamespace:
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         no_wrap=False,
-        how="auto",
         allow_reject=False,
         unsupervised=False,
         fit_kwargs=None,
@@ -228,30 +225,6 @@ class SkrubNamespace:
             parameters. Passing ``no_wrap=True`` disables this wrapping in all
             cases. When ``no_wrap`` is True, ``cols`` and ``allow_reject``
             cannot be used.
-
-        how : "auto", "cols", "frame" or "no_wrap", optional
-            Deprecated. Use ``no_wrap`` instead.
-
-            How the estimator is applied. In most cases the default "auto"
-            is appropriate.
-
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
-              transformer, which fits a separate clone of `estimator` each
-              column in `cols`. `estimator` must be a transformer (have a
-              ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
-              transformer, which fits a single clone of `estimator` to the
-              selected part of the input dataframe. `estimator` must be a
-              transformer.
-            - "no_wrap" means no wrapping, `estimator` is applied directly to
-              the unmodified input.
-            - "auto" chooses the wrapping depending on the input and estimator.
-              If the input is not a dataframe or the estimator is not a
-              transformer, the "no_wrap" strategy is chosen. Otherwise if the
-              estimator has a ``__single_column_transformer__`` attribute,
-              "cols" is chosen. Otherwise "frame" is chosen.
-
-            .. deprecated:: 0.9.0
 
         allow_reject : bool, optional
             Whether the transformer can refuse to transform columns for which
@@ -467,7 +440,6 @@ class SkrubNamespace:
             cols=cols,
             exclude_cols=exclude_cols,
             no_wrap=no_wrap,
-            how=how,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
             kwargs={
