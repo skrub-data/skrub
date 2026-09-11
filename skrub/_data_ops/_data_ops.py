@@ -203,19 +203,20 @@ def _unpack_arity():
 
     Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
     """
-    if (getframe := getattr(sys, "_getframe", None)) is None:
-        return None
     try:
         # skip the frames of this function and of DataOp.__iter__
-        frame = getframe(2)
+        frame = sys._getframe(2)
         for instruction in dis.get_instructions(frame.f_code):
             if instruction.offset == frame.f_lasti:
+                # starred targets (`a, *rest = obj`, ie UNPACK_EX) are not
+                # handled because `rest` takes however many values are left.
                 if instruction.opname == "UNPACK_SEQUENCE":
                     return instruction.arg
                 return None
     except Exception:
-        # this is best-effort introspection: anything unexpected must fall back
-        # on refusing to iterate, not raise something else.
+        # best-effort introspection: anything unexpected (a Python
+        # implementation without sys._getframe, bytecode we cannot read, ...)
+        # must fall back on refusing to iterate, not raise something else.
         pass
     return None
 
@@ -733,7 +734,7 @@ class DataOp:
         # the DataOp is evaluated.
         if (arity := _unpack_arity()) is not None:
             values = unpack(self, arity)
-            return iter([values[i] for i in range(arity)])
+            return (values[i] for i in range(arity))
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -1715,7 +1716,7 @@ class AsTuple(DataOpImpl):
         return result
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {short_repr(self.iterable)}>"
+        return f"<{self.__class__.__name__}: {self.expected_length} items>"
 
 
 @checked_data_op_constructor
