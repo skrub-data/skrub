@@ -226,7 +226,8 @@ class AggJoiner(TransformerMixin, SkrubBaseEstimator):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        By default, `cols` are all columns from `aux_table`, except `aux_key`.
+        By default, `cols` are all columns from `aux_table`, except `aux_key`,
+        in the order in which they appear in `aux_table`.
 
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
@@ -326,9 +327,10 @@ class AggJoiner(TransformerMixin, SkrubBaseEstimator):
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
 
         self._cols = _utils.atleast_1d_or_none(self.cols)
-        # If no `cols` provided, all columns but `aux_key` are used.
+        # If no `cols` provided, all columns but `aux_key` are used, in the
+        # order in which they appear in `aux_table`.
         if self.cols is None:
-            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
+            self._cols = (~s.cols(*self._aux_key)).expand(self._aux_table)
         _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
 
         self._operations, self._suffix = check_other_inputs(
