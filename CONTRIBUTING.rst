@@ -161,6 +161,43 @@ the new issue.
    git commit -m "my message"
    git push --set-upstream origin my-branch-name-eg-fix-issue-123
 
+Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
+
+.. code:: console
+
+    pre-commit install
+
+
+Optionally, configure Git to ignore certain revisions in git blame and
+IDE integrations. These revisions are listed in .git-blame-ignore-revs:
+
+.. code:: console
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+Run the tests
+^^^^^^^^^^^^^
+
+To ensure your environment is correctly set up, run the test suite:
+
+.. code:: console
+
+    pytest --pyargs skrub
+
+Testing should take about 5 minutes.
+
+If you see some warnings like:
+
+.. code:: sh
+
+  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+    warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them.
+However, no tests should fail at this point: if they do fail, then let us know.
+
+After that, your environment is ready for development!
+
 At this point, if you visit again the `pull requests
 page <https://github.com/skrub-data/skrub/pulls>`__ github should show a
 banner asking if you want to open a pull request from your new branch.

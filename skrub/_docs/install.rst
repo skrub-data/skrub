@@ -12,7 +12,7 @@ Install
 
     <ul class="nav nav-pills nav-fill" id="installation" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="false">Using pip</a>
+            <a class="nav-link active" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="true">Using pip</a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="conda-tab" data-bs-toggle="tab" data-bs-target="#conda-tab-pane" type="button" role="tab" aria-controls="conda" aria-selected="false">Using conda</a>
@@ -21,12 +21,12 @@ Install
             <a class="nav-link" id="mamba-tab" data-bs-toggle="tab" data-bs-target="#mamba-tab-pane" type="button" role="tab" aria-controls="mamba" aria-selected="false">Using mamba</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="true">From source</a>
+            <a class="nav-link" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="false">From source</a>
         </li>
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane fade" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
+        <div class="tab-pane fade show active" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
             <hr />
 
 .. code:: console
@@ -101,7 +101,7 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
 .. raw:: html
 
         </div>
-        <div class="tab-pane fade show active" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
+        <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
 .. _installing_from_source:
@@ -177,42 +177,7 @@ install the local package in editable mode with development dependencies:
 
     pip install -e ".[dev]"
 
-Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
 
-.. code:: console
-
-    pre-commit install
-
-
-Optionally, configure Git to ignore certain revisions in git blame and
-IDE integrations. These revisions are listed in .git-blame-ignore-revs:
-
-.. code:: console
-
-    git config blame.ignoreRevsFile .git-blame-ignore-revs
-
-4. Run the tests
-''''''''''''''''
-
-To ensure your environment is correctly set up, run the test suite:
-
-.. code:: console
-
-    pytest --pyargs skrub
-
-Testing should take about 5 minutes.
-
-If you see some warnings like:
-
-.. code:: sh
-
-  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
-    warnings.warn(
-
-This is expected, and you may proceed with the next steps without worrying about them.
-However, no tests should fail at this point: if they do fail, then let us know.
-
-After that, your environment is ready for development!
 
 **Deep learning dependencies**
 
@@ -225,7 +190,6 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 .. code:: console
 
     $ pip install -e ".[transformers]"
-
 
 Now that you're set up,
 you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
