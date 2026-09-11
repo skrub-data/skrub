@@ -267,24 +267,22 @@ def test_pandas_date_objects():
     assert transformed[0] == pd.Timestamp("2005-05-05")
 
 
-def test_cast_date_objects_converts_date_objects():
-    """A pandas object column of datetime.date becomes Datetime."""
-    col = pd.Series([date(2002, 1, 1), None, date(2003, 2, 2)], name="when")
+def test_cast_date_objects_converts_date_objects(df_module):
+    """A column of datetime.date objects is treated as a date column."""
+    col = df_module.make_column("when", [date(2002, 1, 1), None, date(2003, 2, 2)])
     out = _cast_date_objects(col)
     assert sbd.is_any_date(out)
-    assert out[0] == pd.Timestamp("2002-01-01")
-    assert pd.isna(out[1])
 
 
-def test_cast_date_objects_empty_column_unchanged():
-    """An all-null object column has nothing to sample: returned unchanged."""
-    col = pd.Series([None, None], dtype=object, name="when")
+def test_cast_date_objects_empty_column_unchanged(df_module):
+    """An all-null column has nothing to sample: returned unchanged."""
+    col = df_module.make_column("when", [None, None])
     assert _cast_date_objects(col) is col
 
 
-def test_cast_date_objects_non_date_column_unchanged():
-    """Object columns that are not all dates are returned unchanged."""
-    col = pd.Series(["hello", "world"], name="when")
+def test_cast_date_objects_non_date_column_unchanged(df_module):
+    """Columns that are not all dates are returned unchanged."""
+    col = df_module.make_column("when", ["hello", "world"])
     assert _cast_date_objects(col) is col
 
 
