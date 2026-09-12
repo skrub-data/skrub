@@ -19,6 +19,10 @@ New Features
   <DataOp.skb.apply_func>`. See the :ref:`user guide
   <user_guide_data_ops_caching>` for more information.
   :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
+  (of known size), for example ``first, second = data_op``. Each target becomes
+  a DataOp that extracts one of the items.
+  :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
 
 Changes
 -------

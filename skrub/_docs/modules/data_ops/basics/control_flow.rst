@@ -106,25 +106,30 @@ Result:
 Unpacking multiple outputs from deferred functions
 --------------------------------------------------
 
-When a deferred function returns more than one value, you cannot unpack the
-result directly because unpacking iterates over the result. Iteration is not
-supported on DataOps until evaluation.
-
-In general, it is recommended that deferred functions return a single
-value whenever possible. Returning multiple outputs should be avoided unless
-strictly necessary, as it makes downstream usage more complex.
-
-Instead, keep the result as a single DataOp and index into it:
+When a deferred function returns more than one value, we can unpack the result
+as usual:
 
 >>> test = skrub.var("test", [1, 2])
 >>> @skrub.deferred
 ... def process_test_data(test):
-...     left = test[0]
-...     right = test[1]
-...     return left, right
->>> res = test.skb.apply_func(process_test_data)
->>> left = res[0]
->>> right = res[1]
+...     return test[0], test[1]
+>>> left, right = process_test_data(test)
+>>> left
+<GetItem 0>
+Result:
+―――――――
+1
+
+Each target becomes a DataOp that extracts one of the values, once the
+computation runs. To do so, skrub needs to know how many values we are
+unpacking: it finds out by inspecting the bytecode of the assignment. This
+works on CPython, but it is not guaranteed by the language, and it does not
+cover starred targets such as ``first, *rest = ...`` (the number of values is
+not known in that case). When in doubt, we can always keep the result as a
+single DataOp and index into it, which is equivalent and always works:
+
+>>> res = process_test_data(test)
+>>> left, right = res[0], res[1]
 
 :func:`deferred` is useful not only for our own functions, but also when we
 need to call module-level functions from a library. For example, to delay the

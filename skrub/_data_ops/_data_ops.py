@@ -34,6 +34,7 @@ import itertools
 import operator
 import pathlib
 import re
+import sys
 import textwrap
 import traceback
 import types
@@ -198,6 +199,29 @@ def _format_data_op_creation_stack():
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
     return traceback.format_list(stack)
+
+
+def _unpack_arity():
+    """Number of targets in the unpacking assignment being executed, if any.
+
+    Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
+    """
+    try:
+        # skip the frames of this function and of DataOp.__iter__
+        frame = sys._getframe(2)
+        for instruction in dis.get_instructions(frame.f_code):
+            if instruction.offset == frame.f_lasti:
+                # starred targets (`a, *rest = obj`, ie UNPACK_EX) are not
+                # handled because `rest` takes however many values are left.
+                if instruction.opname == "UNPACK_SEQUENCE":
+                    return instruction.arg
+                return None
+    except Exception:
+        # best-effort introspection: anything unexpected (a Python
+        # implementation without sys._getframe, bytecode we cannot read, ...)
+        # must fall back on refusing to iterate, not raise something else.
+        pass
+    return None
 
 
 class DataOpImpl:
@@ -533,13 +557,17 @@ class _Skb:
 _DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
-Please refer to the example gallery for an introduction to skrub
-DataOps.
+A complete machine learning pipeline -- from data loading and wrangling to the final
+prediction -- in a single object that can be fitted, tuned, cross-validated, and
+saved like any scikit-learn estimator.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing DataOp.
+
+Refer to the :ref:`user_guide_data_ops_index` page for more information.
+
 """
 
 _DATA_OP_INSTANCE_DOC = """Skrub DataOp.
@@ -712,6 +740,13 @@ class DataOp:
         )
 
     def __iter__(self):
+        # Unpacking (`a, b = data_op`) is supported: we know how many values are
+        # expected, so we can create a node for each of them. Any other kind of
+        # iteration would need the length of the result, which is unknown until
+        # the DataOp is evaluated.
+        if (arity := _unpack_arity()) is not None:
+            values = unpack(self, arity)
+            return (values[i] for i in range(arity))
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -1696,6 +1731,33 @@ class GetItem(DataOpImpl):
 
     def pretty_repr(self):
         return f"[{_get_preview(self.key)!r}]"
+
+
+class AsTuple(DataOpImpl):
+    """Node created by unpacking a DataOp, e.g. ``a, b = data_op``."""
+
+    _fields = ["iterable", "expected_length"]
+
+    def compute(self, e, mode, environment):
+        # converting to a tuple (rather than indexing into the result directly)
+        # allows unpacking any iterable, and makes sure an iterator is consumed
+        # only once even though each target indexes into this node.
+        result = tuple(e.iterable)
+        expected, got = e.expected_length, len(result)
+        if got != expected:
+            problem = "not enough" if got < expected else "too many"
+            raise ValueError(
+                f"{problem} values to unpack (expected {expected}, got {got})"
+            )
+        return result
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.expected_length} items>"
+
+
+@checked_data_op_constructor
+def unpack(iterable, expected_length):
+    return DataOp(AsTuple(iterable, expected_length))
 
 
 class Call(DataOpImpl):
