@@ -161,6 +161,93 @@ the new issue.
    git commit -m "my message"
    git push --set-upstream origin my-branch-name-eg-fix-issue-123
 
+
+Advanced Usage for Contributors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Fork the project
+'''''''''''''''''''
+
+To contribute to the project, you first need to
+`fork skrub on GitHub <https://github.com/skrub-data/skrub/fork>`_.
+
+That will enable you to push your commits to a branch *on your fork*.
+
+2. Clone your fork
+''''''''''''''''''
+
+Clone your forked repo to your local machine:
+
+.. code:: console
+
+    git clone https://github.com/<YOUR_USERNAME>/skrub
+    cd skrub
+
+Next, add the *upstream* remote (i.e. the official skrub repository). This allows you
+to pull the latest changes from the main repository:
+
+.. code:: console
+
+    git remote add upstream https://github.com/skrub-data/skrub.git
+
+Verify that both the origin (your fork) and upstream (official repo)
+are correctly set up:
+
+.. code:: console
+
+    git remote -v
+
+You should see something like this:
+
+.. code:: console
+
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (fetch)
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (push)
+    upstream        git@github.com:skrub-data/skrub.git (fetch)
+    upstream        git@github.com:skrub-data/skrub.git (push)
+
+
+
+Installing pre-commit hooks
+'''''''''''''''''''''''''''
+Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
+
+.. code:: console
+
+    pre-commit install
+
+
+Optionally, configure Git to ignore certain revisions in git blame and
+IDE integrations. These revisions are listed in .git-blame-ignore-revs:
+
+.. code:: console
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+Run the tests
+^^^^^^^^^^^^^
+
+To ensure your environment is correctly set up, run the test suite:
+
+.. code:: console
+
+    pytest --pyargs skrub
+
+Testing should take about 5 minutes.
+
+If you see some warnings like:
+
+.. .. code:: sh
+
+..   UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+..     warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them.
+However, no tests should fail at this point: if they do fail, then let us know.
+
+After that, your environment is ready for development!
+
+
 At this point, if you visit again the `pull requests
 page <https://github.com/skrub-data/skrub/pulls>`__ github should show a
 banner asking if you want to open a pull request from your new branch.
