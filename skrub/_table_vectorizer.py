@@ -1,5 +1,4 @@
 import reprlib
-import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
@@ -121,7 +120,7 @@ def _get_preprocessors(
     *,
     cols,
     drop_null_fraction,
-    drop_if_unique,
+    drop_if_unique=False,
     drop_if_constant,
     n_jobs,
     parse_numbers=False,
@@ -206,16 +205,6 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_if_unique : bool, default=False
-        If set to true, drop columns that contain only unique values, i.e., the number
-        of unique values is equal to the number of rows in the column. Numeric columns
-        are never dropped.
-
-        .. deprecated:: 0.9.0
-        This functionality can drop informative columns and is unlikely to be
-        of use in practice. It is therefore deprecated and will be removed in a
-        future version.
-
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
@@ -236,14 +225,6 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         non-categorical, and non-datetime columns, converting them to strings.
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
-
-    numeric_dtype : "float32" or None, default=None
-        If set to "float32", this parameter has the same effect as
-        ``cast_to_float32=True`` and ``parse_numbers=True``: it casts
-        numeric columns to ``float32``.
-
-        .. deprecated:: 0.9.0
-            Use ``cast_to_float32=True`` with ``parse_numbers=True`` instead.
 
     null_strings : str or sequence of str, default=None
         Additional strings to consider as null values, beyond the default list.
@@ -399,25 +380,21 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         self,
         drop_null_fraction=1.0,
         drop_if_constant=False,
-        drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
         parse_numbers=False,
         cast_to_float32=False,
         cast_to_str=False,
         n_jobs=1,
-        numeric_dtype=None,
     ):
         self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
-        self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.parse_numbers = parse_numbers
         self.cast_to_float32 = cast_to_float32
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
-        self.numeric_dtype = numeric_dtype
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -440,23 +417,6 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
 
         cast_to_float32 = self.cast_to_float32
         parse_numbers = self.parse_numbers
-        # TODO: remove this deprecated parameter in a future version
-        if self.numeric_dtype is not None:
-            warnings.warn(
-                "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
-                " removed in a future version."
-                "Use `cast_to_float32=True` instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if self.numeric_dtype == "float32":
-                cast_to_float32 = True
-                parse_numbers = True
-            else:
-                raise TypeError(
-                    f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
-                    "The only supported value is 'float32'."
-                )
 
         if not isinstance(self.parse_numbers, bool):
             raise TypeError(
@@ -471,7 +431,6 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
-            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_numbers=parse_numbers,
             cast_to_float32=cast_to_float32,
