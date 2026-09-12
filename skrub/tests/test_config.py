@@ -5,7 +5,12 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _get_default_data_dir, _parse_env_bool
+from skrub._config import (
+    _get_default_data_dir,
+    _load_cache_env_var,
+    _parse_env_bool,
+    get_cache_dir,
+)
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -53,6 +58,7 @@ def test_default_config():
     expected_keys = {
         "use_table_report_data_ops",
         "data_dir",
+        "cache",
         "table_report_n_rows",
         "table_report_verbosity",
         "table_report_plots_threshold",
@@ -283,3 +289,29 @@ def test_get_deprecated_int_env_default(monkeypatch):
             "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
         )
     assert result == 30
+
+
+def test_cache_dir(tmp_path):
+    assert get_cache_dir() is None
+    set_config(cache=True)
+    assert get_cache_dir().is_dir()
+    set_config(cache=None)
+    assert get_cache_dir() is None
+    set_config(cache=False)
+    assert get_cache_dir() is None
+    set_config(cache=tmp_path)
+    assert get_cache_dir() == tmp_path
+
+
+def test_cache_env_var(monkeypatch):
+    monkeypatch.setenv("SKB_CACHE", "none")
+    assert _load_cache_env_var() is False
+    monkeypatch.setenv("SKB_CACHE", "1")
+    assert _load_cache_env_var() is True
+    monkeypatch.setenv("SKB_CACHE", "/tmp/cache")
+    assert _load_cache_env_var() == "/tmp/cache"
+
+
+def test_unchanged():
+    # make codecov happy
+    assert repr(skrub._config.UNCHANGED) == "unchanged"
