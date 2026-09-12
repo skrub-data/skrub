@@ -106,53 +106,8 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
 
 .. _installing_from_source:
 
-Advanced Usage for Contributors
--------------------------------
-
-1. Fork the project
-'''''''''''''''''''
-
-To contribute to the project, you first need to
-`fork skrub on GitHub <https://github.com/skrub-data/skrub/fork>`_.
-
-That will enable you to push your commits to a branch *on your fork*.
-
-2. Clone your fork
-''''''''''''''''''
-
-Clone your forked repo to your local machine:
-
-.. code:: console
-
-    git clone https://github.com/<YOUR_USERNAME>/skrub
-    cd skrub
-
-Next, add the *upstream* remote (i.e. the official skrub repository). This allows you
-to pull the latest changes from the main repository:
-
-.. code:: console
-
-    git remote add upstream https://github.com/skrub-data/skrub.git
-
-Verify that both the origin (your fork) and upstream (official repo)
-are correctly set up:
-
-.. code:: console
-
-    git remote -v
-
-You should see something like this:
-
-.. code:: console
-
-    origin  git@github.com:<YOUR_USERNAME>/skrub.git (fetch)
-    origin  git@github.com:<YOUR_USERNAME>/skrub.git (push)
-    upstream        git@github.com:skrub-data/skrub.git (fetch)
-    upstream        git@github.com:skrub-data/skrub.git (push)
-
-
-3. Setup your environment
-'''''''''''''''''''''''''
+Setup your environment
+''''''''''''''''''''''
 
 Now, setup a development environment.
 You can set up a virtual environment with Conda, or with python's ``venv``:
