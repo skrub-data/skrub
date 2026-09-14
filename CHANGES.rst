@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
+  (of known size), for example ``first, second = data_op``. Each target becomes
+  a DataOp that extracts one of the items.
+  :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
 
 Changes
 -------
