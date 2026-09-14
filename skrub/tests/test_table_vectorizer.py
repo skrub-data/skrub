@@ -1364,68 +1364,38 @@ def test_list_transformations_vectorizer(with_specific, df_module):
         cardinality_threshold=3,
     )
     _ = vectorizer.fit_transform(df)
-    vectorizer_output = vectorizer.list_transformations(max_cols=3)
+    vectorizer_output = vectorizer.describe_transformations(max_cols=3)
 
-    expected_vectorizer_output = (
-        "Preprocessors\n=============\n"
-        + list_category("Null values cleaned", "null", with_specific=with_specific)
-        + "\nProcessors by type\n==================\n"
-        + list_category(
-            "PassThrough", "float", column_type="numeric", with_specific=with_specific
-        )
-        + list_category(
-            "DatetimeEncoder",
-            "datetime",
-            column_type="datetime",
-            with_specific=with_specific,
-        )
-        + list_category(
-            "OneHotEncoder",
-            "low_card",
-            column_type="low_cardinality",
-            with_specific=with_specific,
-        )
-        + list_category(
-            "StringEncoder",
-            "high_card",
-            column_type="high_cardinality",
-            with_specific=with_specific,
-        )
-    )
+    expected_vectorizer_output = """Preprocessors
+=============
+Null values cleaned (7 columns):
+    - low_card
+    - datetime
+    - passthrough_1
+    - ...
 
-    if with_specific:
-        expected_vectorizer_output += (
-            "\n\nSpecific transformers\n=====================\n"
-            + list_category(
-                "PassThrough", "specific", column_type="specific", with_specific=False
-            )
-        )
-    # Expected output for the TableVectorizer:
+Processors by type
+==================
+PassThrough (numeric - 2 columns):
+    - numbers
+    - uninformative
+DatetimeEncoder (datetime - 1 columns):
+    - datetime
+OneHotEncoder (low_cardinality - 1 columns):
+    - low_card
+StringEncoder (high_cardinality - 5 columns):
+    - passthrough_1
+    - passthrough_2
+    - passthrough_3
+    - ...
 
-    # Preprocessors
-    # =============
-    # Null values cleaned (2 columns):
-    #         - low_card
-    #         - datetime
-
-    # Processors by type
-    # ==================
-    # PassThrough (numeric - 2 columns):
-    #         - numbers
-    #         - uninformative
-    # DatetimeEncoder (datetime - 1 columns):
-    #         - datetime
-    # OneHotEncoder (low_cardinality - 1 columns):
-    #         - low_card
-    # No high_cardinality columns have been detected.
-
-    # Specific transformers (if with_specific)
-    # =====================
-    # PassThrough (specific - 5 columns):
-    #         - passthrough_1
-    #         - passthrough_2
-    #         - passthrough_3
-    #         - ...
+Specific transformers
+=====================
+PassThrough (specific - 5 columns):
+    - passthrough_1
+    - passthrough_2
+    - passthrough_3
+    - ..."""
 
     for output, expected in zip(
         vectorizer_output.split("\n"), expected_vectorizer_output.split("\n")
@@ -1439,21 +1409,14 @@ def test_list_transformations_cleaner(df_module):
     _ = vectorizer.fit_transform(df)
 
     cleaner_output = vectorizer.list_transformations(max_cols=3)
-    expected_cleaner_output = list_category(
-        "Null values cleaned", "null", with_specific=False
-    ) + list_category("DropUninformative", "uninformative", with_specific=False)
 
-    # Expected output for the cleaner:
-    # Null values cleaned (7 columns):
-    #         - low_card
-    #         - datetime
-    #         - passthrough_1
-    #         - passthrough_2
-    #         - passthrough_3
-    #         - passthrough_4
-    #         - passthrough_5
-    # DropUninformative (1 columns):
-    #         - uninformative
+    expected_cleaner_output = """Null values cleaned (7 columns):
+    - low_card
+    - datetime
+    - passthrough_1
+    - ...
+DropUninformative (1 columns):
+    - uninformative"""
 
     for output, expected in zip(
         cleaner_output.split("\n"), expected_cleaner_output.split("\n")

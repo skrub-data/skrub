@@ -184,11 +184,11 @@ def _get_preprocessors(
     return steps
 
 
-def _list_transformations(estimator, max_cols=10):
+def _describe_transformations(estimator, max_cols=10):
     message = ""
     post = estimator._postprocessors if hasattr(estimator, "_postprocessors") else []
 
-    template = "{} ({} columns):\n\t- {}\n"
+    template = "{} ({} columns):\n    - {}\n"
 
     for step in estimator._pipeline.named_steps:
         if step == "checkinputdataframe":
@@ -208,7 +208,7 @@ def _list_transformations(estimator, max_cols=10):
         n_cols = len(all_cols)
         if n_cols > 0:
             columns = _limit_cols(all_cols, max_cols=max_cols)
-            message += template.format(label, n_cols, "\n\t- ".join(columns))
+            message += template.format(label, n_cols, "\n    - ".join(columns))
     return message
 
 
@@ -586,7 +586,7 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
             (preprocessing, specific processors, etc.) and listing the columns
             to which each of these transformers is applied.
         """
-        return _list_transformations(self, max_cols=max_cols)
+        return _describe_transformations(self, max_cols=max_cols)
 
 
 class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
@@ -1214,7 +1214,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
-    def list_transformations(self, max_cols=10):
+    def describe_transformations(self, max_cols=10):
         """Returns a string reporting the transformations applied by the \
             TableVectorizer and the columns they are each applied to.
 
@@ -1240,7 +1240,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         """
         preprocessing_transformations = (
             "Preprocessors\n=============\n"
-            + _list_transformations(self, max_cols=max_cols)
+            + _describe_transformations(self, max_cols=max_cols)
         )
         vectorize_transformations = "Processors by type\n==================\n"
         specific_transformations = ""
@@ -1258,10 +1258,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
                 # and its class name printed.
                 vectorize_transformations += (
                     f"{getattr(self, transformer_type).__class__.__name__} "
-                    f"({transformer_type} - {len(cols_to_print)} columns):" + "\n\t- "
+                    f"({transformer_type} - {len(cols_to_print)} columns):" + "\n    - "
                 )
                 vectorize_transformations += (
-                    "\n\t- ".join(_limit_cols(cols_to_print, max_cols=max_cols)) + "\n"
+                    "\n    - ".join(_limit_cols(cols_to_print, max_cols=max_cols))
+                    + "\n"
                 )
             else:
                 vectorize_transformations += (
@@ -1275,10 +1276,10 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             for t in self.specific_transformers:
                 specific_transformations += (
                     f"{t[0].__class__.__name__} (specific - {len(specific)} columns):"
-                    + "\n\t- "
+                    + "\n    - "
                 )
                 specific_transformations += (
-                    "\n\t- ".join(_limit_cols(specific, max_cols=max_cols)) + "\n"
+                    "\n    - ".join(_limit_cols(specific, max_cols=max_cols)) + "\n"
                 )
 
         full_list = (
