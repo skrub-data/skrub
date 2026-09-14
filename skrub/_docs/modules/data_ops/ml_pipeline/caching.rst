@@ -57,3 +57,16 @@ function is very fast and caching hinders performance instead of improving it.
 This is achieved by passing ``no_cache=True`` to :func:`deferred`,
 :meth:`.skb.apply() <DataOp.skb.apply>` or :meth:`.skb.apply_func()
 <DataOp.skb.apply_func>`.
+
+Limiting the cache directory size
+---------------------------------
+
+By default skrub will start a subprocess to prune the cache in order to limit
+its size, once per python program using the skrub cache. This can be controlled
+with the ``target_cache_size`` :func:`config <set_config>` option. Set it to
+``None`` to disable this pruning altogether, to an int for a size in bytes, or
+to a string like ``'3K'``, ``'3M'``, ``'3G'``. The default is ``'2G'``.
+
+Note this is a rough target size and not a strict limit. In particular, as the
+prunining only runs once (the first time the caching is used in a program), the
+cache may grow afterwards and become bigger than the target size.

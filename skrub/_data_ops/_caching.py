@@ -3,7 +3,10 @@ Helper to cache functions and estimator methods according to the config.
 """
 
 import pickle
+import subprocess
+import sys
 import types
+from pathlib import Path
 
 import joblib
 
@@ -65,6 +68,27 @@ class Memory:
         self.cache_dir = None
         self.memory = None
         self.cached_func = {}
+        self._ran_reduce_cache = False
+
+    def _reduce_cache_size(self):
+        target_size = _config.get_config()["target_cache_size"]
+        if str(target_size).lower() in ("none", ""):
+            return
+        script = (Path(__file__).parent / "_reduce_cache_size.py").resolve()
+        kwargs = {}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = (
+                subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            )
+        else:
+            kwargs["start_new_session"] = True
+        subprocess.Popen(
+            [sys.executable, str(script), str(self.cache_dir), str(target_size)],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            **kwargs,
+        )
 
     def _check_cache_dir(self):
         """
@@ -74,8 +98,20 @@ class Memory:
         if cache_dir == self.cache_dir:
             return
         self.cached_func = {}
-        self.memory = joblib.Memory(cache_dir, verbose=0)
         self.cache_dir = cache_dir
+        if self.cache_dir is None:
+            self.memory = None
+        else:
+            # Always pass a string to Memory because it behaves differently if
+            # we pass a Path (adds joblib/ for strings but not for Paths)
+            # https://github.com/joblib/joblib/issues/1684
+            self.memory = joblib.Memory(str(cache_dir), verbose=0)
+            if not self._ran_reduce_cache:
+                self._ran_reduce_cache = True
+                try:
+                    self._reduce_cache_size()
+                except Exception:
+                    pass
 
     def has_memory(self):
         """

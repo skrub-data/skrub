@@ -109,6 +109,7 @@ _global_config = {
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_dir": _get_default_data_dir(),
     "cache": _load_cache_env_var(),
+    "target_cache_size": os.environ.get("SKB_TARGET_CACHE_SIZE", "2G"),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
     "data_ops_open_graph_dropdown": _parse_env_bool(
         "SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN", False
@@ -174,6 +175,7 @@ def set_config(
     cardinality_threshold=None,
     data_dir=None,
     cache=UNCHANGED,
+    target_cache_size=UNCHANGED,
     eager_data_ops=None,
     data_ops_open_graph_dropdown=None,
 ):
@@ -278,8 +280,22 @@ def set_config(
         - If True, the cache directory is in a default location (data_dir / _cache).
         - If a string (or Path), this path is used as the cache directory.
 
+        This configuration can also be set with the ``SKB_CACHE``
+        environment variable.
+
         See :ref:`user_guide_data_ops_caching` for more information about caching.
 
+    target_cache_size : int, str or None
+        When using caching, the cache will be pruned if it grows bigger than
+        this size. Can be an int to set a size in bytes, or a string like
+        '3000000K', '3000M', '3G'. None means never prune the cache. By default
+        it is set to 2G; set to None if you prefer to manage the cache
+        yourself.
+
+        This configuration can also be set with the ``SKB_TARGET_CACHE_SIZE``
+        environment variable (Set it to 'None' or '' to mean None ie no limit).
+
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
 
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
@@ -431,6 +447,9 @@ def set_config(
     if cache is not UNCHANGED:
         local_config["cache"] = cache
 
+    if target_cache_size is not UNCHANGED:
+        local_config["target_cache_size"] = target_cache_size
+
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
 
@@ -457,6 +476,7 @@ def config_context(
     cardinality_threshold=None,
     data_dir=None,
     cache=UNCHANGED,
+    target_cache_size=UNCHANGED,
     eager_data_ops=None,
     data_ops_open_graph_dropdown=None,
 ):
@@ -555,6 +575,21 @@ def config_context(
         - If True, the cache directory is in a default location (data_dir / _cache).
         - If a string (or Path), this path is used as the cache directory.
 
+        This configuration can also be set with the ``SKB_CACHE``
+        environment variable.
+
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
+
+    target_cache_size : int, str or None
+        When using caching, the cache will be pruned if it grows bigger than
+        this size. Can be an int to set a size in bytes, or a string like
+        '3000000K', '3000M', '3G'. None means never prune the cache. By default
+        it is set to 2G; set to None if you prefer to manage the cache
+        yourself.
+
+        This configuration can also be set with the ``SKB_TARGET_CACHE_SIZE``
+        environment variable (Set it to 'None' or '' to mean None ie no limit).
+
         See :ref:`user_guide_data_ops_caching` for more information about caching.
 
     eager_data_ops : bool, default=True
@@ -613,6 +648,7 @@ def config_context(
         cardinality_threshold=cardinality_threshold,
         data_dir=data_dir,
         cache=cache,
+        target_cache_size=target_cache_size,
         eager_data_ops=eager_data_ops,
         data_ops_open_graph_dropdown=data_ops_open_graph_dropdown,
     )
