@@ -51,54 +51,79 @@ def _get_session_column_pandas(
 ):
     # Adding a row order column to sort lines back
     row_order_col = f"_row_order_skrub_{random_string()}"
-    X_with_order = X.assign(**{row_order_col: range(X.shape[0])})
-
-    # Selecting only the columns needed for sessionization and sorting them
-    # to ensure that the sessionization is done correctly
-
+    X_with_order = X.assign(**{row_order_col: range(len(X))})
     selected = split_by_columns + [timestamp_column]
-    X_selected = s.select(X_with_order, selected + [row_order_col])
-    X_has_nulls = X_selected.loc[X_selected[selected].isnull().any(axis=1)]
-    # Assigning a session ID of -1 to rows with nulls in timestamp or group_by columns
-    # -1 rather than None because adding nulls to a pandas column of integers will
-    # convert it to float
-    X_has_nulls = X_has_nulls.assign(**{session_id_column: -1})
-
-    X_selected = X_selected.dropna(subset=selected)
-
-    # needed to avoid a warning with min deps
-    grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
-    groups = (
-        X_selected.groupby(grouper) if len(split_by_columns) > 0 else [("", X_selected)]
+    X_selected = X_with_order[selected + [row_order_col]]
+    mask_null = X_selected[selected].isnull().any(axis=1)
+    X_has_nulls = X_selected.loc[mask_null].assign(**{session_id_column: -1})
+    X_clean = X_selected.loc[~mask_null]
+    sort_cols = (
+        split_by_columns + [timestamp_column]
+        if split_by_columns
+        else [timestamp_column]
     )
-    rolling_session_id = 0
-
-    groups_with_session_ids = []
-
-    for _, group_df in groups:
-        group_df_sorted = group_df.sort_values(by=timestamp_column)
-        # Compute time differences between consecutive events
-        time_diffs = group_df_sorted[timestamp_column].diff().dt.total_seconds()
-        # Identify session boundaries based on time gaps
-        session_boundaries = (time_diffs > session_gap) | (time_diffs.isna())
-        # Assign session IDs based on cumulative sum of session boundaries
-        # cumsum - 1 to start session IDs at 0
-        session_ids = session_boundaries.cumsum() - 1 + rolling_session_id
-        # Update rolling_session_id for the next group
-        rolling_session_id = session_ids.max() + 1
-
-        group_df_sorted = group_df_sorted.assign(
-            **{
-                session_id_column: pd.Series(
-                    session_ids.values, index=group_df_sorted.index
-                )
-            }
+    X_sorted = X_clean.sort_values(by=sort_cols)
+    if split_by_columns:
+        grouper = (
+            split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
         )
-        groups_with_session_ids.append(group_df_sorted)
-    X_with_session_id = pd.concat(groups_with_session_ids + [X_has_nulls], axis=0)
+        diffs = X_sorted.groupby(grouper)[timestamp_column].diff().dt.total_seconds()
+    else:
+        diffs = X_sorted[timestamp_column].diff().dt.total_seconds()
+    boundary = diffs.isna() | (diffs > session_gap)
+    session_ids = boundary.cumsum() - 1
+    X_sorted = X_sorted.assign(**{session_id_column: session_ids.values})
+    X_with_session = pd.concat([X_sorted, X_has_nulls])
+    return X_with_session.sort_values(by=row_order_col)[session_id_column]
 
-    # Reordering rows back to the original order and selecting session id
-    return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
+    # X_with_order = X.assign(**{row_order_col: range(X.shape[0])})
+
+    # # Selecting only the columns needed for sessionization and sorting them
+    # # to ensure that the sessionization is done correctly
+
+    # selected = split_by_columns + [timestamp_column]
+    # X_selected = s.select(X_with_order, selected + [row_order_col])
+    # X_has_nulls = X_selected.loc[X_selected[selected].isnull().any(axis=1)]
+    # # Assigning a session ID of -1 to rows with nulls in timestamp or group_by columns
+    # # -1 rather than None because adding nulls to a pandas column of integers will
+    # # convert it to float
+    # X_has_nulls = X_has_nulls.assign(**{session_id_column: -1})
+
+    # X_selected = X_selected.dropna(subset=selected)
+
+    # # needed to avoid a warning with min deps
+    # grouper = split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
+    # groups = (
+    # X_selected.groupby(grouper) if len(split_by_columns) > 0 else [("", X_selected)]
+    # )
+    # rolling_session_id = 0
+
+    # groups_with_session_ids = []
+
+    # for _, group_df in groups:
+    #     group_df_sorted = group_df.sort_values(by=timestamp_column)
+    #     # Compute time differences between consecutive events
+    #     time_diffs = group_df_sorted[timestamp_column].diff().dt.total_seconds()
+    #     # Identify session boundaries based on time gaps
+    #     session_boundaries = (time_diffs > session_gap) | (time_diffs.isna())
+    #     # Assign session IDs based on cumulative sum of session boundaries
+    #     # cumsum - 1 to start session IDs at 0
+    #     session_ids = session_boundaries.cumsum() - 1 + rolling_session_id
+    #     # Update rolling_session_id for the next group
+    #     rolling_session_id = session_ids.max() + 1
+
+    #     group_df_sorted = group_df_sorted.assign(
+    #         **{
+    #             session_id_column: pd.Series(
+    #                 session_ids.values, index=group_df_sorted.index
+    #             )
+    #         }
+    #     )
+    #     groups_with_session_ids.append(group_df_sorted)
+    # X_with_session_id = pd.concat(groups_with_session_ids + [X_has_nulls], axis=0)
+
+    # # Reordering rows back to the original order and selecting session id
+    # return X_with_session_id.sort_values(by=row_order_col)[session_id_column]
 
 
 @_get_session_column.specialize("polars")
@@ -132,7 +157,6 @@ def _get_session_column_polars(
         if split_by_columns
         else X_clean.sort(by=timestamp_column)
     )
-    # %%
     if split_by_columns:
         diff_expr = (
             pl.col(timestamp_column).diff().over(split_by_columns).dt.total_seconds()
