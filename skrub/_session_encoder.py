@@ -126,6 +126,32 @@ def _get_session_column_polars(
     ).with_columns(pl.lit(-1).cast(pl.Int64).alias(session_id_column))
 
     X_selected = X_selected.drop_nulls(subset=selected)
+    X_clean = X_selected.drop_nulls(subset=selected)
+    X_sorted = (
+        X_clean.sort(by=split_by_columns + [timestamp_column])
+        if split_by_columns
+        else X_clean.sort(by=timestamp_column)
+    )
+    # %%
+    if split_by_columns:
+        diff_expr = (
+            pl.col(timestamp_column).diff().over(split_by_columns).dt.total_seconds()
+        )
+    else:
+        diff_expr = pl.col(timestamp_column).diff().dt.total_seconds()
+    # %%
+    X_sorted = X_sorted.with_columns(diff_expr.alias("_diff"))
+    # %%
+    boundary = (
+        pl.col("_diff").is_null()
+        | pl.col("_diff").is_nan()
+        | (pl.col("_diff") > session_gap)
+    )
+    X_sorted = X_sorted.with_columns(
+        (boundary.cast(pl.Int64).cum_sum() - 1).alias(session_id_column)
+    ).drop("_diff")
+    X_with_session = pl.concat([X_sorted, X_has_nulls])
+    return X_with_session.sort(by=row_order_col)[session_id_column]
 
     groups = (
         X_selected.group_by(split_by_columns, maintain_order=True)
