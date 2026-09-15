@@ -60,8 +60,10 @@ def tabular_pipeline(estimator, *, n_jobs=None):
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
         - a scikit-learn estimator: the provided estimator is used as the final step.
-        - a scikit-learn pipeline : the whole pipeline is kept and usual pre-processing by the TableVectorizer
-          is added before, depending on the estimator in the last step of the pipeline.
+        - a scikit-learn pipeline : if given a pipeline the steps are extracted and
+          returned in a new pipeline with the usual pre-processing by the
+          TableVectorizer (depending on the estimator
+          in the last step of the pipeline) added before.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
