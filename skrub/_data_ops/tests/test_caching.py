@@ -1,6 +1,8 @@
+import time
 import warnings
 from collections import defaultdict
 
+import numpy as np
 import pytest
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -149,3 +151,38 @@ def test_memory_cache():
     mem = skrub._data_ops._caching.Memory()
     assert not mem.has_memory()
     assert mem.cache(f) is f
+
+
+def _dir_size(path):
+    return sum(
+        (dir_path / fname).stat().st_size
+        for (dir_path, _, file_names) in path.walk()
+        for fname in file_names
+    )
+
+
+def test_cache_pruning(tmp_path):
+    _MEMORY = skrub._data_ops._data_ops._MEMORY
+
+    _MEMORY.cache_dir = None
+    _MEMORY._ran_reduce_cache = False
+
+    data_op = skrub.as_data_op(np.ones(1_000_000)).skb.apply_func(f)
+
+    # Fill the cache without pruning
+    skrub.set_config(cache=tmp_path, target_cache_size=None)
+    data_op.skb.eval()
+    full_size = _dir_size(tmp_path)
+    assert full_size > 1_000_000
+
+    # Reduce the target size and force the pruning to run again.
+    skrub.set_config(target_cache_size="10K")
+    _MEMORY._ran_reduce_cache = False
+    _MEMORY.cache_dir = None
+    data_op.skb.eval()
+
+    # Wait for the subprocess to run and check that the cache was pruned
+    deadline = time.time() + 5
+    while (pruned_size := _dir_size(tmp_path)) >= 10_000 and time.time() < deadline:
+        time.sleep(0.1)
+    assert pruned_size < 10_000

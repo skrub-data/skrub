@@ -59,6 +59,7 @@ def test_default_config():
         "use_table_report_data_ops",
         "data_dir",
         "cache",
+        "target_cache_size",
         "table_report_n_rows",
         "table_report_verbosity",
         "table_report_plots_threshold",
