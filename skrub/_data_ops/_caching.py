@@ -49,6 +49,7 @@ class Memory:
         self.memory = None
         self.cached_func = {}
         self._ran_reduce_cache = False
+        self._check_cache_dir()
 
     def _reduce_cache_size(self):
         target_size = _config.get_config()["target_cache_size"]
