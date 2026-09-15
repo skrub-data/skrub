@@ -569,7 +569,7 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
-    def list_transformations(self, max_cols=10):
+    def describe_transformations(self, max_cols=10):
         """Returns a string reporting the transformations applied by the \
         TableVectorizer and the columns they are each applied to.
 

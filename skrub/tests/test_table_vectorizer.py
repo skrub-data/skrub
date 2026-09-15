@@ -1380,7 +1380,7 @@ def test_list_transformations_cleaner(df_module):
     vectorizer = Cleaner(drop_if_constant=True)
     _ = vectorizer.fit_transform(df)
 
-    cleaner_output = vectorizer.list_transformations(max_cols=3)
+    cleaner_output = vectorizer.describe_transformations(max_cols=3)
 
     expected_cleaner_output = """Null values cleaned (7 columns):
     - low_card
