@@ -1280,43 +1280,6 @@ def test_duration_to_float(df_module):
     df_module.assert_column_equal(transformed["duration"], df["duration"])
 
 
-def list_category(line_name, key, column_type="", with_specific=True, max_cols=3):
-    # This generates an expected string output from list_transformations.
-    # The output format is "{line_name} (x columns):", followed
-    # by a bullet-point list of columns.
-    specifics = [f"passthrough_{i}" for i in range(1, 6)]
-    expected_dict = {
-        "null": ["low_card", "datetime"] + [f"passthrough_{i}" for i in range(1, 6)],
-        "uninformative": ["uninformative"],
-        "datetime": ["datetime"],
-        "float": ["numbers", "uninformative"],
-        "low_card": ["low_card"],
-        "high_card": [] if with_specific else specifics,
-        "specific": [f"passthrough_{i}" for i in range(1, 6)],
-    }
-    col_list = expected_dict[key]
-    if with_specific:
-        col_list = [x for x in col_list if x not in expected_dict["specific"]]
-
-    disp_list = col_list[:max_cols]
-
-    if len(col_list) != len(disp_list):
-        disp_list.append("...")
-
-    joiner = ""
-    if column_type:
-        joiner += " - "
-
-    full_list = ""
-    if col_list == []:
-        header = f"No {column_type} columns have been detected."
-    else:
-        header = f"{line_name} ({column_type}{joiner}{len(col_list)} columns):"
-        full_list = "\n\t- " + "\n\t- ".join(disp_list) + "\n"
-
-    return header + full_list
-
-
 def make_test_df(df_module):
     # The following lines help create a dummy dataset, containing columns
     # of various types (numeric, datetime etc.) and a series of identical
@@ -1365,15 +1328,15 @@ def test_list_transformations_vectorizer(with_specific, df_module):
     )
     _ = vectorizer.fit_transform(df)
     vectorizer_output = vectorizer.describe_transformations(max_cols=3)
+    n_null = 7 if not with_specific else 2
+    extra_null_lines = "    - passthrough_1\n    - ...\n" if not with_specific else ""
 
-    expected_vectorizer_output = """Preprocessors
+    common_block = f"""Preprocessors
 =============
-Null values cleaned (7 columns):
+Null values cleaned ({n_null} columns):
     - low_card
     - datetime
-    - passthrough_1
-    - ...
-
+{extra_null_lines}
 Processors by type
 ==================
 PassThrough (numeric - 2 columns):
@@ -1382,12 +1345,11 @@ PassThrough (numeric - 2 columns):
 DatetimeEncoder (datetime - 1 columns):
     - datetime
 OneHotEncoder (low_cardinality - 1 columns):
-    - low_card
-StringEncoder (high_cardinality - 5 columns):
-    - passthrough_1
-    - passthrough_2
-    - passthrough_3
-    - ...
+    - low_card"""
+
+    extra_block = (
+        """
+No high_cardinality columns have been detected.
 
 Specific transformers
 =====================
@@ -1396,6 +1358,16 @@ PassThrough (specific - 5 columns):
     - passthrough_2
     - passthrough_3
     - ..."""
+        if with_specific
+        else """
+StringEncoder (high_cardinality - 5 columns):
+    - passthrough_1
+    - passthrough_2
+    - passthrough_3
+    - ..."""
+    )
+
+    expected_vectorizer_output = common_block + extra_block
 
     for output, expected in zip(
         vectorizer_output.split("\n"), expected_vectorizer_output.split("\n")
