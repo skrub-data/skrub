@@ -1782,6 +1782,7 @@ class Call(DataOpImpl):
                 "Please pass the original, undecorated function instead.\n"
                 "(Note: it can be accessed from the deferred function as f.func)."
             )
+        kwargs = (e.kwdefaults or {}) | e.kwargs
         if e.globals or e.closure or e.defaults:
             # The deferred function has skrub DataOps (that need to be
             # evaluated) in its global variables, free variables or default
@@ -1789,17 +1790,17 @@ class Call(DataOpImpl):
             # new function in which the DataOps have been replaced by their
             # computed value. More details in the docstring of
             # `skrub.deferred`.
+            #
+            # In this case we never use caching because joblib would not detect
+            # changes to the globals and closure.
             func = types.FunctionType(
                 e.func.__code__,
                 globals={**e.func.__globals__, **e.globals},
                 argdefs=e.defaults,
                 closure=tuple(types.CellType(c) for c in e.closure),
             )
-        else:
-            func = e.func
-        kwargs = (e.kwdefaults or {}) | e.kwargs
-
-        return _MEMORY.call_func(func, e.args, kwargs, no_cache=e.no_cache)
+            return func(*e.args, **kwargs)
+        return _MEMORY.call_func(e.func, e.args, kwargs, no_cache=e.no_cache)
 
     def get_func_name(self):
         if not hasattr(self.func, "_skrub_impl"):

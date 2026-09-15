@@ -2,7 +2,6 @@
 Helper to cache functions and estimator methods according to the config.
 """
 
-import pickle
 import subprocess
 import sys
 from pathlib import Path
@@ -108,8 +107,11 @@ class Memory:
         self._check_cache_dir()
         if self.memory is None:
             return func
-        key = (func, ignore)
+        key = (id(func), ignore)
         try:
+            # The value stored in `cached_func` keeps the func object
+            # alive, so if it is found we know the id cannot have been reused
+            # and it is the same object.
             return self.cached_func[key]
         except KeyError:
             pass
@@ -118,11 +120,18 @@ class Memory:
         return result
 
     def call_func(self, func, args, kwargs, *, no_cache):
-        if no_cache or not self.has_memory():
+        if (
+            no_cache
+            or not self.has_memory()
+            or getattr(func, "__name__", None) == "<lambda>"
+            or getattr(func, "__closure__", None)
+        ):
             return func(*args, **kwargs)
         try:
             return self.cache(func)(*args, **kwargs)
-        except pickle.PicklingError:
+        except Exception:
+            # It could be caused by caching (e.g. unhashable args) so try again
+            # without.
             pass
         return func(*args, **kwargs)
 
@@ -139,7 +148,9 @@ class Memory:
                 ignore=("estimator", "method_name", "args", "kwargs"),
             )(estimator, method_name, args, kwargs, estimator_id)
             return estimator, result, estimator_id
-        except pickle.PicklingError:
+        except Exception:
+            # It could be caused by caching (e.g. unhashable args) so try again
+            # without.
             pass
         # Fall back to non-cached call if arguments cannot be serialized
         result = getattr(estimator, method_name)(*args, **kwargs)
@@ -155,7 +166,9 @@ class Memory:
             return self.cache(_call_non_fitting_method, ignore=("estimator",))(
                 estimator, method_name, args, kwargs, estimator_id
             )
-        except pickle.PicklingError:
+        except Exception:
+            # It could be caused by caching (e.g. unhashable args) so try again
+            # without.
             pass
         # Fall back to non-cached call if arguments cannot be serialized
         return getattr(estimator, method_name)(*args, **kwargs)
