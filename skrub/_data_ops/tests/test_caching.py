@@ -1,6 +1,8 @@
+import os
 import time
 import warnings
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -154,9 +156,10 @@ def test_memory_cache():
 
 
 def _dir_size(path):
+    # Path.walk only added in 3.12 -> use os.walk
     return sum(
-        (dir_path / fname).stat().st_size
-        for (dir_path, _, file_names) in path.walk()
+        (Path(dir_path) / fname).stat().st_size
+        for (dir_path, _, file_names) in os.walk(path)
         for fname in file_names
     )
 
