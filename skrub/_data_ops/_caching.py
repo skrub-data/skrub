@@ -5,7 +5,6 @@ Helper to cache functions and estimator methods according to the config.
 import pickle
 import subprocess
 import sys
-import types
 from pathlib import Path
 
 import joblib
@@ -20,24 +19,6 @@ def _call_fitting_method(estimator, method_name, args, kwargs, estimator_id):
 
 def _call_non_fitting_method(estimator, method_name, args, kwargs, estimator_id):
     return getattr(estimator, method_name)(*args, **kwargs)
-
-
-def _call_deferred_func(func, args, kwargs, globals, closure, defaults, kwdefaults):
-    if globals or closure or defaults:
-        # The deferred function has skrub DataOps (that need to be
-        # evaluated) in its global variables, free variables or default
-        # arguments. In this case after those are evaluated, we recompile a
-        # new function in which the DataOps have been replaced by their
-        # computed value. More details in the docstring of
-        # `skrub.deferred`.
-        func = types.FunctionType(
-            func.__code__,
-            globals={**func.__globals__, **globals},
-            argdefs=defaults,
-            closure=tuple(types.CellType(c) for c in closure),
-        )
-    kwargs = (kwdefaults or {}) | kwargs
-    return func(*args, **kwargs)
 
 
 # Note: the config is stored in a thread-local variable (mostly because it has
@@ -82,7 +63,8 @@ class Memory:
             )
         else:
             kwargs["start_new_session"] = True
-        subprocess.Popen(
+        # keep a reference to the handle to avoid ResourceWarning
+        self._pruning_subprocess = subprocess.Popen(
             [sys.executable, str(script), str(self.cache_dir), str(target_size)],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -108,7 +90,10 @@ class Memory:
             self.memory = joblib.Memory(str(cache_dir), verbose=0)
             if not self._ran_reduce_cache:
                 self._ran_reduce_cache = True
-                self._reduce_cache_size()
+                try:
+                    self._reduce_cache_size()
+                except Exception:
+                    pass
 
     def has_memory(self):
         """
@@ -132,18 +117,14 @@ class Memory:
         self.cached_func[key] = result
         return result
 
-    def call_deferred_func(
-        self, func, args, kwargs, globals, closure, defaults, kwdefaults, *, no_cache
-    ):
-        all_args = (func, args, kwargs, globals, closure, defaults, kwdefaults)
+    def call_func(self, func, args, kwargs, *, no_cache):
         if no_cache or not self.has_memory():
-            return _call_deferred_func(*all_args)
+            return func(*args, **kwargs)
         try:
-            return self.cache(_call_deferred_func)(*all_args)
+            return self.cache(func)(*args, **kwargs)
         except pickle.PicklingError:
             pass
-        # Fall back to non-cached call if arguments cannot be serialized
-        return _call_deferred_func(*all_args)
+        return func(*args, **kwargs)
 
     def call_fitting_method(self, estimator, method_name, args, kwargs, *, no_cache):
         if no_cache or not self.has_memory():
