@@ -29,7 +29,7 @@ _SINGLE_COL_LINE = (
 
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
 _SINGLE_COL_NOTE = (
-    f".. admonition:: A note on using single column transformations \n"
+    f".. tip:: A note on using single column transformations \n"
     f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
 )
 
