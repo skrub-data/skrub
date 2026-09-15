@@ -3,11 +3,11 @@ import argparse
 import joblib
 
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("cache_dir", type=str)
     parser.add_argument("target_size", type=str)
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     cache_dir = args.cache_dir
     size = args.target_size
@@ -25,4 +25,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover

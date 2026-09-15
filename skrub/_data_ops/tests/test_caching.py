@@ -189,3 +189,10 @@ def test_cache_pruning(tmp_path):
     while (pruned_size := _dir_size(tmp_path)) >= 10_000 and time.time() < deadline:
         time.sleep(0.1)
     assert pruned_size < 10_000
+
+    # when the script is run in a subprocess codecov doesn't see it so we run
+    # it once more here
+
+    from skrub._data_ops._reduce_cache_size import main
+
+    main([str(tmp_path), "10K"])
