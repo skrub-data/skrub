@@ -39,6 +39,8 @@ dependencies = [
   "matplotlib>=3.6.1",
   "requests>=2.27.1",
   "pydot",
+  "cloudpickle>=3.0",
+  "joblib>=1.4.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -69,8 +71,9 @@ dev = [
   "statsmodels",
 
   # lint
-  "ruff==0.15.0",
   "pre-commit",
+  "identify>=2",
+  "virtualenv",
 
   # test
   "pytest",
@@ -92,6 +95,11 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 
 [tool.setuptools]
 packages = ["skrub"]
+
+[tool.setuptools.package-data]
+# Needed to prevent pytest from executing the examples and doctests when
+# it searches for tests in the source dir
+skrub = ["_docs/**/*.rst", "_docs/**/*.py"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
@@ -133,8 +141,12 @@ optuna = "*"
 skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
-ruff = "==0.15.0"
+python = ">=3.13,<3.14"
 pre-commit = "*"
+identify = ">=2"
+
+[tool.pixi.feature.lint.pypi-dependencies]
+virtualenv = "*"
 
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
@@ -252,8 +264,8 @@ check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_da
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
-test-user-guide = { cmd = "pytest doc/**/*.rst" }
-test-docstrings = { cmd = "pytest -doctest-modules skrub doc/modules --ignore-glob=\"*/test_*.py\" --doctest-glob=\"*.rst\"" }
+test-user-guide = { cmd = "pytest skrub/_docs/**/*.rst" }
+test-docstrings = { cmd = "pytest -doctest-modules skrub skrub/_docs/modules --ignore-glob=\"*/test_*.py\" --doctest-glob=\"*.rst\"" }
 
 [tool.pixi.environments]
 lint = ["lint"]
