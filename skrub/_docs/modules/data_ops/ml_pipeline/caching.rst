@@ -72,7 +72,7 @@ with the ``target_cache_size`` :func:`config <set_config>` option. Set it to
 to a string like ``'3K'``, ``'3M'``, ``'3G'``. The default is ``'2G'``.
 
 Note this is a rough target size and not a strict limit. In particular, as the
-prunining only runs once (the first time the caching is used in a program), the
+pruning only runs once (the first time the caching is used in a program), the
 cache may grow afterwards and become bigger than the target size.
 
 The cache can be stale
