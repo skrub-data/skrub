@@ -8,11 +8,15 @@ The results of estimators added to a DataOp with :meth:`.skb.apply()
 <DataOp.skb.apply>` and of functions added with :func:`deferred()` or
 :meth:`.skb.apply_func() <DataOp.skb.apply_func>` can be cached.
 
-This can save a lot of computation when we run the same operation again. This
+This is a fairly **experimental feature**. The feature and its API may change to
+improve the identification of identical calls, the management of the cache
+directory, etc. If you experiment with it, please provide feedback!
+
+Caching can save a lot of computation when we run the same operation again. This
 typically happens when some step in a pipeline has changed (during
-hyperparameter search or because we modified the code), but some earlier steps
-remain the same and their results can be reused. For example suppose we have
-evaluated the following DataOp:
+hyperparameter search or because we modified our pipeline), but some earlier
+steps remain the same and their results can be reused. For example suppose we
+have evaluated the following DataOp:
 
 .. code:: python
 
@@ -70,3 +74,20 @@ to a string like ``'3K'``, ``'3M'``, ``'3G'``. The default is ``'2G'``.
 Note this is a rough target size and not a strict limit. In particular, as the
 prunining only runs once (the first time the caching is used in a program), the
 cache may grow afterwards and become bigger than the target size.
+
+The cache can be stale
+----------------------
+
+Skrub relies on :mod:`joblib` for caching. Some effort is done to detect if the
+code of cached functions has changed (thus invalidating cached results), but
+this is on a best-effort basis and is fairly brittle. For example, changes to a
+helper that is called by the cached function are not detected. Changes to the
+code of estimators passed to :meth:`DataOp.skb.apply` are not detected. (Note
+the same limitations apply to joblib in general, and for example the ``memory``
+parameter of scikit-learn pipelines).
+
+To handle this consider complementing the automated heuristics in place with
+some manual intervention, such as applying ``no_cache=True`` for functions or
+estimators that you are actively modifying, manually deleting the cache
+directory when appropriate, or enabling caching only in experimental
+environments.

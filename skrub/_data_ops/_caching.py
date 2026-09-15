@@ -39,9 +39,6 @@ class Memory:
     - When predicting the estimator_id is used for hashing, rather than the
       fitted estimator itself (which could cause spurious cache misses,
       serialization errors and hashing computation time).
-
-    The cached function wrapped by call_deferred_func takes care of recompiling
-    a function with the evaluated globals, defaults and closure if needed.
     """
 
     def __init__(self):
@@ -49,7 +46,6 @@ class Memory:
         self.memory = None
         self.cached_func = {}
         self._ran_reduce_cache = False
-        self._check_cache_dir()
 
     def _reduce_cache_size(self):
         target_size = _config.get_config()["target_cache_size"]
