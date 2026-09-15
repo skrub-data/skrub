@@ -15,6 +15,10 @@ New Features
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
   :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
+-- TabularPipeline now uses the estimator when given a pipeline to determine
+  the parameters of the TableVectorizer.
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+
 
 Changes
 -------
@@ -174,8 +178,6 @@ New Features
   Additionally, negative numbers indicated with parentheses can be converted to the
   regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
   Gómez Jiménez <gabrielapgomezji>`.
-- TabularPipeline now uses the estimator when given a pipeline to determine the parameters of the TableVectorizer
-  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 
 
 **Misc**:
