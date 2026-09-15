@@ -49,6 +49,7 @@ def get_cache_dir():
         cache = Path(config["data_dir"]) / "_cache"
     else:
         cache = Path(cache)
+    cache = cache.expanduser().resolve()
     cache.mkdir(exist_ok=True, parents=True)
     return cache
 

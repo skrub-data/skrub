@@ -34,7 +34,7 @@ class DummyTransformer(TransformerMixin, BaseEstimator):
         DummyTransformer.n_calls = defaultdict(int)
 
 
-def f(x, add=10):
+def f(x, add=10, **kwargs):
     f.n_calls += 1
     return x + add
 
@@ -117,7 +117,9 @@ def test_pickling_error(tmp_path):
         .skb.apply(
             DummyTransformer(), fit_transform_kwargs={"a": a}, transform_kwargs={"a": a}
         )
-        .skb.apply_func(lambda x: x)  # the applied function cannot be serialized
+        .skb.apply_func(
+            f, add=0, callback=lambda x: x
+        )  # an argument cannot be serialized
     )
     assert data_op.skb.eval() == 4
     # the value for the a parameter cannot be serialized: try fit_transform and
@@ -196,3 +198,5 @@ def test_cache_pruning(tmp_path):
     from skrub._data_ops._reduce_cache_size import main
 
     main([str(tmp_path), "10K"])
+
+    # Failing to start the pruning should not cause a crash
