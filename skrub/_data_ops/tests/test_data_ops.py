@@ -46,6 +46,33 @@ def test_slice():
     assert c.skb.eval({"a": list(range(10, 20)), "b": 5}) == [10, 11, 12, 13, 14]
 
 
+def test_unpacking():
+    a = skrub.var("a", [10, 20, 30])
+    first, second, third = a
+    assert repr(first).startswith("<GetItem 0>")
+    assert (first.skb.eval(), second.skb.eval(), third.skb.eval()) == (10, 20, 30)
+    assert (first + second).skb.eval({"a": [1, 2, 3]}) == 3
+
+
+def test_unpacking_iterable():
+    # the result does not need to be a sequence, and an iterator must be
+    # consumed only once even though each target indexes into it.
+    @skrub.deferred
+    def f():
+        yield 1
+        yield 2
+        yield 3
+
+    a, b, c = f()
+    assert (a + b + c).skb.eval() == 6
+
+
+def test_unpacking_nested():
+    a = skrub.var("a", [1, [2, 3]])
+    first, (second, third) = a
+    assert (first.skb.eval(), second.skb.eval(), third.skb.eval()) == (1, 2, 3)
+
+
 def test_estimator():
     c = skrub.var("c")
     e = skrub.as_data_op(LogisticRegression(C=c))

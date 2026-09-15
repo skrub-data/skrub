@@ -101,9 +101,8 @@ class TableReport:
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
     column. Numpy arrays are converted to pandas DataFrame or Series. The computed
-    statistics can be accessed interactively in a Jupyter notebook or web browser.
-    Alternatively, it can be saved or exported in JSON, Markdown, or HTML format
-    for programmatic access or for inclusion in documents.
+    statistics can be accessed interactively in a Jupyter notebook or web browser,
+    or programmatically with ``.dict()``, ``.json()``, or ``.markdown()``.
 
     Parameters
     ----------
