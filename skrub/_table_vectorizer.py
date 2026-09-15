@@ -1238,12 +1238,13 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
 
 
         """
-        preprocessing_transformations = (
-            "Preprocessors\n=============\n"
-            + _describe_transformations(self, max_cols=max_cols)
-        )
-        vectorize_transformations = "Processors by type\n==================\n"
-        specific_transformations = ""
+        preprocessing_transformations = [
+            "Preprocessors",
+            "=============",
+            _describe_transformations(self, max_cols=max_cols),
+        ]
+        vectorize_transformations = ["Processors by type", "=================="]
+        specific_transformations = []
 
         all_transformers = self.kind_to_columns_.copy()
         specific = all_transformers.pop("specific")
@@ -1256,40 +1257,43 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
                 # displayed (for instance, self.numeric = Passthrough()).
                 # The corresponding attribute is therefore fetched
                 # and its class name printed.
-                vectorize_transformations += (
+                vectorize_transformations.append(
                     f"{getattr(self, transformer_type).__class__.__name__} "
-                    f"({transformer_type} - {len(cols_to_print)} columns):" + "\n    - "
+                    f"({transformer_type} - {len(cols_to_print)} columns):"
                 )
-                vectorize_transformations += (
-                    "\n    - ".join(_limit_cols(cols_to_print, max_cols=max_cols))
-                    + "\n"
+
+                vectorize_transformations.extend(
+                    [
+                        "    - " + s
+                        for s in _limit_cols(cols_to_print, max_cols=max_cols)
+                    ]
                 )
             else:
-                vectorize_transformations += (
-                    f"No {transformer_type} columns have been detected." + "\n"
+                vectorize_transformations.append(
+                    f"No {transformer_type} columns have been detected."
                 )
 
         if self.specific_transformers:
-            specific_transformations = (
-                "\nSpecific transformers\n=====================\n"
-            )
+            specific_transformations = [
+                "",
+                "Specific transformers",
+                "=====================",
+            ]
             for t in self.specific_transformers:
-                specific_transformations += (
+                specific_transformations.append(
                     f"{t[0].__class__.__name__} (specific - {len(specific)} columns):"
-                    + "\n    - "
                 )
-                specific_transformations += (
-                    "\n    - ".join(_limit_cols(specific, max_cols=max_cols)) + "\n"
+                specific_transformations.extend(
+                    ["    - " + s for s in _limit_cols(specific, max_cols=max_cols)]
                 )
 
-        full_list = (
+        full_transformations = (
             preprocessing_transformations
-            + "\n"
             + vectorize_transformations
             + specific_transformations
         )
 
-        return full_list
+        return "\n".join(full_transformations)
 
 
 def _limit_cols(col_names, max_cols=10):
