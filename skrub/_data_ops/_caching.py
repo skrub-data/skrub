@@ -108,10 +108,7 @@ class Memory:
             self.memory = joblib.Memory(str(cache_dir), verbose=0)
             if not self._ran_reduce_cache:
                 self._ran_reduce_cache = True
-                try:
-                    self._reduce_cache_size()
-                except Exception:
-                    pass
+                self._reduce_cache_size()
 
     def has_memory(self):
         """
