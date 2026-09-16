@@ -128,8 +128,17 @@ class TimeSeriesReport:
 
                 # Get metadata items (values, colors, etc.)
                 metadata = self.get_metadata(y_col)
-                # Add the plot to metadata dict
-                plotly_html = fig.to_html(full_html=False, config={"responsive": True})
+
+                # MEMORY OPTIMIZATION:
+                # Load Plotly.js only once (first plot), use unique div IDs
+                col_id = col.replace(" ", "-").replace("_", "-")
+                include_plotlyjs = "cdn" if i == 0 else False
+                plotly_html = fig.to_html(
+                    full_html=False,
+                    include_plotlyjs=include_plotlyjs,
+                    div_id=f"plot-metadata-{col_id}",
+                    config={"responsive": True},
+                )
                 metadata["plot"] = plotly_html
 
                 # SIZE COMPARISON (only for first column to avoid spam)
@@ -167,7 +176,13 @@ class TimeSeriesReport:
 
                 # Other plot views
                 plots = {
-                    "trends": self.plot_avg(y_col, y_min=y_min, y_max=y_max),
+                    "trends": self.plot_avg(
+                        y_col,
+                        y_min=y_min,
+                        y_max=y_max,
+                        div_id=f"plot-trends-{col_id}",
+                        include_plotlyjs=False,  # Already loaded in metadata plot
+                    ),
                     #              "extrema": self.make_extrema(y_col),
                     # "autocorrelation": ...,
                     # 'periodicity': self.plot_avg(y_col),
@@ -663,7 +678,7 @@ class TimeSeriesReport:
 
         return fig.to_html(full_html=False, config={"responsive": True})
 
-    def plot_avg(self, y, y_min=None, y_max=None):
+    def plot_avg(self, y, y_min=None, y_max=None, div_id=None, include_plotlyjs=False):
         if y_min is None:
             y_min = y.min()
         if y_max is None:
@@ -804,7 +819,12 @@ class TimeSeriesReport:
             hovermode="x unified",
         )
 
-        return fig.to_html(full_html=False, config={"responsive": True})
+        return fig.to_html(
+            full_html=False,
+            include_plotlyjs=include_plotlyjs,
+            div_id=div_id,
+            config={"responsive": True},
+        )
 
         fig.update_layout(
             title="Time series — 7-day average",
@@ -832,7 +852,12 @@ class TimeSeriesReport:
 
         # figs = [f.to_html(full_html=False) for f in figs]
 
-        return fig.to_html(full_html=False, config={"responsive": True})
+        return fig.to_html(
+            full_html=False,
+            include_plotlyjs=include_plotlyjs,
+            div_id=div_id,
+            config={"responsive": True},
+        )
 
     def stats_overview(self, df):
         deltas = self.time.diff()
