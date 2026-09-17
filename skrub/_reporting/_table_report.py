@@ -117,13 +117,6 @@ class TableReport:
         The default value ``None`` uses the global configuration (see
         :func:`set_config`), which then defaults to 10.
 
-    order_by : str, deprecated
-        Deprecated. Column name to use for sorting. Other numerical columns
-        will be plotted as function of the sorting column. Must be of
-        numerical or datetime type.
-
-        .. deprecated:: 0.10.0
-
     title : str
         Title for the report.
 
@@ -270,7 +263,6 @@ class TableReport:
         self,
         dataframe,
         n_rows=None,
-        order_by=None,
         title=None,
         column_filters=None,
         verbose=None,
@@ -313,17 +305,7 @@ class TableReport:
             )
         self.open_tab = open_tab
 
-        # Deprecate order_by parameter on TableReport; prefer pre-sorted dataframes
-        if order_by is not None:
-            warnings.warn(
-                "'order_by' parameter of TableReport is deprecated and will be"
-                " removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         self._summary_kwargs = {
-            "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
             "verbose": self.verbose,
