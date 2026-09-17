@@ -22,6 +22,10 @@ New Features
 
 Changes
 -------
+- The minimum version of Python has been increased to 3.11. The minimum version of
+  scikit-learn has been increased to 1.5.2. :pr:`2280` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
