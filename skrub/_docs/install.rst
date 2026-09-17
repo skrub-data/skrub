@@ -105,11 +105,16 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
             <hr />
 
 .. _installing_from_source:
+How to Contribute
+-----------------
+
+To set up the project, you will need to fork and clone the repository.
+Instructions for forking, see :ref:`Fork the project <fork-project>` and cloning, see :ref:`Clone the project <clone-project>`.
 
 Setup your environment
 ''''''''''''''''''''''
 
-Now, setup a development environment.
+Set up the development environment.
 You can set up a virtual environment with Conda, or with python's ``venv``:
 
 - With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
@@ -120,19 +125,24 @@ You can set up a virtual environment with Conda, or with python's ``venv``:
     conda activate env_skrub
 
 - With `venv <https://docs.python.org/3/library/venv.html>`__:
+
 .. code:: console
 
     python -m venv env_skrub
     source env_skrub/bin/activate
 
 Then, with the environment activated and at the root of your local copy of skrub,
-install the local package in editable mode with development dependencies:
+install the local package in editable mode:
+
+.. code:: console
+
+    pip install -e .
+
+For installing with development dependencies:
 
 .. code:: console
 
     pip install -e ".[dev]"
-
-
 
 **Deep learning dependencies**
 
