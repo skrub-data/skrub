@@ -15,13 +15,16 @@ New Features
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
   :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
--- TabularPipeline now uses the estimator when given a pipeline to determine
+- TabularPipeline now uses the estimator when given a pipeline to determine
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 
 
 Changes
 -------
+- The :class:`SessionEncoder` has been optimized to reduce its execution time.
+  Depending on backend, we measured up to 15x speedups compared to the previous
+  version. :pr:`2285` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
