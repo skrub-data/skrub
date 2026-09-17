@@ -99,8 +99,7 @@ def test_unpacking_wrong_number_of_targets_at_runtime():
     # without a value for 'a' the length is only known when the plan runs
     a = skrub.var("a")
     first, _second = a
-    err_t, err_msg = ValueError, "too many values to unpack"
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(ValueError, match="too many values to unpack"):
         first.skb.eval({"a": [1, 2, 3]})
 
 

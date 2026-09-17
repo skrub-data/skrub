@@ -191,19 +191,18 @@ def test_becomes_default():
     # default
     assert c.skb.eval({"b": 20}) == 21
     # Whereas b is not
-    err_t, err_msg = KeyError, "No value has been provided for 'b'"
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         c.skb.eval({"a": 10})
     d = c.skb.clone(drop_values=True)
     assert d.skb.get_data() == {"a": 1}
     assert d.skb.eval({"b": 20}) == 21
     assert d.skb.eval({"a": 10, "b": 20}) == 30
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         d.skb.eval({})
     learner = c.skb.make_learner()
     assert learner.fit_transform({"b": 20}) == 21
     assert learner.fit_transform({"a": 10, "b": 20}) == 30
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         learner.fit_transform({})
 
 
