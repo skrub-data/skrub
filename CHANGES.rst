@@ -29,6 +29,10 @@ Changes
 
 Bugfixes
 --------
+- Building :class:`DataOp` plans that reuse a node several times (for example
+  ``f(v, v)`` or :meth:`DataOp.skb.if_else`) no longer takes time exponential
+  in the depth of the graph. Read-only DataOp traversals now visit each shared
+  node once. :pr:`2291` by :user:`Michał Furgała <00200200>`.
 
 Deprecations
 ------------
