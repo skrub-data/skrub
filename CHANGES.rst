@@ -24,8 +24,8 @@ Deprecations
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.
 - Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
-   from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
-   instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+  from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
+  instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 
 Release 0.10.1
 ===================
