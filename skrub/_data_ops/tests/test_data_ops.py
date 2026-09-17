@@ -191,10 +191,7 @@ def test_becomes_default():
     # default
     assert c.skb.eval({"b": 20}) == 21
     # Whereas b is not
-    if sys.version_info < (3, 11):
-        err_t, err_msg = RuntimeError, "Evaluation of node <Var 'b'> failed"
-    else:
-        err_t, err_msg = KeyError, "No value has been provided for 'b'"
+    err_t, err_msg = KeyError, "No value has been provided for 'b'"
     with pytest.raises(err_t, match=err_msg):
         c.skb.eval({"a": 10})
     d = c.skb.clone(drop_values=True)

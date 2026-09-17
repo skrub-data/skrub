@@ -99,10 +99,7 @@ def test_unpacking_wrong_number_of_targets_at_runtime():
     # without a value for 'a' the length is only known when the plan runs
     a = skrub.var("a")
     first, _second = a
-    if sys.version_info < (3, 11):
-        err_t, err_msg = RuntimeError, "Evaluation of node <AsTuple"
-    else:
-        err_t, err_msg = ValueError, "too many values to unpack"
+    err_t, err_msg = ValueError, "too many values to unpack"
     with pytest.raises(err_t, match=err_msg):
         first.skb.eval({"a": [1, 2, 3]})
 
