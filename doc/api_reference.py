@@ -84,7 +84,7 @@ API_REFERENCE = {
                 ),
                 "autosummary": [
                     "StringEncoder",
-                    "TextEncoder",
+                    "LLMEncoder",
                     "MinHashEncoder",
                     "GapEncoder",
                     "SimilarityEncoder",
