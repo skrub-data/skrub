@@ -135,8 +135,19 @@ class _DataOpTraversal:
     # evaluator. However that logic is very simple because the task of ensuring
     # children are evaluated first is handled by the evaluator (the
     # _DataOpTraversal subclass).
+    #
+    # Read-only subclasses set ``_memoize_data_ops`` so that a DataOp already
+    # visited during this ``run()`` is not walked again. That keeps shared DAGs
+    # (``f(v, v)``, ``if_else``) linear in the number of nodes. Traversals that
+    # need per-edge bookkeeping (``_Graph``) or that clone while preserving
+    # identity (``_Cloner``) leave this off and hoist their own identity check.
+    # ``_ChoiceGraph`` also leaves it off: choice parentage depends on the
+    # current outcome, so it memoizes per (node, outcome) instead.
+
+    _memoize_data_ops = False
 
     def run(self, data_op):
+        self._seen_data_ops = {}
         stack = [data_op]
         last_result = None
 
@@ -238,12 +249,20 @@ class _DataOpTraversal:
         return last_result
 
     def handle_data_op(self, data_op):
+        if self._memoize_data_ops:
+            try:
+                return self._seen_data_ops[id(data_op)]
+            except KeyError:
+                pass
         impl = data_op._skrub_impl
         evaluated_attributes = {}
         for name in impl._fields:
             attr = getattr(impl, name)
             evaluated_attributes[name] = yield attr
-        return self.compute_result(data_op, evaluated_attributes)
+        result = self.compute_result(data_op, evaluated_attributes)
+        if self._memoize_data_ops:
+            self._seen_data_ops[id(data_op)] = result
+        return result
 
     def compute_result(self, data_op, evaluated_attributes):
         # Compute the result for a DataOp, once all the children have already
@@ -618,6 +637,13 @@ class _Cloner(_DataOpTraversal):
         self._replace[id(choice)] = new_choice
         return new_choice
 
+    def handle_data_op(self, data_op):
+        # Return an already-built clone before walking children so shared DAG
+        # nodes stay shared and are not cloned exponentially.
+        if id(data_op) in self._replace:
+            return self._replace[id(data_op)]
+        return (yield from super().handle_data_op(data_op))
+
     @_as_gen
     def handle_value(self, value):
         if hasattr(value, "__sklearn_clone__") and not isinstance(
@@ -696,6 +722,11 @@ class _Graph(_DataOpTraversal):
             child, parent = id(data_op), id(self._current_data_op[-1])
             self._children[parent].append(child)
             self._parents[child].append(parent)
+        # Record the incoming edge above, then skip children of nodes already
+        # in the graph. The DAG structure is unchanged: ``_simplify_graph``
+        # already collapses duplicate parent/child ids.
+        if id(data_op) in self._nodes:
+            return data_op
         self._current_data_op.append(data_op)
         result = yield from super().handle_data_op(data_op)
         self._current_data_op.pop()
@@ -785,6 +816,10 @@ class _ChoiceGraph(_DataOpTraversal):
         self._choices = {}
         self._children = defaultdict(list)
         self._current_outcome = [None]
+        # A shared DataOp can sit in several choice-outcome contexts. Memoize
+        # per (node, current outcome), not per node, so nested choice parentage
+        # is recorded for every context without walking the DAG as a tree.
+        self._seen_in_outcome = set()
 
         _ = super().run(data_op)
 
@@ -814,8 +849,17 @@ class _ChoiceGraph(_DataOpTraversal):
             "choice_display_names": _choice_display_names(choices),
         }
 
+    def handle_data_op(self, data_op):
+        key = (id(data_op), self._current_outcome[-1])
+        if key in self._seen_in_outcome:
+            return data_op
+        self._seen_in_outcome.add(key)
+        return (yield from super().handle_data_op(data_op))
+
     def handle_choice(self, choice):
         self._children[self._current_outcome[-1]].append(id(choice))
+        if id(choice) in self._choices:
+            return choice
         if not isinstance(choice, _choosing.Choice):
             self._choices[id(choice)] = choice
             return choice
@@ -1084,6 +1128,8 @@ def optuna_suggestion(trial):
 class _ChoiceEvaluator(_DataOpTraversal):
     """Helper for `eval_choices`."""
 
+    _memoize_data_ops = True
+
     def run(self, data_op, policy):
         graph = choice_graph(data_op)
         data_op_choices = graph["choices"]
@@ -1170,6 +1216,8 @@ class _Found(Exception):
 
 
 class _FindNode(_DataOpTraversal):
+    _memoize_data_ops = True
+
     def __init__(self, predicate=None):
         self.predicate = predicate
 
@@ -1260,6 +1308,8 @@ def needs_eval(obj, return_node=False):
 
 class _FindConflicts(_DataOpTraversal):
     """Find duplicate names or if 2 nodes are marked as X or y."""
+
+    _memoize_data_ops = True
 
     def __init__(self):
         self._names = {}
@@ -1373,6 +1423,8 @@ def find_conflicts(data_op):
 
 
 class _FindArg(_DataOpTraversal):
+    _memoize_data_ops = True
+
     def __init__(self, predicate, skip_types=(Var, Value)):
         self.predicate = predicate
         self.skip_types = skip_types
@@ -1401,6 +1453,8 @@ def find_arg(data_op, predicate, skip_types=(Var, Value)):
 
 
 class _FindFirstApply(_DataOpTraversal):
+    _memoize_data_ops = True
+
     def handle_choice(self, choice):
         return (yield choice.chosen_outcome_or_default())
 

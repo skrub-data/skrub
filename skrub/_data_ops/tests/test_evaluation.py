@@ -99,6 +99,143 @@ def test_caching_in_special_data_ops():
     assert e._skrub_impl.results == {"fit_transform": "BE"}
 
 
+def _shared_diamond(depth):
+    """Build a tiny DAG where each step reuses the previous node twice.
+
+    ``f(v, v)`` repeated ``depth`` times has only ``depth + 1`` DataOp nodes,
+    but a tree walk visits ``2**(depth + 1) - 1`` nodes.
+    """
+
+    @skrub.deferred
+    def f(a, b):
+        return a + b
+
+    v = skrub.var("v", 1.0)
+    for _ in range(depth):
+        v = f(v, v)
+    return v
+
+
+def test_shared_diamond_read_only_traversal_is_linear():
+    # Read-only DataOp traversals must walk a shared DAG as a DAG, not a tree.
+    # ``_FindConflicts`` runs on every node construction, so exponential visits
+    # make building ordinary plans (one table feeding several branches) unusable.
+    depth = 6
+    data_op = _shared_diamond(depth)
+    n_nodes = len(_evaluation.nodes(data_op))
+    assert n_nodes == depth + 1
+
+    class _CountingFindConflicts(_evaluation._FindConflicts):
+        def __init__(self):
+            super().__init__()
+            self.n_visits = 0
+
+        def handle_data_op(self, e):
+            self.n_visits += 1
+            yield from super().handle_data_op(e)
+
+    counter = _CountingFindConflicts()
+    counter.run(data_op)
+
+    # A tree walk would visit 2**(depth + 1) - 1 = 127 nodes at depth 6.
+    assert counter.n_visits < 2**depth
+    assert counter.n_visits <= 2 * n_nodes
+
+
+class _CountingGraph(_evaluation._Graph):
+    def __init__(self):
+        self.n_visits = 0
+
+    def handle_data_op(self, data_op):
+        self.n_visits += 1
+        return (yield from super().handle_data_op(data_op))
+
+
+class _CountingCloner(_evaluation._Cloner):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.n_visits = 0
+
+    def handle_data_op(self, data_op):
+        self.n_visits += 1
+        return (yield from super().handle_data_op(data_op))
+
+
+def test_graph_traversal_of_shared_diamond_is_linear():
+    depth = 6
+    data_op = _shared_diamond(depth)
+    counter = _CountingGraph()
+    graph = counter.run(data_op)
+    n_nodes = len(graph["nodes"])
+    assert n_nodes == depth + 1
+    assert counter.n_visits < 2**depth
+    assert counter.n_visits <= 2 * n_nodes
+
+
+def test_cloner_traversal_of_shared_diamond_is_linear():
+    depth = 6
+    data_op = _shared_diamond(depth)
+    counter = _CountingCloner()
+    counter.run(data_op)
+    n_nodes = len(_evaluation.nodes(data_op))
+    assert counter.n_visits < 2**depth
+    assert counter.n_visits <= 2 * n_nodes
+
+
+def test_graph_keeps_all_parents_of_shared_node():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a + b
+    d = c * a
+    graph = _evaluation.graph(d)
+    a_id = next(i for i, n in graph["nodes"].items() if n is a)
+    c_id = next(i for i, n in graph["nodes"].items() if n is c)
+    d_id = next(i for i, n in graph["nodes"].items() if n is d)
+    b_id = next(i for i, n in graph["nodes"].items() if n is b)
+    assert sorted(graph["parents"][a_id]) == sorted([c_id, d_id])
+    assert graph["children"][c_id] == [a_id, b_id]
+    assert graph["children"][d_id] == [c_id, a_id]
+
+
+def test_clone_preserves_shared_node_identity():
+    data_op = _shared_diamond(2)
+    cloned = _evaluation.clone(data_op)
+    outer_args = cloned._skrub_impl.args
+    assert outer_args[0] is outer_args[1]
+    inner_args = outer_args[0]._skrub_impl.args
+    assert inner_args[0] is inner_args[1]
+
+
+def test_choice_graph_keeps_shared_node_in_each_outcome_context():
+    # ``x`` is both an outcome of ``b`` and a sibling of ``b``. Choice ``a``
+    # inside ``x`` must stay visible at the top level, including when ``b``
+    # selects the outcome that does not use ``x``.
+    x = skrub.var("x", 1) + skrub.choose_from([1, 2], name="a")
+    data_op = skrub.choose_from([x, 0], name="b").as_data_op() + x
+    grid = data_op.skb.describe_param_grid()
+    assert "a: [1, 2]" in grid
+    assert grid.count("a: [1, 2]") == 2
+
+
+class _CountingChoiceGraph(_evaluation._ChoiceGraph):
+    def __init__(self):
+        self.n_visits = 0
+
+    def handle_data_op(self, data_op):
+        self.n_visits += 1
+        return (yield from super().handle_data_op(data_op))
+
+
+def test_choice_graph_traversal_of_shared_diamond_is_linear():
+    depth = 6
+    data_op = _shared_diamond(depth)
+    counter = _CountingChoiceGraph()
+    counter.run(data_op)
+    n_nodes = len(_evaluation.nodes(data_op))
+    assert counter.n_visits < 2**depth
+    assert counter.n_visits <= 2 * n_nodes
+
+
 def test_needs_eval():
     # needs_eval() is used to check if a collection contains some skrub
     # DataOp or choice. problems with cyclical references are handled
