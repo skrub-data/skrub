@@ -58,11 +58,6 @@ Top-level object
      - string
      - **Optional.** Present only when a ``title`` argument was passed to
        :class:`~skrub.TableReport`.
-   * - ``order_by``
-     - string
-     - **Optional.** Name of the column used for sorting when the deprecated
-       parameter ``order_by`` was passed to :class:`~skrub.TableReport`.
-
 
 .. _table_report_json_schema_column:
 
@@ -224,13 +219,13 @@ Present for columns whose dtype is numeric (integer or float), or duration
        ``true``).
    * - ``histogram_plot``
      - string (SVG)
-     - **Optional**. Present only when ``plots_skipped`` is ``false`` and
-       ``order_by`` is not set. Distribution histogram as an inline SVG
+     - **Optional**. Present only when ``plots_skipped`` is ``false``.
+       Distribution histogram as an inline SVG
        string.
    * - ``line_plot``
      - string (SVG)
-     - **Optional**. Present only when ``plots_skipped`` is ``false`` and ``order_by``
-       is set. Line chart of the column values against the sort column as
+     - **Optional**. Present only when ``plots_skipped`` is ``false`.
+       Line chart of the column values against the sort column as
        an inline SVG string.
 
 
