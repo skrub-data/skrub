@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numbers
 import string
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -142,6 +142,27 @@ def toy_orders(split="train"):
 
 
 def toy_products():
+    """Generate a synthetic dataframe example of a mock product catalog.
+
+    Contains the following columns:
+    description: A brief description of the product.
+    price: The price of the product.
+    seller: The name of the seller.
+    category: The category to which the product belongs.
+
+    Returns
+    -------
+    pandas Dataframe
+        The synthetic dataframe of shape (6, 4), with columns labelled description,
+        price, seller, and category.
+
+    Examples
+    --------
+    >>> from skrub.datasets import toy_products
+    >>> df = toy_products()
+    >>> df.shape
+    (6, 4)
+    """
     return pd.DataFrame(
         {
             "description": [
@@ -208,7 +229,7 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
 
     Returns
     -------
-    pandas dataframe
+    pandas Dataframe
         The randomly-generated dataframe, with `size` rows and
         `5 + n_metrics` columns.
 
@@ -238,7 +259,7 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         raise ValueError(f"n_metrics must be a positive integer, got {n_metrics}.")
 
     rng = np.random.default_rng(seed=seed)
-    now = datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()
+    now = datetime(2024, 1, 1, tzinfo=UTC).timestamp()
     capitals = [
         "Amsterdam",
         "Athens",
@@ -287,11 +308,11 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     # Backwards compatibility is ensured for older versions of Pandas using `applymap`.
     if hasattr(df_dates, "map"):
         df_dates = df_dates.map(
-            lambda ts: datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+            lambda ts: datetime.fromtimestamp(ts, tz=UTC).replace(tzinfo=None)
         )
     else:
         df_dates = df_dates.applymap(
-            lambda ts: datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+            lambda ts: datetime.fromtimestamp(ts, tz=UTC).replace(tzinfo=None)
         )
     # As above, "end" sees some of its values set to null.
     p = rng.uniform(0, 1, size=size)
@@ -395,7 +416,7 @@ def make_retail_events(n_users=200, n_events=5000, random_state=None):
     #   2. Space session starts by Exponential gaps >> session_gap, spread
     #      across a 90-day window.
     #   3. Within each session, place events with Exponential(90 s) gaps.
-    base_time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
+    base_time = datetime(2024, 1, 1, 0, 0, tzinfo=UTC)
     total_window_s = 90 * 24 * 3600  # 90 days
     within_session_mean_s = 90.0  # ~1.5 min between events inside a session
     min_between_session_s = 2 * 3600  # 2 h minimum gap — well above session_gap

@@ -4,15 +4,28 @@ skrub: Machine learning with dataframes.
 
 ``skrub`` facilitates machine learning with tabular
 data.  It helps clean, encode, and transform dataframes into features
-ready for scikit-learn or other ML frameworks.
+ready for scikit-learn Pipelines, or build lazy, stateful pipelines with
+``skrub.DataOp``.
 
+Bundled docs: ``skrub.__docs_dir__``
+Bundled getting started: ``skrub.__docs_dir__ / "tutorials"``
+Bundled examples: ``skrub.__docs_dir__ / "examples"``
+Bundled datasets: ``skrub.datasets``
+
+GitHub repo: https://github.com/skrub-data/skrub/
+
+Online:
 Docs: https://skrub-data.org/stable/reference/index.html
-User Guide: https://skrub-data.org/stable/documentation.html
-Source: https://github.com/skrub-data/skrub/
+User guide: https://skrub-data.org/stable/documentation.html
 Examples: https://skrub-data.org/stable/auto_examples/index.html
+
 """
 
 from pathlib import Path as _Path
+
+#: Path to the documentation bundled with the package.
+#: Use ``skrub.__docs_dir__`` to access it programmatically.
+__docs_dir__ = _Path(__file__).parent / "_docs"
 
 from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
@@ -56,7 +69,7 @@ from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
 from ._tabular_pipeline import tabular_pipeline
-from ._text_encoder import TextEncoder
+from ._text_encoder import LLMEncoder, TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
 from ._to_float import ToFloat
@@ -84,7 +97,7 @@ __all__ = [
     "ToFloat",
     "ToCategorical",
     "TableVectorizer",
-    "TextEncoder",
+    "LLMEncoder",
     "StringEncoder",
     "Cleaner",
     "DropSimilar",
@@ -119,4 +132,6 @@ __all__ = [
     "config_context",
     "SessionEncoder",
     "core",
+    "TextEncoder",
+    "__docs_dir__",
 ]

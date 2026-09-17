@@ -34,6 +34,7 @@ import itertools
 import operator
 import pathlib
 import re
+import sys
 import textwrap
 import traceback
 import types
@@ -51,7 +52,6 @@ from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
-from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
@@ -195,6 +195,29 @@ def _format_data_op_creation_stack():
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
     return traceback.format_list(stack)
+
+
+def _unpack_arity():
+    """Number of targets in the unpacking assignment being executed, if any.
+
+    Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
+    """
+    try:
+        # skip the frames of this function and of DataOp.__iter__
+        frame = sys._getframe(2)
+        for instruction in dis.get_instructions(frame.f_code):
+            if instruction.offset == frame.f_lasti:
+                # starred targets (`a, *rest = obj`, ie UNPACK_EX) are not
+                # handled because `rest` takes however many values are left.
+                if instruction.opname == "UNPACK_SEQUENCE":
+                    return instruction.arg
+                return None
+    except Exception:
+        # best-effort introspection: anything unexpected (a Python
+        # implementation without sys._getframe, bytecode we cannot read, ...)
+        # must fall back on refusing to iterate, not raise something else.
+        pass
+    return None
 
 
 class DataOpImpl:
@@ -530,13 +553,17 @@ class _Skb:
 _DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
-Please refer to the example gallery for an introduction to skrub
-DataOps.
+A complete machine learning pipeline -- from data loading and wrangling to the final
+prediction -- in a single object that can be fitted, tuned, cross-validated, and
+saved like any scikit-learn estimator.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing DataOp.
+
+Refer to the :ref:`user_guide_data_ops_index` page for more information.
+
 """
 
 _DATA_OP_INSTANCE_DOC = """Skrub DataOp.
@@ -700,6 +727,13 @@ class DataOp:
         )
 
     def __iter__(self):
+        # Unpacking (`a, b = data_op`) is supported: we know how many values are
+        # expected, so we can create a node for each of them. Any other kind of
+        # iteration would need the length of the result, which is unknown until
+        # the DataOp is evaluated.
+        if (arity := _unpack_arity()) is not None:
+            values = unpack(self, arity)
+            return (values[i] for i in range(arity))
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -838,14 +872,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, exclude_cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
     if exclude_cols is not None:
         msg = f"`exclude_cols` must be None (the default) when {reason}"
-    elif how not in ["auto", "no_wrap"]:
-        msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
         msg = f"`allow_reject` must be False (the default) when {reason}"
     if msg is not None:
@@ -876,7 +908,7 @@ def _check_estimator_type(estimator):
     )
 
 
-def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X):
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, allow_reject, X):
     """
     Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
     """
@@ -885,16 +917,6 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
             "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
             f"got: {no_wrap!r}."
         )
-    valid = ["auto", "cols", "frame", "no_wrap"]
-    if how not in valid:
-        raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-    if how != "auto":
-        warnings.warn(
-            "The 'how' parameter of .skb.apply() has been deprecated "
-            "and will  be removed in a future release. "
-            f"Use the 'no_wrap' parameter instead. Got how={how!r}",
-            FutureWarning,
-        )
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -902,13 +924,10 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, exclude_cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, allow_reject, reason)
 
     if no_wrap:
         _check("`no_wrap` is True")
-        return estimator
-    if how == "no_wrap":
-        _check("`how` is 'no_wrap'")
         return estimator
     if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
@@ -916,17 +935,8 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    if how == "auto":
-        return ApplyToCols(
-            estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
-        )
-    columnwise = {"cols": True, "frame": False}[how]
-    return wrap_transformer(
-        estimator,
-        cols=cols,
-        exclude_cols=exclude_cols,
-        allow_reject=allow_reject,
-        columnwise=columnwise,
+    return ApplyToCols(
+        estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
     )
 
 
@@ -1371,7 +1381,7 @@ class FreezeAfterFit(DataOpImpl):
 
 
 def _check_column_names(X):
-    # NOTE: could allow int column names when how='no_wrap', prob. not worth
+    # NOTE: could allow int column names when no_wrap=True, prob. not worth
     # the added complexity.
     #
     # TODO: maybe also forbid duplicates? use a reduced version of
@@ -1422,7 +1432,6 @@ class Apply(DataOpImpl):
         "cols",
         "exclude_cols",
         "no_wrap",
-        "how",
         "allow_reject",
         "unsupervised",
         "kwargs",
@@ -1461,14 +1470,12 @@ class Apply(DataOpImpl):
             cols = yield self.cols
             exclude_cols = yield self.exclude_cols
             no_wrap = yield self.no_wrap
-            how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
                 exclude_cols=exclude_cols,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 X=X,
             )
@@ -1660,6 +1667,33 @@ class GetItem(DataOpImpl):
 
     def pretty_repr(self):
         return f"[{_get_preview(self.key)!r}]"
+
+
+class AsTuple(DataOpImpl):
+    """Node created by unpacking a DataOp, e.g. ``a, b = data_op``."""
+
+    _fields = ["iterable", "expected_length"]
+
+    def compute(self, e, mode, environment):
+        # converting to a tuple (rather than indexing into the result directly)
+        # allows unpacking any iterable, and makes sure an iterator is consumed
+        # only once even though each target indexes into this node.
+        result = tuple(e.iterable)
+        expected, got = e.expected_length, len(result)
+        if got != expected:
+            problem = "not enough" if got < expected else "too many"
+            raise ValueError(
+                f"{problem} values to unpack (expected {expected}, got {got})"
+            )
+        return result
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.expected_length} items>"
+
+
+@checked_data_op_constructor
+def unpack(iterable, expected_length):
+    return DataOp(AsTuple(iterable, expected_length))
 
 
 class Call(DataOpImpl):
