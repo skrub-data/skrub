@@ -1,4 +1,4 @@
-from datetime import date, timezone
+from datetime import UTC, date
 from functools import partial
 
 import numpy as np
@@ -159,14 +159,10 @@ def test_fit_naive_transform_aware(df_module, datetime_col):
     assert to_iso(encoder.transform(aware)) == to_iso(convert(df_module, aware, "UTC"))
 
 
-@pytest.mark.parametrize(
-    "source", ["Europe/Paris", "America/Sao_Paulo", "UTC", timezone.utc]
-)
-@pytest.mark.parametrize(
-    "dest", ["Europe/Paris", "America/Sao_Paulo", "UTC", timezone.utc]
-)
+@pytest.mark.parametrize("source", ["Europe/Paris", "America/Sao_Paulo", "UTC", UTC])
+@pytest.mark.parametrize("dest", ["Europe/Paris", "America/Sao_Paulo", "UTC", UTC])
 def test_transform_from_a_different_timezone(df_module, datetime_col, source, dest):
-    if timezone.utc in (source, dest) and df_module.name == "polars":
+    if UTC in (source, dest) and df_module.name == "polars":
         # polars only receives strings as time zones.
         # for pandas we also test with timezone.utc because it results in
         # series where .dt.tz is a standard library timezone rather than a

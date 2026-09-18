@@ -11,9 +11,21 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
+  (of known size), for example ``first, second = data_op``. Each target becomes
+  a DataOp that extracts one of the items.
+  :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
+-- TabularPipeline now uses the estimator when given a pipeline to determine
+  the parameters of the TableVectorizer.
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+
 
 Changes
 -------
+- The minimum version of Python has been increased to 3.11. The minimum version of
+  scikit-learn has been increased to 1.5.2. :pr:`2280` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
@@ -28,6 +40,9 @@ Deprecations
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.
+- Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
+  from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
+  instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 
 Release 0.10.1
 ===================
@@ -69,6 +84,8 @@ Changes
   as the second step.
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
+- Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
+  :user:`Eloi Massoulié <emassoulie>`.
 
 
 Bugfixes
