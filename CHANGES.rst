@@ -22,12 +22,21 @@ New Features
 
 Changes
 -------
+- The minimum version of Python has been increased to 3.11. The minimum version of
+  scikit-learn has been increased to 1.5.2. :pr:`2280` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 - The :class:`SessionEncoder` has been optimized to reduce its execution time.
   Depending on backend, we measured up to 15x speedups compared to the previous
   version. :pr:`2285` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
+- :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
+  columns containing ``datetime.date`` objects. Pandas stores those in an
+  ``object`` column, so they used to be rejected, whereas the equivalent polars
+  ``Date`` column was accepted.
+  :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
 
 Deprecations
 ------------
