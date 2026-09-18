@@ -15,10 +15,13 @@ New Features
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
   :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
--- TabularPipeline now uses the estimator when given a pipeline to determine
+- TabularPipeline now uses the estimator when given a pipeline to determine
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
-
+- The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
+  :method:`list_transformations` method that outputs a human-readable
+  summary of the columns transformed by each of its steps.
+  :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
