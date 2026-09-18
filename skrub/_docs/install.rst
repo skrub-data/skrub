@@ -105,44 +105,33 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
             <hr />
 
 .. _installing_from_source:
-How to Contribute
------------------
 
-To set up the project, you will need to fork and clone the repository.
-Instructions for forking, see :ref:`Fork the project <fork-project>` and cloning, see :ref:`Clone the project <clone-project>`.
+.. Now that you're set up,
+.. you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
+.. and start coding!
 
-Setup your environment
+Installing from source
 ''''''''''''''''''''''
 
-Set up the development environment.
-You can set up a virtual environment with Conda, or with python's ``venv``:
-
-- With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
+Clone your project from the main repository:
 
 .. code:: console
 
-    conda create -n env_skrub python=3.13
-    conda activate env_skrub
+    git clone https://github.com/<YOUR_USERNAME>/skrub
+    cd skrub
 
-- With `venv <https://docs.python.org/3/library/venv.html>`__:
-
-.. code:: console
-
-    python -m venv env_skrub
-    source env_skrub/bin/activate
-
-Then, with the environment activated and at the root of your local copy of skrub,
-install the local package in editable mode:
-
-.. code:: console
-
-    pip install -e .
-
-For installing with development dependencies:
+Install skrub in the current environment with development dependencies:
 
 .. code:: console
 
     pip install -e ".[dev]"
+
+
+Contributing to the library
+''''''''''''''''''''''''''''
+
+To contribute to the library, check the :ref:`contributing guide <fork-project>`
+
 
 **Deep learning dependencies**
 
@@ -155,10 +144,6 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 .. code:: console
 
     $ pip install -e ".[transformers]"
-
-Now that you're set up,
-you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
-and start coding!
 
 .. raw:: html
 

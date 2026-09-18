@@ -153,7 +153,6 @@ To contribute to the project, you first need to
 
 That will enable you to push your commits to a branch *on your fork*.
 
-.. _clone-project:
 
 Clone your fork
 ''''''''''''''''
@@ -188,7 +187,39 @@ You should see something like this:
     upstream        git@github.com:skrub-data/skrub.git (fetch)
     upstream        git@github.com:skrub-data/skrub.git (push)
 
-.. _install-pre-commit:
+
+Set up your environment
+''''''''''''''''''''''
+
+Set up the development environment.
+You can set up a virtual environment with Conda, or with python's ``venv``:
+
+- With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
+
+.. code:: console
+
+    conda create -n env_skrub python=3.13
+    conda activate env_skrub
+
+- With `venv <https://docs.python.org/3/library/venv.html>`__:
+
+.. code:: console
+
+    python -m venv env_skrub
+    source env_skrub/bin/activate
+
+Install the local package at the root of your local copy of skrub in editable mode. Modifications done in the source folder are reflected in the installed package.
+
+.. code:: console
+
+    pip install -e .
+
+For installing with development dependencies:
+
+.. code:: console
+
+    pip install -e ".[dev]"
+
 
 Installing pre-commit hooks
 '''''''''''''''''''''''''''
@@ -205,6 +236,7 @@ IDE integrations. These revisions are listed in .git-blame-ignore-revs:
 .. code:: console
 
     git config blame.ignoreRevsFile .git-blame-ignore-revs
+
 
 Run the tests
 ''''''''''''''
