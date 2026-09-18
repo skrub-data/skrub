@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ module_name }}</title>
+
+<!-- Prism core theme -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+<!-- Prism line-numbers plugin CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+<!-- Prism line-highlight plugin CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css">
+
+<style>
+  body { font-family: sans-serif; max-width: 100%; margin: 2em auto; padding: 2em; }
+  pre[class*="language-"] { font-size: 0.95em; }
+</style>
+</head>
+<body>
+
+    <h1><code>{{ module_name }}</code></h1>
+
+<pre id="code-container" class="line-numbers" data-line=""><code class="language-python" id="code">{{ python_source_code }}</code></pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+
+<script>
+  // Parse "#L5" (GitHub/GitLab style) from the URL hash and return the line number, or null.
+  function lineFromHash() {
+    var m = /^#?L(\d+)$/.exec(location.hash);
+    return m ? m[1] : null;
+  }
+
+  var codeEl = document.getElementById('code');
+  var containerEl = document.getElementById('code-container');
+
+  // Tell the line-highlight plugin which line to highlight (if any).
+  var line = lineFromHash();
+  if (line) containerEl.setAttribute('data-line', line);
+
+  // Highlight + render line numbers / line highlight. The Python source is
+  // already embedded in the <code> element above, so no fetch() is needed.
+  Prism.highlightElement(codeEl);
+
+  // Scroll the highlighted line into view once Prism has rendered the highlight overlay.
+  if (line) {
+    setTimeout(function () {
+      var highlightEl = containerEl.querySelector('.line-highlight');
+      if (highlightEl) highlightEl.scrollIntoView({ block: 'center' });
+    }, 0);
+  }
+
+  // Support changing the hash while the page is open (e.g. user edits #L2 -> #L3).
+  window.addEventListener('hashchange', function () {
+    location.reload();
+  });
+</script>
+
+</body>
+</html>

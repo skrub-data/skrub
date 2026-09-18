@@ -1,5 +1,7 @@
 import datetime
+import hashlib
 import html
+import inspect
 import io
 import numbers
 import re
@@ -20,7 +22,7 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
-from ._data_ops import Apply, SplitX, Value, Var
+from ._data_ops import Apply, Call, DataOp, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 
@@ -107,6 +109,43 @@ def _node_status(data_op_graph, mode):
         else:
             status[node_id] = "none"
     return status
+
+
+def _add_source_file(source_path, module_name, output_dir):
+    source_path = Path(source_path).expanduser().resolve()
+    path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
+    python_dir = output_dir / "python"
+    python_dir.mkdir(exist_ok=True)
+    target_file_name = f"{path_hash}.html"
+    target_path = python_dir / target_file_name
+    url = str(Path("python") / target_file_name)
+    if target_path.is_file():
+        return url
+    html = _get_template("python_module.html").render(
+        {
+            "python_source_code": source_path.read_text("utf-8"),
+            "module_name": module_name,
+        }
+    )
+    target_path.write_text(html, "utf-8")
+    return url
+
+
+def _get_source_url(obj, output_dir):
+    if isinstance(obj, DataOp):
+        return None
+    if not (callable(obj) or isinstance(obj, type)):
+        return None
+    try:
+        source_path = inspect.getsourcefile(obj)
+        line_no = inspect.getsourcelines(obj)[1]
+        source_file_url = _add_source_file(
+            source_path, obj.__module__, output_dir=output_dir
+        )
+        return f"{source_file_url}#L{line_no}"
+    except Exception:
+        raise
+        return None
 
 
 def full_report(
@@ -210,6 +249,7 @@ def _make_full_report(
             }
             for n in g["parents"].get(i, [])
         ]
+        source_url = None
         if isinstance(node._skrub_impl, Apply):
             estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
@@ -218,8 +258,11 @@ def _make_full_report(
                 estimator_html_repr = estimator._repr_html_()
             else:
                 estimator_html_repr = None
+            source_url = _get_source_url(estimator.__class__, output_dir)
         else:
             estimator_html_repr = None
+        if isinstance(node._skrub_impl, Call):
+            source_url = _get_source_url(node._skrub_impl.func, output_dir)
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -242,6 +285,7 @@ def _make_full_report(
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
+                source_url=source_url,
             )
         )
         out = output_dir / f"node_{i}.html"

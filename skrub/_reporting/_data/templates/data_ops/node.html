@@ -76,18 +76,34 @@
                     <h3>Where was this step created?</h3>
                     <pre><code class="node-creation-stack">{{ node_creation_stack_description }}</code></pre>
                 </div>
-                {% if eval_duration is not none and env_key is none %}
+                {% if env_key is none %}
+
+                {% if eval_duration is not none %}
                 <div>
                     <h3>Computation time</h3>
                     <code>{{ eval_duration | format_duration }}</code>
                 </div>
                 {% endif %}
 
-                {% if estimator_html_repr and env_key is none %}
+                {% if estimator_html_repr %}
                 <div>
                     <h3>Estimator fitted in this step:</h3>
+                    {% if source_url is not none %}
+                    <p>
+                    <a href="{{ source_url }}">source code</a>
+                    </p>
+                    {% endif %}
                     {{ estimator_html_repr | safe }}
                 </div>
+                {% else %}
+                {% if source_url is not none %}
+                <div>
+                    <h3>{{ "Estimator" if node_type == "Apply" else "Function" }} applied in this step:</h3>
+                    <a href="{{ source_url }}">source code</a>
+                </div>
+                {% endif %}
+                {% endif %}
+
                 {% endif %}
 
                 {% if  report is not none %}
