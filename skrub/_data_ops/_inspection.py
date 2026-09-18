@@ -3,6 +3,7 @@ import hashlib
 import html
 import inspect
 import io
+import linecache
 import numbers
 import re
 import shutil
@@ -121,9 +122,16 @@ def _add_source_file(source_path, output_dir):
     url = str(Path("python") / target_file_name)
     if target_path.is_file():
         return url
+    if source_path.is_file():
+        source_code = source_path.read_text("utf-8")
+    else:
+        lines = linecache.getlines(str(source_path))
+        if not lines:
+            raise OSError(f"Could not find source code for {source_path}")
+        source_code = "".join(lines)
     html = _get_template("python_module.html").render(
         {
-            "python_source_code": source_path.read_text("utf-8"),
+            "python_source_code": source_code,
             "source_file": str(source_path),
         }
     )
