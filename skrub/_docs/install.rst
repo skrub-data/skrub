@@ -117,7 +117,7 @@ Clone your project from the main repository:
 
 .. code:: console
 
-    git clone https://github.com/<YOUR_USERNAME>/skrub
+    git clone https://github.com/skrub-data/skrub.git
     cd skrub
 
 Install skrub in the current environment with development dependencies:
