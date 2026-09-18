@@ -87,6 +87,15 @@ pre, code {
     font-size: 1rem;
 }
 
+.node-creation-stack a {
+    text-decoration: none;
+}
+
+.node-creation-stack .node-creation-stack-line {
+    display: block;
+    margin-left: 2em;
+}
+
 .main-nav:not([data-is-open]){
     display: none;
 }

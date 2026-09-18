@@ -111,7 +111,7 @@ def _node_status(data_op_graph, mode):
     return status
 
 
-def _add_source_file(source_path, module_name, output_dir):
+def _add_source_file(source_path, output_dir):
     source_path = Path(source_path).expanduser().resolve()
     path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
     python_dir = output_dir / "python"
@@ -124,7 +124,7 @@ def _add_source_file(source_path, module_name, output_dir):
     html = _get_template("python_module.html").render(
         {
             "python_source_code": source_path.read_text("utf-8"),
-            "module_name": module_name,
+            "source_file": str(source_path),
         }
     )
     target_path.write_text(html, "utf-8")
@@ -139,13 +139,24 @@ def _get_source_url(obj, output_dir):
     try:
         source_path = inspect.getsourcefile(obj)
         line_no = inspect.getsourcelines(obj)[1]
-        source_file_url = _add_source_file(
-            source_path, obj.__module__, output_dir=output_dir
-        )
+        source_file_url = _add_source_file(source_path, output_dir=output_dir)
         return f"{source_file_url}#L{line_no}"
     except Exception:
-        raise
         return None
+
+
+def _get_stack_info(stack, output_dir):
+    result = []
+    for frame_summary in stack:
+        try:
+            source_file_url = _add_source_file(
+                frame_summary.filename, output_dir=output_dir
+            )
+            url = f"{source_file_url}#L{frame_summary.lineno}"
+        except Exception:
+            url = None
+        result.append({"url": url, "frame": frame_summary})
+    return result
 
 
 def full_report(
@@ -263,6 +274,9 @@ def _make_full_report(
             estimator_html_repr = None
         if isinstance(node._skrub_impl, Call):
             source_url = _get_source_url(node._skrub_impl.func, output_dir)
+            applied_func_name = node._skrub_impl.get_func_name()
+        else:
+            applied_func_name = None
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -277,6 +291,9 @@ def _make_full_report(
                 eval_duration=eval_duration,
                 env_key=env_key,
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
+                node_creation_stack_info=_get_stack_info(
+                    node._skrub_impl.creation_stack(), output_dir
+                ),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
                 node_uuid=node._skrub_impl.uuid,
@@ -286,6 +303,7 @@ def _make_full_report(
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
                 source_url=source_url,
+                applied_func_name=applied_func_name,
             )
         )
         out = output_dir / f"node_{i}.html"
