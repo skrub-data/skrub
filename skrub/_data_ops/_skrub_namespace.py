@@ -1520,12 +1520,9 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add → _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',

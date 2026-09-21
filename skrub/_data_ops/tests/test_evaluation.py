@@ -300,28 +300,25 @@ def test_describe_steps():
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
     >>> print(c.skb.describe_steps())
-    Var 'a'
+    Var 'a' → _0
     Var 'b'
     Call 'func'
     Apply TableVectorizer
     Value int
     CallMethod 'amethod'
-    ( Var 'a' )*
-    ( Var 'a' )*
-    BinOp: add
+    Load _0 (Var 'a')
+    Load _0 (Var 'a')
+    BinOp: add → _6
     Concat: 2 tables
     Value BoolChoice
     BinOp: add
     Var 'X'
-    ( Var 'a' )*
-    ( Var 'a' )*
-    ( BinOp: add )*
+    Load _6 (BinOp: add)
     IfElse <Var 'X'> ? 3 : <BinOp: add>
     Var 'item'
     GetItem <Var 'item'>
     GetAttr 'b'
     BinOp: add
-    * Cached, not recomputed
     """
 
 
