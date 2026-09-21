@@ -136,6 +136,8 @@ class _DataOpTraversal:
     # children are evaluated first is handled by the evaluator (the
     # _DataOpTraversal subclass).
 
+    cache_data_op_results = False
+
     def run(self, data_op):
         stack = [data_op]
         last_result = None
@@ -153,6 +155,18 @@ class _DataOpTraversal:
         # Total time spent evaluating each node (not counting time spent
         # evaluating its children)
         node_durations = defaultdict(float)
+
+        if self.cache_data_op_results:
+            data_op_results = {}
+
+            def handle_data_op(data_op):
+                if (data_op_id := id(data_op)) in data_op_results:
+                    return data_op_results[data_op_id]
+                result = yield from self.handle_data_op(data_op)
+                data_op_results[data_op_id] = result
+                return result
+        else:
+            handle_data_op = self.handle_data_op
 
         def push_computation(handler):
             "Replace the top of stack (tos) with a _Computation wrapping handler(tos)."
@@ -214,7 +228,7 @@ class _DataOpTraversal:
                 pop()
                 last_result = bool(running_apply - {stack[-1].target_id})
             elif isinstance(top, DataOp):
-                push_computation(self.handle_data_op)
+                push_computation(handle_data_op)
 
             # We recurse into built-in collections but not their subclasses (we
             # would not know how to reconstruct a collection from the items'
@@ -302,6 +316,10 @@ class _DataOpTraversal:
 
     def handle_slice(self, s):
         return slice((yield s.start), (yield s.stop), (yield s.step))
+
+
+class _DataOpSingleTraversal(_DataOpTraversal):
+    cache_data_op_results = True
 
 
 class _Evaluator(_DataOpTraversal):
@@ -1081,7 +1099,7 @@ def optuna_suggestion(trial):
     return policy
 
 
-class _ChoiceEvaluator(_DataOpTraversal):
+class _ChoiceEvaluator(_DataOpSingleTraversal):
     """Helper for `eval_choices`."""
 
     def run(self, data_op, policy):
@@ -1169,7 +1187,7 @@ class _Found(Exception):
         self.value = value
 
 
-class _FindNode(_DataOpTraversal):
+class _FindNode(_DataOpSingleTraversal):
     def __init__(self, predicate=None):
         self.predicate = predicate
 
@@ -1258,7 +1276,7 @@ def needs_eval(obj, return_node=False):
     return needs
 
 
-class _FindConflicts(_DataOpTraversal):
+class _FindConflicts(_DataOpSingleTraversal):
     """Find duplicate names or if 2 nodes are marked as X or y."""
 
     def __init__(self):
@@ -1372,7 +1390,7 @@ def find_conflicts(data_op):
     return None
 
 
-class _FindArg(_DataOpTraversal):
+class _FindArg(_DataOpSingleTraversal):
     def __init__(self, predicate, skip_types=(Var, Value)):
         self.predicate = predicate
         self.skip_types = skip_types
@@ -1400,7 +1418,7 @@ def find_arg(data_op, predicate, skip_types=(Var, Value)):
     return None
 
 
-class _FindFirstApply(_DataOpTraversal):
+class _FindFirstApply(_DataOpSingleTraversal):
     def handle_choice(self, choice):
         return (yield choice.chosen_outcome_or_default())
 
