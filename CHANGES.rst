@@ -46,6 +46,8 @@ Deprecations
 - Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
   from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
   instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- Removed deprecated parameter ``order_by`` from :class:`TableReport`.
+  :pr:`2289` by :user:`Lisa McBride <lisaleemcb>`.
 
 Release 0.10.1
 ===================
