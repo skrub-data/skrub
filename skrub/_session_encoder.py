@@ -130,20 +130,21 @@ def _get_session_column_polars(
     else:
         # Otherwise, it's just over the timestamp
         diff_expr = pl.col(timestamp_column).diff().dt.total_seconds()
-    X_sorted = X_sorted.with_columns(diff_expr.alias("_diff"))
+    _diff_column = f"_diff_skrub_{random_string()}"
+    X_sorted = X_sorted.with_columns(diff_expr.alias(_diff_column))
     # Identify session boundaries based on the time differences, null values
     # are added when there isn't a value to diff against (i.e., this is the
     # first record in a group)
     boundary = (
-        pl.col("_diff").is_null()
-        | pl.col("_diff").is_nan()
-        | (pl.col("_diff") > session_gap)
+        pl.col(_diff_column).is_null()
+        | pl.col(_diff_column).is_nan()
+        | (pl.col(_diff_column) > session_gap)
     )
     # The boundary is a bool, so it gets converted to int and the cumulative
     # sum of all boundaries is the session id
     X_sorted = X_sorted.with_columns(
         (boundary.cast(pl.Int64).cum_sum() - 1).alias(session_id_column)
-    ).drop("_diff")
+    ).drop(_diff_column)
     # Add back the null-containing rows that were removed earlier
     X_with_session = pl.concat([X_sorted, X_has_nulls])
     # Sort back to the original order
