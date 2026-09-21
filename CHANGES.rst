@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- Added :class:`CategoricalEncoder`, a single column transformer that combines
+  :class:`~sklearn.preprocessing.OneHotEncoder` and
+  :class:`~sklearn.preprocessing.TargetEncoder`.
+  :pr:`2244` by :user:`Tomasz Kazimierczak <faithlesstomas>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
