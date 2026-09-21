@@ -12,12 +12,13 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import check_cv
+from sklearn.utils._indexing import _safe_indexing
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from .._base import SkrubBaseEstimator
-from .._sklearn_compat import _safe_indexing, _VisualBlock
+from .._sklearn_compat import _VisualBlock
 from .._utils import set_module
 from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default

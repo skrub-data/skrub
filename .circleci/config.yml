@@ -3,12 +3,12 @@ version: 2.1
 jobs:
   python3:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.11
     resource_class: "medium+" # 6gb memory so we don't get OOM killed #1855
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
-      - PYTHON_VERSION: "3.10"
+      - PYTHON_VERSION: "3.11"
       - OMP_NUM_THREADS: 2 # Avoid over-commit with HistGradientBoosting
     steps:
       - checkout
@@ -36,7 +36,7 @@ jobs:
 
   run:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.11
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh

@@ -15,22 +15,37 @@ New Features
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
   :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
--- TabularPipeline now uses the estimator when given a pipeline to determine
+- TabularPipeline now uses the estimator when given a pipeline to determine
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
-
+- The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
+  :method:`list_transformations` method that outputs a human-readable
+  summary of the columns transformed by each of its steps.
+  :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
+- The minimum version of Python has been increased to 3.11. The minimum version of
+  scikit-learn has been increased to 1.5.2. :pr:`2280` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
+- :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
+  columns containing ``datetime.date`` objects. Pandas stores those in an
+  ``object`` column, so they used to be rejected, whereas the equivalent polars
+  ``Date`` column was accepted.
+  :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
 
 Deprecations
 ------------
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.
+- Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
+  from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
+  instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 - Removed deprecated parameter ``order_by`` from :class:`TableReport`.
   :pr:`2289` by :user:`Lisa McBride <lisaleemcb>`.
 
