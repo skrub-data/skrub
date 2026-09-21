@@ -408,7 +408,51 @@ def test_agg_joiner_default_cols(main_table):
         aux_table=main_table, operations="mode", key=["movieId", "userId"]
     )
     agg_joiner.fit(main_table)
-    assert sorted(agg_joiner._cols) == ["genre", "rating"]
+    # The columns keep the order they have in `aux_table`, not a sorted or
+    # otherwise arbitrary one.
+    assert agg_joiner._cols == ["rating", "genre"]
+
+
+def test_agg_joiner_default_cols_order(df_module):
+    """Check that default `cols` follow `aux_table`'s column order.
+
+    The order used to depend on set iteration, so it varied with
+    ``PYTHONHASHSEED`` and the aggregated columns came out in a different
+    order from one run to the next.
+    """
+    aux_table = df_module.make_dataframe(
+        {
+            "userId": [1, 1, 2],
+            "rating": [4.0, 3.0, 5.0],
+            "year": [1999, 2000, 2001],
+            "budget": [10.0, 20.0, 30.0],
+            "votes": [7.0, 8.0, 9.0],
+            "runtime": [90.0, 100.0, 110.0],
+            "screens": [1.0, 2.0, 3.0],
+        }
+    )
+    main_table = df_module.make_dataframe({"userId": [1, 2]})
+
+    agg_joiner = AggJoiner(aux_table=aux_table, operations="mean", key="userId")
+    aggregated = agg_joiner.fit_transform(main_table)
+
+    assert agg_joiner._cols == [
+        "rating",
+        "year",
+        "budget",
+        "votes",
+        "runtime",
+        "screens",
+    ]
+    assert sbd.column_names(aggregated) == [
+        "userId",
+        "rating_mean",
+        "year_mean",
+        "budget_mean",
+        "votes_mean",
+        "runtime_mean",
+        "screens_mean",
+    ]
 
 
 def test_agg_joiner_correct_cols(df_module, main_table):

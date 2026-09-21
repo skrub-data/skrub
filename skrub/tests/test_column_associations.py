@@ -1,3 +1,5 @@
+import builtins
+import sys
 import warnings
 
 import numpy as np
@@ -26,6 +28,38 @@ def test_column_associations(df_module):
     assert sbd.to_list(sbd.col(asso, "pearson_corr")) == pytest.approx(
         [-1.0, -0.13484, 0.13484]
     )
+
+
+def test_column_associations_without_pearson(df_module):
+    df = df_module.make_dataframe({"x": [0, 1], "y": [0, 1]})
+
+    associations = column_associations(df, compute_pearson=False)
+
+    assert sbd.column_names(associations) == [
+        "left_column_name",
+        "left_column_idx",
+        "right_column_name",
+        "right_column_idx",
+        "cramer_v",
+    ]
+
+
+def test_column_associations_polars_without_pyarrow_raises(monkeypatch):
+    """Requesting Pearson correlation without PyArrow raises an exception."""
+    pl = pytest.importorskip("polars")
+    df = pl.DataFrame({"x": [0, 1], "y": [0, 1]})
+    monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pyarrow" or name.startswith("pyarrow."):
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+
+    with pytest.raises(ImportError):
+        column_associations(df)
 
 
 @skip_polars_installed_without_pyarrow

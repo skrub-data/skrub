@@ -173,8 +173,6 @@ class SingleColumnTransformer(SkrubBaseEstimator):
         This default implementation simply calls ``fit_transform()`` and
         returns ``self``.
 
-        Subclasses should implement ``fit_transform`` and ``transform``.
-
         Parameters
         ----------
         column : a pandas or polars Series
