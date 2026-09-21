@@ -33,27 +33,35 @@ followed by three digits.
 2  HS014   WB9M88
 
 We would like to be able to "unpack" the zip code so that we have a column for the
-letters and one for the digits; the transformer should also be able to "reject" a column
-if it does not satisfy the format we specify. A "rejected" column should be passed
-through unchanged, as it cannot be handled by this particular transformer.
+letters and one for the digits; the transformer should also be able to handle columns
+that do not satisfy the format we specify by "rejecting" them.
+A "rejected" column should be passed through unchanged, as it cannot be handled
+by this particular transformer.
 
-We can therefore define a custom class that inherits from |SingleColumnTranformer|
-and that raises |RejectColumn| if a column cannot be handled:
+|SingleColumnTranformer| and |RejectColumn| let us define a transformer that satisfies these
+requirements:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>> class ZipcodeParser(SingleColumnTransformer):
 ...     def __init__(self):
 ...         return
 ...     def fit_transform(self, X, y=None):
+...         self.col_name = X.name if X.name else "parsed_zip"
 ...         if any(X.map(len) != 5):
 ...             raise RejectColumn('This transformer only takes zip codes of length 5.')
-...         else:
-...             letters = X.map(lambda s: s[:2])
-...             try:
-...                 numbers = X.map(lambda s: int(s[2:]))
-...             except:
-...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
-...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
+...         letters = X.map(lambda s: s[:2])
+...         try:
+...             numbers = X.map(lambda s: int(s[2:]))
+...         except:
+...             raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
+...
+...         return(pd.DataFrame({f'{self.col_name}_letters': letters, f'{self.col_name}_numbers': numbers}))
+...     def transform(self, X, y=None):
+...         letters = X.map(lambda s: s[:2])
+...         numbers = X.map(lambda s: int(s[2:]))
+...         return pd.DataFrame({"letters": letters, "numbers": numbers})
+
+
 >>> ZipcodeParser().fit_transform(df["sent"])
   letters  numbers
 0      AB      123
