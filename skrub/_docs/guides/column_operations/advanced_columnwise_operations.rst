@@ -15,25 +15,30 @@ Advanced columnwise operations
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where we want to apply a custom transformation to a series we need the |ApplyToCols|
-structure to handle multiple columns, and if this transformation needs to be able to reject certain
-columns and communicate this to |ApplyToCols|, we must to create a transformer from scratch
-that raises this exception when appropriate: this can be done with the |SingleColumnTranformer| class.
+There are situations in which information in a column may be encoded according
+to a specific system, and it may be beneficial to write a transformer that automatically
+converts columns that satisfy the format into separate columns for further processing.
 
-For instance, we might want to create a custom transformer specialized in parsing zip codes:
-in this example, the zip codes need to have the format ``AB123``, that is two letters
-followed by three digits.
+The |SingleColumnTranformer| can be used to define such a transformer, providing
+additional features to simplify its inclusion in a pipeline and the rejection of
+columns that cannot be handled by the transformer.
+
+We can use the code used to identify municipalities in France
+(`COG, Code officiel géographique <https://en.wikipedia.org/wiki/INSEE_code#Geographical_codes>`_)
+as an example of this problem. The COG is a 5-digit number with the format XXYYY,
+where the XX digits report the number of the department, and the YYY contain the
+code of the municipality.
 
 >>> import pandas as pd
->>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
+>>> df = pd.DataFrame({'sent': ["75001", "13001", "69002"], 'received': ["ABCDE", "DU3K93", "WB9M88"]})
 >>> df
     sent received
-0  AB123   AB1C45
-1  BD601   DU3K93
-2  HS014   WB9M88
+0  75001    ABCDE
+1  13001   DU3K93
+2  69002   WB9M88
 
-We would like to be able to "unpack" the zip code so that we have a column for the
-letters and one for the digits; the transformer should also be able to handle columns
+We would like to be able to "unpack" the code so that we have a column for the
+department code and one for the commune code; the transformer should also be able to handle columns
 that do not satisfy the format we specify by "rejecting" them.
 A "rejected" column should be passed through unchanged, as it cannot be handled
 by this particular transformer.
@@ -46,37 +51,37 @@ requirements:
 ...     def __init__(self):
 ...         return
 ...     def fit_transform(self, X, y=None):
-...         self.col_name = X.name if X.name else "parsed_zip"
+...         self.col_name_ = X.name if X.name else "parsed_zip"
 ...         if any(X.map(len) != 5):
 ...             raise RejectColumn('This transformer only takes zip codes of length 5.')
-...         letters = X.map(lambda s: s[:2])
-...         try:
-...             numbers = X.map(lambda s: int(s[2:]))
-...         except:
-...             raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
-...
-...         return(pd.DataFrame({f'{self.col_name}_letters': letters, f'{self.col_name}_numbers': numbers}))
+...         if not all(X.map(lambda s: s.isdigit())):
+...             raise RejectColumn('Input zip codes must be numeric.')
+...         department = X.map(lambda s: s[:2])
+...         commune = X.map(lambda s: s[2:])
+...         return(pd.DataFrame({f'{self.col_name_}_department': department,
+...                              f'{self.col_name_}_commune': commune}))
 ...     def transform(self, X, y=None):
-...         letters = X.map(lambda s: s[:2])
-...         numbers = X.map(lambda s: int(s[2:]))
-...         return pd.DataFrame({"letters": letters, "numbers": numbers})
+...         department = X.map(lambda s: s[:2])
+...         commune = X.map(lambda s: s[2:])
+...         return(pd.DataFrame({f'{self.col_name_}_department': department,
+...                              f'{self.col_name_}_commune': commune}))
 
 
 >>> ZipcodeParser().fit_transform(df["sent"])
-  letters  numbers
-0      AB      123
-1      BD      601
-2      HS       14
+  sent_department sent_commune
+0              75          001
+1              13          001
+2              69          002
 
 We can use |ApplyToCols| to apply this transformer to the entire dataframe at once,
 and set ``allow_reject=True`` to let rejected columns through without changes:
 
 >>> from skrub import ApplyToCols
 >>> ApplyToCols(ZipcodeParser(), allow_reject=True).fit_transform(df)
-letters  numbers received
-0      AB      123   AB1C45
-1      BD      601   DU3K93
-2      HS       14   WB9M88
+  sent_department sent_commune received
+0              75          001    ABCDE
+1              13          001   DU3K93
+2              69          002   WB9M88
 
 Note how the ``"received"`` column has been "rejected" and passed through unmodified.
 
@@ -95,7 +100,7 @@ fails as soon as a malformed column is encountered:
 >>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
+skrub.core.RejectColumn: Input zip codes must be numeric.
 Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 Letting rejected columns through can be useful for situations in which we do not
 know the content of a column in advance, like when we are trying to convert to
