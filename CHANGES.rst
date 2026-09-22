@@ -37,6 +37,10 @@ Bugfixes
   ``object`` column, so they used to be rejected, whereas the equivalent polars
   ``Date`` column was accepted.
   :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
+- Performance: the construction of :class:`DataOp` and :class:`SkrubLearner`
+  involving deep computation graphs has become much faster.
+  :pr:`2296` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Deprecations
 ------------
