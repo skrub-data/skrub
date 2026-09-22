@@ -1,8 +1,8 @@
 .. currentmodule:: skrub
 
 .. |ApplyToCols| replace:: :class:`ApplyToCols`
-.. |RejectColumn| replace:: :class:`core.RejectColumn`
-.. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
+.. |RejectColumn| replace:: :class:`~core.RejectColumn`
+.. |SingleColumnTransformer| replace:: :class:`~core.SingleColumnTransformer`
 .. |ToDatetime| replace:: :class:`ToDatetime`
 
 .. _user_guide_single_column_transformer:
@@ -16,16 +16,17 @@ The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are situations in which information in a column may be encoded according
-to a specific system, and it may be beneficial to write a transformer that automatically
-converts columns that satisfy the format into separate columns for further processing.
+to a specific set of rules, and it may be beneficial to write a transformer that
+makes use of those rules to convert the starting column into separate features.
 
-The |SingleColumnTranformer| can be used to define such a transformer, providing
+The |SingleColumnTransformer| can be used to define such a transformer, providing
 additional features to simplify its inclusion in a pipeline and the rejection of
 columns that cannot be handled by the transformer.
 
-We can use the code used to identify municipalities in France
-(`COG, Code officiel géographique <https://en.wikipedia.org/wiki/INSEE_code#Geographical_codes>`_)
-as an example of this problem. The COG is a 5-digit number with the format XXYYY,
+For example, consider a situation where we want to identify municipalities in France
+based on their "COG"
+(`Code officiel géographique <https://en.wikipedia.org/wiki/INSEE_code#Geographical_codes>`_).
+The COG is a 5-digit number with the format XXYYY,
 where the XX digits report the number of the department, and the YYY contain the
 code of the municipality.
 
@@ -43,7 +44,7 @@ that do not satisfy the format we specify by "rejecting" them.
 A "rejected" column should be passed through unchanged, as it cannot be handled
 by this particular transformer.
 
-|SingleColumnTranformer| and |RejectColumn| let us define a transformer that satisfies these
+|SingleColumnTransformer| and |RejectColumn| let us define a transformer that satisfies these
 requirements:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
@@ -85,6 +86,9 @@ and set ``allow_reject=True`` to let rejected columns through without changes:
 
 Note how the ``"received"`` column has been "rejected" and passed through unmodified.
 
+Any |SingleColumnTransformer| is designed to work in conjunction with |ApplyToCols|
+and the skrub :ref:`selectors <user_guide_selectors>` to provide a high degree of
+control over what columns should be modified.
 
 
 Rejection handling with |ApplyToCols| and |RejectColumn|
@@ -102,6 +106,7 @@ Traceback (most recent call last):
     ...
 skrub.core.RejectColumn: Input zip codes must be numeric.
 Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
+
 Letting rejected columns through can be useful for situations in which we do not
 know the content of a column in advance, like when we are trying to convert to
 datetime columns in a dataframe, without knowing which ones actually contain dates.
