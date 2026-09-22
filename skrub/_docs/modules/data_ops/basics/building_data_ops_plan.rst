@@ -77,12 +77,11 @@ Result:
 1    4
 2    6
 >>> print(df_doubled.skb.describe_steps())
-Var 'df'
-( Var 'df' )*
+Var 'df' -> _0
+Load _0 (Var 'df')
 GetItem 'col'
 BinOp: mul
 CallMethod 'assign'
-* Cached, not recomputed
 
 On the other hand, working directly on ``df`` leads us to the same result, but
 the actual operations are not being tracked.

@@ -136,6 +136,14 @@ class _DataOpTraversal:
     # children are evaluated first is handled by the evaluator (the
     # _DataOpTraversal subclass).
 
+    # By default whenever a node is visited, all its children are visited. For
+    # DAGs that are not trees that means the same node can be visited many
+    # times. Subclasses can either redefine handle_data_op to take some control
+    # over the graph walk logic (see for example _Evaluator, _Graph, _Cloner),
+    # or turn on cache_data_op_results = True. In this case the result of each
+    # DataOp node is cached and handle_data_op is never called more than once
+    # on the same DataOp. Other objects such as lists, choices or estimators
+    # may still be visited several times.
     cache_data_op_results = False
 
     def run(self, data_op):
@@ -321,6 +329,9 @@ class _DataOpTraversal:
 class _Evaluator(_DataOpTraversal):
     # Class used by the evaluate() function defined in this module to evaluate
     # a DataOp.
+
+    # Handled explicitly in this subclass with the result cache in DataOpImpl.results
+    cache_data_op_results = False
 
     def __init__(self, mode="preview", environment=None, callbacks=()):
         self.mode = mode
@@ -585,29 +596,34 @@ def _cache_pruner(data_op, mode):
 class _Printer(_DataOpTraversal):
     """Helper for `describe_steps()`"""
 
+    # Handled explicitly in this class so we can print lines for re-loading
+    # previous results.
+    cache_data_op_results = False
+
     def run(self, data_op):
-        self._node_ids = {id(n): n_id for n_id, n in graph(data_op)["nodes"].items()}
-        self._seen = set()
+        self._data_op_ids = {}
         self._reused = set()
         self._ops = []
         _ = super().run(data_op)
         lines = []
         for text, n_id in self._ops:
             if n_id in self._reused:
-                text = f"{text} → _{n_id}"
+                text = f"{text} -> _{n_id}"
             lines.append(text)
         return "\n".join(lines)
 
     def handle_data_op(self, data_op):
-        n_id = self._node_ids[id(data_op)]
-        if id(data_op) in self._seen:
+        dop_id = id(data_op)
+        if dop_id in self._data_op_ids:
+            n_id = self._data_op_ids[dop_id]
             self._reused.add(n_id)
             op = (f"Load _{n_id} ({simple_repr(data_op)})", None)
         else:
-            op = (simple_repr(data_op), n_id)
             yield from super().handle_data_op(data_op)
+            n_id = len(self._data_op_ids)
+            self._data_op_ids[dop_id] = n_id
+            op = (simple_repr(data_op), n_id)
         self._ops.append(op)
-        self._seen.add(id(data_op))
 
 
 def describe_steps(data_op):
@@ -621,7 +637,11 @@ class _Cloner(_DataOpTraversal):
     # DAG, not always a tree). We keep track of objects we have already cloned
     # in `replace` which maps original object id to the clone, to avoid
     # creating several clones and thus breaking the graph's structure by
-    # turning it into a tree.
+    # turning it into a tree. The caller may pass a pre-populated dict of clones
+    # to use for (some of) the objects contained in the graph.
+
+    # Handled in this class to keep track of object's clones.
+    cache_data_op_results = False
 
     def __init__(self, replace=None, drop_preview_data=False):
         self.replace = replace
@@ -701,11 +721,15 @@ def _simplify_graph(graph):
 class _Graph(_DataOpTraversal):
     """Helper for `graph()`"""
 
+    # Handled in this class so that we can update graph edges correctly for
+    # nodes that have several parents.
+    cache_data_op_results = False
+
     def run(self, data_op):
         self._nodes = {}
         self._children = defaultdict(list)
         self._parents = defaultdict(list)
-        self._current_data_op = []
+        self._current_data_op_id = []
         _ = super().run(data_op)
         graph = {
             "nodes": self._nodes,
@@ -716,17 +740,17 @@ class _Graph(_DataOpTraversal):
 
     def handle_data_op(self, data_op):
         data_op_id = id(data_op)
-        if self._current_data_op:
-            child, parent = data_op_id, self._current_data_op[-1]
+        if self._current_data_op_id:
+            child, parent = data_op_id, self._current_data_op_id[-1]
             self._children[parent].append(child)
             self._parents[child].append(parent)
         if data_op_id in self._nodes:
-            # We have already visited this node, so we do not need to explore
-            # its children.
+            # We have already visited this node, so once we have updated edges
+            # we do not need to explore its children.
             return data_op
-        self._current_data_op.append(data_op_id)
+        self._current_data_op_id.append(data_op_id)
         yield from super().handle_data_op(data_op)
-        self._current_data_op.pop()
+        self._current_data_op_id.pop()
         self._nodes[data_op_id] = data_op
         return data_op
 
@@ -809,6 +833,10 @@ def _choice_display_names(choices):
 class _ChoiceGraph(_DataOpTraversal):
     """Helper for `choice_graph()`."""
 
+    # Handled in this class because we need to re-traverse the graph for each
+    # choice outcome, so we can identify which other choices are its descendants.
+    cache_data_op_results = False
+
     def run(self, data_op):
         self._choices = {}
         self._children = defaultdict(list)
@@ -848,6 +876,8 @@ class _ChoiceGraph(_DataOpTraversal):
             self._current_outcome[-1], set()
         )
         if (data_op_id := id(data_op)) in seen:
+            # We already visited this node when looking for descendants of the
+            # current outcome, so we do not need to explore it again.
             return data_op
         yield from super().handle_data_op(data_op)
         seen.add(data_op_id)
@@ -1123,6 +1153,7 @@ def optuna_suggestion(trial):
 class _ChoiceEvaluator(_DataOpTraversal):
     """Helper for `eval_choices`."""
 
+    # Only visit each DataOp node once.
     cache_data_op_results = True
 
     def run(self, data_op, policy):
@@ -1211,6 +1242,7 @@ class _Found(Exception):
 
 
 class _FindNode(_DataOpTraversal):
+    # Only visit each DataOp node once.
     cache_data_op_results = True
 
     def __init__(self, predicate=None):
@@ -1304,6 +1336,7 @@ def needs_eval(obj, return_node=False):
 class _FindConflicts(_DataOpTraversal):
     """Find duplicate names or if 2 nodes are marked as X or y."""
 
+    # Only visit each DataOp node once.
     cache_data_op_results = True
 
     def __init__(self):
@@ -1418,6 +1451,7 @@ def find_conflicts(data_op):
 
 
 class _FindArg(_DataOpTraversal):
+    # Only visit each DataOp node once.
     cache_data_op_results = True
 
     def __init__(self, predicate, skip_types=(Var, Value)):
@@ -1448,6 +1482,7 @@ def find_arg(data_op, predicate, skip_types=(Var, Value)):
 
 
 class _FindFirstApply(_DataOpTraversal):
+    # Only visit each DataOp node once.
     cache_data_op_results = True
 
     def handle_choice(self, choice):
