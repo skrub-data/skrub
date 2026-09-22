@@ -93,6 +93,7 @@ Building a complex pipeline with the skrub Data Ops
    modules/data_ops/ml_pipeline/documenting_data_ops_plan
    modules/data_ops/ml_pipeline/evaluating_debugging_data_ops
    modules/data_ops/ml_pipeline/using_part_of_data_ops_plan
+   modules/data_ops/ml_pipeline/caching
    modules/data_ops/ml_pipeline/subsampling_data
 
 Tuning and validating skrub DataOps plans

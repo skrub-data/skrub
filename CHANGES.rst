@@ -11,6 +11,14 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to enable persistent caching of estimators and functions
+  used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
+  `cache` in :func:`set_config`. This caching can be turned off on a
+  node-by-node basis by using the ``no_cache`` parameter of :func:`deferred`,
+  :meth:`.skb.apply <DataOp.skb.apply>` and :meth:`.skb.apply_func
+  <DataOp.skb.apply_func>`. See the :ref:`user guide
+  <user_guide_data_ops_caching>` for more information.
+  :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
@@ -50,6 +58,8 @@ Deprecations
 - Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
   from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
   instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- Removed deprecated parameter ``order_by`` from :class:`TableReport`.
+  :pr:`2289` by :user:`Lisa McBride <lisaleemcb>`.
 
 Release 0.10.1
 ===================
