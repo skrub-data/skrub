@@ -620,8 +620,7 @@ class _Printer(_DataOpTraversal):
             op = (f"Load _{n_id} ({simple_repr(data_op)})", None)
         else:
             yield from super().handle_data_op(data_op)
-            n_id = len(self._data_op_ids)
-            self._data_op_ids[dop_id] = n_id
+            self._data_op_ids[dop_id] = n_id = len(self._data_op_ids)
             op = (simple_repr(data_op), n_id)
         self._ops.append(op)
 
@@ -835,6 +834,8 @@ class _ChoiceGraph(_DataOpTraversal):
 
     # Handled in this class because we need to re-traverse the graph for each
     # choice outcome, so we can identify which other choices are its descendants.
+    # If we visited each DataOp only once rather than once per outcome some
+    # edges would be missing in the choice graph.
     cache_data_op_results = False
 
     def run(self, data_op):
