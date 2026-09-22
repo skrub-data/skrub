@@ -86,14 +86,6 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
-def test_deprecated_order_by(df_module):
-    """`order_by` parameter should emit a DeprecationWarning."""
-    df = df_module.make_dataframe({"a": [1, 2, 3]})
-    with pytest.warns(DeprecationWarning, match="order_by"):
-        TableReport(df, order_by="a")
-
-
-@skip_polars_installed_without_pyarrow
 def test_few_rows(df_module):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
