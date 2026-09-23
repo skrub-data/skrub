@@ -5,8 +5,8 @@
 
 .. _user_guide_featurizing_describe_transformations:
 
-How to display the transformations done by the |TableVectorizer| and the |Cleaner|
-==================================================================================
+How to display how the |TableVectorizer| modified a dataframe
+=============================================================
 
 Both the |TableVectorizer| and the |Cleaner| modify a given dataframe in various
 ways, from converting dtypes, to cleaning formats, to removing columns. In many
@@ -20,7 +20,7 @@ listing:
 
 - the **preprocessing** steps and the columns they were applied to;
 - (for the |TableVectorizer|) the **main transformers** (one per column kind) and
-the columns they handled.
+  the columns they handled.
 
 Let us fit a |TableVectorizer| on a small employee dataframe that contains a
 numeric column, a date stored as a string, a percentage stored as a string, and
@@ -41,25 +41,28 @@ two string columns:
 This prints the following report:
 
 >>> print(vectorizer.describe_transformations()) # doctest: +SKIP
-Preprocessors
-=============
-Null values cleaned (4 columns):
-    - department
-    - employee
-    - hire_date
-    - bonus_pct
 
-Processors by type
-==================
-PassThrough (numeric - 1 columns):
-    - salary
-DatetimeEncoder (datetime - 1 columns):
-    - hire_date
-OneHotEncoder (low_cardinality - 3 columns):
-    - department
-    - employee
-    - bonus_pct
-No high_cardinality columns have been detected.
+.. code-block::
+
+   Preprocessors
+   =============
+   Null values cleaned (4 columns):
+       - department
+       - employee
+       - hire_date
+       - bonus_pct
+
+   Processors by type
+   ==================
+   PassThrough (numeric - 1 columns):
+       - salary
+   DatetimeEncoder (datetime - 1 columns):
+       - hire_date
+   OneHotEncoder (low_cardinality - 3 columns):
+       - department
+       - employee
+       - bonus_pct
+   No high_cardinality columns have been detected.
 
 Reading the report
 ------------------
@@ -70,9 +73,7 @@ Reading the report
   them and applied the |DatetimeEncoder| to extract features such as the year,
   month and day.
 - ``department``, ``employee`` and ``bonus_pct`` are string columns with few
-  unique values (note that the ``"5%"``-style strings were parsed as numbers
-  during preprocessing, but the resulting column still has low cardinality), so
-  they are handled by the |OneHotEncoder|.
+  unique values, so they are handled by the |OneHotEncoder|.
 
 The ``max_cols`` parameter limits how many columns are listed per transformer;
 any overflow is represented by ``...``:
