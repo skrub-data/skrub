@@ -14,6 +14,9 @@ the :ref:`API Reference <api_ref>`.
 
 .. include:: includes/big_toc_css.rst
 
+Exploring dataframes
+--------------------
+
 .. toctree::
    :maxdepth: 2
 
@@ -21,7 +24,21 @@ the :ref:`API Reference <api_ref>`.
    guides/table_report/02_exporting.rst
    guides/table_report/03_finding_correlated_columns.rst
    guides/table_report/04_custom_filters.rst
+
+Featurizing dataframes
+----------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   guides/featurizing/01_describe_transformations.rst
+
+Utilities
+---------
+
+.. toctree::
+   :maxdepth: 2
+
    guides/utilities/customizing_configuration.rst
    guides/utilities/deduplicate_categorical_data.rst
    guides/utilities/fetching_datasets.rst
-   guides/featurizing/01_describe_transformations.rst
