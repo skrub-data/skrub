@@ -27,7 +27,7 @@ New Features
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 - The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
-  :method:`list_transformations` method that outputs a human-readable
+  :method:`describe_transformations` method that outputs a human-readable
   summary of the columns transformed by each of its steps.
   :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
 

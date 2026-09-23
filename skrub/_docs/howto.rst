@@ -24,3 +24,4 @@ the :ref:`API Reference <api_ref>`.
    guides/utilities/customizing_configuration.rst
    guides/utilities/deduplicate_categorical_data.rst
    guides/utilities/fetching_datasets.rst
+   guides/featurizing/01_describe_transformations.rst
