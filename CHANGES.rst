@@ -27,9 +27,14 @@ New Features
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 - The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
-  :method:`describe_transformations` method that outputs a human-readable
+  :meth:`~TableVectorizer.describe_transformations` method that outputs a human-readable
   summary of the columns transformed by each of its steps.
   :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
+- Expanded dtypes accepted by :class:`ToCategorical`. Now accepts `int` columns
+  by setting the new kwarg accept_numeric to ``"int"``. `float` columns are also now
+  accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
+  setting ``accept_numeric=None``.
+  :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
 
 Changes
 -------
@@ -90,7 +95,6 @@ Changes
   containing the full X and y before splitting.
 
   :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
-
 - Added support in :func:`tabular_pipeline` for estimators instantiated from either
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
