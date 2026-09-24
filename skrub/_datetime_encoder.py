@@ -2,7 +2,7 @@
 This module provides the implementation of the DatetimeEncoder.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,7 @@ def _get_dt_feature_pandas(col, feature):
         if col.dt.tz is None:
             epoch = datetime(1970, 1, 1)
         else:
-            epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+            epoch = datetime(1970, 1, 1, tzinfo=UTC)
         return ((col - epoch) / pd.Timedelta("1s")).astype("float32")
     if feature == "weekday":
         return col.dt.day_of_week + 1
