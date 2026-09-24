@@ -101,6 +101,7 @@ Changes
   :user:`Eloi Massoulié <emassoulie>`.
 
 - Made the following changes to :func:`tabular_pipeline`:
+
   - Estimators are no longer required to inherit from :class:`sklearn.BaseEstimator`.
     Instead, scikit-learn compatibility check is based on presence of the methods:
     `get_params`, `set_params`, `fit`, `predict`.
