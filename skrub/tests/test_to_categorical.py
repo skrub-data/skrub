@@ -5,7 +5,7 @@ from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 
 
-def test_to_categorical_pass(df_module):
+def test_to_categorical(df_module):
     s = df_module.make_column("c", ["a", "b", None])
     assert not sbd.is_categorical(s)
     out = ToCategorical().fit_transform(s)
@@ -13,10 +13,20 @@ def test_to_categorical_pass(df_module):
     # categorial columns are accepted
     assert ToCategorical().fit_transform(out) is out
     assert ToCategorical().fit(out).transform(out) is out
+    # non-string, non-categorical columns are rejected
+    f = df_module.make_column("c", [1.1, 2.2, None])
+    with pytest.raises(RejectColumn, match=".*only strings or only integers.*"):
+        ToCategorical().fit(f)
     # default behaviour accepts string columns
     expected = sbd.to_categorical(s)
     df_module.assert_column_equal(ToCategorical().fit_transform(s), expected)
     df_module.assert_column_equal(ToCategorical().fit(s).transform(s), expected)
+    # once accepted during fit, transform works on any column regardless
+    # of dtype
+    f = df_module.make_column("c", [1.1, 2.2, None])
+    assert sbd.is_categorical(ToCategorical().fit(s).transform(f))
+    if df_module.description == "pandas-numpy-dtypes":
+        pytest.skip("nullable dtypes can't accept int columns with nulls")
     # also accepts int columns if accept_int is True
     i = df_module.make_column("c", [1, 2, None])
     expected = sbd.to_categorical(i)
@@ -26,10 +36,6 @@ def test_to_categorical_pass(df_module):
     df_module.assert_column_equal(
         ToCategorical(accept_int=True).fit(i).transform(i), expected
     )
-    # once accepted during fit, transform works on any column regardless
-    # of dtype
-    f = df_module.make_column("c", [1.1, 2.2, None])
-    assert sbd.is_categorical(ToCategorical().fit(s).transform(f))
 
 
 @pytest.mark.parametrize(
