@@ -23,7 +23,6 @@ def test_to_categorical(df_module):
     df_module.assert_column_equal(ToCategorical().fit(s).transform(s), expected)
     # once accepted during fit, transform works on any column regardless
     # of dtype
-    f = df_module.make_column("c", [1.1, 2.2, None])
     assert sbd.is_categorical(ToCategorical().fit(s).transform(f))
     if df_module.description == "pandas-numpy-dtypes":
         pytest.skip("nullable dtypes can't accept int columns with nulls")
