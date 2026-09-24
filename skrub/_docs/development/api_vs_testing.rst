@@ -5,14 +5,16 @@ Comparing the dispatch API and ``df_module``
 
 skrub has two distinct mechanisms for handling multiple dataframe backends:
 the dispatched *dataframe API* (``skrub/_dataframe``, ``skrub/_dispatch.py``) and
-the *``df_module`` fixture* (``skrub/conftest.py``). They look superficially
+the ``df_module`` *fixture* (``skrub/conftest.py``). They look superficially
 similar — both abstract over pandas and polars — but they exist at different
 levels and serve different roles.
+Refer to :ref:`dev_dataframe_api` and :ref:`dev_testing` for more detail on how
+each mechanism is used in the codebase.
 
 +---------------------------+--------------------------------------+------------------------------------+
 |                           | Dispatch API                         | ``df_module`` fixture              |
 +===========================+======================================+====================================+
-| **Where**                 | ``skrub/_dataframe/_common.py``,     | ``skrub/conftest.py``              |
+| **Where**                 | ``skrub/_dataframe/_common.py``      | ``skrub/conftest.py``              |
 +---------------------------+--------------------------------------+------------------------------------+
 | **When it runs**          | Production — at import time and      | Test time — under pytest only      |
 |                           | when skrub functions are called      |                                    |
@@ -57,6 +59,6 @@ Use this table to decide where new code or infrastructure belongs.
 |                                               | local ``@dispatch``.              |
 +-----------------------------------------------+-----------------------------------+
 
-A concrete heuristic: if you are writing code that will run when a user calls
+Rule of thumb: if you are writing code that will run when a user calls
 ``TableVectorizer().fit_transform(df)``, use the dataframe API.  If you are
 writing code that only runs under ``pytest``, use ``df_module``.

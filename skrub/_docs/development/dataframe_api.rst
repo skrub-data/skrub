@@ -87,9 +87,6 @@ priority ordering based on specificity.
 Using the API
 -------------
 
-Import convention
-~~~~~~~~~~~~~~~~~
-
 Throughout skrub, the module is imported under the alias ``sbd`` (or
 occasionally ``ns`` in older code and docstrings):
 
