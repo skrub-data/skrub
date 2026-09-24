@@ -19,16 +19,16 @@ _TREE_ENSEMBLE_CLASS_NAME_SUBSTRINGS = (
 )
 
 
-def is_scikit_learn_compatible_estimator(estimator) -> tuple[bool, str | None]:
-    """Determine whether a candidate object is a valid scikit learn-compatiable
+def _is_scikit_learn_compatible_estimator(estimator) -> tuple[bool, str | None]:
+    """Determine whether a candidate object is a valid scikit learn-compatible
     estimator. Return True or False, plus an optional string stating the failure
     reason."""
 
-    REQUIRED_METHOD_NAMES = ["get_params", "set_params", "fit", "predict"]
-    for method_name in REQUIRED_METHOD_NAMES:
+    required_method_names = ["get_params", "set_params", "fit", "predict"]
+    for method_name in required_method_names:
         if not hasattr(estimator, method_name):
             return False, f"The estimator must have a {method_name} attribute."
-    for method_name in REQUIRED_METHOD_NAMES:
+    for method_name in required_method_names:
         if not callable(getattr(estimator, method_name)):
             return False, f"The estimator's {method_name} attribute must be callable."
     return True, None
@@ -262,13 +262,13 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             " estimator rather than the class itself."
         )
 
-    is_scikit_learn_compatible, incompatable_reason = (
-        is_scikit_learn_compatible_estimator(estimator)
+    is_scikit_learn_compatible, incompatible_reason = (
+        _is_scikit_learn_compatible_estimator(estimator)
     )
     if not is_scikit_learn_compatible:
         raise TypeError(
             "tabular_pipeline expects a scikit-learn compatible estimator as its first"
-            " argument. " + incompatable_reason
+            " argument. " + incompatible_reason
         )
 
     is_estimator_from_tabicl = estimator.__class__.__name__ in (

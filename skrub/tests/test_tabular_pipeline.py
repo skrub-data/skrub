@@ -104,7 +104,7 @@ class Regressor:
 
 
 def test_sklearn_compatible_learner_returns_correct_pipeline():
-    """Test that no error is raised when the estimate have both `get_params`
+    """Test that no error is raised when the estimator has both `get_params`
     and `set_params` attributes"""
     pipeline = tabular_pipeline(Regressor())
     X = pd.DataFrame({"feature": [1, 2, 3]})
