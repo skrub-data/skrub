@@ -27,7 +27,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import selectors as s
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._utils import random_string
 
@@ -59,6 +58,7 @@ def _get_session_column_pandas(
     X_sorted = X_selected.loc[~mask_null].sort_values(by=selected_cols)
     # Find the difference in time between groups, or only between timestamps
     if split_by_columns:
+        # This if is needed because otherwise it causes a warning with min reqs
         grouper = (
             split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
         )
@@ -90,8 +90,8 @@ def _get_session_column_polars(
 
     # Selecting only the columns needed for sessionization and sorting them
     # to ensure that the sessionization is done correctly
-    X_selected = s.select(
-        X_with_order, split_by_columns + [timestamp_column, row_order_col]
+    X_selected = X_with_order.select(
+        split_by_columns + [timestamp_column, row_order_col]
     )
 
     # Identify rows with nulls in timestamp or group_by columns
