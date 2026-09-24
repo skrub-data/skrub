@@ -232,17 +232,17 @@ def test_choice_repr():
     >>> skrub.choose_from(
     ...     [
     ...         skrub.StringEncoder(n_components=n_components),
-    ...         skrub.TextEncoder(n_components=n_components),
+    ...         skrub.LLMEncoder(n_components=n_components),
     ...     ]
     ... )
-    choose_from([StringEncoder(...), TextEncoder(...)])
+    choose_from([StringEncoder(...), LLMEncoder(...)])
     >>> skrub.choose_from(
     ...     {
     ...         "string": skrub.StringEncoder(n_components=n_components),
-    ...         "text": skrub.TextEncoder(n_components=n_components),
+    ...         "text": skrub.LLMEncoder(n_components=n_components),
     ...     }
     ... )
-    choose_from({'string': StringEncoder(...), 'text': TextEncoder(...)})
+    choose_from({'string': StringEncoder(...), 'text': LLMEncoder(...)})
 
     >>> skrub.choose_from([np.eye(3)])
     choose_from([ndarray(...)])

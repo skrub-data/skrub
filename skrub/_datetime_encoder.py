@@ -2,7 +2,7 @@
 This module provides the implementation of the DatetimeEncoder.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,7 @@ def _get_dt_feature_pandas(col, feature):
         if col.dt.tz is None:
             epoch = datetime(1970, 1, 1)
         else:
-            epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+            epoch = datetime(1970, 1, 1, tzinfo=UTC)
         return ((col - epoch) / pd.Timedelta("1s")).astype("float32")
     if feature == "weekday":
         return col.dt.day_of_week + 1
@@ -398,9 +398,11 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
-            if self.add_weekday:
-                encoding_levels += ["weekday"]
+            encoding_levels = [
+                feature
+                for feature in self.extracted_features_
+                if feature in _DEFAULT_ENCODING_PERIODS
+            ]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(

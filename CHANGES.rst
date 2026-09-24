@@ -9,9 +9,56 @@ Release history
 Ongoing development
 ===================
 
-
 New Features
 ------------
+- It is now possible to enable persistent caching of estimators and functions
+  used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
+  `cache` in :func:`set_config`. This caching can be turned off on a
+  node-by-node basis by using the ``no_cache`` parameter of :func:`deferred`,
+  :meth:`.skb.apply <DataOp.skb.apply>` and :meth:`.skb.apply_func
+  <DataOp.skb.apply_func>`. See the :ref:`user guide
+  <user_guide_data_ops_caching>` for more information.
+  :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
+  (of known size), for example ``first, second = data_op``. Each target becomes
+  a DataOp that extracts one of the items.
+  :pr:`2243` by :user:`Elias Strauss <e-strauss>`.
+- TabularPipeline now uses the estimator when given a pipeline to determine
+  the parameters of the TableVectorizer.
+  :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
+- The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
+  :method:`describe_transformations` method that outputs a human-readable
+  summary of the columns transformed by each of its steps.
+  :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
+
+Changes
+-------
+- The minimum version of Python has been increased to 3.11. The minimum version of
+  scikit-learn has been increased to 1.5.2. :pr:`2280` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+
+Bugfixes
+--------
+- :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
+  columns containing ``datetime.date`` objects. Pandas stores those in an
+  ``object`` column, so they used to be rejected, whereas the equivalent polars
+  ``Date`` column was accepted.
+  :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
+
+Deprecations
+------------
+- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
+  from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
+  instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- Removed deprecated parameter ``order_by`` from :class:`TableReport`.
+  :pr:`2289` by :user:`Lisa McBride <lisaleemcb>`.
+
+Release 0.10.1
+===================
 
 Changes
 -------
@@ -54,6 +101,8 @@ Changes
   accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
   setting ``accept_numeric=None``.
   :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
+- Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
+  :user:`Eloi Massoulié <emassoulie>`.
 
 
 Bugfixes
@@ -61,18 +110,25 @@ Bugfixes
 - :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
   installed by avoiding the unused Pearson's correlation computation.
   :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
-
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`GapEncoder` with ``init="k-means"`` raised an error when the input
   column contained missing values. This has been fixed in :pr:`2238` by
   :user:`Achraf Ez <Hrafz>`.
-
-Deprecations
-------------
-
-
+- :class:`DatetimeEncoder` no longer raises ``UnboundLocalError`` when
+  ``resolution=None`` is combined with ``periodic_encoding="circular"`` or
+  ``"spline"``, and no longer fits an unused ``weekday`` periodic encoder when
+  ``resolution`` is finer than ``"hour"``. :pr:`2240` by
+  :user:`Achraf Ez <Hrafz>`.
+- When ``cols`` was not provided, :class:`AggJoiner` and :class:`MultiAggJoiner`
+  selected the columns to aggregate through a Python ``set``, so the order of the
+  aggregated output columns varied between runs. They now keep the order in which
+  the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
+  :user:`Dylan Pulver <dylanpulver>`.
+- A ``cloudpickle`` import error that could happen after updating some required
+  dependencies was fixed in :pr:`2261` by :user:`Jérôme Dockès <jeromedockes>`
+  and :user:`Riccardo Cappuzzo <rcap107>`.
 
 
 Release 0.10.0
@@ -188,6 +244,11 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The package build has been updated to include the user guide and examples with
+  the package, so that it is now possible to access it directly from the wheel
+  rather than having to rely on the online docs. Docs and examples are now stored
+  in ``skrub/_docs``, rather than in the root of the repository.
+  :pr:`2173` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -636,7 +697,7 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_0010_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numeric columns, enabling more robust handling of numeric columns

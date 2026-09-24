@@ -34,6 +34,7 @@ import itertools
 import operator
 import pathlib
 import re
+import sys
 import textwrap
 import traceback
 import types
@@ -51,8 +52,7 @@ from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
-from .._wrap_transformer import wrap_transformer
-from . import _utils
+from . import _caching, _utils
 from ._choosing import get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
@@ -145,6 +145,9 @@ _UNARY_OPS = [
 ]
 
 
+_MEMORY = _caching.Memory()
+
+
 class UninitializedVariable(KeyError):
     """
     Evaluating a DataOp and a value has not been provided for one of the variables.
@@ -195,6 +198,29 @@ def _format_data_op_creation_stack():
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
     return traceback.format_list(stack)
+
+
+def _unpack_arity():
+    """Number of targets in the unpacking assignment being executed, if any.
+
+    Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
+    """
+    try:
+        # skip the frames of this function and of DataOp.__iter__
+        frame = sys._getframe(2)
+        for instruction in dis.get_instructions(frame.f_code):
+            if instruction.offset == frame.f_lasti:
+                # starred targets (`a, *rest = obj`, ie UNPACK_EX) are not
+                # handled because `rest` takes however many values are left.
+                if instruction.opname == "UNPACK_SEQUENCE":
+                    return instruction.arg
+                return None
+    except Exception:
+        # best-effort introspection: anything unexpected (a Python
+        # implementation without sys._getframe, bytecode we cannot read, ...)
+        # must fall back on refusing to iterate, not raise something else.
+        pass
+    return None
 
 
 class DataOpImpl:
@@ -462,7 +488,7 @@ def _get_preview(obj):
     return obj
 
 
-def _checked_deferred_call_constructor(f):
+def checked_deferred_call_constructor(f):
     """Warn about function calls returning None
 
     We use this check because it is quite likely that the function was called
@@ -530,13 +556,17 @@ class _Skb:
 _DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
-Please refer to the example gallery for an introduction to skrub
-DataOps.
+A complete machine learning pipeline -- from data loading and wrangling to the final
+prediction -- in a single object that can be fitted, tuned, cross-validated, and
+saved like any scikit-learn estimator.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing DataOp.
+
+Refer to the :ref:`user_guide_data_ops_index` page for more information.
+
 """
 
 _DATA_OP_INSTANCE_DOC = """Skrub DataOp.
@@ -625,14 +655,23 @@ class DataOp:
     def __getitem__(self, key):
         return DataOp(GetItem(self, key))
 
-    @_checked_deferred_call_constructor
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
             return DataOp(CallMethod(impl.source_object, impl.attr_name, args, kwargs))
         return DataOp(
-            Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
+            Call(
+                self,
+                args,
+                kwargs,
+                globals={},
+                closure=(),
+                defaults=(),
+                kwdefaults={},
+                no_cache=True,
+            )
         )
 
     @checked_data_op_constructor
@@ -700,6 +739,13 @@ class DataOp:
         )
 
     def __iter__(self):
+        # Unpacking (`a, b = data_op`) is supported: we know how many values are
+        # expected, so we can create a node for each of them. Any other kind of
+        # iteration would need the length of the result, which is unknown until
+        # the DataOp is evaluated.
+        if (arity := _unpack_arity()) is not None:
+            values = unpack(self, arity)
+            return (values[i] for i in range(arity))
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -838,14 +884,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, exclude_cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
     if exclude_cols is not None:
         msg = f"`exclude_cols` must be None (the default) when {reason}"
-    elif how not in ["auto", "no_wrap"]:
-        msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
         msg = f"`allow_reject` must be False (the default) when {reason}"
     if msg is not None:
@@ -876,7 +920,7 @@ def _check_estimator_type(estimator):
     )
 
 
-def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X):
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, allow_reject, X):
     """
     Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
     """
@@ -885,16 +929,6 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
             "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
             f"got: {no_wrap!r}."
         )
-    valid = ["auto", "cols", "frame", "no_wrap"]
-    if how not in valid:
-        raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-    if how != "auto":
-        warnings.warn(
-            "The 'how' parameter of .skb.apply() has been deprecated "
-            "and will  be removed in a future release. "
-            f"Use the 'no_wrap' parameter instead. Got how={how!r}",
-            FutureWarning,
-        )
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -902,13 +936,10 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, exclude_cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, allow_reject, reason)
 
     if no_wrap:
         _check("`no_wrap` is True")
-        return estimator
-    if how == "no_wrap":
-        _check("`how` is 'no_wrap'")
         return estimator
     if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
@@ -916,17 +947,8 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    if how == "auto":
-        return ApplyToCols(
-            estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
-        )
-    columnwise = {"cols": True, "frame": False}[how]
-    return wrap_transformer(
-        estimator,
-        cols=cols,
-        exclude_cols=exclude_cols,
-        allow_reject=allow_reject,
-        columnwise=columnwise,
+    return ApplyToCols(
+        estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
     )
 
 
@@ -1371,7 +1393,7 @@ class FreezeAfterFit(DataOpImpl):
 
 
 def _check_column_names(X):
-    # NOTE: could allow int column names when how='no_wrap', prob. not worth
+    # NOTE: could allow int column names when no_wrap=True, prob. not worth
     # the added complexity.
     #
     # TODO: maybe also forbid duplicates? use a reduced version of
@@ -1422,10 +1444,10 @@ class Apply(DataOpImpl):
         "cols",
         "exclude_cols",
         "no_wrap",
-        "how",
         "allow_reject",
         "unsupervised",
         "kwargs",
+        "no_cache",
     ]
 
     # We define `eval()` rather than `compute` because some children may not
@@ -1461,20 +1483,20 @@ class Apply(DataOpImpl):
             cols = yield self.cols
             exclude_cols = yield self.exclude_cols
             no_wrap = yield self.no_wrap
-            how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
                 exclude_cols=exclude_cols,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 X=X,
             )
             self._store_y_format(y)
 
         # 2. Call the appropriate estimator method
+
+        no_cache = yield self.no_cache
 
         if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
             # We are a transformer in 'fit' mode. Rather than `fit()` we call
@@ -1505,21 +1527,42 @@ class Apply(DataOpImpl):
             # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
-                self.estimator_.fit(X, y, **fit_kwargs)
+                self.estimator_, _, self.estimator_id_ = _MEMORY.call_fitting_method(
+                    self.estimator_, "fit", (X, y), fit_kwargs, no_cache=no_cache
+                )
             predict_kwargs = yield from self._eval_kwargs("predict")
-            pred = self.estimator_.predict(X, **predict_kwargs)
+            pred = _MEMORY.call_non_fitting_method(
+                self.estimator_,
+                "predict",
+                (X,),
+                predict_kwargs,
+                self.estimator_id_,
+                no_cache=no_cache,
+            )
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
 
         if "fit" in method_name:
-            y_arg = () if self.unsupervised else (y,)
+            args = (X,) if self.unsupervised else (X, y)
         elif method_name == "score":
-            y_arg = (y,)
+            args = (X, y)
         else:
-            y_arg = ()
-        method_kwargs = yield from self._eval_kwargs(method_name)
-        return getattr(self.estimator_, method_name)(X, *y_arg, **method_kwargs)
+            args = (X,)
+        kwargs = yield from self._eval_kwargs(method_name)
+        if "fit" in method_name:
+            self.estimator_, result, self.estimator_id_ = _MEMORY.call_fitting_method(
+                self.estimator_, method_name, args, kwargs, no_cache=no_cache
+            )
+            return result
+        return _MEMORY.call_non_fitting_method(
+            self.estimator_,
+            method_name,
+            args,
+            kwargs,
+            self.estimator_id_,
+            no_cache=no_cache,
+        )
 
     def _store_y_format(self, y):
         if sbd.is_dataframe(y):
@@ -1662,6 +1705,33 @@ class GetItem(DataOpImpl):
         return f"[{_get_preview(self.key)!r}]"
 
 
+class AsTuple(DataOpImpl):
+    """Node created by unpacking a DataOp, e.g. ``a, b = data_op``."""
+
+    _fields = ["iterable", "expected_length"]
+
+    def compute(self, e, mode, environment):
+        # converting to a tuple (rather than indexing into the result directly)
+        # allows unpacking any iterable, and makes sure an iterator is consumed
+        # only once even though each target indexes into this node.
+        result = tuple(e.iterable)
+        expected, got = e.expected_length, len(result)
+        if got != expected:
+            problem = "not enough" if got < expected else "too many"
+            raise ValueError(
+                f"{problem} values to unpack (expected {expected}, got {got})"
+            )
+        return result
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.expected_length} items>"
+
+
+@checked_data_op_constructor
+def unpack(iterable, expected_length):
+    return DataOp(AsTuple(iterable, expected_length))
+
+
 class Call(DataOpImpl):
     _fields = [
         "func",
@@ -1671,10 +1741,20 @@ class Call(DataOpImpl):
         "closure",
         "defaults",
         "kwdefaults",
+        "no_cache",
     ]
 
     def compute(self, e, mode, environment):
-        func = e.func
+        if getattr(e.func, "_skrub_is_deferred", False):
+            raise ValueError(
+                "A deferred function was wrapped in a DataOp, "
+                "probably by passing it (indirectly) to .skb.apply_func():\n"
+                f"{e.func!r}.\n"
+                "This results in deferring the function twice.\n"
+                "Please pass the original, undecorated function instead.\n"
+                "(Note: it can be accessed from the deferred function as f.func)."
+            )
+        kwargs = (e.kwdefaults or {}) | e.kwargs
         if e.globals or e.closure or e.defaults:
             # The deferred function has skrub DataOps (that need to be
             # evaluated) in its global variables, free variables or default
@@ -1682,15 +1762,17 @@ class Call(DataOpImpl):
             # new function in which the DataOps have been replaced by their
             # computed value. More details in the docstring of
             # `skrub.deferred`.
+            #
+            # In this case we never use caching because joblib would not detect
+            # changes to the globals and closure.
             func = types.FunctionType(
-                func.__code__,
-                globals={**func.__globals__, **e.globals},
+                e.func.__code__,
+                globals={**e.func.__globals__, **e.globals},
                 argdefs=e.defaults,
                 closure=tuple(types.CellType(c) for c in e.closure),
             )
-
-        kwargs = (e.kwdefaults or {}) | e.kwargs
-        return func(*e.args, **kwargs)
+            return func(*e.args, **kwargs)
+        return _MEMORY.call_func(e.func, e.args, kwargs, no_cache=e.no_cache)
 
     def get_func_name(self):
         if not hasattr(self.func, "_skrub_impl"):
@@ -1752,7 +1834,67 @@ class CallMethod(DataOpImpl):
         return f".{_get_preview(self.method_name)}()"
 
 
-def deferred(func):
+def prepare_call_fields(func, no_cache):
+    """
+    Prepare most fields for a Call node.
+
+    This inspects the provided func to prepare the arguments needed to build a
+    Call dataop. Only the args and kwargs for the Call need to be completed in
+    order to build the node.
+    """
+    from ._evaluation import needs_eval
+
+    fields = {
+        "func": func,
+        "globals": {},
+        "closure": (),
+        "defaults": (),
+        "kwdefaults": {},
+        "no_cache": no_cache,
+    }
+
+    if not hasattr(func, "__code__"):
+        return fields
+
+    globals_names = [
+        i.argval
+        for i in dis.get_instructions(func.__code__)
+        if i.opname == "LOAD_GLOBAL"
+    ]
+    # find any globals that need evaluation (contain a dataop or choice).
+    f_globals = {
+        name: func.__globals__[name]
+        for name in globals_names
+        if name in func.__globals__
+        and not isinstance(
+            func.__globals__[name],
+            (
+                # We know that those types do not contain dataops so we skip
+                # the needs_eval() call for speed.
+                types.FunctionType,
+                types.BuiltinFunctionType,
+                type,
+                types.ModuleType,
+            ),
+        )
+        and needs_eval(func.__globals__[name])
+    }
+    closure = tuple(c.cell_contents for c in func.__closure__ or ())
+    if not f_globals and not needs_eval(
+        (closure, func.__defaults__, func.__kwdefaults__)
+    ):
+        return fields
+
+    fields.update(
+        globals=f_globals,
+        closure=closure,
+        defaults=func.__defaults__,
+        kwdefaults=func.__kwdefaults__,
+    )
+    return fields
+
+
+def deferred(func=None, *, no_cache=False):
     """Wrap function calls in a DataOp :class:`DataOp`.
 
     When this decorator is applied, the resulting function returns DataOps.
@@ -1767,6 +1909,13 @@ def deferred(func):
     ----------
     func : function
         The function to wrap
+
+    no_cache : bool, default = False
+        If True, caching is forbidden for this function: calls will not be
+        cached even if the configuration enables caching with
+        skrub.set_config(cache='/path/to/cache_dir').
+
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
 
     Returns
     -------
@@ -1824,6 +1973,26 @@ def deferred(func):
     >>> e.skb.eval({'x': 3})
     INFO x = 3
     3
+
+    It is possible to pass ``no_cache`` with the decorator syntax as well:
+
+    >>> @skrub.deferred(no_cache=True)
+    ... def f(x): return x * 2
+
+    is equivalent to:
+
+    >>> def f(x): return x * 2
+    >>> f = skrub.deferred(f, no_cache=True)
+
+    The original function is available as the ``func`` attribute:
+
+    >>> f(2)  # Call the deferred function, returns a DataOp.
+    <Call 'f'>
+    Result:
+    ―――――――
+    4
+    >>> f.func(2)  # Call the original function.
+    4
 
     **Advanced examples**
 
@@ -1890,75 +2059,30 @@ def deferred(func):
            [-0.87,  0.5 ],
            [-0.  ,  1.  ]])
     """  # noqa : E501
-    from ._evaluation import needs_eval
+    if func is None:
+        return functools.partial(deferred, no_cache=no_cache)
 
-    if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):
-        return func
+    if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+        warnings.warn(
+            "skrub.deferred was applied twice to the function:\n"
+            f"{func!r}\n"
+            "deferred should only be applied once.",
+            stacklevel=2,
+        )
+        no_cache = no_cache or func._skrub_no_cache
+        func = func.func
 
-    @_checked_deferred_call_constructor
+    prepared_call_fields = prepare_call_fields(func, no_cache=no_cache)
+
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals={},
-                closure=(),
-                defaults=(),
-                kwdefaults={},
-            )
-        )
+        return DataOp(Call(**prepared_call_fields, args=args, kwargs=kwargs))
 
     deferred_func._skrub_is_deferred = True
-
-    if not hasattr(func, "__code__"):
-        return deferred_func
-
-    globals_names = [
-        i.argval
-        for i in dis.get_instructions(func.__code__)
-        if i.opname == "LOAD_GLOBAL"
-    ]
-    f_globals = {
-        name: func.__globals__[name]
-        for name in globals_names
-        if name in func.__globals__
-        and not isinstance(
-            func.__globals__[name],
-            (
-                types.FunctionType,
-                types.BuiltinFunctionType,
-                type,
-                types.ModuleType,
-            ),
-        )
-        and needs_eval(func.__globals__[name])
-    }
-    closure = tuple(c.cell_contents for c in func.__closure__ or ())
-    if not f_globals and not needs_eval(
-        (closure, func.__defaults__, func.__kwdefaults__)
-    ):
-        return deferred_func
-
-    @_checked_deferred_call_constructor
-    @checked_data_op_constructor
-    @functools.wraps(func)
-    def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals=f_globals,
-                closure=closure,
-                defaults=func.__defaults__,
-                kwdefaults=func.__kwdefaults__,
-            )
-        )
-
-    deferred_func._skrub_is_deferred = True
+    deferred_func._skrub_no_cache = no_cache
+    deferred_func.func = func
 
     return deferred_func
 
