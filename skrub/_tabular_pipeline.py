@@ -1,6 +1,6 @@
 from sklearn import ensemble
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
 from ._datetime_encoder import DatetimeEncoder
@@ -59,7 +59,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or scikit-learn
-        compatible estimator
+        compatible estimator or scikit-learn pipeline
 
         The estimator to use as the final step in the pipeline. Based on the type of
         estimator, the previous preprocessing steps and their respective parameters are
@@ -71,8 +71,11 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         - ``'classifier'`` or ``'classification'``: a
           :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
           step;
-        - a scikit-learn compatible estimator: the provided estimator is used as the final
-          step.
+        - a scikit-learn estimator: the provided estimator is used as the final step.
+        - a scikit-learn pipeline : if given a pipeline the steps are extracted and
+          returned in a new pipeline with the usual pre-processing by the
+          TableVectorizer (depending on the estimator
+          in the last step of the pipeline) added before.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
@@ -238,7 +241,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     cat_feat_kwargs = {"categorical_features": "from_dtype"}
-
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
             return tabular_pipeline(
@@ -261,6 +263,14 @@ def tabular_pipeline(estimator, *, n_jobs=None):
             " its first argument, but you have passed a type. Pass an instance of the"
             " estimator rather than the class itself."
         )
+    if isinstance(estimator, Pipeline):
+        # extract all the transforms but separate the last step,
+        # which is the estimator (only keeping the second item in
+        # the tuple, the actual transformer/estimator, and not its name)
+        *user_transformers, (_, estimator) = estimator.steps
+    else:
+        # else just create an empty iterable
+        user_transformers = ()
 
     is_scikit_learn_compatible, incompatible_reason = (
         _is_scikit_learn_compatible_estimator(estimator)
@@ -309,6 +319,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
+
     steps = [vectorizer]
     if not is_estimator_from_tabicl:
         # Check whether we need imputation
@@ -322,5 +333,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         if not is_tree_ensemble_estimator:
             steps.append(SquashingScaler(max_absolute_value=5))
 
+    steps.extend([transformer for _, transformer in user_transformers])
     steps.append(estimator)
     return make_pipeline(*steps)

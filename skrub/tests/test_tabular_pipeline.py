@@ -2,8 +2,11 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import ensemble
+from sklearn.base import BaseEstimator
+from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 from skrub import (
@@ -16,7 +19,13 @@ from skrub import (
 
 
 @pytest.mark.parametrize(
-    "learner_kind", ["regressor", "regression", "classifier", "classification"]
+    "learner_kind",
+    [
+        "regressor",
+        "regression",
+        "classifier",
+        "classification",
+    ],
 )
 def test_default_pipeline(learner_kind):
     p = tabular_pipeline(learner_kind)
@@ -178,7 +187,17 @@ def test_from_dtype():
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
 
 
-class TabICLClassifier(Regressor):
+def test_estimator_is_a_pipeline():
+    input_learner = LogisticRegression()
+    sk_pipeline = Pipeline([("pca", PCA()), ("clf", input_learner)])
+    tab_pipeline = tabular_pipeline(sk_pipeline)
+    assert len(tab_pipeline.steps) == 5
+    *_, pca, learner = tab_pipeline.named_steps.values()  # keep only the last two steps
+    assert learner is input_learner
+    assert isinstance(pca, PCA)
+
+
+class TabICLClassifier(BaseEstimator):
     """Dummy class which pretends to be `tabicl.TabICLClassifier`"""
 
     pass

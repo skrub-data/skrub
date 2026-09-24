@@ -2,7 +2,6 @@ import codecs
 import functools
 import json
 import numbers
-import warnings
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -101,9 +100,8 @@ class TableReport:
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
     column. Numpy arrays are converted to pandas DataFrame or Series. The computed
-    statistics can be accessed interactively in a Jupyter notebook or web browser.
-    Alternatively, it can be saved or exported in JSON, Markdown, or HTML format
-    for programmatic access or for inclusion in documents.
+    statistics can be accessed interactively in a Jupyter notebook or web browser,
+    or programmatically with ``.dict()``, ``.json()``, or ``.markdown()``.
 
     Parameters
     ----------
@@ -118,22 +116,17 @@ class TableReport:
         The default value ``None`` uses the global configuration (see
         :func:`set_config`), which then defaults to 10.
 
-    order_by : str, deprecated
-        Deprecated. Column name to use for sorting. Other numerical columns
-        will be plotted as function of the sorting column. Must be of
-        numerical or datetime type.
-
-        .. deprecated:: 0.10.0
-
     title : str
         Title for the report.
+
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
         Each key is the filter named to be displayed in the dropdown menu
-        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
-        formats for the filter values are a list of column names,
-        a list of column indices, or a Selector object.
+        (e.g. ``"first_10"``), and the value is the desired filter. Filters
+        may be specified as a list of column names, a list of column indices,
+        or a :ref:`skrub selectors <user_guide_selectors>` object.
         See the end of the "Examples" section below for details.
+
     verbose : int, default = None
         Whether to print progress information while the report is being generated.
 
@@ -141,6 +134,7 @@ class TableReport:
           which then defaults to 1.
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
+
     plot_distributions : bool or "auto", default="auto"
         Whether to plot the distributions of the columns.
 
@@ -158,18 +152,6 @@ class TableReport:
         - ``"auto"`` (default): compute associations only when the number of
           columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
-
-    max_plot_columns : int or "all", deprecated
-        Deprecated in favor of ``plot_distributions``. This parameter overrides
-        the value chosen for ``plot_distributions`` when it is not None.
-
-        .. deprecated:: 0.9.0
-
-    max_association_columns : int or "all", deprecated
-        Deprecated in favor of ``compute_associations``. This parameter overrides
-        the value chosen for ``compute_associations`` when it is not None.
-
-        .. deprecated:: 0.9.0
 
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
@@ -202,9 +184,8 @@ class TableReport:
     >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two'], c=[11.1, 11.1]))
     >>> report = TableReport(df)
 
-    If you are in a Jupyter notebook, to display the report just have it be the
-    last expression evaluated in a cell so that it is displayed in the cell's
-    output.
+    To display the report in a Jupyter notebook, simply evaluate the last line above
+    in a cell.
 
     >>> report
     <TableReport: use .open() or .markdown() to display>
@@ -263,25 +244,18 @@ class TableReport:
     With the code above, in addition to the default filters such as "All
     columns", "Numeric columns", etc., the added "my_filter" will be available
     in the report, selecting both columns "a" and "b".
-    Filters may be specified as a list of column names, a list of column indices,
-    or one of the :ref:`skrub selectors <user_guide_selectors>` objects.
-
     """
 
     def __init__(
         self,
         dataframe,
         n_rows=None,
-        order_by=None,
         title=None,
         column_filters=None,
         verbose=None,
         plot_distributions="auto",
         compute_associations="auto",
         open_tab="table",
-        # Deprecated parameters kept for backward compatibility
-        max_plot_columns=None,
-        max_association_columns=None,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -315,17 +289,7 @@ class TableReport:
             )
         self.open_tab = open_tab
 
-        # Deprecate order_by parameter on TableReport; prefer pre-sorted dataframes
-        if order_by is not None:
-            warnings.warn(
-                "'order_by' parameter of TableReport is deprecated and will be"
-                " removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         self._summary_kwargs = {
-            "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
             "verbose": self.verbose,
@@ -337,29 +301,6 @@ class TableReport:
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
-
-        if max_plot_columns is not None:
-            warnings.warn(
-                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            plot_distributions = (
-                max_plot_columns == "all" or max_plot_columns >= self.n_columns
-            )
-
-        if max_association_columns is not None:
-            warnings.warn(
-                "'max_association_columns' is deprecated. Use 'compute_associations'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            compute_associations = (
-                max_association_columns == "all"
-                or max_association_columns >= self.n_columns
-            )
 
         (
             self.plot_distributions,

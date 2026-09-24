@@ -13,6 +13,7 @@ from .._select_cols import DropCols, SelectCols
 from ._data_ops import (
     AppliedEstimator,
     Apply,
+    Call,
     Concat,
     DataOp,
     FreezeAfterFit,
@@ -24,7 +25,8 @@ from ._data_ops import (
     check_data_op,
     check_name,
     checked_data_op_constructor,
-    deferred,
+    checked_deferred_call_constructor,
+    prepare_call_fields,
 )
 from ._estimator import (
     ParamSearch,
@@ -156,10 +158,10 @@ class SkrubNamespace:
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         no_wrap=False,
-        how="auto",
         allow_reject=False,
         unsupervised=False,
         kwargs=None,
+        no_cache=False,
     ):
         if kwargs is None:
             kwargs = {}
@@ -171,10 +173,10 @@ class SkrubNamespace:
                 X=self._data_op,
                 y=y,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
                 kwargs=kwargs,
+                no_cache=no_cache,
             )
         )
         return data_op
@@ -188,7 +190,6 @@ class SkrubNamespace:
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         no_wrap=False,
-        how="auto",
         allow_reject=False,
         unsupervised=False,
         fit_kwargs=None,
@@ -198,6 +199,7 @@ class SkrubNamespace:
         predict_proba_kwargs=None,
         decision_function_kwargs=None,
         score_kwargs=None,
+        no_cache=False,
     ):
         """
         Apply an estimator that follows the scikit-learn API to a dataframe or numpy array.
@@ -228,30 +230,6 @@ class SkrubNamespace:
             parameters. Passing ``no_wrap=True`` disables this wrapping in all
             cases. When ``no_wrap`` is True, ``cols`` and ``allow_reject``
             cannot be used.
-
-        how : "auto", "cols", "frame" or "no_wrap", optional
-            Deprecated. Use ``no_wrap`` instead.
-
-            How the estimator is applied. In most cases the default "auto"
-            is appropriate.
-
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
-              transformer, which fits a separate clone of `estimator` each
-              column in `cols`. `estimator` must be a transformer (have a
-              ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
-              transformer, which fits a single clone of `estimator` to the
-              selected part of the input dataframe. `estimator` must be a
-              transformer.
-            - "no_wrap" means no wrapping, `estimator` is applied directly to
-              the unmodified input.
-            - "auto" chooses the wrapping depending on the input and estimator.
-              If the input is not a dataframe or the estimator is not a
-              transformer, the "no_wrap" strategy is chosen. Otherwise if the
-              estimator has a ``__single_column_transformer__`` attribute,
-              "cols" is chosen. Otherwise "frame" is chosen.
-
-            .. deprecated:: 0.9.0
 
         allow_reject : bool, optional
             Whether the transformer can refuse to transform columns for which
@@ -295,6 +273,12 @@ class SkrubNamespace:
         score_kwargs : dict, optional, default=None
             Extra named arguments for ``score``. See the description of the
             ``fit_kwargs`` parameter.
+        no_cache : bool, default = False
+            If True, caching is forbidden for this estimator: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -467,7 +451,6 @@ class SkrubNamespace:
             cols=cols,
             exclude_cols=exclude_cols,
             no_wrap=no_wrap,
-            how=how,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
             kwargs={
@@ -479,9 +462,12 @@ class SkrubNamespace:
                 "decision_function": decision_function_kwargs,
                 "score": score_kwargs,
             },
+            no_cache=no_cache,
         )
 
-    def apply_func(self, func, *args, **kwargs):
+    @checked_deferred_call_constructor
+    @checked_data_op_constructor
+    def apply_func(self, func, *args, no_cache=False, **kwargs):
         r"""Apply the given function.
 
         This is a convenience function; ``X.skb.apply_func(func)`` is
@@ -497,6 +483,17 @@ class SkrubNamespace:
 
         kwargs
             named arguments passed to ``func``.
+
+        no_cache : bool, default = False
+            If True, caching is forbidden for this call: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            Note: if your function has a keyword-only parameter named
+            ``no_cache`` and you need to pass a value for it, use
+            :func:`skrub.deferred` instead of ``apply_func``.
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -543,7 +540,25 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        return deferred(func)(self._data_op, *args, **kwargs)
+        if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+            # stacklevel: 2 + the 2 decorators @checked_deferred_call_constructor
+            #                                  @checked_data_op_constructor
+            #             = 4
+            warnings.warn(
+                "A deferred function was passed to .skb.apply_func():\n"
+                f"{func!r}\nPlease pass the original, undecorated function instead. "
+                "(Note: it can be accessed from the deferred function as f.func).",
+                stacklevel=4,
+            )
+            no_cache = no_cache or func._skrub_no_cache
+            func = func.func
+        return DataOp(
+            Call(
+                **prepare_call_fields(func, no_cache=no_cache),
+                args=(self._data_op, *args),
+                kwargs=kwargs,
+            )
+        )
 
     @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
