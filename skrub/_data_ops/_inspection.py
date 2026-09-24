@@ -15,8 +15,8 @@ import jinja2
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from .. import ApplyToCols, datasets
 from .. import _dataframe as sbd
-from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
@@ -113,7 +113,7 @@ def _node_status(data_op_graph, mode):
 
 
 def _add_source_file(source_path, output_dir):
-    source_path = Path(source_path).expanduser().resolve()
+    source_path = Path(source_path)
     path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
     python_dir = output_dir / "python"
     python_dir.mkdir(exist_ok=True)
@@ -277,7 +277,11 @@ def _make_full_report(
                 estimator_html_repr = estimator._repr_html_()
             else:
                 estimator_html_repr = None
-            source_url = _get_source_url(estimator.__class__, output_dir)
+            if isinstance(estimator, ApplyToCols):
+                estimator_class = estimator.transformer.__class__
+            else:
+                estimator_class = estimator.__class__
+            source_url = _get_source_url(estimator_class, output_dir)
         else:
             estimator_html_repr = None
         if isinstance(node._skrub_impl, Call):
