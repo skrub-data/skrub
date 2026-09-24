@@ -336,7 +336,7 @@ class TimeSeriesReport:
 
     def _add_mean(self, y, color, name="mean"):
         mean = y.mean()
-        return go.Scatter(
+        return go.Scattergl(
             x=[self.time_min, self.time_max],
             y=[mean, mean],
             name=name,
@@ -377,7 +377,7 @@ class TimeSeriesReport:
     def _add_bands(self, band_corners, color, name):
         band_x, band_y = band_corners
 
-        return go.Scatter(
+        return go.Scattergl(
             x=band_x,
             y=band_y,
             name=name,
@@ -391,7 +391,7 @@ class TimeSeriesReport:
         )
 
     def _add_timeline(self, y):
-        return go.Scatter(
+        return go.Scattergl(
             x=self.time,
             y=y,
             name="timeline",
@@ -402,7 +402,7 @@ class TimeSeriesReport:
         )
 
     def _make_trace(self, x, y, name, visible=False, color="#1f77b4"):
-        return go.Scatter(
+        return go.Scattergl(
             x=x,
             y=y,
             name=name,
@@ -417,7 +417,6 @@ class TimeSeriesReport:
         self,
         y,
         labels,
-        titles=("A", "B", "C"),
         color="#1f77b4",
     ):
         fig = make_subplots(
@@ -428,7 +427,7 @@ class TimeSeriesReport:
                 [{"colspan": 2}, None],  # row 2: one plot spanning both columns
             ],
             row_heights=[0.75, 0.25],
-            subplot_titles=(titles),
+            subplot_titles=("", "", ""),  # Titles set dynamically by JavaScript
             vertical_spacing=0.15,
             horizontal_spacing=0.05,
         )
@@ -487,7 +486,7 @@ class TimeSeriesReport:
         # Always visible (needed for vrects and base-plot sparkline)
         # Transparent in overlay mode so base-plot shows through
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=self.time,
                 y=y,
                 mode="lines",
@@ -647,7 +646,7 @@ class TimeSeriesReport:
 
         fig = go.Figure()
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=df_1h["period"],
                 y=df_1h["count"],
                 name="1h",
@@ -708,7 +707,7 @@ class TimeSeriesReport:
 
             # Add to top subplot
             fig.add_trace(
-                go.Scatter(
+                go.Scattergl(
                     x=time_values,
                     y=y_rolled,
                     mode="lines",
@@ -723,7 +722,7 @@ class TimeSeriesReport:
 
         # --- Add bottom timeline sparkline (always visible) ---
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=self.time,
                 y=y,
                 mode="lines",
@@ -740,7 +739,7 @@ class TimeSeriesReport:
             color = default_colors[i % len(default_colors)]
 
             fig.add_trace(
-                go.Scatter(
+                go.Scattergl(
                     x=time_values,
                     y=y_rolled,
                     mode="lines",

@@ -6,6 +6,26 @@
     <style>
         {% include "timeseries_report.css" %}
     </style>
+    <script>
+        // Define switchTab early so onclick handlers can use it
+        function switchTab(tabName) {
+          console.log('Switching to tab:', tabName);
+          document.querySelectorAll('.tab-content').forEach(function(el) {
+            el.classList.remove('active');
+          });
+          document.querySelectorAll('.tab-button').forEach(function(el) {
+            el.classList.remove('active');
+          });
+          var tabElement = document.getElementById('tab-' + tabName);
+          if (tabElement) {
+            tabElement.classList.add('active');
+          } else {
+            console.error('Tab not found:', 'tab-' + tabName);
+          }
+          var tabBtn = document.querySelector('.tab-button[onclick*="' + tabName + '"]');
+          if (tabBtn) tabBtn.classList.add('active');
+        }
+    </script>
     </head>
     <body>
     <h1 onclick="switchTab('overview')" style="cursor: pointer;">Time Series Report</h1>
@@ -99,6 +119,48 @@
         {% endfor %}
 
       <script>
+        // Map traces to their subplot annotations
+        var traceToSubplot = {
+          'heads': 0, 'min': 0, 'missingness': 0,
+          'tails': 1, 'max': 1, 'outliers': 1,
+          'mean': 2, 'std': 2, 'percentile': 2
+        };
+
+        // Update subplot title to show all visible traces in that subplot
+        function updateSubplotTitle(plotDiv, subplotIdx) {
+          try {
+            if (!plotDiv || !plotDiv.data) return;
+
+            var subplotTraces = {
+              0: ['heads', 'min', 'missingness'],
+              1: ['tails', 'max', 'outliers'],
+              2: ['mean', 'std', 'percentile']
+            };
+
+            var visibleTraces = [];
+            var traces = subplotTraces[subplotIdx];
+
+            for (var i = 0; i < plotDiv.data.length; i++) {
+              var trace = plotDiv.data[i];
+              if (traces.indexOf(trace.name) !== -1 && trace.visible !== false && trace.visible !== 'legendonly') {
+                visibleTraces.push(trace.name);
+              }
+            }
+
+            var title = visibleTraces.length > 0 ? visibleTraces.join(', ') : '';
+
+            // Update the annotation text
+            var annotations = plotDiv.layout.annotations || [];
+            if (annotations[subplotIdx]) {
+              var update = {};
+              update['annotations[' + subplotIdx + '].text'] = title;
+              Plotly.relayout(plotDiv, update);
+            }
+          } catch (e) {
+            console.error('Error updating subplot title:', e);
+          }
+        }
+
         // Helper function to toggle Plotly trace visibility by name
         function toggleTrace(plotDiv, traceName) {
           if (!plotDiv || !plotDiv.data) {
@@ -106,65 +168,80 @@
             return;
           }
 
-          // Find trace by name
+          // Find trace by name and toggle visibility
           for (var i = 0; i < plotDiv.data.length; i++) {
             if (plotDiv.data[i].name === traceName) {
               var currentVisibility = plotDiv.data[i].visible;
               var newVisibility = (currentVisibility === false || currentVisibility === 'legendonly') ? true : false;
               Plotly.restyle(plotDiv, {visible: newVisibility}, [i]);
+
+              // Update subplot title to show visible traces
+              var subplotIdx = traceToSubplot[traceName];
+              if (subplotIdx !== undefined) {
+                updateSubplotTitle(plotDiv, subplotIdx);
+              }
               return;
             }
           }
           console.warn('Trace not found: ' + traceName);
         }
 
-        // Button click handlers
-        document.querySelectorAll('.sub-buttons').forEach(function(btnGroup) {
-          btnGroup.querySelectorAll('.sub-button').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-              var container = btn.closest('.main-container');
-              var isMeta = btn.classList.contains('meta-button');
+        // Initialize everything when DOM is ready
+        function initializePlots() {
+          // Button click handlers
+          document.querySelectorAll('.sub-buttons').forEach(function(btnGroup) {
+            btnGroup.querySelectorAll('.sub-button').forEach(function(btn) {
+              btn.addEventListener('click', function() {
+                var container = btn.closest('.main-container');
+                var isMeta = btn.classList.contains('meta-button');
 
-              if (isMeta) {
-                // Meta buttons toggle Plotly traces
-                btn.classList.toggle('active');
-                var traceName = btn.getAttribute('data-trace');
-                var tabId = container.closest('[id^="tab-"]').id.replace('tab-', '');
-                var plotWrapper = document.getElementById('plot-' + tabId);
-                var plotDiv = plotWrapper.querySelector('.plotly-graph-div');
+                if (isMeta) {
+                  // Meta buttons toggle Plotly traces
+                  btn.classList.toggle('active');
+                  var traceName = btn.getAttribute('data-trace');
+                  var tabId = container.closest('[id^="tab-"]').id.replace('tab-', '');
+                  var plotWrapper = document.getElementById('plot-' + tabId);
+                  var plotDiv = plotWrapper.querySelector('.plotly-graph-div');
 
-                toggleTrace(plotDiv, traceName);
-              } else {
-                // Regular buttons switch between plot views
-                var idx = btn.getAttribute('data-subtab');
-                var panel = container.querySelector('.sub-panel-' + idx);
+                  toggleTrace(plotDiv, traceName);
+                } else {
+                  // Regular buttons switch between plot views
+                  var idx = btn.getAttribute('data-subtab');
+                  var panel = container.querySelector('.sub-panel-' + idx);
 
-                // Make regular buttons exclusive
-                container.querySelectorAll('.sub-button:not(.meta-button)').forEach(function(b) {
-                  b.classList.remove('active');
-                });
-                container.querySelectorAll('.sub-panel').forEach(function(p) {
-                  p.classList.remove('active');
-                });
+                  // Make regular buttons exclusive
+                  container.querySelectorAll('.sub-button:not(.meta-button)').forEach(function(b) {
+                    b.classList.remove('active');
+                  });
+                  container.querySelectorAll('.sub-panel').forEach(function(p) {
+                    p.classList.remove('active');
+                  });
 
-                btn.classList.add('active');
-                panel.classList.add('active');
-              }
+                  btn.classList.add('active');
+                  panel.classList.add('active');
+                }
+              });
             });
           });
-        });
 
-        // Top-level tab switching
-        function switchTab(tabName) {
-          document.querySelectorAll('.tab-content').forEach(function(el) {
-            el.classList.remove('active');
-          });
-          document.querySelectorAll('.tab-button').forEach(function(el) {
-            el.classList.remove('active');
-          });
-          document.getElementById('tab-' + tabName).classList.add('active');
-          var tabBtn = document.querySelector('.tab-button[onclick*="' + tabName + '"]');
-          if (tabBtn) tabBtn.classList.add('active');
+          // Initialize subplot titles based on visible traces
+          setTimeout(function() {
+            document.querySelectorAll('.plotly-graph-div').forEach(function(plotDiv) {
+              if (plotDiv.data && plotDiv.layout) {
+                // Update all three subplot titles based on initially visible traces
+                for (var subplotIdx = 0; subplotIdx < 3; subplotIdx++) {
+                  updateSubplotTitle(plotDiv, subplotIdx);
+                }
+              }
+            });
+          }, 100);
+        }
+
+        // Initialize when DOM is ready or immediately if already loaded
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initializePlots);
+        } else {
+          initializePlots();
         }
       </script>
     </body>
