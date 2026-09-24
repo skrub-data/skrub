@@ -1,0 +1,45 @@
+.. _how_to:
+
+How-tos
+--------
+
+This page is the index of skrub's How-to guides: these are short guides and examples
+on how to complete specific tasks and address specific circumstances.
+
+For a more long-form discussion on how skrub works and the reasoning behind specific
+design choices, refer to the :ref:`User Guide <user_guide>`. For runnable code, see the
+:doc:`Example gallery <auto_examples/index>`. For class and function details, see
+the :ref:`API Reference <api_ref>`.
+
+
+.. include:: includes/big_toc_css.rst
+
+Exploring dataframes
+--------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   guides/common_errors
+   guides/table_report/01_alter_appearance.rst
+   guides/table_report/02_exporting.rst
+   guides/table_report/03_finding_correlated_columns.rst
+   guides/table_report/04_custom_filters.rst
+
+Featurizing dataframes
+----------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   guides/featurizing/01_describe_transformations.rst
+
+Utilities
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   guides/utilities/customizing_configuration.rst
+   guides/utilities/deduplicate_categorical_data.rst
+   guides/utilities/fetching_datasets.rst

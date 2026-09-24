@@ -53,6 +53,31 @@ still full-width (unlike the article) #}
 
   <!-- Feature Section 1 -->
   <div class="row mb-0 row-padding-between-features">
+    <div class="col-md-5">
+      <h4 class="feature-title">Interactive Data Exploration</h4>
+      <p class="feature-text">Explore your dataframes interactively with
+        <a class="reference internal"
+        href="reference/generated/skrub.TableReport.html#tablereport"
+        title="skrub.TableReport"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">TableReport</span></code></a>.
+      </p>
+      {% include "demo_table_report_code.html" %}
+      <p class="feature-text-see-also">
+        <a href="https://skrub-data.org/skrub-reports/">Try it on your dataset →</a>
+      </p>
+      <div class="row">
+        <p class="click-table-report-hint">Click anywhere on the table <i class="fa-solid
+fa-caret-right visible-large-screen"></i><i class="fa-solid
+fa-caret-down visible-small-screen"></i></p>
+      </div>
+    </div>
+    <div class="col-md-7">
+      {% include "demo_table_report_generated.html" %}
+    </div>
+  </div>
+
+  <!-- Feature Section 2 -->
+  <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5 mb-5">
       <h4 class="feature-title">Effortless Tabular Learning</h4>
       <p class="feature-text">Create strong scikit-learn pipeline baselines effortlessly with
@@ -69,35 +94,11 @@ still full-width (unlike the article) #}
     </div>
 
 
+
     <div class="col-md-7">
       <!-- Placeholder for coding demo -->
       {% include "demo_tabular_pipeline.html" %}
 
-    </div>
-  </div>
-
-  <!-- Feature Section 2 -->
-  <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
-    <div class="col-md-5">
-      <h4 class="feature-title">Interactive Data Exploration</h4>
-      <p class="feature-text">Explore your dataframes interactively with
-        <a class="reference internal"
-        href="reference/generated/skrub.TableReport.html#tablereport"
-        title="skrub.TableReport"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">TableReport</span></code></a>.
-      </p>
-      {% include "demo_table_report_code.html" %}
-      <p class="feature-text-see-also">
-        <a href="https://skrub-data.org/skrub-reports/">Try it on your dataset →</a>
-      </p>
-      <div class="row">
-        <p class="click-table-report-hint"><i class="fa-solid
-fa-caret-left visible-large-screen"></i> Click anywhere on the table <i class="fa-solid
-fa-caret-down visible-small-screen"></i></p>
-      </div>
-    </div>
-    <div class="col-md-7">
-      {% include "demo_table_report_generated.html" %}
     </div>
   </div>
 
@@ -109,8 +110,8 @@ fa-caret-down visible-small-screen"></i></p>
         (<a class="reference internal"
         href="reference/generated/skrub.StringEncoder.html#stringencoder"
         title="skrub.StringEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringEncoder</span></code></a>,
-	<a class="reference internal" href="reference/generated/skrub.TextEncoder.html#textencoder"
-        title="skrub.TextEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextEncoder</span></code></a>,
+	<a class="reference internal" href="reference/generated/skrub.LLMEncoder.html#LLMEncoder"
+        title="skrub.LLMEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMEncoder</span></code></a>,
 	<a class="reference internal" href="reference/generated/skrub.GapEncoder.html#gapencoder"
         title="skrub.GapEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GapEncoder</span></code></a>,
         and

@@ -1,0 +1,203 @@
+import os
+import time
+import warnings
+from collections import defaultdict
+from pathlib import Path
+
+import numpy as np
+import pytest
+from sklearn.base import BaseEstimator, TransformerMixin
+
+import skrub
+
+
+class DummyTransformer(TransformerMixin, BaseEstimator):
+    n_calls = defaultdict(int)
+
+    def __init__(self, add=1):
+        self.add = add
+
+    def fit(self, X, y=None):
+        self.n_calls["fit"] += 1
+        return self
+
+    def fit_transform(self, X, y=None, **kwargs):
+        self.n_calls["fit_transform"] += 1
+        return X + self.add
+
+    def transform(self, X, **kwargs):
+        self.n_calls["transform"] += 1
+        return X + self.add
+
+    @staticmethod
+    def reset():
+        DummyTransformer.n_calls = defaultdict(int)
+
+
+def f(x, add=10, **kwargs):
+    f.n_calls += 1
+    return x + add
+
+
+f.n_calls = 0
+
+
+@pytest.fixture(autouse=True)
+def reset_counts():
+    f.n_calls = 0
+    DummyTransformer.reset()
+
+
+@pytest.mark.parametrize("with_cache", (False, True))
+def test_caching(with_cache, tmp_path):
+    if with_cache:
+        skrub.set_config(cache=tmp_path)
+    data_op = (
+        skrub.var("x")
+        .skb.apply(DummyTransformer(1))
+        .skb.apply_func(f, 10)
+        .skb.apply(DummyTransformer(2), no_cache=True)
+        .skb.apply_func(f, 20, no_cache=True)
+    )
+    learner = data_op.skb.make_learner()
+    out = learner.fit_transform({"x": 1})
+    assert out == 34
+    assert DummyTransformer.n_calls == {"fit_transform": 2}
+    assert f.n_calls == 2
+    out = learner.fit_transform({"x": 1})
+    assert out == 34
+    assert DummyTransformer.n_calls == {"fit_transform": 3 if with_cache else 4}
+    assert f.n_calls == (3 if with_cache else 4)
+    out = learner.fit_transform({"x": 2})
+    assert out == 35
+    assert DummyTransformer.n_calls == {"fit_transform": 5 if with_cache else 6}
+    assert f.n_calls == (5 if with_cache else 6)
+
+    f.n_calls = 0
+    DummyTransformer.reset()
+
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == 2
+    assert f.n_calls == (1 if with_cache else 2)
+
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == (3 if with_cache else 4)
+    assert f.n_calls == (2 if with_cache else 4)
+
+    skrub.set_config(cache=False)
+    out = learner.transform({"x": 2})
+    assert DummyTransformer.n_calls["transform"] == (5 if with_cache else 6)
+    assert f.n_calls == (4 if with_cache else 6)
+
+
+@pytest.mark.parametrize(
+    "apply_func, deferred, n_calls",
+    [(False, False, 1), (False, True, 2), (True, False, 2), (True, True, 2)],
+)
+def test_apply_deferred_func(apply_func, deferred, n_calls, tmp_path):
+    with warnings.catch_warnings():
+        # warning should not apply_func(deferred(...))
+        warnings.simplefilter("ignore")
+        skrub.set_config(cache=tmp_path)
+        data_op = skrub.var("x").skb.apply_func(
+            skrub.deferred(f, no_cache=deferred), no_cache=apply_func
+        )
+        data_op.skb.eval({"x": 0})
+        data_op.skb.eval({"x": 0})
+        assert f.n_calls == n_calls
+
+
+def test_pickling_error(tmp_path):
+    # check that we get no error when caching fails due to arguments or
+    # function that cannot be serialized/hashed by jobib.
+    skrub.set_config(cache=tmp_path)
+    a = skrub.var("a", 0, becomes_default=True)
+    data_op = (
+        skrub.as_data_op(3)
+        .skb.apply(
+            DummyTransformer(), fit_transform_kwargs={"a": a}, transform_kwargs={"a": a}
+        )
+        .skb.apply_func(
+            f, add=0, callback=lambda x: x
+        )  # an argument cannot be serialized
+    )
+    assert data_op.skb.eval() == 4
+    # the value for the a parameter cannot be serialized: try fit_transform and
+    # transform.
+    assert data_op.skb.eval({"a": lambda: None}) == 4
+    assert data_op.skb.make_learner(fitted=True).transform({"a": lambda: None}) == 4
+
+
+def test_cache_reuse_across_data_ops(tmp_path):
+    # cache reused with different estimator objects in different graphs
+    skrub.set_config(cache=tmp_path)
+    skrub.var("x").skb.apply(DummyTransformer(1)).skb.apply_func(f, 10).skb.eval(
+        {"x": 1}
+    )
+    assert DummyTransformer.n_calls == {"fit_transform": 1}
+    skrub.var("x").skb.apply(DummyTransformer(1)).skb.apply_func(f, 20).skb.eval(
+        {"x": 1}
+    )
+    assert DummyTransformer.n_calls == {"fit_transform": 1}
+
+
+def test_deferred_no_cache_decorator(tmp_path):
+    # no_cache is passed in separate call: deferred(no_cache=True)(f) rather
+    # than deferred(f, no_cache=True)
+    skrub.set_config(cache=tmp_path)
+    g = skrub.deferred(no_cache=True)(f)
+    g(skrub.var("x")).skb.eval({"x": 0})
+    g(skrub.var("x")).skb.eval({"x": 0})
+    assert f.n_calls == 2
+
+
+def test_memory_cache():
+    mem = skrub._data_ops._caching.Memory()
+    assert not mem.has_memory()
+    assert mem.cache(f) is f
+
+
+def _dir_size(path):
+    # Path.walk only added in 3.12 -> use os.walk
+    return sum(
+        (Path(dir_path) / fname).stat().st_size
+        for (dir_path, _, file_names) in os.walk(path)
+        for fname in file_names
+    )
+
+
+def test_cache_pruning(tmp_path):
+    _MEMORY = skrub._data_ops._data_ops._MEMORY
+
+    _MEMORY.cache_dir = None
+    _MEMORY._ran_reduce_cache = False
+
+    data_op = skrub.var("x").skb.apply_func(f)
+
+    # Fill the cache without pruning
+    skrub.set_config(cache=tmp_path, target_cache_size=None)
+    data_op.skb.eval({"x": np.ones(1_000_000)})
+    full_size = _dir_size(tmp_path)
+    assert full_size > 1_000_000
+
+    # Reduce the target size and force the pruning to run again.
+    skrub.set_config(target_cache_size="10K")
+    _MEMORY._ran_reduce_cache = False
+    _MEMORY.cache_dir = None
+
+    # Here we use a small input because the result of evaluation may be
+    # written to the cache after the pruning runs.
+    data_op.skb.eval({"x": np.ones(1)})
+
+    # Wait for the subprocess to run and check that the cache was pruned
+    deadline = time.time() + 5
+    while (pruned_size := _dir_size(tmp_path)) >= 10_000 and time.time() < deadline:
+        time.sleep(0.1)
+    assert pruned_size < 10_000
+
+    # when the script is run in a subprocess codecov doesn't see it so we run
+    # it once more here
+
+    from skrub._data_ops._reduce_cache_size import main
+
+    main([str(tmp_path), "10K"])

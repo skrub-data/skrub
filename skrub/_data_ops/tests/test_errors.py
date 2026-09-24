@@ -2,6 +2,7 @@ import pickle
 import re
 import sys
 import traceback
+import types
 
 import numpy as np
 import pytest
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 import skrub
+from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -26,6 +28,79 @@ def test_for():
     ):
         for _item in a:
             pass
+
+
+def test_star_unpacking():
+    # unlike `a, b = data_op`, iteration with a starred target does not tell us
+    # how many values are expected so it remains unsupported.
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, *_rest = a
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        (lambda *args: None)(*a)
+
+
+def test_unpacking_wrong_number_of_targets():
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*too many values to unpack \(expected 2, got 3\)",
+    ):
+        _first, _second = a
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*not enough values to unpack \(expected 4, got 3\)",
+    ):
+        _first, _second, _third, _fourth = a
+
+
+def _bytecode_inspection_failure(code):
+    raise RuntimeError("cannot inspect bytecode")
+
+
+@pytest.mark.parametrize(
+    "module_name, replacement",
+    [
+        # a Python implementation that does not provide sys._getframe
+        pytest.param("sys", types.SimpleNamespace(), id="no_getframe"),
+        # inspecting the bytecode fails
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=_bytecode_inspection_failure),
+            id="inspection_error",
+        ),
+        # the instruction being executed is not found in the bytecode
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=lambda code: iter(())),
+            id="instruction_not_found",
+        ),
+    ],
+)
+def test_unpacking_without_bytecode_inspection(monkeypatch, module_name, replacement):
+    # `a, b = data_op` relies on finding the UNPACK_SEQUENCE instruction that is
+    # being executed. When that is not possible we fall back on refusing to
+    # iterate, as users can always index into the result instead.
+    monkeypatch.setattr(_data_ops, module_name, replacement)
+    a = skrub.var("a", [1, 2])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, _second = a
+
+
+def test_unpacking_wrong_number_of_targets_at_runtime():
+    # without a value for 'a' the length is only known when the plan runs
+    a = skrub.var("a")
+    first, _second = a
+    with pytest.raises(ValueError, match="too many values to unpack"):
+        first.skb.eval({"a": [1, 2, 3]})
 
 
 def test_if():
@@ -695,3 +770,41 @@ def test_missing_var_message_train_test_split():
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
     )
+
+
+def test_apply_deferred_func():
+    # Test warning / error when user erroneously combines skrub.deferred
+    # and .skb.apply_func (or applies deferred twice)
+
+    def f(x):
+        return x + 1
+
+    x = skrub.var("x")
+
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"(?s)deferred function was passed to \.skb\.apply_func\(\)"
+            r".*pass the original, undecorated function instead"
+        ),
+    ):
+        out = x.skb.apply_func(skrub.deferred(f))
+    assert out.skb.eval({"x": 10}) == 11
+
+    with pytest.warns(
+        UserWarning,
+        match=r"(?s)skrub\.deferred was applied twice.*only be applied once",
+    ):
+        deferred_f = skrub.deferred(skrub.deferred(f))
+    assert deferred_f(x).skb.eval({"x": 10}) == 11
+
+    # When a deferred function is wrapped inside a DataOp it cannot be
+    # inspected when building the graph. We only discover the mistake when
+    # evaluating the DataOp at which point it is too late to correct / unwrap,
+    # so we get an error instead of a warning.
+
+    with pytest.raises(Exception) as e:
+        x.skb.apply_func(skrub.as_data_op(skrub.deferred(f))).skb.eval({"x": 10})
+
+    full_msg = "\n".join(traceback.format_exception(e.value, e.value, e.tb))
+    assert "pass the original, undecorated function instead" in full_msg
