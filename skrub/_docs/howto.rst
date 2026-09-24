@@ -18,7 +18,7 @@ Exploring dataframes
 --------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    guides/table_report/01_alter_appearance.rst
    guides/table_report/02_exporting.rst
@@ -29,7 +29,7 @@ Featurizing dataframes
 ----------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    guides/featurizing/01_describe_transformations.rst
 
@@ -37,7 +37,7 @@ Utilities
 ---------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    guides/utilities/customizing_configuration.rst
    guides/utilities/deduplicate_categorical_data.rst
