@@ -11,6 +11,14 @@ Ongoing development
 
 New Features
 ------------
+- It is now possible to enable persistent caching of estimators and functions
+  used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
+  `cache` in :func:`set_config`. This caching can be turned off on a
+  node-by-node basis by using the ``no_cache`` parameter of :func:`deferred`,
+  :meth:`.skb.apply <DataOp.skb.apply>` and :meth:`.skb.apply_func
+  <DataOp.skb.apply_func>`. See the :ref:`user guide
+  <user_guide_data_ops_caching>` for more information.
+  :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
@@ -19,9 +27,14 @@ New Features
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 - The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
-  :method:`list_transformations` method that outputs a human-readable
+  :meth:`~TableVectorizer.describe_transformations` method that outputs a human-readable
   summary of the columns transformed by each of its steps.
   :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
+- Expanded dtypes accepted by :class:`ToCategorical`. Now accepts `int` columns
+  by setting the new kwarg accept_numeric to ``"int"``. `float` columns are also now
+  accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
+  setting ``accept_numeric=None``.
+  :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
 
 Changes
 -------
@@ -46,6 +59,8 @@ Deprecations
 - Removed deprecated parameters ``max_plot_columns`` and ``max_association_columns``
   from :class:`TableReport`. Use ``plot_distributions`` and ``compute_associations``
   instead. :pr:`2271` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- Removed deprecated parameter ``order_by`` from :class:`TableReport`.
+  :pr:`2289` by :user:`Lisa McBride <lisaleemcb>`.
 
 Release 0.10.1
 ===================
@@ -80,7 +95,6 @@ Changes
   containing the full X and y before splitting.
 
   :pr:`2213` by :user:`Jérôme Dockès <jeromedockes>`.
-
 - Added support in :func:`tabular_pipeline` for estimators instantiated from either
   :class:`tabicl.TabICLClassifier` or :class:`tabicl.TabICLRegressor` with recommended
   default parameters of :class:`TableVectorizer` as the first step, and the estimator
@@ -90,6 +104,15 @@ Changes
 - Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
   :user:`Eloi Massoulié <emassoulie>`.
 
+- Made the following changes to :func:`tabular_pipeline`:
+
+  - Estimators are no longer required to inherit from :class:`sklearn.BaseEstimator`.
+    Instead, scikit-learn compatibility check is based on presence of the methods:
+    ``get_params``, ``set_params``, ``fit``, ``predict``.
+  - Requirement for special treatment for tree ensemble/HGBT models is determined
+    based on class name substring matching, rather than exact type matching.
+
+  :pr:`2225` by :user:`Laurence Dyer <ljdyer>`.
 
 Bugfixes
 --------
