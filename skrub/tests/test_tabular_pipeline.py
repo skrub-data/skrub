@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import ensemble
-from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.pipeline import Pipeline
@@ -197,13 +197,13 @@ def test_estimator_is_a_pipeline():
     assert isinstance(pca, PCA)
 
 
-class TabICLClassifier(BaseEstimator):
+class TabICLClassifier(DummyClassifier):
     """Dummy class which pretends to be `tabicl.TabICLClassifier`"""
 
     pass
 
 
-class TabICLRegressor(Regressor):
+class TabICLRegressor(DummyRegressor):
     """Dummy class which pretends to be `tabicl.TabICLRegressor`"""
 
     pass
