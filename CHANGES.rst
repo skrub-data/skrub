@@ -27,9 +27,14 @@ New Features
   the parameters of the TableVectorizer.
   :pr:`2152` by :user:`Khaoula Riad and Marine Michaut`.
 - The :class:`Cleaner` and :class:`TableVectorizer` classes now have a
-  :method:`describe_transformations` method that outputs a human-readable
+  :meth:`~TableVectorizer.describe_transformations` method that outputs a human-readable
   summary of the columns transformed by each of its steps.
   :pr:`2122` by :user:`Eloi Massoulié <emassoulie>`.
+- Expanded dtypes accepted by :class:`ToCategorical`. Now accepts `int` columns
+  by setting the new kwarg accept_numeric to ``"int"``. `float` columns are also now
+  accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
+  setting ``accept_numeric=None``.
+  :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
 
 Changes
 -------
@@ -96,11 +101,6 @@ Changes
   as the second step.
   :pr:`2222` by :user:`Ashwin V. Mohanan <ashwinvis>`, with guidance from
   :user:`Jérôme Dockès <jeromedockes>`.
-- Expanded dtypes accepted by the encoder `ToCategorical`. Now accepts `int` columns
-  by setting the new kwarg accept_numeric to ``"int"``. `float` columns are also now
-  accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
-  setting ``accept_numeric=None``.
-  :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
 - Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
   :user:`Eloi Massoulié <emassoulie>`.
 
