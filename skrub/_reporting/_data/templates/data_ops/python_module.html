@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <title>{{ module_name }}</title>
 
-<!-- Prism core theme -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
-<!-- Prism line-numbers plugin CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
-<!-- Prism line-highlight plugin CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css">
+<!-- Prism.js (v1.29.0, MIT license) is vendored in prism-1.29.0/ so that this
+     page is fully standalone and does not require a network connection.
+     See prism-1.29.0/README.md and prism-1.29.0/LICENSE. -->
+<style>
+{% include "prism-1.29.0/prism.min.css" %}
+{% include "prism-1.29.0/prism-line-numbers.min.css" %}
+{% include "prism-1.29.0/prism-line-highlight.min.css" %}
+</style>
 
 <style>
   body { font-family: sans-serif; max-width: 100%; margin: 2em auto; padding: 2em; }
@@ -22,10 +24,12 @@
 
 <pre id="code-container" class="line-numbers" data-line=""><code class="language-python" id="code">{{ python_source_code }}</code></pre>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+<script>
+{% include "prism-1.29.0/prism-core.min.js" %}
+{% include "prism-1.29.0/prism-python.min.js" %}
+{% include "prism-1.29.0/prism-line-numbers.min.js" %}
+{% include "prism-1.29.0/prism-line-highlight.min.js" %}
+</script>
 
 <script>
   // Parse "#L5" (GitHub/GitLab style) from the URL hash and return the line number, or null.
