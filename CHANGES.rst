@@ -104,6 +104,15 @@ Changes
 - Removed the parameter ``how`` of :meth:`DataOp.skb.apply`. :pr:`2281` by
   :user:`Eloi Massoulié <emassoulie>`.
 
+- Made the following changes to :func:`tabular_pipeline`:
+
+  - Estimators are no longer required to inherit from :class:`sklearn.BaseEstimator`.
+    Instead, scikit-learn compatibility check is based on presence of the methods:
+    ``get_params``, ``set_params``, ``fit``, ``predict``.
+  - Requirement for special treatment for tree ensemble/HGBT models is determined
+    based on class name substring matching, rather than exact type matching.
+
+  :pr:`2225` by :user:`Laurence Dyer <ljdyer>`.
 
 Bugfixes
 --------
