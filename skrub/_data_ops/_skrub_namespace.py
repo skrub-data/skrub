@@ -1563,19 +1563,15 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add -> _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',
         compute the addition leaving the result of (a + b) on the stack, then
-        repeat this operation (but the second time no computation actually runs
-        because the result of evaluating ``c`` has been cached in-memory), and
-        finally evaluate the multiplication.
+        load the previous result again (the result of evaluating ``c`` has been
+        cached in-memory), and finally evaluate the multiplication.
         """
 
         return describe_steps(self._data_op)
