@@ -4,7 +4,9 @@ repos:
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
+        exclude: skrub/_reporting/_data/templates/data_ops/prism-1.29.0/.*
     -   id: trailing-whitespace
+        exclude: skrub/_reporting/_data/templates/data_ops/prism-1.29.0/.*
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
