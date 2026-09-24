@@ -20,6 +20,7 @@ Exploring dataframes
 .. toctree::
    :maxdepth: 1
 
+   guides/common_errors
    guides/table_report/01_alter_appearance.rst
    guides/table_report/02_exporting.rst
    guides/table_report/03_finding_correlated_columns.rst
