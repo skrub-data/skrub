@@ -23,12 +23,6 @@ from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
-
-try:
-    import polars as pl
-except ImportError:
-    pl = None
-
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -54,26 +48,22 @@ def _get_session_column_pandas(
     X_with_order = X.assign(**{row_order_col: range(len(X))})
 
     # Select only the columns needed for sessionization
-    selected = split_by_columns + [timestamp_column]
-    X_selected = X_with_order[selected + [row_order_col]]
+    selected_cols = split_by_columns + [timestamp_column]
+    X_selected = X_with_order[selected_cols + [row_order_col]]
 
     # Only do sessionization on rows that have no nulls in the selected columns
     # Columns with nulls get -1 in the session id
-    mask_null = X_selected[selected].isnull().any(axis=1)
+    mask_null = X_selected[selected_cols].isnull().any(axis=1)
     X_has_nulls = X_selected.loc[mask_null].assign(**{session_id_column: -1})
-    X_clean = X_selected.loc[~mask_null]
 
-    sort_cols = (
-        split_by_columns + [timestamp_column]
-        if split_by_columns
-        else [timestamp_column]
-    )
-    X_sorted = X_clean.sort_values(by=sort_cols)
+    X_sorted = X_selected.loc[~mask_null].sort_values(by=selected_cols)
     # Find the difference in time between groups, or only between timestamps
     if split_by_columns:
         grouper = (
             split_by_columns[0] if len(split_by_columns) == 1 else split_by_columns
         )
+        # Pandas groupby maintains the order of columns in a group so the sorting
+        # order does not break
         diffs = X_sorted.groupby(grouper)[timestamp_column].diff().dt.total_seconds()
     else:
         diffs = X_sorted[timestamp_column].diff().dt.total_seconds()
@@ -82,12 +72,9 @@ def _get_session_column_pandas(
     # i.e. start of a session), or if the diff is > session_gap (too much time
     # has passed)
     boundary = diffs.isna() | (diffs > session_gap)
-    # session id is the boundary
     session_ids = boundary.cumsum() - 1
     X_sorted = X_sorted.assign(**{session_id_column: session_ids.values})
-    # bring back the null values
     X_with_session = pd.concat([X_sorted, X_has_nulls])
-    # sort back to the original order
     return X_with_session.sort_values(by=row_order_col)[session_id_column]
 
 
@@ -95,6 +82,8 @@ def _get_session_column_pandas(
 def _get_session_column_polars(
     X, split_by_columns, timestamp_column, session_gap, session_id_column
 ):
+    import polars as pl
+
     # Adding a row order column to sort lines back
     row_order_col = f"_row_order_skrub_{random_string()}"
     X_with_order = X.with_row_index(name=row_order_col)
@@ -106,21 +95,16 @@ def _get_session_column_polars(
     )
 
     # Identify rows with nulls in timestamp or group_by columns
-    selected = split_by_columns + [timestamp_column]
+    selected_cols = split_by_columns + [timestamp_column]
 
     # Find rows with nulls in timestamp or group_by columns and assign them a session
     # ID of -1 rather than None for consistency with pandas implementation
     X_has_nulls = X_selected.filter(
-        pl.any_horizontal(pl.col(selected).is_null())
+        pl.any_horizontal(pl.col(selected_cols).is_null())
     ).with_columns(pl.lit(-1).cast(pl.Int64).alias(session_id_column))
 
     # Work only on the columns that have no nulls in the timestamp or split_by columns
-    X_clean = X_selected.drop_nulls(subset=selected)
-    X_sorted = (
-        X_clean.sort(by=split_by_columns + [timestamp_column])
-        if split_by_columns
-        else X_clean.sort(by=timestamp_column)
-    )
+    X_sorted = X_selected.drop_nulls(subset=selected_cols).sort(selected_cols)
     # Find the difference in time between groups
     if split_by_columns:
         # If there are split_by columns, the difference should be over groups
@@ -130,21 +114,17 @@ def _get_session_column_polars(
     else:
         # Otherwise, it's just over the timestamp
         diff_expr = pl.col(timestamp_column).diff().dt.total_seconds()
-    _diff_column = f"_diff_skrub_{random_string()}"
-    X_sorted = X_sorted.with_columns(diff_expr.alias(_diff_column))
+    diff_column = f"_diff_skrub_{random_string()}"
+    X_sorted = X_sorted.with_columns(diff_expr.alias(diff_column))
     # Identify session boundaries based on the time differences, null values
     # are added when there isn't a value to diff against (i.e., this is the
     # first record in a group)
-    boundary = (
-        pl.col(_diff_column).is_null()
-        | pl.col(_diff_column).is_nan()
-        | (pl.col(_diff_column) > session_gap)
-    )
+    boundary = pl.col(diff_column).is_null() | (pl.col(diff_column) > session_gap)
     # The boundary is a bool, so it gets converted to int and the cumulative
     # sum of all boundaries is the session id
     X_sorted = X_sorted.with_columns(
         (boundary.cast(pl.Int64).cum_sum() - 1).alias(session_id_column)
-    ).drop(_diff_column)
+    ).drop(diff_column)
     # Add back the null-containing rows that were removed earlier
     X_with_session = pl.concat([X_sorted, X_has_nulls])
     # Sort back to the original order
