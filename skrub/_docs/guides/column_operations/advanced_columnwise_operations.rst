@@ -86,20 +86,18 @@ and set ``allow_reject=True`` to let rejected columns through without changes:
 
 Note how the ``"received"`` column has been "rejected" and passed through unmodified.
 
-Any |SingleColumnTransformer| is designed to work in conjunction with |ApplyToCols|
+The |SingleColumnTransformer| is designed to work in conjunction with |ApplyToCols|
 and the skrub :ref:`selectors <user_guide_selectors>` to provide a high degree of
 control over what columns should be modified.
 
 
-Rejection handling with |ApplyToCols| and |RejectColumn|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to reject or ignore columns with |ApplyToCols| and |RejectColumn|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The combination |ApplyToCols| and |RejectColumn| allows allows flexible manipulation
-and error checking of dataframe. In the previous example, we decided to ignore the
-malformed ``"received"`` column by setting ``allow_reject=True``. If, however,
-we want our transformer to fail if it encounters a column that it cannot parse,
-we can keep the default value of ``allow_reject=False``, so that the transform
-fails as soon as a malformed column is encountered:
+The combination of |ApplyToCols| and |RejectColumn| allows allows flexible manipulation
+and error checking of dataframe.
+By default, the |RejectColumn| exception is raised if a column cannot be handled
+the transformer: this can be useful to detect errors at fit time.
 
 >>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
@@ -107,9 +105,9 @@ Traceback (most recent call last):
 skrub.core.RejectColumn: Input zip codes must be numeric.
 Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 
-Letting rejected columns through can be useful for situations in which we do not
-know the content of a column in advance, like when we are trying to convert to
-datetime columns in a dataframe, without knowing which ones actually contain dates.
+In some situations, we may not know in advance whether a column can be transformed
+or not: this can be the case if, for example, we are trying to convert strings
+to datetimes.
 
 >>> from skrub import ToDatetime
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
@@ -121,7 +119,7 @@ birthday    ...
 city        ...
 dtype: object
 
-Converting a datetime column would work:
+Converting the datetime column works:
 
 >>> ToDatetime().fit_transform(df["birthday"])
 0   2024-01-29
@@ -136,7 +134,8 @@ skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
 
 The ``allow_reject`` parameter in |ApplyToCols| allows to apply the same transformer
 to all columns without having to worry about which columns will actually be converted:
-here, |ToDatetime| is applied only to the "birthday" column, while "city" is passed
+any rejected column is passed through unchanged.
+Here, |ToDatetime| is applied only to the "birthday" column, while "city" is passed
 through unchanged and no exception is raised.
 
 >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
