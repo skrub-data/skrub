@@ -15,7 +15,7 @@
 Building robust ML baselines with |tabular_pipeline|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The |tabular_pipeline| is a function that, given a scikit-learn estimator,
+The |tabular_pipeline| is a function that, given a scikit-learn compatible estimator,
 returns a full scikit-learn |Pipeline| that contains a |TableVectorizer|
 followed by the given estimator.
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
@@ -50,7 +50,7 @@ problems, but may not beat properly tuned ad-hoc pipelines.
    :widths: 25 25 25 25
 
    * - Parameter
-     - ``RandomForest`` models
+     - Tree ensemble models (e.g. ``RandomForest``)
      - ``HistGradientBoosting`` models
      - Linear models and others
    * - Low-cardinality encoder
@@ -139,7 +139,7 @@ the default table preprocessing:
 >>> model_pipeline = make_pipeline(PCA(n_components=20), Ridge())
 >>> full_pipeline = tabular_pipeline(model_pipeline)
 >>> [name for name, _ in full_pipeline.steps]
-['tablevectorizer', 'simpleimputer', 'squashingscaler', 'pipeline']
+['tablevectorizer', 'simpleimputer', 'squashingscaler', 'pca', 'ridge']
 
 The user-provided estimator pipeline is appended as a single final step. This
 means that ``tabular_pipeline`` can still decide which preprocessing steps to

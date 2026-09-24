@@ -252,6 +252,10 @@ html_theme_options = {
     #         "name": "PyData",
     #     },
     # ],
+    "analytics": {
+        "plausible_analytics_domain": "skrub-data.org",
+        "plausible_analytics_url": "https://views.scientific-python.org/js/script.js",
+    },
     "header_links_before_dropdown": 5,
     "icon_links": [
         {

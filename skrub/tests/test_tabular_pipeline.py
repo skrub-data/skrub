@@ -1,8 +1,12 @@
+import numpy as np
+import pandas as pd
 import pytest
 from sklearn import ensemble
-from sklearn.base import BaseEstimator
+from sklearn.decomposition import PCA
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 from skrub import (
@@ -15,7 +19,13 @@ from skrub import (
 
 
 @pytest.mark.parametrize(
-    "learner_kind", ["regressor", "regression", "classifier", "classification"]
+    "learner_kind",
+    [
+        "regressor",
+        "regression",
+        "classifier",
+        "classification",
+    ],
 )
 def test_default_pipeline(learner_kind):
     p = tabular_pipeline(learner_kind)
@@ -36,12 +46,78 @@ def test_bad_learner():
         match=".*should be 'regressor', 'regression', 'classifier' or 'classification'",
     ):
         tabular_pipeline("bad")
-    with pytest.raises(
-        TypeError, match=".*Pass an instance of HistGradientBoostingRegressor"
-    ):
+    with pytest.raises(TypeError, match=".*Pass an instance"):
         tabular_pipeline(ensemble.HistGradientBoostingRegressor)
-    with pytest.raises(TypeError, match=".*expects a scikit-learn estimator"):
+    with pytest.raises(
+        TypeError, match=".*expects a scikit-learn compatible estimator"
+    ):
         tabular_pipeline(object())
+
+
+def test_missing_required_attribute():
+    """Test that a TypeError is raised when the estimator does not have one of the
+    attributes required of a scikit learn-compatible estimator"""
+
+    class MissingSetParams:
+        def fit(self, X, y=None):
+            return self
+
+        def predict(self, X):
+            return np.zeros(X.shape[0])
+
+        def get_params(self):
+            return {}
+
+    with pytest.raises(
+        TypeError, match=".*expects a scikit-learn compatible estimator.*set_params"
+    ):
+        tabular_pipeline(MissingSetParams())
+
+
+def test_required_attribute_is_not_callable():
+    """Test that a TypeError is raised when the estimator has all of the required
+    attributes, but one of them is not callable"""
+
+    class PredictNotCallable:
+        def fit(self, X, y=None):
+            return self
+
+        predict = 1
+
+        def get_params(self):
+            return {}
+
+        def set_params(self, **params):
+            return self
+
+    with pytest.raises(
+        TypeError, match=".*expects a scikit-learn compatible estimator.*predict"
+    ):
+        tabular_pipeline(PredictNotCallable())
+
+
+class Regressor:
+    """Dummy regressor used for tests"""
+
+    def fit(self, X, y=None):
+        return self
+
+    def predict(self, X):
+        return np.zeros(X.shape[0])
+
+    def get_params(self):
+        return {}
+
+    def set_params(self, **params):
+        return self
+
+
+def test_sklearn_compatible_learner_returns_correct_pipeline():
+    """Test that no error is raised when the estimator has both `get_params`
+    and `set_params` attributes"""
+    pipeline = tabular_pipeline(Regressor())
+    X = pd.DataFrame({"feature": [1, 2, 3]})
+    pipeline.fit(X)
 
 
 def test_linear_learner():
@@ -66,6 +142,40 @@ def test_tree_learner():
     assert tv.datetime.periodic_encoding is None
 
 
+def test_tree_ensemble_treatment_for_any_random_forest():
+    """Test that special treatment for tree ensemble models is applied when
+    substring 'RandomForest' appears in estimator class name"""
+
+    class IAmARandomForestEstimator(Regressor):
+        pass
+
+    original_learner = IAmARandomForestEstimator()
+    p = tabular_pipeline(original_learner)
+    _, tv = p.steps[0]
+    _, learner = p.steps[-1]
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
+
+
+def test_tree_ensemble_treatment_for_xgboost():
+    """Test that special treatment for tree ensemble models is applied when
+    substring 'XGB' appears in estimator class name"""
+
+    class IAmXGB(Regressor):
+        pass
+
+    original_learner = IAmXGB()
+    p = tabular_pipeline(original_learner)
+    _, tv = p.steps[0]
+    _, learner = p.steps[-1]
+    assert learner is original_learner
+    assert isinstance(tv.high_cardinality, StringEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
+
+
 def test_from_dtype():
     p = tabular_pipeline(
         ensemble.HistGradientBoostingRegressor(categorical_features=())
@@ -77,13 +187,23 @@ def test_from_dtype():
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
 
 
-class TabICLClassifier(BaseEstimator):
+def test_estimator_is_a_pipeline():
+    input_learner = LogisticRegression()
+    sk_pipeline = Pipeline([("pca", PCA()), ("clf", input_learner)])
+    tab_pipeline = tabular_pipeline(sk_pipeline)
+    assert len(tab_pipeline.steps) == 5
+    *_, pca, learner = tab_pipeline.named_steps.values()  # keep only the last two steps
+    assert learner is input_learner
+    assert isinstance(pca, PCA)
+
+
+class TabICLClassifier(DummyClassifier):
     """Dummy class which pretends to be `tabicl.TabICLClassifier`"""
 
     pass
 
 
-class TabICLRegressor(BaseEstimator):
+class TabICLRegressor(DummyRegressor):
     """Dummy class which pretends to be `tabicl.TabICLRegressor`"""
 
     pass
