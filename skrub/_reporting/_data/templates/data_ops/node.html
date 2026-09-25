@@ -90,28 +90,49 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif %}{{ f.frame
                 </div>
                 {% endif %}
 
-                {% if estimator_html_repr %}
+                {% if node_type == "Apply" %}
+                <h3>Estimator applied in this step:</h3>
                 <div>
-                    <h3>Estimator fitted in this step:</h3>
                     {% if source_url is not none %}
                     <p>
-                    <a href="{{ source_url }}">source code</a>
+                        <a href="{{ source_url }}">source code</a>
                     </p>
                     {% endif %}
-                    {{ estimator_html_repr | safe }}
-                </div>
-                {% else %}
-                {% if source_url is not none %}
-                <div>
-                    <h3>{{ "Estimator" if node_type == "Apply" else "Function" }} applied in this step:</h3>
-                    {% if applied_func_name is not none %}
-                        <code>{{ applied_func_name }}</code>: 
+                    {% if estimator_doc is not none %}
+                    <details><summary>docstring</summary>
+                    <pre>
+                    <code>
+{{ estimator_doc }}
+</code>
+</pre>
+                    </details>
                     {% endif %}
-                    <a href="{{ source_url }}">source code</a>
+
+                    {% if estimator_html_repr %}
+                    {{ estimator_html_repr | safe }}
+                    {% endif %}
                 </div>
                 {% endif %}
-                {% endif %}
+                {% if node_type == "Call" %}
+                <div>
+                    <h3>Function applied in this step:</h3>
+                        <code>{{ applied_func_name }}</code>
+                        {% if source_url is not none %}
+                        : <a href="{{ source_url }}">source code</a>
+                    {% endif %}
 
+                    {% if applied_func_doc is not none %}
+                    <details><summary>docstring</summary>
+                    <pre>
+                    <code>
+{{ applied_func_doc }}
+</code>
+</pre>
+                    </details>
+                    {% endif %}
+
+                </div>
+                {% endif %}
                 {% endif %}
 
                 {% if  report is not none %}

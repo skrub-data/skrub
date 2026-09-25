@@ -21,7 +21,7 @@ from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice, Choice
+from ._choosing import BaseChoice, BaseNumericChoice, Choice
 from ._data_ops import Apply, Call, DataOp, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
@@ -152,6 +152,12 @@ def _get_source_url(obj, output_dir):
         return None
 
 
+def _get_doc(obj):
+    if isinstance(obj, (DataOp, BaseChoice)):
+        return None
+    return getattr(obj, "__doc__", "")
+
+
 def _get_stack_info(stack, output_dir):
     result = []
     for frame_summary in stack:
@@ -272,6 +278,7 @@ def _make_full_report(
             estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
+            estimator_doc = _get_doc(estimator)
             if isinstance(estimator, DataOp):
                 estimator_html_repr = None
             else:
@@ -287,11 +294,14 @@ def _make_full_report(
                 source_url = _get_source_url(estimator_class, output_dir)
         else:
             estimator_html_repr = None
+            estimator_doc = None
         if isinstance(node._skrub_impl, Call):
             source_url = _get_source_url(node._skrub_impl.func, output_dir)
             applied_func_name = node._skrub_impl.get_func_name()
+            applied_func_doc = _get_doc(node._skrub_impl.func)
         else:
             applied_func_name = None
+            applied_func_doc = None
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -305,7 +315,6 @@ def _make_full_report(
                 error_msg=error_msg,
                 eval_duration=eval_duration,
                 env_key=env_key,
-                node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_creation_stack_info=_get_stack_info(
                     node._skrub_impl.creation_stack(), output_dir
                 ),
@@ -317,8 +326,10 @@ def _make_full_report(
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
+                estimator_doc=estimator_doc,
                 source_url=source_url,
                 applied_func_name=applied_func_name,
+                applied_func_doc=applied_func_doc,
             )
         )
         out = output_dir / f"node_{i}.html"
