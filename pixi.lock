@@ -12152,7 +12152,6 @@ packages:
   - libstdcxx >=15
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -12168,7 +12167,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - python_abi 3.12.* *_cp312
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -12184,7 +12182,6 @@ packages:
   - libstdcxx >=15
   - python_abi 3.13.* *_cp313
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -12200,7 +12197,6 @@ packages:
   - libstdcxx >=15
   - python_abi 3.14.* *_cp314
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -23936,7 +23932,6 @@ packages:
   - __osx >=11.0
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -23951,7 +23946,6 @@ packages:
   - libcxx >=21
   - python_abi 3.14.* *_cp314
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -28694,7 +28688,6 @@ packages:
   - __osx >=11.0
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -28709,7 +28702,6 @@ packages:
   - libcxx >=21
   - python_abi 3.13.* *_cp313
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -28724,7 +28716,6 @@ packages:
   - libcxx >=21
   - python_abi 3.14.* *_cp314
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -34650,7 +34641,6 @@ packages:
   - ucrt >=10.0.20348.0
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -34666,7 +34656,6 @@ packages:
   - ucrt >=10.0.20348.0
   - python_abi 3.13.* *_cp313
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}
@@ -34682,7 +34671,6 @@ packages:
   - ucrt >=10.0.20348.0
   - python_abi 3.14.* *_cp314
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/greenlet?source=compressed-mapping
   run_exports: {}

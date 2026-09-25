@@ -42,6 +42,9 @@ Changes
   scikit-learn has been increased to 1.5.2. :pr:`2280` by
   :user:`Riccardo Cappuzzo <rcap107>`.
 
+- The :class:`SessionEncoder` has been optimized to reduce its execution time.
+  Depending on backend, we measured up to 15x speedups compared to the previous
+  version. :pr:`2285` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
