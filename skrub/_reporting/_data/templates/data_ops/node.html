@@ -77,10 +77,10 @@
                     <pre><code class="node-creation-stack">
 {%- for f in node_creation_stack_info -%}
 File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
-{{ f.frame["filename"] }}, line {{ f.frame["lineno"] -}}
+{{ f.frame.filename }}, line {{ f.frame.lineno -}}
 {%- if f['url'] is not none %}</a>{% endif -%}
-, in {{ f.frame["name"] }}
-<span class="node-creation-stack-line">{{ f.frame["line"] }}</span>
+, in {{ f.frame.name }}
+<span class="node-creation-stack-line">{{ f.frame.line }}</span>
 {%- endfor -%}
                     </code></pre>
                 </div>
@@ -93,7 +93,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                 </div>
                 {% endif %}
 
-                {% if node_type == "Apply" %}
+                {% if node_type == "Apply" and (source_url is not none or estimator_doc or estimator_html_repr) %}
                 <h3>Estimator applied in this step:</h3>
                 <div>
                     {% if source_url is not none %}
@@ -102,7 +102,6 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     </p>
                     {% endif %}
                     {% if estimator_doc %}
-                    <p>
                     <details>
                         <summary>
                             <strong>docstring:</strong>
@@ -112,7 +111,6 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
 {{- estimator_doc -}}
                         </code></pre>
                     </details>
-                    </p>
                     {% endif %}
 
                     {% if estimator_html_repr %}
@@ -123,13 +121,12 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                 {% if node_type == "Call" %}
                 <div>
                     <h3>Function applied in this step:</h3>
-                        <code>{{ applied_func_name }}</code>
-                        {% if source_url is not none %}
-                        : <a href="{{ source_url }}">source code</a>
+                    <code>{{ applied_func_name }}</code>
+                    {% if source_url is not none %}
+                    : <a href="{{ source_url }}">source code</a>
                     {% endif %}
 
                     {% if applied_func_doc %}
-                    <p>
                     <details>
                         <summary>
                             <strong>docstring:</strong>
@@ -139,7 +136,6 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
 {{- applied_func_doc -}}
                         </code></pre>
                     </details>
-                    </p>
                     {% endif %}
 
                 </div>

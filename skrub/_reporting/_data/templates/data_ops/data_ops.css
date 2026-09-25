@@ -29,6 +29,10 @@ summary {
     cursor: pointer;
 }
 
+details {
+    margin: 1em 0;
+}
+
 #graph-nav text {
     transform: translateY(2px);
 }

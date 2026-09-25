@@ -334,7 +334,7 @@ class DataOpImpl:
     def creation_stack_last_line(self):
         if not self._creation_stack:
             return ""
-        line = traceback.format_list(self._creation_stack)[-1]
+        line = traceback.format_list(self._creation_stack[-1:])[0]
         return textwrap.indent(line, "    ").rstrip("\n")
 
     def creation_stack(self):

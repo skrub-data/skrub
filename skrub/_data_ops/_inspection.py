@@ -128,13 +128,14 @@ def _add_source_file(source_path, output_dir):
         if not lines:
             raise OSError(f"Could not find source code for {source_path}")
         source_code = "".join(lines)
-    html = _get_template("python_module.html").render(
+    page_html = _get_template("python_module.html").render(
         {
             "python_source_code": source_code,
             "source_file": str(source_path),
+            "module_name": source_path.stem,
         }
     )
-    target_path.write_text(html, "utf-8")
+    target_path.write_text(page_html, "utf-8")
     return url
 
 
@@ -159,6 +160,8 @@ def _get_doc(obj):
 
 
 def _get_stack_info(stack, output_dir):
+    if not stack:
+        return []
     result = []
     for frame_summary in stack:
         try:
@@ -286,11 +289,11 @@ def _make_full_report(
                     estimator_html_repr = estimator._repr_html_()
                 except Exception:
                     estimator_html_repr = None
-                estimator_class = (
-                    estimator.transformer.__class__
-                    if isinstance(estimator, ApplyToCols)
-                    else estimator.__class__
-                )
+                if isinstance(estimator, ApplyToCols):
+                    estimator_doc = _get_doc(estimator.transformer)
+                    estimator_class = estimator.transformer.__class__
+                else:
+                    estimator_class = estimator.__class__
                 source_url = _get_source_url(estimator_class, output_dir)
         else:
             estimator_html_repr = None
