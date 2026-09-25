@@ -13,7 +13,6 @@ from pathlib import Path
 
 import jinja2
 import numpy as np
-from sklearn.base import BaseEstimator
 
 from .. import ApplyToCols, datasets
 from .. import _dataframe as sbd
@@ -273,15 +272,19 @@ def _make_full_report(
             estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
-            if isinstance(estimator, BaseEstimator):
-                estimator_html_repr = estimator._repr_html_()
-            else:
+            if isinstance(estimator, DataOp):
                 estimator_html_repr = None
-            if isinstance(estimator, ApplyToCols):
-                estimator_class = estimator.transformer.__class__
             else:
-                estimator_class = estimator.__class__
-            source_url = _get_source_url(estimator_class, output_dir)
+                try:
+                    estimator_html_repr = estimator._repr_html_()
+                except Exception:
+                    estimator_html_repr = None
+                estimator_class = (
+                    estimator.transformer.__class__
+                    if isinstance(estimator, ApplyToCols)
+                    else estimator.__class__
+                )
+                source_url = _get_source_url(estimator_class, output_dir)
         else:
             estimator_html_repr = None
         if isinstance(node._skrub_impl, Call):
