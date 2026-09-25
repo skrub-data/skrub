@@ -25,6 +25,10 @@ pre, code {
     font-size: 1rem;
 }
 
+summary {
+    cursor: pointer;
+}
+
 #graph-nav text {
     transform: translateY(2px);
 }

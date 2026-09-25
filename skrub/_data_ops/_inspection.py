@@ -155,7 +155,7 @@ def _get_source_url(obj, output_dir):
 def _get_doc(obj):
     if isinstance(obj, (DataOp, BaseChoice)):
         return None
-    return getattr(obj, "__doc__", "")
+    return inspect.getdoc(obj) or ""
 
 
 def _get_stack_info(stack, output_dir):

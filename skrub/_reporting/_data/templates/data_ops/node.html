@@ -76,7 +76,10 @@
                     <h3>Where was this step created?</h3>
                     <pre><code class="node-creation-stack">
 {%- for f in node_creation_stack_info -%}
-File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif %}{{ f.frame["filename"] }}, line {{ f.frame["lineno"] }}{% if f['url'] is not none %}</a>{% endif %}, in {{ f.frame["name"] }}
+File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
+{{ f.frame["filename"] }}, line {{ f.frame["lineno"] -}}
+{%- if f['url'] is not none %}</a>{% endif -%}
+, in {{ f.frame["name"] }}
 <span class="node-creation-stack-line">{{ f.frame["line"] }}</span>
 {%- endfor -%}
                     </code></pre>
@@ -98,14 +101,18 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif %}{{ f.frame
                         <a href="{{ source_url }}">source code</a>
                     </p>
                     {% endif %}
-                    {% if estimator_doc is not none %}
-                    <details><summary>docstring</summary>
-                    <pre>
-                    <code>
-{{ estimator_doc }}
-</code>
-</pre>
+                    {% if estimator_doc %}
+                    <p>
+                    <details>
+                        <summary>
+                            <strong>docstring:</strong>
+                            <code>{{ estimator_doc.split("\n")[0] }}</code>
+                        </summary>
+                        <pre><code>
+{{- estimator_doc -}}
+                        </code></pre>
                     </details>
+                    </p>
                     {% endif %}
 
                     {% if estimator_html_repr %}
@@ -121,14 +128,18 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif %}{{ f.frame
                         : <a href="{{ source_url }}">source code</a>
                     {% endif %}
 
-                    {% if applied_func_doc is not none %}
-                    <details><summary>docstring</summary>
-                    <pre>
-                    <code>
-{{ applied_func_doc }}
-</code>
-</pre>
+                    {% if applied_func_doc %}
+                    <p>
+                    <details>
+                        <summary>
+                            <strong>docstring:</strong>
+                            <code>{{ applied_func_doc.split("\n")[0] }}</code>
+                        </summary>
+                        <pre><code>
+{{- applied_func_doc -}}
+                        </code></pre>
                     </details>
+                    </p>
                     {% endif %}
 
                 </div>
