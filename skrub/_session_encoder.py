@@ -94,7 +94,6 @@ def _get_session_column_polars(
         split_by_columns + [timestamp_column, row_order_col]
     )
 
-    # Identify rows with nulls in timestamp or group_by columns
     selected_cols = split_by_columns + [timestamp_column]
 
     # Find rows with nulls in timestamp or group_by columns and assign them a session
@@ -106,13 +105,13 @@ def _get_session_column_polars(
     # Work only on the columns that have no nulls in the timestamp or split_by columns
     X_sorted = X_selected.drop_nulls(subset=selected_cols).sort(selected_cols)
     # Find the difference in time between groups
+    # If there are split_by columns, the difference should be over groups
+    # Otherwise, it's just over the timestamp
     if split_by_columns:
-        # If there are split_by columns, the difference should be over groups
         diff_expr = (
             pl.col(timestamp_column).diff().over(split_by_columns).dt.total_seconds()
         )
     else:
-        # Otherwise, it's just over the timestamp
         diff_expr = pl.col(timestamp_column).diff().dt.total_seconds()
     diff_column = f"_diff_skrub_{random_string()}"
     X_sorted = X_sorted.with_columns(diff_expr.alias(diff_column))
@@ -125,9 +124,7 @@ def _get_session_column_polars(
     X_sorted = X_sorted.with_columns(
         (boundary.cast(pl.Int64).cum_sum() - 1).alias(session_id_column)
     ).drop(diff_column)
-    # Add back the null-containing rows that were removed earlier
     X_with_session = pl.concat([X_sorted, X_has_nulls])
-    # Sort back to the original order
     return X_with_session.sort(by=row_order_col)[session_id_column]
 
 
