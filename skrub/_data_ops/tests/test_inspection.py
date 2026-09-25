@@ -1,17 +1,41 @@
 import builtins
 import re
 import sys
+import traceback
 import webbrowser
 from pathlib import Path
 from unittest.mock import Mock
 
+import pandas as pd
 import pytest
+from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_selection import SelectKBest
 
 import skrub
 from skrub import datasets
 from skrub._data_ops import _inspection, _utils
+
+
+class _Doubler(BaseEstimator):
+    """Doubles the input.
+
+    Multiplies every value by two.
+    """
+
+    def fit(self, X, y=None):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return X * 2
+
+    def transform(self, X):
+        return X * 2
+
+
+def _times_two(x):
+    """Multiply the input by two."""
+    return x * 2
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
@@ -94,6 +118,64 @@ def test_full_report_failed_apply():
     )
     report = e.skb.full_report({"X": orders.X, "y": orders.y}, open=False)
     assert report["error"] is not None
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_estimator_doc_and_source():
+    df = pd.DataFrame({"a": [1, 2, 3]})
+
+    def _node_1_html(e):
+        report = e.skb.full_report(open=False)
+        out = report["report_path"].parent
+        return (out / "node_1.html").read_text("utf-8"), out
+
+    text, out = _node_1_html(skrub.X(df).skb.apply(_Doubler(), no_wrap=True))
+    assert "Estimator applied in this step:" in text
+    assert "docstring:" in text
+    assert "Doubles the input." in text
+    match = re.search(r'href="(python/[0-9a-f]+\.html)#L\d+"', text)
+    source = (out / match.group(1)).read_text("utf-8")
+    assert "_Doubler" in source
+    assert "<title>test_inspection</title>" in source
+
+    # .skb.apply() wraps the estimator in ApplyToCols by default; the doc
+    # shown should still be _Doubler's, not ApplyToCols's.
+    text, _ = _node_1_html(skrub.X(df).skb.apply(_Doubler()))
+    assert "Doubles the input." in text
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_call_doc_and_source():
+    report = (
+        skrub.var("a").skb.apply_func(_times_two).skb.full_report({"a": 3}, open=False)
+    )
+    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
+    assert "Function applied in this step:" in text
+    assert "_times_two" in text
+    assert "docstring:" in text
+    assert "Multiply the input by two." in text
+    assert "source code" in text
+
+    report = (
+        skrub.var("a").skb.apply_func(lambda x: x).skb.full_report({"a": 3}, open=False)
+    )
+    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
+    assert "Function applied in this step:" in text
+    assert "&lt;lambda&gt;" in text
+    assert "docstring:" not in text
+    assert "source code" in text
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_report_no_creation_stack(monkeypatch):
+    monkeypatch.setattr(
+        traceback, "extract_stack", Mock(side_effect=Exception("error"))
+    )
+    e = skrub.var("a") + 1
+    monkeypatch.undo()
+    report = e.skb.full_report({"a": 1}, open=False)
+    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
+    assert '<code class="node-creation-stack"></code>' in text
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")

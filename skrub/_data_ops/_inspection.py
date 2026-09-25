@@ -1,6 +1,9 @@
 import datetime
+import hashlib
 import html
+import inspect
 import io
+import linecache
 import numbers
 import re
 import shutil
@@ -10,17 +13,16 @@ from pathlib import Path
 
 import jinja2
 import numpy as np
-from sklearn.base import BaseEstimator
 
+from .. import ApplyToCols, datasets
 from .. import _dataframe as sbd
-from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice, Choice
-from ._data_ops import Apply, SplitX, Value, Var
+from ._choosing import BaseChoice, BaseNumericChoice, Choice
+from ._data_ops import Apply, Call, DataOp, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 
@@ -107,6 +109,70 @@ def _node_status(data_op_graph, mode):
         else:
             status[node_id] = "none"
     return status
+
+
+def _add_source_file(source_path, output_dir):
+    source_path = Path(source_path)
+    path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
+    python_dir = output_dir / "python"
+    python_dir.mkdir(exist_ok=True)
+    target_file_name = f"{path_hash}.html"
+    target_path = python_dir / target_file_name
+    url = str(Path("python") / target_file_name)
+    if target_path.is_file():
+        return url
+    if source_path.is_file():
+        source_code = source_path.read_text("utf-8")
+    else:
+        lines = linecache.getlines(str(source_path))
+        if not lines:
+            raise OSError(f"Could not find source code for {source_path}")
+        source_code = "".join(lines)
+    page_html = _get_template("python_module.html").render(
+        {
+            "python_source_code": source_code,
+            "source_file": str(source_path),
+            "module_name": source_path.stem,
+        }
+    )
+    target_path.write_text(page_html, "utf-8")
+    return url
+
+
+def _get_source_url(obj, output_dir):
+    if isinstance(obj, DataOp):
+        return None
+    if not (callable(obj) or isinstance(obj, type)):
+        return None
+    try:
+        source_path = inspect.getsourcefile(obj)
+        line_no = inspect.getsourcelines(obj)[1]
+        source_file_url = _add_source_file(source_path, output_dir=output_dir)
+        return f"{source_file_url}#L{line_no}"
+    except Exception:
+        return None
+
+
+def _get_doc(obj):
+    if isinstance(obj, (DataOp, BaseChoice)):
+        return None
+    return inspect.getdoc(obj) or ""
+
+
+def _get_stack_info(stack, output_dir):
+    if not stack:
+        return []
+    result = []
+    for frame_summary in stack:
+        try:
+            source_file_url = _add_source_file(
+                frame_summary.filename, output_dir=output_dir
+            )
+            url = f"{source_file_url}#L{frame_summary.lineno}"
+        except Exception:
+            url = None
+        result.append({"url": url, "frame": frame_summary})
+    return result
 
 
 def full_report(
@@ -210,16 +276,35 @@ def _make_full_report(
             }
             for n in g["parents"].get(i, [])
         ]
+        source_url = None
         if isinstance(node._skrub_impl, Apply):
             estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
-            if isinstance(estimator, BaseEstimator):
-                estimator_html_repr = estimator._repr_html_()
-            else:
+            estimator_doc = _get_doc(estimator)
+            if isinstance(estimator, DataOp):
                 estimator_html_repr = None
+            else:
+                try:
+                    estimator_html_repr = estimator._repr_html_()
+                except Exception:
+                    estimator_html_repr = None
+                if isinstance(estimator, ApplyToCols):
+                    estimator_doc = _get_doc(estimator.transformer)
+                    estimator_class = estimator.transformer.__class__
+                else:
+                    estimator_class = estimator.__class__
+                source_url = _get_source_url(estimator_class, output_dir)
         else:
             estimator_html_repr = None
+            estimator_doc = None
+        if isinstance(node._skrub_impl, Call):
+            source_url = _get_source_url(node._skrub_impl.func, output_dir)
+            applied_func_name = node._skrub_impl.get_func_name()
+            applied_func_doc = _get_doc(node._skrub_impl.func)
+        else:
+            applied_func_name = None
+            applied_func_doc = None
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -233,7 +318,9 @@ def _make_full_report(
                 error_msg=error_msg,
                 eval_duration=eval_duration,
                 env_key=env_key,
-                node_creation_stack_description=node._skrub_impl.creation_stack_description(),
+                node_creation_stack_info=_get_stack_info(
+                    node._skrub_impl.creation_stack(), output_dir
+                ),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
                 node_uuid=node._skrub_impl.uuid,
@@ -242,6 +329,10 @@ def _make_full_report(
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
+                estimator_doc=estimator_doc,
+                source_url=source_url,
+                applied_func_name=applied_func_name,
+                applied_func_doc=applied_func_doc,
             )
         )
         out = output_dir / f"node_{i}.html"

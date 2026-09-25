@@ -35,6 +35,18 @@ def test_creation_stack_description(monkeypatch):
     assert a._skrub_impl.creation_stack_last_line() == ""
 
 
+def _make_var_in_helper():
+    return skrub.var("a")  # innermost frame
+
+
+def test_last_line_is_innermost_frame():
+    a = _make_var_in_helper()
+    last_line = a._skrub_impl.creation_stack_last_line()
+    assert "innermost frame" in last_line
+    assert "_make_var_in_helper" in last_line
+    assert "test_last_line_is_innermost_frame" not in last_line
+
+
 @pytest.fixture(params=[False, True])
 def eval_data_op(request):
     """Fixture to try evaluation both with .skb.eval() and through the learner."""

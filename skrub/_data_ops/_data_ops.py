@@ -184,7 +184,7 @@ def _remove_shell_frames(stack):
     return stack
 
 
-def _format_data_op_creation_stack():
+def _data_op_creation_stack():
     "Call stack information used to tell users where a DataOp was defined."
 
     # TODO use inspect.stack() instead of traceback.extract_stack() for more
@@ -197,7 +197,7 @@ def _format_data_op_creation_stack():
     stack = itertools.takewhile(
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
-    return traceback.format_list(stack)
+    return list(stack)
 
 
 def _unpack_arity():
@@ -281,9 +281,9 @@ class DataOpImpl:
             self.errors = {}
             self.metadata = {}
             try:
-                self._creation_stack_lines = _format_data_op_creation_stack()
+                self._creation_stack = _data_op_creation_stack()
             except Exception:
-                self._creation_stack_lines = None
+                self._creation_stack = None
             self.is_X = False
             self.is_y = False
             if "name" not in self.__dict__:
@@ -304,7 +304,7 @@ class DataOpImpl:
     def __replace__(self, **fields):
         kwargs = {k: getattr(self, k) for k in self._fields} | fields
         new = self.__class__(**kwargs)
-        new._creation_stack_lines = self._creation_stack_lines
+        new._creation_stack = self._creation_stack
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
@@ -327,15 +327,18 @@ class DataOpImpl:
         raise NotImplementedError()
 
     def creation_stack_description(self):
-        if self._creation_stack_lines is None:
+        if self._creation_stack is None:
             return ""
-        return "".join(self._creation_stack_lines)
+        return "".join(traceback.format_list(self._creation_stack))
 
     def creation_stack_last_line(self):
-        if not self._creation_stack_lines:
+        if not self._creation_stack:
             return ""
-        line = self._creation_stack_lines[-1]
+        line = traceback.format_list(self._creation_stack[-1:])[0]
         return textwrap.indent(line, "    ").rstrip("\n")
+
+    def creation_stack(self):
+        return self._creation_stack
 
     def preview_if_available(self):
         return self.results.get("preview", NULL)
