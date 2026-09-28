@@ -52,57 +52,53 @@ def test_cat_encoder_values_and_unknown_category(df_module):
     )
 
 
-def test_cat_encoder_y_none():
-    s = pd.Series(["a", "b", "a"], name="col")
+def test_cat_encoder_y_none(df_module):
+    s = df_module.make_column("col", ["a", "b", "a"])
     enc = CatEncoder()
     with pytest.raises(ValueError, match="one-dimensional"):
         enc.fit_transform(s, y=None)
 
 
-def test_cat_encoder_dataframe_target_and_unnamed_column():
-    s = pd.Series(["a", "b", "c"] * 5, name=None)
-    y = pd.DataFrame({"target": np.asarray(["0", "1", "2"] * 5, dtype=object)})
+def test_cat_encoder_dataframe_target_and_unnamed_column(df_module):
+    s = df_module.make_column(None, ["a", "b", "c"] * 5)
+    y = df_module.make_dataframe({"target": ["0", "1", "2"] * 5})
 
     enc = CatEncoder(max_categories=2)
     res = enc.fit_transform(s, y)
 
-    assert res.columns.tolist() == [
+    assert list(sbd.column_names(res)) == [
         "cat_enc_c",
         "cat_enc_infrequent_sklearn",
         "cat_enc_target_sklearn_0",
         "cat_enc_target_sklearn_1",
         "cat_enc_target_sklearn_2",
     ]
-    assert res.shape == (15, 5)
+    assert sbd.shape(res) == (15, 5)
     assert enc.target_encoder_.target_type_ == "multiclass"
 
 
-@pytest.mark.parametrize(
-    "y, expected_message",
-    [
-        (
-            pd.DataFrame({"first": [0, 1] * 5, "second": [1, 0] * 5}),
-            "exactly one column",
-        ),
-        (np.ones((10, 2)), "exactly one column"),
-        (np.asarray(1), "one-dimensional"),
-    ],
-)
-def test_cat_encoder_rejects_non_1d_target(y, expected_message):
-    s = pd.Series(["a", "b"] * 5, name="col")
+def test_cat_encoder_rejects_non_1d_target(df_module):
+    s = df_module.make_column("col", ["a", "b"] * 5)
+    y_df = df_module.make_dataframe({"first": [0, 1] * 5, "second": [1, 0] * 5})
 
-    with pytest.raises(ValueError, match=expected_message):
-        CatEncoder().fit_transform(s, y)
+    with pytest.raises(ValueError, match="exactly one column"):
+        CatEncoder().fit_transform(s, y_df)
+
+    with pytest.raises(ValueError, match="exactly one column"):
+        CatEncoder().fit_transform(s, np.ones((10, 2)))
+
+    with pytest.raises(ValueError, match="one-dimensional"):
+        CatEncoder().fit_transform(s, np.asarray(1))
 
 
-def test_cat_encoder_2d_string_target():
-    s = pd.Series(["a", "b", "c"] * 10, name="col")
-    y = np.asarray(["one", "two", "three"] * 10, dtype=object).reshape(-1, 1)
+def test_cat_encoder_2d_string_target(df_module):
+    s = df_module.make_column("col", ["a", "b", "c"] * 10)
+    y = df_module.make_column("target", ["one", "two", "three"] * 10)
 
     enc = CatEncoder()
     res = enc.fit_transform(s, y)
 
-    assert set(res.columns.tolist()) == {
+    assert set(sbd.column_names(res)) == {
         "col_a",
         "col_b",
         "col_c",
@@ -110,9 +106,9 @@ def test_cat_encoder_2d_string_target():
         "col_target_sklearn_three",
         "col_target_sklearn_two",
     }
-    transformed = enc.transform(pd.Series(["a", "new"], name="col"))
-    assert transformed.shape == (2, 6)
-    assert transformed.columns.tolist() == res.columns.tolist()
+    transformed = enc.transform(df_module.make_column("col", ["a", "new"]))
+    assert sbd.shape(transformed) == (2, 6)
+    assert list(sbd.column_names(transformed)) == list(sbd.column_names(res))
 
 
 def test_cat_encoder_preserves_dtypes(df_module):
@@ -185,14 +181,14 @@ def test_cat_encoder_apply_to_cols(df_module):
     ]
 
 
-def test_cat_encoder_data_op_orders_outputs_by_input_column():
-    df = pd.DataFrame(
+def test_cat_encoder_data_op_orders_outputs_by_input_column(df_module):
+    df = df_module.make_dataframe(
         {
             "first": ["a", "b"] * 10,
             "second": ["x", "y"] * 10,
         }
     )
-    y = pd.Series([1, 0] * 10)
+    y = df_module.make_column("target", [1, 0] * 10)
 
     result = (
         skrub.as_data_op(df)
@@ -200,7 +196,7 @@ def test_cat_encoder_data_op_orders_outputs_by_input_column():
         .skb.eval()
     )
 
-    assert result.columns.tolist() == [
+    assert list(sbd.column_names(result)) == [
         "first_a",
         "first_b",
         "first_target_sklearn",
@@ -210,10 +206,10 @@ def test_cat_encoder_data_op_orders_outputs_by_input_column():
     ]
 
 
-def test_cat_encoder_sklearn_compat():
+def test_cat_encoder_sklearn_compat(df_module):
     enc = CatEncoder()
     with pytest.raises(NotFittedError):
-        enc.transform(pd.Series(["a"], name="col"))
+        enc.transform(df_module.make_column("col", ["a"]))
     with pytest.raises(NotFittedError):
         enc.get_feature_names_out()
 
