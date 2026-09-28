@@ -12,6 +12,7 @@ import pytest
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_selection import SelectKBest
+from sklearn.model_selection import KFold
 
 import skrub
 from skrub import datasets
@@ -98,6 +99,22 @@ def test_full_report_failed_apply():
     )
     report = e.skb.full_report({"X": orders.X, "y": orders.y}, open=False)
     assert report["error"] is not None
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_full_report_dataop_estimator(tmp_path):
+    # The estimator of an Apply can itself be a DataOp (the function/estimator
+    # to apply is computed dynamically). Here the estimator's variable is not
+    # provided so the node is not evaluated and there is no fitted
+    # `estimator_`; the report must fall back on the DataOp.
+    e = skrub.X().skb.apply(skrub.var("est"))
+    report = e.skb.full_report(
+        {"X": pd.DataFrame({"a": [1, 2]})},
+        output_dir=tmp_path / "report",
+        open=False,
+    )
+    assert report["error"] is not None
+    assert report["result"] is None
 
 
 class _Doubler(BaseEstimator):
@@ -302,6 +319,17 @@ def test_draw_graph():
     assert "<svg" in g._repr_html_()
     assert g.png.startswith(b"\x89PNG")
     assert g._repr_png_().startswith(b"\x89PNG")
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_draw_graph_split_x():
+    # mark_as_X with a splitter creates a SplitX node which is already labelled
+    # 'X' in its repr; _node_kwargs must not prefix it with another 'X:'.
+    x = skrub.var("a").skb.mark_as_X(cv=KFold())
+    assert _inspection._node_kwargs(x)["label"] == "X"
+    svg = x.skb.draw_graph().svg.decode("utf-8")
+    assert "X" in svg
+    assert "X:\u2002X" not in svg
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
