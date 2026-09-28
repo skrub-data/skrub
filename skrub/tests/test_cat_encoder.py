@@ -69,9 +69,9 @@ def test_cat_encoder_dataframe_target_and_unnamed_column():
     assert res.columns.tolist() == [
         "cat_enc_c",
         "cat_enc_infrequent_sklearn",
-        "cat_enc_0.0",
-        "cat_enc_1.0",
-        "cat_enc_2.0",
+        "cat_enc_0",
+        "cat_enc_1",
+        "cat_enc_2",
     ]
     assert res.shape == (15, 5)
     assert enc.target_encoder_.target_type_ == "multiclass"

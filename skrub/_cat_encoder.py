@@ -132,12 +132,6 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
                 f"single-column dataframe; got an array with shape {y_vec.shape}."
             )
 
-        if y_vec.dtype == object:
-            try:
-                y_vec = y_vec.astype(float)
-            except (ValueError, TypeError):
-                pass
-
         ohe_res = self.one_hot_encoder_.fit_transform(X_arr)
         te_res = self.target_encoder_.fit_transform(X_arr, y_vec)
 
