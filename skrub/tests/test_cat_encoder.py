@@ -93,7 +93,7 @@ def test_cat_encoder_rejects_non_1d_target(df_module):
 
 def test_cat_encoder_2d_string_target(df_module):
     s = df_module.make_column("col", ["a", "b", "c"] * 10)
-    y = df_module.make_column("target", ["one", "two", "three"] * 10)
+    y = df_module.make_dataframe({"target": ["one", "two", "three"] * 10})
 
     enc = CatEncoder()
     res = enc.fit_transform(s, y)
@@ -207,3 +207,62 @@ def test_cat_encoder_sklearn_compat(df_module):
 
     cloned = clone(enc)
     assert cloned.max_categories == enc.max_categories
+
+
+@pytest.mark.parametrize("method", ["fit", "fit_transform"])
+def test_cat_encoder_requires_y(df_module, method):
+    s = df_module.make_column("col", ["a", "b"] * 10)
+    # SingleColumnTransformer's wrappers pass y=None when it is omitted.
+    with pytest.raises(ValueError, match="CatEncoder expects y"):
+        getattr(CatEncoder(), method)(s)
+
+
+@pytest.mark.parametrize(
+    "values, target_type",
+    [
+        ([0, 1], "binary"),
+        ([False, True], "binary"),
+        ([0, 1, 2], "multiclass"),
+        ([0.25, 1.75], "continuous"),
+    ],
+)
+@pytest.mark.parametrize("two_dimensional", [False, True])
+def test_cat_encoder_numeric_object_target(
+    df_module, values, target_type, two_dimensional
+):
+    y = np.asarray(values * 10)
+    s = df_module.make_column("col", ["a", "b"] * (len(y) // 2))
+    object_y = y.astype(object)
+    if two_dimensional:
+        object_y = object_y.reshape(-1, 1)
+
+    enc = CatEncoder()
+    assert enc.fit(s, object_y) is enc
+    expected = CatEncoder().fit(s, y)
+    assert enc.target_encoder_.target_type_ == target_type
+    assert enc.get_feature_names_out() == expected.get_feature_names_out()
+    np.testing.assert_allclose(
+        sbd.to_numpy(enc.transform(s)), sbd.to_numpy(expected.transform(s))
+    )
+
+
+def test_cat_encoder_preserves_numeric_string_labels(df_module):
+    s = df_module.make_column("col", ["a", "b", "c"] * 10)
+    y = np.asarray(["01", "1", "2"] * 10, dtype=object)
+    enc = CatEncoder().fit(s, y)
+    assert enc.target_encoder_.target_type_ == "multiclass"
+    np.testing.assert_array_equal(enc.target_encoder_.classes_, ["01", "1", "2"])
+    assert enc.target_outputs_ == [
+        "col_target_sklearn_01",
+        "col_target_sklearn_1",
+        "col_target_sklearn_2",
+    ]
+
+
+def test_cat_encoder_list_target(df_module):
+    s = df_module.make_column("col", ["a", "b"] * 10)
+    enc = CatEncoder().fit(s, [0, 1] * 10)
+    new = df_module.make_column("col", ["a", "new"])
+    np.testing.assert_allclose(
+        sbd.to_numpy(enc.transform(new)), [[1, 0, 0], [0, 0, 0.5]]
+    )

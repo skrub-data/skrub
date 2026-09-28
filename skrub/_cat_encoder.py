@@ -39,8 +39,9 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         Feature names created by the one-hot encoder.
 
     target_outputs_ : list of str
-        Feature names created by the target encoder. Deterministic ``_target``
-        suffixes are added when names would collide with one-hot features.
+        Feature names using the ``_target_sklearn`` suffix (followed by the
+        class label for multiclass targets). Collisions with one-hot features
+        are resolved by adding a random ``__skrub_<token>__`` suffix.
 
     all_outputs_ : list of str
         The list of feature names created by the transformer.
@@ -52,9 +53,9 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     >>> s = pd.Series(["a", "b", "c", "d", "e"] * 4, name="col")
     >>> y = pd.Series([1, 0, 1, 0, 1] * 4)
     >>> enc = CatEncoder(max_categories=3)
-    >>> enc.fit_transform(s, y)
-       col_a  col_d  col_infrequent_sklearn  col_target_sklearn
-    0    1.0    0.0                     0.0                 ...
+    >>> enc.fit_transform(s, y).head(2)
+       col_d  col_e  col_infrequent_sklearn  col_target_sklearn
+    0    0.0    0.0                     1.0                 ...
     1    0.0    0.0                     1.0                 ...
     """
 
@@ -114,9 +115,6 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         ohe_res = self.one_hot_encoder_.fit_transform(X_arr)
         te_res = self.target_encoder_.fit_transform(X_arr, y_vec)
 
-        if hasattr(ohe_res, "toarray"):
-            ohe_res = ohe_res.toarray()
-
         self.one_hot_outputs_ = list(
             self.one_hot_encoder_.get_feature_names_out([col_name])
         )
@@ -165,9 +163,6 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         ohe_res = self.one_hot_encoder_.transform(X_arr)
         te_res = self.target_encoder_.transform(X_arr)
 
-        if hasattr(ohe_res, "toarray"):
-            ohe_res = ohe_res.toarray()
-
         return self._make_output(column, ohe_res, te_res)
 
     def _make_output(self, column, ohe_res, te_res):
@@ -211,14 +206,21 @@ def _check_y(y):
         y_arr = np.asarray(y)
 
     if y_arr.ndim == 2 and y_arr.shape[1] == 1:
-        return y_arr[:, 0]
-    elif y_arr.ndim == 1:
-        return y_arr
+        y_arr = y_arr[:, 0]
     elif y_arr.ndim == 2:
         raise ValueError(
             f"CatEncoder expects y to contain exactly one column; got {y_arr.shape[1]}."
         )
-    raise ValueError(
-        "CatEncoder expects y to be one-dimensional or a single-column dataframe; "
-        f"got an array with shape {y_arr.shape}."
-    )
+    elif y_arr.ndim != 1:
+        raise ValueError(
+            "CatEncoder expects y to be one-dimensional or a single-column dataframe; "
+            f"got an array with shape {y_arr.shape}."
+        )
+
+    if y_arr.dtype == object:
+        # Infer numeric types from the values without parsing string labels.
+        # TargetEncoder cannot infer the target type of object-typed numbers.
+        inferred = np.asarray(y_arr.tolist())
+        if inferred.dtype.kind in "biuf":
+            y_arr = inferred
+    return y_arr
