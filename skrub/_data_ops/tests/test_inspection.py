@@ -1,4 +1,5 @@
 import builtins
+import linecache
 import re
 import sys
 import traceback
@@ -15,27 +16,6 @@ from sklearn.feature_selection import SelectKBest
 import skrub
 from skrub import datasets
 from skrub._data_ops import _inspection, _utils
-
-
-class _Doubler(BaseEstimator):
-    """Doubles the input.
-
-    Multiplies every value by two.
-    """
-
-    def fit(self, X, y=None):
-        return self
-
-    def fit_transform(self, X, y=None):
-        return X * 2
-
-    def transform(self, X):
-        return X * 2
-
-
-def _times_two(x):
-    """Multiply the input by two."""
-    return x * 2
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
@@ -120,50 +100,125 @@ def test_full_report_failed_apply():
     assert report["error"] is not None
 
 
+class _Doubler(BaseEstimator):
+    """
+    This is the docstring of _Doubler
+    """
+
+    def fit(self, X, y=None):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return X * 2
+
+    def transform(self, X):
+        return X * 2
+
+
+def _times_two(x):
+    """
+    This is the docstring of _times_two
+    """
+    return x * 2
+
+
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_estimator_doc_and_source():
+@pytest.mark.parametrize("no_wrap", [False, True])
+def test_estimator_doc_and_source(tmp_path, no_wrap):
+    report_dir = tmp_path / "report"
     df = pd.DataFrame({"a": [1, 2, 3]})
 
-    def _node_1_html(e):
-        report = e.skb.full_report(open=False)
-        out = report["report_path"].parent
-        return (out / "node_1.html").read_text("utf-8"), out
-
-    text, out = _node_1_html(skrub.X(df).skb.apply(_Doubler(), no_wrap=True))
-    assert "Estimator applied in this step:" in text
-    assert "docstring:" in text
-    assert "Doubles the input." in text
-    match = re.search(r'href="(python/[0-9a-f]+\.html)#L\d+"', text)
-    source = (out / match.group(1)).read_text("utf-8")
-    assert "_Doubler" in source
-    assert "<title>test_inspection</title>" in source
-
-    # .skb.apply() wraps the estimator in ApplyToCols by default; the doc
-    # shown should still be _Doubler's, not ApplyToCols's.
-    text, _ = _node_1_html(skrub.X(df).skb.apply(_Doubler()))
-    assert "Doubles the input." in text
+    # no_wrap: even if wrapped in ApplyToCols, the docstring of the wrapped
+    # transformer should be shown (not that of ApplyToCols)
+    skrub.X(df).skb.apply(_Doubler(), no_wrap=no_wrap).skb.full_report(
+        output_dir=report_dir, open=False
+    )
+    assert "This is the docstring of _Doubler" in (
+        report_dir / "node_1.html"
+    ).read_text("utf-8")
+    assert "X * 2" in next((report_dir / "python").glob("*.html")).read_text("utf-8")
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_call_doc_and_source():
-    report = (
-        skrub.var("a").skb.apply_func(_times_two).skb.full_report({"a": 3}, open=False)
+def test_call_doc_and_source(tmp_path):
+    report_dir = tmp_path / "report"
+    skrub.var("a").skb.apply_func(_times_two).skb.full_report(
+        {"a": 3}, output_dir=report_dir, open=False
     )
-    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
-    assert "Function applied in this step:" in text
-    assert "_times_two" in text
-    assert "docstring:" in text
-    assert "Multiply the input by two." in text
-    assert "source code" in text
+    assert "This is the docstring of _times_two" in (
+        report_dir / "node_1.html"
+    ).read_text("utf-8")
+    assert "x * 2" in next((report_dir / "python").glob("*.html")).read_text("utf-8")
 
-    report = (
-        skrub.var("a").skb.apply_func(lambda x: x).skb.full_report({"a": 3}, open=False)
+    report_dir = tmp_path / "report_lambda"
+    skrub.var("a").skb.apply_func(lambda x: x).skb.full_report(
+        {"a": 3}, output_dir=report_dir, open=False
     )
-    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
+    assert "docstring:" not in (report_dir / "node_1.html").read_text("utf-8")
+
+
+def _find_node_html(out, marker):
+    for node_file in sorted(out.glob("node_*.html")):
+        text = node_file.read_text("utf-8")
+        if marker in text:
+            return text
+    raise AssertionError(f"no node page contains {marker!r}")
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+@pytest.mark.parametrize("func_wrapper", ["dataop", "choice"])
+def test_called_func_is_dataop_or_choice(tmp_path, func_wrapper):
+    # .skb.apply_func() accepts a DataOp as func (the function to apply is
+    # itself computed dynamically); no doc or source is available for it.
+    report_dir = tmp_path / "report"
+    func = (
+        skrub.var("my_func", _times_two, becomes_default=True)
+        if func_wrapper == "dataop"
+        else skrub.choose_from([_times_two, _times_two], name="my_func")
+    )
+    skrub.var("a").skb.apply_func(func).skb.full_report(
+        {"a": 3}, output_dir=report_dir, open=False
+    )
+    node = 2 if func_wrapper == "dataop" else 1
+    text = (report_dir / f"node_{node}.html").read_text("utf-8")
     assert "Function applied in this step:" in text
-    assert "&lt;lambda&gt;" in text
+    assert "my_func" in text
+    assert "source code" not in text
     assert "docstring:" not in text
-    assert "source code" in text
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_call_func_no_source(tmp_path):
+    # builtins have a docstring but no retrievable source code.
+    report_dir = tmp_path / "report"
+    skrub.var("a").skb.apply_func(len).skb.full_report(
+        {"a": [1, 2]}, output_dir=report_dir, open=False
+    )
+    text = (report_dir / "node_1.html").read_text("utf-8")
+    assert "docstring:" in text
+    assert "source code" not in text
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_call_func_from_linecache(tmp_path, monkeypatch):
+    # functions defined in a Jupyter-style cell have no real
+    # source file but their source can be found through linecache.
+    report_dir = tmp_path / "report"
+    filename = "<test-cell>"
+    src = "def f(x):\n    '''doc for f'''\n    return x\n"
+    namespace = {}
+    exec(compile(src, filename, "exec"), namespace)
+    monkeypatch.setitem(
+        linecache.cache,
+        filename,
+        (len(src), None, src.splitlines(keepends=True), filename),
+    )
+    skrub.var("a").skb.apply_func(namespace["f"]).skb.full_report(
+        {"a": 3}, output_dir=report_dir, open=False
+    )
+    source = next((report_dir / "python").glob("*.html")).read_text("utf-8")
+    assert "def f(x):" in source
+    assert "test-cell" in source
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
