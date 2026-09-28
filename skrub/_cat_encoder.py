@@ -63,7 +63,26 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     ):
         self.max_categories = max_categories
 
-    def fit_transform(self, column, y=None):
+    def fit(self, column, y):
+        """Fit the encoder to a categorical column.
+
+        Parameters
+        ----------
+        column : Pandas or Polars Series
+            The single column to fit.
+
+        y : Pandas or Polars Series, DataFrame, or array-like
+            Target values for target encoding.
+
+        Returns
+        -------
+        self
+            The fitted encoder.
+        """
+        self.fit_transform(column, y)
+        return self
+
+    def fit_transform(self, column, y):
         """Fit the encoder and transform a categorical column.
 
         Parameters
@@ -79,8 +98,6 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         res_df : Pandas or Polars DataFrame
             DataFrame containing one-hot and target-encoded features.
         """
-        if y is None:
-            raise ValueError("Target y must be provided to fit CatEncoder.")
 
         self.one_hot_encoder_ = OneHotEncoder(
             max_categories=self.max_categories,

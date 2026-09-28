@@ -55,7 +55,7 @@ def test_cat_encoder_values_and_unknown_category(df_module):
 def test_cat_encoder_y_none():
     s = pd.Series(["a", "b", "a"], name="col")
     enc = CatEncoder()
-    with pytest.raises(ValueError, match="Target y must be provided"):
+    with pytest.raises(ValueError, match="one-dimensional"):
         enc.fit_transform(s, y=None)
 
 
