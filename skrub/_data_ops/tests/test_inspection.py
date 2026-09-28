@@ -183,6 +183,22 @@ def test_no_graphviz(monkeypatch):
         skrub.as_data_op(0).skb.draw_graph()
 
 
+def test_repr_html_no_graphviz(monkeypatch):
+    monkeypatch.delitem(sys.modules, "pydot", raising=False)
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pydot":
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+    # Without a preview value (and without a graph) and with a preview value,
+    # the HTML representation falls back on the graphviz error message.
+    assert "please install Pydot and Graphviz" in skrub.var("a")._repr_html_()
+    assert "please install Pydot and Graphviz" in skrub.var("a", 0)._repr_html_()
+
+
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_draw_graph_open(monkeypatch):
     mock = Mock()

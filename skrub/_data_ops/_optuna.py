@@ -297,7 +297,9 @@ class OptunaParamSearch(_BaseParamSearch):
                 # exists)
                 create_study()
 
-                def optimize():
+                def optimize():  # pragma: no cover
+                    # Runs in joblib/loky worker subprocesses, which pytest-cov
+                    # does not measure.
                     study = create_study()
                     # reseed otherwise all processes will start with the same
                     # params, optuna also does this for each worker when
