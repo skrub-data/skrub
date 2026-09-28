@@ -61,7 +61,7 @@ def test_apply_eval_failure(eval_data_op):
     assert eval_data_op(e, {"a": 1.0, "b": 2.0}) == 5.5
     # error outside of the Apply
     with pytest.raises(
-        (ZeroDivisionError, RuntimeError),
+        ZeroDivisionError,
         match=(
             r"(?ms).*This node was defined here:.*"
             r"^.*test_data_ops_stack_description\.py.*^.*c = a / b"
@@ -73,7 +73,7 @@ def test_apply_eval_failure(eval_data_op):
     d = c.skb.apply(FunctionTransformer(lambda x: x + "string"))
     e = d.skb.apply(FunctionTransformer(lambda x: x + "something else"))
     with pytest.raises(
-        (TypeError, RuntimeError),
+        TypeError,
         match=r"(?ms).*This node was defined here:.*"
         r"^.*test_data_ops_stack_description\.py.*"
         r'^.*d = c\.skb\.apply\(FunctionTransformer\(lambda x: x \+ "string"\)\)',
