@@ -52,9 +52,9 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     >>> y = pd.Series([1, 0, 1, 0, 1] * 4)
     >>> enc = CatEncoder(max_categories=3)
     >>> enc.fit_transform(s, y)
-       col_a  col_d  col_infrequent_sklearn  col
-    0    1.0    0.0                     0.0  ...
-    1    0.0    0.0                     1.0  ...
+       col_a  col_d  col_infrequent_sklearn  col_target_sklearn
+    0    1.0    0.0                     0.0                 ...
+    1    0.0    0.0                     1.0                 ...
     """
 
     def __init__(
@@ -141,7 +141,14 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         self.one_hot_outputs_ = list(
             self.one_hot_encoder_.get_feature_names_out([col_name])
         )
-        target_outputs = list(self.target_encoder_.get_feature_names_out([col_name]))
+        if self.target_encoder_.target_type_ == "multiclass":
+            target_outputs = [
+                f"{col_name}_target_sklearn_{cls}"
+                for cls in self.target_encoder_.classes_
+            ]
+        else:
+            target_outputs = [f"{col_name}_target_sklearn"]
+
         self.target_outputs_ = _make_target_names_unique(
             target_outputs, self.one_hot_outputs_
         )

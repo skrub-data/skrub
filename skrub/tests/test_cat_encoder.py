@@ -18,7 +18,7 @@ def test_cat_encoder(df_module):
     enc = CatEncoder(max_categories=3)
     res = enc.fit_transform(s, y)
 
-    expected_names = ["col_a", "col_d", "col_infrequent_sklearn", "col"]
+    expected_names = ["col_a", "col_d", "col_infrequent_sklearn", "col_target_sklearn"]
     assert sbd.shape(res) == (20, 4)
     assert enc.get_feature_names_out() == expected_names
     assert list(sbd.column_names(res)) == enc.all_outputs_
@@ -69,9 +69,9 @@ def test_cat_encoder_dataframe_target_and_unnamed_column():
     assert res.columns.tolist() == [
         "cat_enc_c",
         "cat_enc_infrequent_sklearn",
-        "cat_enc_0",
-        "cat_enc_1",
-        "cat_enc_2",
+        "cat_enc_target_sklearn_0",
+        "cat_enc_target_sklearn_1",
+        "cat_enc_target_sklearn_2",
     ]
     assert res.shape == (15, 5)
     assert enc.target_encoder_.target_type_ == "multiclass"
@@ -106,9 +106,9 @@ def test_cat_encoder_2d_string_target():
         "col_a",
         "col_b",
         "col_c",
-        "col_one",
-        "col_three",
-        "col_two",
+        "col_target_sklearn_one",
+        "col_target_sklearn_three",
+        "col_target_sklearn_two",
     }
     transformed = enc.transform(pd.Series(["a", "new"], name="col"))
     assert transformed.shape == (2, 6)
@@ -134,9 +134,9 @@ def test_cat_encoder_stable_names_on_collision(df_module):
         "col_a",
         "col_b",
         "col_c",
-        "col_a_target",
-        "col_b_target",
-        "col_c_target",
+        "col_target_sklearn_a",
+        "col_target_sklearn_b",
+        "col_target_sklearn_c",
     ]
 
     first = CatEncoder().fit_transform(s, y)
@@ -177,10 +177,10 @@ def test_cat_encoder_apply_to_cols(df_module):
         "cat_a",
         "cat_d",
         "cat_infrequent_sklearn",
-        "cat",
+        "cat_target_sklearn",
         "other_x",
         "other_y",
-        "other",
+        "other_target_sklearn",
         "num",
     ]
 
@@ -203,10 +203,10 @@ def test_cat_encoder_data_op_orders_outputs_by_input_column():
     assert result.columns.tolist() == [
         "first_a",
         "first_b",
-        "first",
+        "first_target_sklearn",
         "second_x",
         "second_y",
-        "second",
+        "second_target_sklearn",
     ]
 
 
