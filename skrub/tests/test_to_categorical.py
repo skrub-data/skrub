@@ -43,7 +43,7 @@ def test_to_categorical(df_module):
         (False, [1.1, 2.2, None]),  # float rejected always
         (True, [1.1, 2.2, None]),  # float rejected always
         (False, [1, 2, None]),  # int rejected when accept_int=False
-        ("True", [1, 2, None]),  # wrong type rejected
+        ("Wrong", [1, 2, None]),  # wrong type rejected
     ],
 )
 def test_to_categorical_reject(df_module, accept_int, values):
