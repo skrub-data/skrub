@@ -109,29 +109,7 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
 
         col_name = sbd.name(column) or "cat_enc"
         X_arr = sbd.to_numpy(column).reshape(-1, 1)
-
-        if sbd.is_dataframe(y):
-            if sbd.shape(y)[1] != 1:
-                raise ValueError(
-                    "CatEncoder expects y to contain exactly one column; "
-                    f"got {sbd.shape(y)[1]}."
-                )
-            y_col = sbd.col_by_idx(y, 0)
-        else:
-            y_col = y
-
-        if sbd.is_column(y_col):
-            y_vec = sbd.to_numpy(y_col)
-        else:
-            y_vec = np.asarray(y_col)
-
-        if y_vec.ndim == 2 and y_vec.shape[1] == 1:
-            y_vec = y_vec[:, 0]
-        elif y_vec.ndim != 1:
-            raise ValueError(
-                "CatEncoder expects y to be one-dimensional or a "
-                f"single-column dataframe; got an array with shape {y_vec.shape}."
-            )
+        y_vec = _check_y(y)
 
         ohe_res = self.one_hot_encoder_.fit_transform(X_arr)
         te_res = self.target_encoder_.fit_transform(X_arr, y_vec)
@@ -221,3 +199,26 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         """
         check_is_fitted(self, "all_outputs_")
         return self.all_outputs_
+
+
+def _check_y(y):
+    """Validate and convert target y to a 1D numpy array."""
+    if isinstance(y, np.ndarray):
+        y_arr = y
+    elif sbd.is_dataframe(y) or sbd.is_column(y):
+        y_arr = sbd.to_numpy(y)
+    else:
+        y_arr = np.asarray(y)
+
+    if y_arr.ndim == 2 and y_arr.shape[1] == 1:
+        return y_arr[:, 0]
+    elif y_arr.ndim == 1:
+        return y_arr
+    elif y_arr.ndim == 2:
+        raise ValueError(
+            f"CatEncoder expects y to contain exactly one column; got {y_arr.shape[1]}."
+        )
+    raise ValueError(
+        "CatEncoder expects y to be one-dimensional or a single-column dataframe; "
+        f"got an array with shape {y_arr.shape}."
+    )

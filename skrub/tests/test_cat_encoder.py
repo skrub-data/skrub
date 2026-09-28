@@ -84,7 +84,7 @@ def test_cat_encoder_dataframe_target_and_unnamed_column():
             pd.DataFrame({"first": [0, 1] * 5, "second": [1, 0] * 5}),
             "exactly one column",
         ),
-        (np.ones((10, 2)), "one-dimensional"),
+        (np.ones((10, 2)), "exactly one column"),
         (np.asarray(1), "one-dimensional"),
     ],
 )
