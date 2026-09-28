@@ -186,11 +186,7 @@ def test_cat_encoder_data_op_orders_outputs_by_input_column(df_module):
     )
     y = df_module.make_column("target", [1, 0] * 10)
 
-    result = (
-        skrub.as_data_op(df)
-        .skb.apply(CatEncoder(), y=y)
-        .skb.eval()
-    )
+    result = skrub.as_data_op(df).skb.apply(CatEncoder(), y=y).skb.eval()
 
     assert list(sbd.column_names(result)) == [
         "first_a",
