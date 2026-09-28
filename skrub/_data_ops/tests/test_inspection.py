@@ -51,7 +51,7 @@ def test_full_report():
         "utf-8"
     )
     report = e.skb.full_report({"a": 12345, "c": 0}, open=False)
-    assert isinstance(report["error"], (ZeroDivisionError, RuntimeError))
+    assert isinstance(report["error"], ZeroDivisionError)
     assert report["result"] is None
     out = report["report_path"].parent
     text = (out / "node_1.html").read_text("utf-8")
@@ -181,6 +181,22 @@ def test_no_graphviz(monkeypatch):
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
     with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
+
+
+def test_repr_html_no_graphviz(monkeypatch):
+    monkeypatch.delitem(sys.modules, "pydot", raising=False)
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pydot":
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+    # Without a preview value (and without a graph) and with a preview value,
+    # the HTML representation falls back on the graphviz error message.
+    assert "please install Pydot and Graphviz" in skrub.var("a")._repr_html_()
+    assert "please install Pydot and Graphviz" in skrub.var("a", 0)._repr_html_()
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")

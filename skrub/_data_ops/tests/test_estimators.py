@@ -670,7 +670,7 @@ def test_unsupervised():
     k_means.fit(X)
     assert (k_means.predict(X) == data_op_k_means.predict({"X": X})).all()
     assert_allclose(k_means.score(X, y), data_op_k_means.score({"X": X, "y": y}))
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         data_op_k_means.score({"X": X})
 
 

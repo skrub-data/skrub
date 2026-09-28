@@ -374,16 +374,11 @@ class _Evaluator(_DataOpTraversal):
             if self.mode == "preview":
                 raise
             stack = data_op._skrub_impl.creation_stack_last_line()
-            msg = (
+            e.add_note(
                 f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
                 f" traceback. This node was defined here:\n{stack}"
             )
-            if hasattr(e, "add_note"):
-                e.add_note(msg)
-                raise
-            # python < 3.11 : we cannot add note to exception so fall back on chaining.
-            # Note this changes the type of exception.
-            raise RuntimeError(msg) from e
+            raise
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:
@@ -503,11 +498,7 @@ def evaluate(
             data_op
         )
     except UninitializedVariable as e:
-        if (
-            hasattr(e, "add_note")
-            and environment is not None
-            and not environment.get(IS_PREVIEW_DATA_ENV_NAME)
-        ):
+        if environment is not None and not environment.get(IS_PREVIEW_DATA_ENV_NAME):
             # user passed an explicit environment rather than using the
             # variables' preview values.
             e.add_note(
