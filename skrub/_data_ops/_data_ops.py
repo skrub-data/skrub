@@ -179,7 +179,7 @@ def _remove_shell_frames(stack):
     cut = -1
     for i, f in enumerate(stack):
         for file_path, func_name in shells:
-            if pathlib.Path(f.filename).match(file_path) and (
+            if pathlib.Path(f.filename).match(str(file_path)) and (
                 func_name is None or f.name == func_name
             ):
                 cut = i
