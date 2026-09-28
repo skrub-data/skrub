@@ -19,6 +19,13 @@ New Features
   <DataOp.skb.apply_func>`. See the :ref:`user guide
   <user_guide_data_ops_caching>` for more information.
   :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
+- The report created by :meth:`.skb.full_report <DataOp.skb.full_report>` or
+  :meth:`SkrubLearner.report` now contains links to source code where each node
+  was defined, and also the docstring and link to source code for functions
+  applied with :meth:`.skb.apply_func <DataOp.skb.apply_func>` or
+  :func:`deferred` and for estimators applied with :meth:`.skb.apply
+  <DataOp.skb.apply>`.
+  :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
