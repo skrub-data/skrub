@@ -3,7 +3,7 @@ Implementation of CatEncoder combining OneHotEncoder and TargetEncoder.
 """
 
 import numpy as np
-from sklearn.base import TransformerMixin, clone
+from sklearn.base import TransformerMixin
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder
 from sklearn.utils.validation import check_is_fitted
 
@@ -25,19 +25,6 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     max_categories : int or None, default=10
         Maximum number of categories for the ``OneHotEncoder``. If there are more
         categories, the remaining ones are grouped into an infrequent category.
-        Ignored if a custom ``one_hot_encoder`` is provided.
-
-    one_hot_encoder : OneHotEncoder instance or None, default=None
-        Custom ``OneHotEncoder`` instance to use. If ``None``, a default
-        ``OneHotEncoder(max_categories=max_categories, sparse_output=False,
-        handle_unknown="ignore")`` will be used.
-
-    target_encoder : TargetEncoder instance or None, default=None
-        Custom ``TargetEncoder`` instance to use. If ``None``, a default
-        ``TargetEncoder()`` will be used. Depending on the installed scikit-learn
-        version and its cross-validation defaults, repeated calls to
-        ``fit_transform`` may produce different encodings. Pass a configured
-        ``TargetEncoder`` to control the cross-validation strategy.
 
     Attributes
     ----------
@@ -61,8 +48,8 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     --------
     >>> import pandas as pd
     >>> from skrub import CatEncoder
-    >>> s = pd.Series(["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"], name="col")
-    >>> y = pd.Series([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+    >>> s = pd.Series(["a", "b", "c", "d", "e"] * 4, name="col")
+    >>> y = pd.Series([1, 0, 1, 0, 1] * 4)
     >>> enc = CatEncoder(max_categories=3)
     >>> enc.fit_transform(s, y)
        col_a  col_d  col_infrequent_sklearn  col
@@ -73,12 +60,8 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
     def __init__(
         self,
         max_categories=10,
-        one_hot_encoder=None,
-        target_encoder=None,
     ):
         self.max_categories = max_categories
-        self.one_hot_encoder = one_hot_encoder
-        self.target_encoder = target_encoder
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a categorical column.
@@ -99,19 +82,12 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         if y is None:
             raise ValueError("Target y must be provided to fit CatEncoder.")
 
-        if self.one_hot_encoder is None:
-            self.one_hot_encoder_ = OneHotEncoder(
-                max_categories=self.max_categories,
-                sparse_output=False,
-                handle_unknown="ignore",
-            )
-        else:
-            self.one_hot_encoder_ = clone(self.one_hot_encoder)
-
-        if self.target_encoder is None:
-            self.target_encoder_ = TargetEncoder()
-        else:
-            self.target_encoder_ = clone(self.target_encoder)
+        self.one_hot_encoder_ = OneHotEncoder(
+            max_categories=self.max_categories,
+            sparse_output=False,
+            handle_unknown="ignore",
+        )
+        self.target_encoder_ = TargetEncoder()
 
         col_name = sbd.name(column) or "cat_enc"
         X_pandas = sbd.to_pandas(column).to_frame()

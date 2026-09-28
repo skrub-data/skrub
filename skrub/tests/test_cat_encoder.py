@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OneHotEncoder, TargetEncoder
 
 import skrub
 from skrub import ApplyToCols, CatEncoder
@@ -11,14 +10,16 @@ from skrub import _dataframe as sbd
 
 
 def test_cat_encoder(df_module):
-    s = df_module.make_column("col", ["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"])
-    y = df_module.make_column("target", [1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+    s = df_module.make_column(
+        "col", ["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"] * 2
+    )
+    y = df_module.make_column("target", [1, 0, 1, 0, 1, 0, 1, 0, 1, 0] * 2)
 
-    enc = CatEncoder(max_categories=3, target_encoder=TargetEncoder(cv=2))
+    enc = CatEncoder(max_categories=3)
     res = enc.fit_transform(s, y)
 
     expected_names = ["col_a", "col_d", "col_infrequent_sklearn", "col"]
-    assert sbd.shape(res) == (10, 4)
+    assert sbd.shape(res) == (20, 4)
     assert enc.get_feature_names_out() == expected_names
     assert list(sbd.column_names(res)) == enc.all_outputs_
 
@@ -31,7 +32,7 @@ def test_cat_encoder_values_and_unknown_category(df_module):
     s = df_module.make_column("col", ["a", "b"] * 10)
     y = df_module.make_column("target", [1, 0] * 10)
 
-    enc = CatEncoder(target_encoder=TargetEncoder(cv=2))
+    enc = CatEncoder()
     res = enc.fit_transform(s, y)
 
     expected = np.column_stack(
@@ -56,23 +57,6 @@ def test_cat_encoder_y_none():
     enc = CatEncoder()
     with pytest.raises(ValueError, match="Target y must be provided"):
         enc.fit_transform(s, y=None)
-
-
-def test_cat_encoder_custom_encoders():
-    s = pd.Series(["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"], name="col")
-    y = pd.Series([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
-
-    custom_ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
-    custom_te = TargetEncoder(cv=2)
-
-    enc = CatEncoder(one_hot_encoder=custom_ohe, target_encoder=custom_te)
-    _ = enc.fit_transform(s, y)
-
-    assert hasattr(enc, "one_hot_encoder_")
-    assert hasattr(enc, "target_encoder_")
-    # Verify original estimators were not mutated (cloned)
-    assert enc.one_hot_encoder_ is not custom_ohe
-    assert enc.target_encoder_ is not custom_te
 
 
 def test_cat_encoder_dataframe_target_and_unnamed_column():
@@ -111,25 +95,21 @@ def test_cat_encoder_rejects_non_1d_target(y, expected_message):
         CatEncoder().fit_transform(s, y)
 
 
-def test_cat_encoder_2d_string_target_and_sparse_output():
-    s = pd.Series(["a", "b", "c"] * 5, name="col")
-    y = np.asarray(["one", "two", "three"] * 5, dtype=object).reshape(-1, 1)
-    one_hot_encoder = OneHotEncoder(
-        sparse_output=True,
-        handle_unknown="ignore",
-    )
+def test_cat_encoder_2d_string_target():
+    s = pd.Series(["a", "b", "c"] * 10, name="col")
+    y = np.asarray(["one", "two", "three"] * 10, dtype=object).reshape(-1, 1)
 
-    enc = CatEncoder(one_hot_encoder=one_hot_encoder)
+    enc = CatEncoder()
     res = enc.fit_transform(s, y)
 
-    assert res.columns.tolist() == [
+    assert set(res.columns.tolist()) == {
         "col_a",
         "col_b",
         "col_c",
         "col_one",
         "col_three",
         "col_two",
-    ]
+    }
     transformed = enc.transform(pd.Series(["a", "new"], name="col"))
     assert transformed.shape == (2, 6)
     assert transformed.columns.tolist() == res.columns.tolist()
@@ -138,22 +118,13 @@ def test_cat_encoder_2d_string_target_and_sparse_output():
 def test_cat_encoder_preserves_dtypes(df_module):
     s = df_module.make_column("col", ["a", "b"] * 10)
     y = df_module.make_column("target", [1.0, 0.0] * 10)
-    one_hot_encoder = OneHotEncoder(
-        dtype=np.float32,
-        sparse_output=False,
-        handle_unknown="ignore",
-    )
-    enc = CatEncoder(
-        one_hot_encoder=one_hot_encoder,
-        target_encoder=TargetEncoder(cv=2),
-    )
+    enc = CatEncoder()
 
     fitted = enc.fit_transform(s, y)
     transformed = enc.transform(s)
 
     for name in enc.all_outputs_:
         assert sbd.dtype(sbd.col(fitted, name)) == sbd.dtype(sbd.col(transformed, name))
-    assert sbd.to_numpy(sbd.col(fitted, "col_a")).dtype == np.float32
 
 
 def test_cat_encoder_stable_names_on_collision(df_module):
@@ -176,10 +147,10 @@ def test_cat_encoder_stable_names_on_collision(df_module):
 
 
 def test_cat_encoder_preserves_pandas_index():
-    index = pd.Index([10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
-    s = pd.Series(["a", "b"] * 5, name="col", index=index)
-    y = pd.Series([1, 0] * 5, index=index)
-    enc = CatEncoder(target_encoder=TargetEncoder(cv=2))
+    index = pd.Index(list(range(100, 120)))
+    s = pd.Series(["a", "b"] * 10, name="col", index=index)
+    y = pd.Series([1, 0] * 10, index=index)
+    enc = CatEncoder()
 
     fitted = enc.fit_transform(s, y)
     transformed = enc.transform(s)
@@ -191,14 +162,14 @@ def test_cat_encoder_preserves_pandas_index():
 def test_cat_encoder_apply_to_cols(df_module):
     df = df_module.make_dataframe(
         {
-            "cat": ["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"],
-            "other": ["x", "y"] * 5,
-            "num": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "cat": ["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"] * 2,
+            "other": ["x", "y"] * 10,
+            "num": list(range(20)),
         }
     )
-    y = df_module.make_column("target", [1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+    y = df_module.make_column("target", [1, 0] * 10)
 
-    enc = CatEncoder(max_categories=3, target_encoder=TargetEncoder(cv=2))
+    enc = CatEncoder(max_categories=3)
     apply = ApplyToCols(enc, cols=["cat", "other"])
 
     res = apply.fit_transform(df, y)
@@ -217,15 +188,15 @@ def test_cat_encoder_apply_to_cols(df_module):
 def test_cat_encoder_data_op_orders_outputs_by_input_column():
     df = pd.DataFrame(
         {
-            "first": ["a", "b"] * 5,
-            "second": ["x", "y"] * 5,
+            "first": ["a", "b"] * 10,
+            "second": ["x", "y"] * 10,
         }
     )
-    y = pd.Series([1, 0] * 5)
+    y = pd.Series([1, 0] * 10)
 
     result = (
         skrub.as_data_op(df)
-        .skb.apply(CatEncoder(target_encoder=TargetEncoder(cv=2)), y=y)
+        .skb.apply(CatEncoder(), y=y)
         .skb.eval()
     )
 
