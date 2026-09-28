@@ -118,7 +118,7 @@ def _add_source_file(source_path, output_dir):
     python_dir.mkdir(exist_ok=True)
     target_file_name = f"{path_hash}.html"
     target_path = python_dir / target_file_name
-    url = str(Path("python") / target_file_name)
+    url = f"python/{target_file_name}"
     if target_path.is_file():
         return url
     if source_path.is_file():
