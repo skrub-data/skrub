@@ -172,11 +172,11 @@ def test_cache_pruning(tmp_path):
     _MEMORY.cache_dir = None
     _MEMORY._ran_reduce_cache = False
 
-    data_op = skrub.as_data_op(np.ones(1_000_000)).skb.apply_func(f)
+    data_op = skrub.var("x").skb.apply_func(f)
 
     # Fill the cache without pruning
     skrub.set_config(cache=tmp_path, target_cache_size=None)
-    data_op.skb.eval()
+    data_op.skb.eval({"x": np.ones(1_000_000)})
     full_size = _dir_size(tmp_path)
     assert full_size > 1_000_000
 
@@ -184,7 +184,10 @@ def test_cache_pruning(tmp_path):
     skrub.set_config(target_cache_size="10K")
     _MEMORY._ran_reduce_cache = False
     _MEMORY.cache_dir = None
-    data_op.skb.eval()
+
+    # Here we use a small input because the result of evaluation may be
+    # written to the cache after the pruning runs.
+    data_op.skb.eval({"x": np.ones(1)})
 
     # Wait for the subprocess to run and check that the cache was pruned
     deadline = time.time() + 5
@@ -198,5 +201,3 @@ def test_cache_pruning(tmp_path):
     from skrub._data_ops._reduce_cache_size import main
 
     main([str(tmp_path), "10K"])
-
-    # Failing to start the pruning should not cause a crash
