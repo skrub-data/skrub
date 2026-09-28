@@ -6,14 +6,12 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import check_cv
 from sklearn.utils._indexing import _safe_indexing
-from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
@@ -836,16 +834,6 @@ class _XyPipelineMixin:
         return {**self.environment, **xy_environment}
 
 
-class _MultiMetricScorer:
-    """Compatibility helper for scikit-learn < 1.5"""
-
-    def __init__(self, scorers):
-        self.scorers = scorers
-
-    def __call__(self, estimator, X, y):
-        return {name: scorer(estimator, X, y) for name, scorer in self.scorers.items()}
-
-
 class _XyPipeline(_XyPipelineMixin, SkrubLearner):
     """
     Scikit-learn compatible interface to the SkrubLearner.
@@ -878,15 +866,6 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return result
 
     def _prepare_scorer(self, scoring, kwargs):
-        if parse_version(sklearn.__version__) < parse_version("1.5"):
-            if isinstance(scoring, (list, tuple, set)):
-                return _MultiMetricScorer(
-                    {k: self._prepare_scorer(k, kwargs) for k in scoring}
-                )
-            if isinstance(scoring, dict):
-                return _MultiMetricScorer(
-                    {k: self._prepare_scorer(v, kwargs) for k, v in scoring.items()}
-                )
         scorer = check_scoring(self, scoring)
         kwargs = kwargs or {}
         if not hasattr(scorer, "get_metadata_routing"):

@@ -39,7 +39,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report_data_ops', 'table_report_plots_threshold', 'table_report_associations_threshold', 'table_report_n_rows', 'table_report_verbosity', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
+dict_keys(['use_table_report_data_ops', 'table_report_plots_threshold', 'table_report_associations_threshold', 'table_report_n_rows', 'table_report_verbosity', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'cache', 'target_cache_size', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
 
 These are the parameters currently available in the global configuration:
 
@@ -87,6 +87,14 @@ These are the parameters currently available in the global configuration:
      - ``~/skrub_data``
      - ``SKB_DATA_DIRECTORY``
      - Set the default location used by skrub to store datasets and other data, such as the Data Ops reports.
+   * - ``cache``
+     - ``False``
+     - ``SKB_CACHE``
+     - Enable :ref:`caching <user_guide_data_ops_caching>` of the estimators and functions used in a DataOp. ``True`` uses a default directory inside ``data_dir``; a path can also be provided.
+   * - ``target_cache_size``
+     - ``'2G'``
+     - ``SKB_TARGET_CACHE_SIZE``
+     - Approximate size above which the cache directory is pruned, as an int (bytes) or a string such as ``'3G'``. ``None`` disables pruning.
    * - ``eager_data_ops``
      - ``True``
      - ``SKB_EAGER_DATA_OPS``

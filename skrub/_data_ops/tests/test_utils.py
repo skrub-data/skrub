@@ -79,3 +79,8 @@ def test_prune_directory_catch_exception(tmp_dir, create_dir, monkeypatch):
     assert len(list(tmp_dir.iterdir())) == 1
 
     monkeypatch.undo()
+
+
+def test_prune_directory_nonexistent(tmp_dir):
+    # A path that does not exist is a no-op rather than an error.
+    _utils.prune_directory(tmp_dir / "does_not_exist")
