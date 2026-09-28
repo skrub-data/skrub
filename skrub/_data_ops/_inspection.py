@@ -111,39 +111,40 @@ def _node_status(data_op_graph, mode):
     return status
 
 
-def _add_source_file(source_path, output_dir):
+def _read_source(source_path):
+    source_path = Path(source_path)
+    if source_path.is_file():
+        return source_path.read_text("utf-8")
+    # the file is not there anymore (eg jupyter tmp files for cells) or is
+    # not a real file; the source lines may still be in the line cache
+    # (this is similar to what inspect.findsource does)
+    lines = linecache.getlines(str(source_path))
+    if not lines:
+        # sometimes they cannot be retrieved there, e.g. functions defined
+        # in interactive shell in python 3.14 have a source file like
+        # <python-input-0> but there are no lines for it, or the line cache
+        # may have been flushed.
+        raise OSError(f"Could not find source code for {source_path}")
+    return "".join(lines)
+
+
+def _add_source_file(source_path, source_code, output_dir):
     source_path = Path(source_path)
     path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
     python_dir = output_dir / "python"
     python_dir.mkdir(exist_ok=True)
     target_file_name = f"{path_hash}.html"
     target_path = python_dir / target_file_name
-    url = f"python/{target_file_name}"
-    if target_path.is_file():
-        return url
-    if source_path.is_file():
-        source_code = source_path.read_text("utf-8")
-    else:
-        # the file is not there anymore (eg jupyter tmp files for cells) or is
-        # not a real file; the source lines may still be in the line cache
-        # (this is similar to what inspect.findsource does)
-        lines = linecache.getlines(str(source_path))
-        if not lines:
-            # sometimes they cannot be retrieved there, e.g. functions defined
-            # in interactive shell in python 3.14 have a source file like
-            # <python-input-0> but there are no lines for it, or the line cache
-            # may have been flushed.
-            raise OSError(f"Could not find source code for {source_path}")
-        source_code = "".join(lines)
-    page_html = _get_template("python_module.html").render(
-        {
-            "python_source_code": source_code,
-            "source_file": str(source_path),
-            "module_name": source_path.stem,
-        }
-    )
-    target_path.write_text(page_html, "utf-8")
-    return url
+    if not target_path.is_file():
+        page_html = _get_template("python_module.html").render(
+            {
+                "python_source_code": source_code,
+                "source_file": str(source_path),
+                "module_name": source_path.stem,
+            }
+        )
+        target_path.write_text(page_html, "utf-8")
+    return f"python/{target_file_name}"
 
 
 def _get_source_url(obj, output_dir):
@@ -152,9 +153,16 @@ def _get_source_url(obj, output_dir):
     if not (callable(obj) or isinstance(obj, type)):
         return None
     try:
+        obj = inspect.unwrap(obj)
         source_path = inspect.getsourcefile(obj)
-        line_no = inspect.getsourcelines(obj)[1]
-        source_file_url = _add_source_file(source_path, output_dir=output_dir)
+        lines, line_no = inspect.getsourcelines(obj)
+        name = "lambda" if obj.__name__ == "<lambda>" else obj.__name__
+        if not re.search(rf"\b{re.escape(name)}\b", "".join(lines)):
+            # the file or line number do not match the definition of obj, eg
+            # it was loaded from a pickle or the file was modified.
+            return None
+        source_code = _read_source(source_path)
+        source_file_url = _add_source_file(source_path, source_code, output_dir)
         return f"{source_file_url}#L{line_no}"
     except Exception:
         return None
@@ -172,10 +180,15 @@ def _get_stack_info(stack, output_dir):
     result = []
     for frame_summary in stack:
         try:
-            source_file_url = _add_source_file(
-                frame_summary.filename, output_dir=output_dir
-            )
-            url = f"{source_file_url}#L{frame_summary.lineno}"
+            filename, lineno = frame_summary.filename, frame_summary.lineno
+            source_code = _read_source(filename)
+            # the file may have changed since the stack was recorded
+            if not frame_summary.line.startswith(
+                source_code.splitlines()[lineno - 1].strip()
+            ):
+                raise ValueError("source file does not match the recorded stack")
+            source_file_url = _add_source_file(filename, source_code, output_dir)
+            url = f"{source_file_url}#L{lineno}"
         except Exception:
             url = None
         result.append({"url": url, "frame": frame_summary})

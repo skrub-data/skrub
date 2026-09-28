@@ -1,8 +1,10 @@
 import builtins
+import functools
 import linecache
 import re
 import sys
 import traceback
+import types
 import webbrowser
 from pathlib import Path
 from unittest.mock import Mock
@@ -185,6 +187,42 @@ def test_source_link_target_exists(tmp_path):
     text = (report_dir / "node_1.html").read_text("utf-8")
     match = re.search(r'href="(python/[0-9a-f]+\.html)#L\d+"', text)
     assert (report_dir / match.group(1)).is_file()
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_get_source_url_mismatch(tmp_path):
+    # no link if the source file does not contain the definition of the object
+    assert _inspection._get_source_url(_times_two, tmp_path) is not None
+    other = tmp_path / "other.py"
+    other.write_text("\n" * 200)
+    code = _times_two.__code__.replace(co_filename=str(other))
+    f = types.FunctionType(code, _times_two.__globals__)
+    assert _inspection._get_source_url(f, tmp_path) is None
+
+    # wrapped function: the link must point to the wrapped function's file
+    @functools.wraps(_times_two)
+    def wrapper(x):
+        return _times_two(x)
+
+    url = _inspection._get_source_url(wrapper, tmp_path)
+    assert url == _inspection._get_source_url(_times_two, tmp_path)
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_stack_info_modified_source(tmp_path):
+    module = tmp_path / "my_module.py"
+    module.write_text("import skrub\nx = skrub.var('a')\n")
+    frame = traceback.FrameSummary(
+        str(module), 2, "<module>", line="x = skrub.var('a')"
+    )
+    stack = [frame]
+    (tmp_path / "report_ok").mkdir()
+    (tmp_path / "report_modified").mkdir()
+    info = _inspection._get_stack_info(stack, tmp_path / "report_ok")
+    assert info[0]["url"] is not None
+    module.write_text("# a new line\nimport skrub\nx = skrub.var('a')\n")
+    info = _inspection._get_stack_info(stack, tmp_path / "report_modified")
+    assert info[0]["url"] is None
 
 
 def _find_node_html(out, marker):
