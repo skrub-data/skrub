@@ -83,7 +83,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
-                    "CategoricalEncoder",
+                    "CatEncoder",
                     "StringEncoder",
                     "LLMEncoder",
                     "MinHashEncoder",

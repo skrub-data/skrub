@@ -1,5 +1,5 @@
 """
-Implementation of CategoricalEncoder combining OneHotEncoder and TargetEncoder.
+Implementation of CatEncoder combining OneHotEncoder and TargetEncoder.
 """
 
 import numpy as np
@@ -10,10 +10,10 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from ._single_column_transformer import SingleColumnTransformer
 
-__all__ = ["CategoricalEncoder"]
+__all__ = ["CatEncoder"]
 
 
-class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
+class CatEncoder(TransformerMixin, SingleColumnTransformer):
     """Encode a single categorical column combining OneHotEncoder and TargetEncoder.
 
     This transformer applies a :class:`~sklearn.preprocessing.OneHotEncoder`
@@ -60,10 +60,10 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub import CategoricalEncoder
+    >>> from skrub import CatEncoder
     >>> s = pd.Series(["a", "b", "a", "c", "d", "e", "a", "b", "c", "d"], name="col")
     >>> y = pd.Series([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
-    >>> enc = CategoricalEncoder(max_categories=3)
+    >>> enc = CatEncoder(max_categories=3)
     >>> enc.fit_transform(s, y)
        col_a  col_d  col_infrequent_sklearn  col
     0    1.0    0.0                     0.0  ...
@@ -97,7 +97,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
             DataFrame containing one-hot and target-encoded features.
         """
         if y is None:
-            raise ValueError("Target y must be provided to fit CategoricalEncoder.")
+            raise ValueError("Target y must be provided to fit CatEncoder.")
 
         if self.one_hot_encoder is None:
             self.one_hot_encoder_ = OneHotEncoder(
@@ -113,13 +113,13 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
         else:
             self.target_encoder_ = clone(self.target_encoder)
 
-        col_name = sbd.name(column) or "categorical_enc"
+        col_name = sbd.name(column) or "cat_enc"
         X_pandas = sbd.to_pandas(column).to_frame()
 
         if sbd.is_dataframe(y):
             if sbd.shape(y)[1] != 1:
                 raise ValueError(
-                    "CategoricalEncoder expects y to contain exactly one column; "
+                    "CatEncoder expects y to contain exactly one column; "
                     f"got {sbd.shape(y)[1]}."
                 )
             y_col = sbd.col_by_idx(y, 0)
@@ -135,7 +135,7 @@ class CategoricalEncoder(TransformerMixin, SingleColumnTransformer):
             y_vec = y_vec[:, 0]
         elif y_vec.ndim != 1:
             raise ValueError(
-                "CategoricalEncoder expects y to be one-dimensional or a "
+                "CatEncoder expects y to be one-dimensional or a "
                 f"single-column dataframe; got an array with shape {y_vec.shape}."
             )
 
