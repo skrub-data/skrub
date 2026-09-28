@@ -123,23 +123,19 @@ def test_cat_encoder_preserves_dtypes(df_module):
         assert sbd.dtype(sbd.col(fitted, name)) == sbd.dtype(sbd.col(transformed, name))
 
 
-def test_cat_encoder_stable_names_on_collision(df_module):
-    s = df_module.make_column("col", ["a", "b", "c"] * 5)
-    y = df_module.make_column("target", ["a", "b", "c"] * 5)
-    expected_names = [
-        "col_a",
-        "col_b",
-        "col_c",
-        "col_target_sklearn_a",
-        "col_target_sklearn_b",
-        "col_target_sklearn_c",
-    ]
+def test_cat_encoder_column_collision_handled_by_pick_column_names(df_module):
+    # A collision occurs if a category name produces a one-hot column that
+    # matches the target-encoded column name: "col_target_sklearn".
+    s = df_module.make_column("col", ["a", "target_sklearn"] * 10)
+    y = df_module.make_column("target", [1, 0] * 10)
 
-    first = CatEncoder().fit_transform(s, y)
-    second = CatEncoder().fit_transform(s, y)
+    res = CatEncoder().fit_transform(s, y)
+    cols = list(sbd.column_names(res))
 
-    assert list(sbd.column_names(first)) == expected_names
-    assert list(sbd.column_names(second)) == expected_names
+    assert len(cols) == len(set(cols))
+    assert "col_a" in cols
+    assert "col_target_sklearn" in cols
+    assert any(col.startswith("col_target_sklearn__skrub_") for col in cols)
 
 
 def test_cat_encoder_preserves_pandas_index():
