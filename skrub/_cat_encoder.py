@@ -8,6 +8,7 @@ from sklearn.preprocessing import OneHotEncoder, TargetEncoder
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from ._join_utils import pick_column_names
 from ._single_column_transformer import SingleColumnTransformer
 
 __all__ = ["CatEncoder"]
@@ -149,8 +150,8 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         else:
             target_outputs = [f"{col_name}_target_sklearn"]
 
-        self.target_outputs_ = _make_target_names_unique(
-            target_outputs, self.one_hot_outputs_
+        self.target_outputs_ = pick_column_names(
+            target_outputs, forbidden_names=self.one_hot_outputs_
         )
 
         res_df = self._make_output(column, ohe_res, te_res)
@@ -220,19 +221,3 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         """
         check_is_fitted(self, "all_outputs_")
         return self.all_outputs_
-
-
-def _make_target_names_unique(target_names, one_hot_names):
-    """Make target-encoded names unique with deterministic suffixes."""
-    used_names = set(one_hot_names)
-    unique_names = []
-    for name in target_names:
-        candidate = name
-        suffix_idx = 1
-        while candidate in used_names:
-            suffix = "target" if suffix_idx == 1 else f"target_{suffix_idx}"
-            candidate = f"{name}_{suffix}"
-            suffix_idx += 1
-        unique_names.append(candidate)
-        used_names.add(candidate)
-    return unique_names
