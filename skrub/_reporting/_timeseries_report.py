@@ -3,6 +3,7 @@ from pathlib import Path
 
 import jinja2
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -48,6 +49,79 @@ def calculate_label_width(name, char_width_px=10):
     return len(name) * char_width_px
 
 
+def lttb(x, y, threshold=20):
+    # Convert Polars to pandas if needed
+    if hasattr(x, "to_pandas"):
+        x = x.to_pandas()
+    if hasattr(y, "to_pandas"):
+        y = y.to_pandas()
+
+    # Ensure they're pandas Series
+    if not isinstance(x, pd.Series):
+        x = pd.Series(x)
+    if not isinstance(y, pd.Series):
+        y = pd.Series(y)
+
+    threshold = threshold
+    delta = (y.shape[0] - 2) / (threshold - 2)
+    delta
+    # %%
+    for i in range(0, y.shape[0]):
+        print(i, int(np.floor(i * delta)))
+    # %%
+    bin_edges = [int(np.floor(i * delta)) + 1 for i in range(1, threshold - 1)]
+    bin_edges.append(y.shape[0] - 1)
+    bin_edges
+    # %%
+    # Convert datetime to numeric (int64 nanoseconds)
+    if pd.api.types.is_datetime64_any_dtype(x):
+        x = pd.Series(x.astype("int64"))
+    else:
+        x = pd.Series(pd.to_datetime(x, unit="us").astype("int64"))
+    downsampled = [(x.iloc[0], y.iloc[0])]
+    for i in range(1, len(bin_edges[:-2])):
+        index = lambda idx: bin_edges[idx]
+        triangle = lambda p1, p2, p3: abs(
+            p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])
+        )
+
+        j = i + 1
+        x_bucket = x.iloc[index(i) : index(j)]
+        y_bucket = y.iloc[index(i) : index(j)]
+
+        # print("x_bucket", x_bucket)
+        # print("y_bucket", y_bucket)
+        # print("centroid_x", x[index(j):index(j+1)])
+        centroid_x = x.iloc[index(j) : index(j + 1)].mean()
+        centroid_y = y.iloc[index(j) : index(j + 1)].mean()
+
+        max = 0
+        keep = None
+
+        if len(y_bucket) == 0:
+            print(f"Bucket {i} is empty!")
+            continue
+
+        for point in zip(x_bucket, y_bucket):
+            area = triangle(
+                point, (centroid_x, centroid_y), (x.iloc[index(i)], y.iloc[index(i)])
+            )
+            if area > max:
+                max = area
+                keep = point
+
+        if keep is not None:
+            downsampled.append(keep)
+
+    downsampled.append((x.iloc[-1], y.iloc[-1]))
+    # %%
+    x_ds, y_ds = zip(*downsampled)
+    x_ds = pd.to_datetime(np.array(x_ds), unit="ns")  # Changed from 'us' to 'ns'
+    y_ds = np.array(y_ds)
+
+    return x_ds, y_ds
+
+
 class TimeSeriesReport:
     def __init__(
         self,
@@ -56,6 +130,8 @@ class TimeSeriesReport:
         target=None,
         numcols=None,
         catcols=None,
+        round_float=False,
+        downsample=1000,
         debug=False,
     ):
         self.df = df
@@ -67,6 +143,7 @@ class TimeSeriesReport:
         time = SelectCols(s.any_date()).fit_transform(df)
         self.df = df.sort(time.columns)
         self.target = target
+        self.downsample = downsample
         self.time = SelectCols(s.any_date()).fit_transform(df)[:, 0]
         self.time_min = self.time.min()
         self.time_max = self.time.max()
@@ -88,6 +165,8 @@ class TimeSeriesReport:
             self.catcols = catcols
 
         self.ycols = SelectCols(s.all() - s.any_date()).fit_transform(df)
+        if round_float:
+            self.ycols = self.ycols.cast(pl.Float32)
         self.ncols = 3
         self.nrows = (self.ycols.width + self.ncols - 1) // self.ncols
         self.colors = qualitative.Plotly
@@ -119,12 +198,15 @@ class TimeSeriesReport:
             columns = []
             for i, col in enumerate(self.ycols.columns[:10]):
                 y_col = self.ycols[col]
+                time = self.time
+                if self.downsample is not None:
+                    time, y_col = lttb(self.time, y_col, threshold=self.downsample)
                 # Calculate y_min and y_max once per column for consistent ranges
                 y_min = y_col.min()
                 y_max = y_col.max()
 
                 # Create the main figure with all toggleable traces
-                fig = self._make_figure(y_col, "test")
+                fig = self._make_figure(time, y_col, "test")
 
                 # Get metadata items (values, colors, etc.)
                 metadata = self.get_metadata(y_col)
@@ -310,15 +392,27 @@ class TimeSeriesReport:
             "outliers",
         ]
 
-        values = [
-            y.mean(),
-            y.std(),
-            y.quantile([0.25, 0.5, 0.75])[0],
-            y.min(),
-            y.max(),
-            y.null_count(),
-            0,
-        ]
+        # Handle both numpy arrays and pandas/polars series
+        if isinstance(y, np.ndarray):
+            values = [
+                y.mean(),
+                y.std(),
+                np.quantile(y, 0.25),
+                y.min(),
+                y.max(),
+                np.isnan(y).sum(),
+                0,
+            ]
+        else:
+            values = [
+                y.mean(),
+                y.std(),
+                y.quantile([0.25, 0.5, 0.75])[0],
+                y.min(),
+                y.max(),
+                y.null_count(),
+                0,
+            ]
 
         # Use qualitative colors for each metadata label
         colors = qualitative.Plotly
@@ -334,10 +428,10 @@ class TimeSeriesReport:
             },
         }
 
-    def _add_mean(self, y, color, name="mean"):
+    def _add_mean(self, y, color, time_min, time_max, name="mean"):
         mean = y.mean()
         return go.Scattergl(
-            x=[self.time_min, self.time_max],
+            x=[time_min, time_max],
             y=[mean, mean],
             name=name,
             line=dict(color=color, width=2),
@@ -346,29 +440,37 @@ class TimeSeriesReport:
             showlegend=False,
         )
 
-    def _add_std(self, y, color, name="std"):
+    def _add_std(self, y, color, time_min, time_max, name="std"):
         lower = y.mean() - y.std()
         upper = y.mean() + y.std()
         band_x = [
-            self.time_min,
-            self.time_max,
-            self.time_max,
-            self.time_min,
-            self.time_min,
+            time_min,
+            time_max,
+            time_max,
+            time_min,
+            time_min,
         ]
         band_y = [lower, lower, upper, upper, lower]
 
         return self._add_bands([band_x, band_y], color, name)
 
-    def _add_percentile(self, y, color, quantile=0.25, name="percentile"):
-        lower = y.quantile(quantile)
-        upper = y.quantile(quantile + 0.50)
+    def _add_percentile(
+        self, y, color, time_min, time_max, quantile=0.25, name="percentile"
+    ):
+        # Handle both numpy arrays and pandas/polars series
+        if isinstance(y, np.ndarray):
+            lower = np.quantile(y, quantile)
+            upper = np.quantile(y, quantile + 0.50)
+        else:
+            lower = y.quantile(quantile)
+            upper = y.quantile(quantile + 0.50)
+
         band_x = [
-            self.time_min,
-            self.time_max,
-            self.time_max,
-            self.time_min,
-            self.time_min,
+            time_min,
+            time_max,
+            time_max,
+            time_min,
+            time_min,
         ]
         band_y = [lower, lower, upper, upper, lower]
 
@@ -390,9 +492,9 @@ class TimeSeriesReport:
             showlegend=False,
         )
 
-    def _add_timeline(self, y):
+    def _add_timeline(self, time, y):
         return go.Scattergl(
-            x=self.time,
+            x=time,
             y=y,
             name="timeline",
             line=dict(color="black", width=1),
@@ -415,10 +517,14 @@ class TimeSeriesReport:
 
     def _make_figure(
         self,
+        time,
         y,
         labels,
         color="#1f77b4",
     ):
+        time_min = time.min()
+        time_max = time.max()
+
         fig = make_subplots(
             rows=2,
             cols=2,
@@ -431,16 +537,16 @@ class TimeSeriesReport:
             vertical_spacing=0.15,
             horizontal_spacing=0.05,
         )
-        heads = self._make_trace(self.time, y, "heads", color="red", visible=True)
-        tails = self._make_trace(self.time, y, "tails", color="red", visible=True)
-        min = self._make_trace(self.time, y, "min", color="yellow")
-        max = self._make_trace(self.time, y, "max", color="yellow")
-        missingness = self._make_trace(self.time, y, "missingness", color="purple")
-        outliers = self._make_trace(self.time, y, "outliers", color="purple")
-        timeline = self._add_timeline(y)
-        mean = self._add_mean(y, "green")
-        std = self._add_std(y, "orange")
-        percentile = self._add_percentile(y, "blue")
+        heads = self._make_trace(time, y, "heads", color="red", visible=True)
+        tails = self._make_trace(time, y, "tails", color="red", visible=True)
+        min = self._make_trace(time, y, "min", color="yellow")
+        max = self._make_trace(time, y, "max", color="yellow")
+        missingness = self._make_trace(time, y, "missingness", color="purple")
+        outliers = self._make_trace(time, y, "outliers", color="purple")
+        timeline = self._add_timeline(time, y)
+        mean = self._add_mean(y, "green", time_min, time_max)
+        std = self._add_std(y, "orange", time_min, time_max)
+        percentile = self._add_percentile(y, "blue", time_min, time_max)
 
         fig.add_trace(heads, row=1, col=1)
         fig.add_trace(tails, row=1, col=2)
