@@ -166,7 +166,7 @@ class ToCategorical(SingleColumnTransformer):
 
     def __init__(self, accept_int=False):
         if not isinstance(accept_int, bool):
-            raise TypeError(f"Expected bool, got {type(accept_int).__name__}")
+            raise TypeError(f"Expected `accept_int` to be a Boolean, got {type(accept_int).__name__}")
         self.accept_int = accept_int
 
     def fit_transform(self, column, y=None):
