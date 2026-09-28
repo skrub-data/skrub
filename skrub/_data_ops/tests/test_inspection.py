@@ -157,6 +157,19 @@ def test_call_doc_and_source(tmp_path):
     assert "docstring:" not in (report_dir / "node_1.html").read_text("utf-8")
 
 
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_source_link_target_exists(tmp_path):
+    # Check that the link to the source file is correct: we find the link in
+    # the node page and verify the file exists.
+    report_dir = tmp_path / "report"
+    skrub.var("a").skb.apply_func(_times_two).skb.full_report(
+        {"a": 3}, output_dir=report_dir, open=False
+    )
+    text = (report_dir / "node_1.html").read_text("utf-8")
+    match = re.search(r'href="(python/[0-9a-f]+\.html)#L\d+"', text)
+    assert (report_dir / match.group(1)).is_file()
+
+
 def _find_node_html(out, marker):
     for node_file in sorted(out.glob("node_*.html")):
         text = node_file.read_text("utf-8")
