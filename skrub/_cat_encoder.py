@@ -107,7 +107,7 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
         self.target_encoder_ = TargetEncoder()
 
         col_name = sbd.name(column) or "cat_enc"
-        X_pandas = sbd.to_pandas(column).to_frame()
+        X_arr = sbd.to_numpy(column).reshape(-1, 1)
 
         if sbd.is_dataframe(y):
             if sbd.shape(y)[1] != 1:
@@ -138,8 +138,8 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
             except (ValueError, TypeError):
                 pass
 
-        ohe_res = self.one_hot_encoder_.fit_transform(X_pandas)
-        te_res = self.target_encoder_.fit_transform(X_pandas, y_vec)
+        ohe_res = self.one_hot_encoder_.fit_transform(X_arr)
+        te_res = self.target_encoder_.fit_transform(X_arr, y_vec)
 
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
@@ -180,10 +180,10 @@ class CatEncoder(TransformerMixin, SingleColumnTransformer):
             ],
         )
 
-        X_pandas = sbd.to_pandas(column).to_frame()
+        X_arr = sbd.to_numpy(column).reshape(-1, 1)
 
-        ohe_res = self.one_hot_encoder_.transform(X_pandas)
-        te_res = self.target_encoder_.transform(X_pandas)
+        ohe_res = self.one_hot_encoder_.transform(X_arr)
+        te_res = self.target_encoder_.transform(X_arr)
 
         if hasattr(ohe_res, "toarray"):
             ohe_res = ohe_res.toarray()
