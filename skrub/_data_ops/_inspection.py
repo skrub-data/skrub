@@ -124,8 +124,15 @@ def _add_source_file(source_path, output_dir):
     if source_path.is_file():
         source_code = source_path.read_text("utf-8")
     else:
+        # the file is not there anymore (eg jupyter tmp files for cells) or is
+        # not a real file; the source lines may still be in the line cache
+        # (this is similar to what inspect.findsource does)
         lines = linecache.getlines(str(source_path))
         if not lines:
+            # sometimes they cannot be retrieved there, e.g. functions defined
+            # in interactive shell in python 3.14 have a source file like
+            # <python-input-0> but there are no lines for it, or the line cache
+            # may have been flushed.
             raise OSError(f"Could not find source code for {source_path}")
         source_code = "".join(lines)
     page_html = _get_template("python_module.html").render(
