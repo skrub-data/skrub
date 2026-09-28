@@ -153,14 +153,6 @@ def _get_source_url(obj, output_dir):
         return None
     try:
         source_path = inspect.getsourcefile(obj)
-        try:
-            # source file does not match module file; probably the object was
-            # loaded from a (cloud)pickle file and inspect is getting confused.
-            # we prefer not adding the link to risking adding one to the wrong file
-            if inspect.getmodule(obj).__file__ != source_path:
-                return None
-        except Exception:
-            pass
         line_no = inspect.getsourcelines(obj)[1]
         source_file_url = _add_source_file(source_path, output_dir=output_dir)
         return f"{source_file_url}#L{line_no}"
