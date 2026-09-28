@@ -330,7 +330,9 @@ class _Evaluator(_DataOpTraversal):
     # Class used by the evaluate() function defined in this module to evaluate
     # a DataOp.
 
-    # Handled explicitly in this subclass with the result cache in DataOpImpl.results
+    # Caching / avoiding multiple visits to DataOp nodes is handled in this
+    # class with the data_op._skrub_impl.results dict, so we do not rely on the
+    # base class's cache.
     cache_data_op_results = False
 
     def __init__(self, mode="preview", environment=None, callbacks=()):
@@ -596,11 +598,14 @@ def _cache_pruner(data_op, mode):
 class _Printer(_DataOpTraversal):
     """Helper for `describe_steps()`"""
 
-    # Handled explicitly in this class so we can print lines for re-loading
-    # previous results.
+    # Caching / avoiding multiple visits to DataOp nodes is handled in this
+    # class to be able to print lines for re-loading results, so we do not rely
+    # on the base class's cache.
     cache_data_op_results = False
 
     def run(self, data_op):
+        # mapping of arbitrary IDs for nodes that get reused so we have a
+        # handle to refer to them when loading previously computed result.
         self._data_op_ids = {}
         self._reused = set()
         self._ops = []
@@ -639,7 +644,9 @@ class _Cloner(_DataOpTraversal):
     # turning it into a tree. The caller may pass a pre-populated dict of clones
     # to use for (some of) the objects contained in the graph.
 
-    # Handled in this class to keep track of object's clones.
+    # Caching / avoiding multiple visits to DataOp nodes is handled in this
+    # class to be able to keep track of all object's clones, so we do not rely
+    # on the base class's cache.
     cache_data_op_results = False
 
     def __init__(self, replace=None, drop_preview_data=False):
@@ -720,8 +727,9 @@ def _simplify_graph(graph):
 class _Graph(_DataOpTraversal):
     """Helper for `graph()`"""
 
-    # Handled in this class so that we can update graph edges correctly for
-    # nodes that have several parents.
+    # Caching / avoiding multiple visits to DataOp nodes is handled in this
+    # class to be able to find all edges reaching nodes that have several
+    # parents, so we do not rely on the base class's cache.
     cache_data_op_results = False
 
     def run(self, data_op):
@@ -832,16 +840,21 @@ def _choice_display_names(choices):
 class _ChoiceGraph(_DataOpTraversal):
     """Helper for `choice_graph()`."""
 
-    # Handled in this class because we need to re-traverse the graph for each
-    # choice outcome, so we can identify which other choices are its descendants.
-    # If we visited each DataOp only once rather than once per outcome some
-    # edges would be missing in the choice graph.
+    # We need to re-traverse the graph for each choice outcome, so we can
+    # identify which other choices are its descendants. If we visited each
+    # DataOp only once rather than once per outcome some edges would be missing
+    # in the choice graph. So we handle caching / avoiding unneeded visits in
+    # this class and do not rely on the base class's cache.
     cache_data_op_results = False
 
     def run(self, data_op):
         self._choices = {}
         self._children = defaultdict(list)
         self._current_outcome = [None]
+
+        # For each choice outcome, we traverse the graph of its descendants
+        # only once. This keeps track of all DataOp nodes we have already seen
+        # for each choice outcome.
         self._seen_data_ops_for_outcome = {}
 
         _ = super().run(data_op)

@@ -1572,6 +1572,11 @@ class SkrubNamespace:
         compute the addition leaving the result of (a + b) on the stack, then
         load the previous result again (the result of evaluating ``c`` has been
         cached in-memory), and finally evaluate the multiplication.
+
+        As we can see results that are used several times are kept and not
+        re-computed; this is indicated in the printed list above by ' -> _2 '
+        (storing, where 2 is an arbitrary id / memory location) and ' Load _2 '
+        when reuisng that result later.
         """
 
         return describe_steps(self._data_op)
