@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- Added :class:`CatEncoder`, a single column transformer that combines
+  :class:`~sklearn.preprocessing.OneHotEncoder` and
+  :class:`~sklearn.preprocessing.TargetEncoder`.
+  :pr:`2244` by :user:`Tomasz Kazimierczak <faithlesstomas>`.
 - It is now possible to enable persistent caching of estimators and functions
   used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
   `cache` in :func:`set_config`. This caching can be turned off on a
