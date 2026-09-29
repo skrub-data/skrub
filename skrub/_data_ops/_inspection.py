@@ -214,7 +214,7 @@ def _get_doc(obj):
     return inspect.getdoc(obj) or ""
 
 
-def full_report(
+def report(
     data_op,
     environment=None,
     mode="preview",
@@ -228,7 +228,7 @@ def full_report(
     if clear:
         clear_results(data_op, mode)
     try:
-        return _make_full_report(
+        return _make_report(
             data_op,
             environment=environment,
             mode=mode,
@@ -243,7 +243,7 @@ def full_report(
             clear_results(data_op, mode)
 
 
-def _make_full_report(
+def _make_report(
     data_op,
     environment=None,
     mode="preview",

@@ -86,7 +86,7 @@ learner.predict({"employee_data": test_dataset.X, "salary": test_dataset.y})
 #
 # .. code:: python
 #
-#    pred.skb.full_report({"employee_data": test_dataset.X, "salary": test_dataset.y})
+#    pred.skb.report({"employee_data": test_dataset.X, "salary": test_dataset.y})
 #
 # As the output is usually quite large, it does not display inline in a
 # notebook but is instead opened in a separate browser tab. However here we

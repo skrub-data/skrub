@@ -61,7 +61,7 @@ def test_last_line_is_innermost_frame():
     assert "test_last_line_is_innermost_frame" not in last_line
 
 
-# .skb.full_report() needs a non-empty creation stack to link to
+# .skb.report() needs a non-empty creation stack to link to
 # the file where each DataOp was created; those frames are always empty when
 # the DataOp is created inside _data_ops/tests/, so these tests must be here.
 
@@ -70,7 +70,7 @@ def test_last_line_is_innermost_frame():
 def test_creation_stack_link(tmp_path):
     report_dir = tmp_path / "report"
     a = skrub.var("a") + 1
-    a.skb.full_report({"a": 1}, output_dir=report_dir, open=False)
+    a.skb.report({"a": 1}, output_dir=report_dir, open=False)
     source = next((report_dir / "python").glob("*.html")).read_text("utf-8")
     assert "a = skrub.var" in source
 
@@ -83,7 +83,7 @@ def test_creation_stack_link_unresolvable():
     filename = "<test-fake-cell>"
     namespace = {}
     exec(compile("import skrub\nb = skrub.var('b') + 1\n", filename, "exec"), namespace)
-    report = namespace["b"].skb.full_report({"b": 1}, open=False)
+    report = namespace["b"].skb.report({"b": 1}, open=False)
     assert report["error"] is None
     text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
     assert "test-fake-cell" in text
