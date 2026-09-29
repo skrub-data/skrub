@@ -199,7 +199,12 @@ def _data_op_creation_stack():
     stack = itertools.takewhile(
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
-    return list(stack)
+
+    # We store plain (filename, lineno, name, line) tuples rather than the
+    # FrameSummary objects, which can hold a reference to the frame's code
+    # object. These tuples are the documented "old-style" format accepted by
+    # traceback.format_list and traceback.StackSummary.from_list
+    return [tuple(frame) for frame in stack]
 
 
 def _unpack_arity():

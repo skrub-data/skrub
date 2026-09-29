@@ -1,3 +1,4 @@
+import pickle
 import traceback
 from unittest.mock import Mock
 
@@ -37,6 +38,19 @@ def test_creation_stack_description(monkeypatch):
 
 def _make_var_in_helper():
     return skrub.var("a")  # innermost frame
+
+
+def test_creation_stack_pickle():
+    # Check that DataOps with a non-empty creation stack can be (de)serialized
+    # correctly.
+    a = skrub.var("a") + 1  # created here
+    assert a._skrub_impl.creation_stack()
+    b = pickle.loads(pickle.dumps(a))
+    assert "created here" in b._skrub_impl.creation_stack_last_line()
+    assert (
+        b._skrub_impl.creation_stack_description()
+        == a._skrub_impl.creation_stack_description()
+    )
 
 
 def test_last_line_is_innermost_frame():

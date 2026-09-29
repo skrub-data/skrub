@@ -213,7 +213,6 @@ def test_stack_info_source_mismatch(tmp_path):
     # e.g. the DataOp was loaded from a cloudpickle and the lines in linecache
     # are for the wrong file (the one loading the pickle, not the one where the
     # function was defined). In this case we should get no link
-    frame = traceback.FrameSummary("", 2, "<module>", line="x = skrub.var('a')")
     same = tmp_path / "same.py"
     same.write_text("import skrub\nx = skrub.var('a')\n")
     other = tmp_path / "other.py"
@@ -221,7 +220,7 @@ def test_stack_info_source_mismatch(tmp_path):
     out = tmp_path / "report"
     out.mkdir()
     for path, has_link in [(same, True), (other, False)]:
-        frame.filename = str(path)
+        frame = (str(path), 2, "<module>", "x = skrub.var('a')")
         info = _inspection._get_stack_info([frame], out)
         assert (info[0]["url"] is not None) == has_link
 

@@ -8,6 +8,7 @@ import numbers
 import re
 import shutil
 import sys
+import traceback
 import webbrowser
 from pathlib import Path
 
@@ -167,7 +168,7 @@ def _get_stack_info(stack, output_dir):
     if not stack:
         return []
     result = []
-    for frame_summary in stack:
+    for frame_summary in traceback.StackSummary.from_list(stack):
         try:
             filename, lineno = frame_summary.filename, frame_summary.lineno
             source_lines = _read_source(filename)
