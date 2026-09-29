@@ -1828,6 +1828,8 @@ class SkrubNamespace:
                     "environment must be None when eval is False, "
                     f"got {type(environment).__name__!r}."
                 )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
             data_op = data_op.skb.clone()
             mode = "fit_transform"
             clear = True
