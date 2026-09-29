@@ -23,25 +23,22 @@ from skrub._data_ops import _inspection, _utils
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_output_dir(tmp_path):
     e = skrub.X()
-    assert e.skb.full_report(open=False)["report_path"].is_relative_to(
+    assert e.skb.report(open=False)["report_path"].is_relative_to(
         datasets.get_data_dir()
     )
     out = tmp_path / "report"
-    assert (
-        e.skb.full_report(open=False, output_dir=out)["report_path"]
-        == out / "index.html"
-    )
+    assert e.skb.report(open=False, output_dir=out)["report_path"] == out / "index.html"
     with pytest.raises(FileExistsError, match=".*Set 'overwrite=True'"):
-        e.skb.full_report(open=False, output_dir=out)
+        e.skb.report(open=False, output_dir=out)
 
     assert (
-        e.skb.full_report(open=False, output_dir=out, overwrite=True)["report_path"]
+        e.skb.report(open=False, output_dir=out, overwrite=True)["report_path"]
         == out / "index.html"
     )
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report():
+def test_report():
     # smoke test for the full report
     # TODO we should have a private function that returns the JSON data so we
     #      can check the content before rendering with jinja
@@ -50,13 +47,13 @@ def test_full_report():
         (skrub.var("a", 12345) + 1).skb.set_name("b").skb.set_description("this is b")
         / skrub.var("c", 1)
     )
-    report = e.skb.full_report(open=False)
+    report = e.skb.report(open=False)
     assert report["error"] is None
     assert report["result"] == -12346.0
     assert "-12346.0" in (report["report_path"].parent / "node_4.html").read_text(
         "utf-8"
     )
-    report = e.skb.full_report({"a": 12345, "c": 0}, open=False)
+    report = e.skb.report({"a": 12345, "c": 0}, open=False)
     assert isinstance(report["error"], ZeroDivisionError)
     assert report["result"] is None
     out = report["report_path"].parent
@@ -67,25 +64,25 @@ def test_full_report():
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report_title():
+def test_report_title():
     # TODO we should have a private function that returns the JSON data so we
     #      can check the content before rendering with jinja
     # however that requires first settling on the content of the report etc.
     data_op = skrub.var("a", 1)
     title = "small data ops"
-    report = data_op.skb.full_report(open=False, title=title)
+    report = data_op.skb.report(open=False, title=title)
     assert title in report["report_path"].read_text("utf-8")
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report_no_eval():
+def test_report_no_eval():
     data_op = skrub.var("a", 12345) + 1
-    report = data_op.skb.full_report(open=False, eval=False)
+    report = data_op.skb.report(open=False, eval=False)
     assert report["result"] is None
     assert report["error"] is None
     assert "global_no_eval" in report["report_path"].read_text("utf-8")
     with pytest.raises(TypeError, match="environment must be None"):
-        data_op.skb.full_report({"a": 1}, open=False, eval=False)
+        data_op.skb.report({"a": 1}, open=False, eval=False)
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
@@ -96,7 +93,7 @@ def test_preview_subsample():
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report_failed_apply():
+def test_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
     orders = skrub.datasets.toy_orders()
@@ -109,18 +106,18 @@ def test_full_report_failed_apply():
             y=skrub.y(),
         )
     )
-    report = e.skb.full_report({"X": orders.X, "y": orders.y}, open=False)
+    report = e.skb.report({"X": orders.X, "y": orders.y}, open=False)
     assert report["error"] is not None
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report_dataop_estimator(tmp_path):
+def test_report_dataop_estimator(tmp_path):
     # The estimator of an Apply can itself be a DataOp (the function/estimator
     # to apply is computed dynamically). Here the estimator's variable is not
     # provided so the node is not evaluated and there is no fitted
     # `estimator_`; the report must fall back on the DataOp.
     e = skrub.X().skb.apply(skrub.var("est"))
-    report = e.skb.full_report(
+    report = e.skb.report(
         {"X": pd.DataFrame({"a": [1, 2]})},
         output_dir=tmp_path / "report",
         open=False,
@@ -147,7 +144,7 @@ def test_unfitted_apply_no_doc_or_source(tmp_path, estimator):
     # str or NoneType class.
     report_dir = tmp_path / "report"
     e = skrub.var("a").skb.apply(estimator)
-    report = e.skb.full_report(
+    report = e.skb.report(
         {},  # 'a' is missing from env so the apply does not get evaluated
         output_dir=report_dir,
         open=False,
@@ -197,7 +194,7 @@ def test_estimator_doc_and_source(tmp_path, no_wrap):
 
     # no_wrap: even if wrapped in ApplyToCols, the docstring of the wrapped
     # transformer should be shown (not that of ApplyToCols)
-    skrub.X(df).skb.apply(_Doubler(), no_wrap=no_wrap).skb.full_report(
+    skrub.X(df).skb.apply(_Doubler(), no_wrap=no_wrap).skb.report(
         output_dir=report_dir, open=False
     )
     assert "This is the docstring of _Doubler" in (
@@ -213,7 +210,7 @@ def test_fitted_passthrough_no_doc_or_source(tmp_path, no_wrap):
     report_dir = tmp_path / "report"
     skrub.X(pd.DataFrame({"a": [1]})).skb.apply(
         "passthrough", no_wrap=no_wrap
-    ).skb.full_report(output_dir=report_dir, open=False)
+    ).skb.report(output_dir=report_dir, open=False)
     text = (report_dir / "node_1.html").read_text("utf-8")
     assert "source code" not in text
     assert "docstring:" not in text
@@ -222,7 +219,7 @@ def test_fitted_passthrough_no_doc_or_source(tmp_path, no_wrap):
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_call_doc_and_source(tmp_path):
     report_dir = tmp_path / "report"
-    skrub.var("a").skb.apply_func(_times_two).skb.full_report(
+    skrub.var("a").skb.apply_func(_times_two).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
     assert "This is the docstring of _times_two" in (
@@ -231,7 +228,7 @@ def test_call_doc_and_source(tmp_path):
     assert "x * 2" in next((report_dir / "python").glob("*.html")).read_text("utf-8")
 
     report_dir = tmp_path / "report_lambda"
-    skrub.var("a").skb.apply_func(lambda x: x).skb.full_report(
+    skrub.var("a").skb.apply_func(lambda x: x).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
     assert "docstring:" not in (report_dir / "node_1.html").read_text("utf-8")
@@ -242,7 +239,7 @@ def test_source_link_target_exists(tmp_path):
     # Check that the link to the source file is correct: we find the link in
     # the node page and verify the file exists.
     report_dir = tmp_path / "report"
-    skrub.var("a").skb.apply_func(_times_two).skb.full_report(
+    skrub.var("a").skb.apply_func(_times_two).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
     text = (report_dir / "node_1.html").read_text("utf-8")
@@ -309,7 +306,7 @@ def test_called_func_is_dataop_or_choice(tmp_path, func_wrapper):
         if func_wrapper == "dataop"
         else skrub.choose_from([_times_two, _times_two], name="my_func")
     )
-    skrub.var("a").skb.apply_func(func).skb.full_report(
+    skrub.var("a").skb.apply_func(func).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
     node = 2 if func_wrapper == "dataop" else 1
@@ -324,7 +321,7 @@ def test_called_func_is_dataop_or_choice(tmp_path, func_wrapper):
 def test_call_func_no_source(tmp_path):
     # builtins have a docstring but no retrievable source code.
     report_dir = tmp_path / "report"
-    skrub.var("a").skb.apply_func(len).skb.full_report(
+    skrub.var("a").skb.apply_func(len).skb.report(
         {"a": [1, 2]}, output_dir=report_dir, open=False
     )
     text = (report_dir / "node_1.html").read_text("utf-8")
@@ -346,7 +343,7 @@ def test_call_func_from_linecache(tmp_path, monkeypatch):
         filename,
         (len(src), None, src.splitlines(keepends=True), filename),
     )
-    skrub.var("a").skb.apply_func(namespace["f"]).skb.full_report(
+    skrub.var("a").skb.apply_func(namespace["f"]).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
     source = next((report_dir / "python").glob("*.html")).read_text("utf-8")
@@ -361,7 +358,7 @@ def test_report_no_creation_stack(monkeypatch):
     )
     e = skrub.var("a") + 1
     monkeypatch.undo()
-    report = e.skb.full_report({"a": 1}, open=False)
+    report = e.skb.report({"a": 1}, open=False)
     text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
     assert '<code class="node-creation-stack"></code>' in text
 
@@ -403,11 +400,19 @@ def test_report_score_mode_with_scoring():
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_full_report_open(monkeypatch):
+def test_report_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(webbrowser, "open", mock)
-    skrub.as_data_op(0).skb.full_report()
+    skrub.as_data_op(0).skb.report()
     mock.assert_called_once()
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_full_report_deprecated():
+    data_op = skrub.as_data_op(0)
+    with pytest.warns(FutureWarning, match="full_report has been renamed"):
+        report = data_op.skb.full_report(open=False)
+    assert report["result"] == 0
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")

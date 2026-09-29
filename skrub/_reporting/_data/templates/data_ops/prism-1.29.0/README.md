@@ -1,7 +1,7 @@
 The files in this directory are a subset of the [Prism.js](https://prismjs.com/)
 project (v1.29.0), used to provide client-side syntax highlighting and line
 highlighting/scrolling for the source code pages linked from the DataOps
-report (`skb.full_report()`), without requiring a network connection.
+report (`skb.report()`), without requiring a network connection.
 
 Files downloaded from the official CDN build:
 https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/

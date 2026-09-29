@@ -19,15 +19,15 @@ New Features
   <DataOp.skb.apply_func>`. See the :ref:`user guide
   <user_guide_data_ops_caching>` for more information.
   :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
-- The report created by :meth:`.skb.full_report <DataOp.skb.full_report>` or
+- The report created by :meth:`.skb.report <DataOp.skb.report>` or
   :meth:`SkrubLearner.report` now contains links to source code where each node
   was defined, and also the docstring and link to source code for functions
   applied with :meth:`.skb.apply_func <DataOp.skb.apply_func>` or
   :func:`deferred` and for estimators applied with :meth:`.skb.apply
   <DataOp.skb.apply>`.
   :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`.
-- It is now possible to pass ``eval=False`` to :meth:`.skb.full_report
-  <DataOp.skb.full_report>` to generate the report, containing any statically
+- It is now possible to pass ``eval=False`` to :meth:`.skb.report
+  <DataOp.skb.report>` to generate the report, containing any statically
   available information about the DataOp, without evaluating it / running any
   computation.
   :pr:`2308` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -71,6 +71,9 @@ Bugfixes
 
 Deprecations
 ------------
+- :meth:`DataOp.skb.full_report` has been renamed :meth:`DataOp.skb.report`.
+  The old name is still available as a deprecated alias but will be removed in a
+  future release. :pr:`2309` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.
