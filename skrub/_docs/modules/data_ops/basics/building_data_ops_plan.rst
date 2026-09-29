@@ -62,27 +62,24 @@ Result:
 1    2
 2    3
 
-``df_do`` is a Data Op that wraps ``df``, so its preview shows the content of ``df``.
-Then, if we now modify ``df_do`` by doubling the column, we can see that both steps
-(the creation of the variable, and the doubling) are now tracked by the final
-Data Op.
+``df_do`` is a Data Op that wraps ``df``, so its preview shows the content of
+``df``. Then, if we perform other operations on ``df_do`` by selecting a column
+and doubling it, we can see that all steps (the creation of the variable,
+selection, and the multiplication) are now tracked by the final Data Op.
 
->>> df_doubled = df_do.assign(col=df_do["col"]*2)
->>> df_doubled
-<CallMethod 'assign'>
+>>> col = df_do["col"]*2
+>>> col
+<BinOp: mul>
 Result:
 ―――――――
-   col
 0    2
 1    4
 2    6
->>> print(df_doubled.skb.describe_steps())
+Name: col, dtype: int64
+>>> print(col.skb.describe_steps())
 Var 'df'
-( Var 'df' )*
 GetItem 'col'
 BinOp: mul
-CallMethod 'assign'
-* Cached, not recomputed
 
 On the other hand, working directly on ``df`` leads us to the same result, but
 the actual operations are not being tracked.

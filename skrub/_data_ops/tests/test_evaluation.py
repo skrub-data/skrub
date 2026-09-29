@@ -143,9 +143,37 @@ def test_clone_preserves_structure():
     c = skrub.choose_from([1, 2], name="c")
     e = skrub.as_data_op([c, c, a, a])
     clone = e.skb.clone()
+    # note describe_steps() shows which nodes are reused, so comparing its
+    # output for the original and the clone checks the graph's structure, not
+    # only the sequence of operations.
     assert clone.skb.describe_steps() == e.skb.describe_steps()
     assert clone.skb.describe_param_grid() == e.skb.describe_param_grid()
     assert _evaluation.param_grid(clone) == _evaluation.param_grid(e)
+
+
+def test_clone_structure_and_replace():
+    a = skrub.var("a", 1)
+    b = skrub.var("b", 2)
+    shared = a + b
+    data_op = shared * shared + a
+
+    clone = _evaluation.clone(data_op)
+    graph = _evaluation.graph(clone)
+    # the clone is a DAG like the original, it has not been turned into a tree
+    assert len(graph["nodes"]) == len(_evaluation.nodes(data_op)) == 5
+    # 'a' is used by the addition and by the multiplication's parent
+    assert len(graph["parents"][0]) == 2
+    assert clone.skb.eval() == data_op.skb.eval() == 10
+
+    # nodes for which the caller provides a replacement are substituted and
+    # their children are not cloned.
+    replacement = skrub.var("z", 99)
+    replaced = _evaluation.clone(data_op, replace={id(shared): replacement})
+    nodes = _evaluation.nodes(replaced)
+    assert len(nodes) == 4
+    # 'b' was only reachable through the node that has been replaced
+    assert {n._skrub_impl.name for n in nodes} == {"z", "a", None}
+    assert replaced.skb.eval() == 99 * 99 + 1
 
 
 #
@@ -183,6 +211,33 @@ def test_param_grid_nested_choices():
         {2: [0], 0: [0, 1, 2], 3: [0, 1, 2, 3, 4]},
         {2: [1], 1: [0, 1, 2, 3], 3: [0, 1, 2, 3, 4]},
     ]
+
+
+def test_param_grid_shared_node_choices():
+    # A node that contains a choice can be reached through several paths. The
+    # choices it contains must be listed in the sub-grid of each of the choice
+    # outcomes from which it can be reached, so they remain tunable in all of
+    # them. This is why _ChoiceGraph tracks the nodes it has already visited
+    # separately for each outcome rather than only once for the whole
+    # traversal.
+    a = skrub.var("a", 1)
+    inner = a * skrub.choose_int(1, 3, name="inner")
+    outer = skrub.choose_from({"x": inner, "y": inner + 1}, name="outer")
+    data_op = outer.as_data_op() + inner
+    choice_names = _evaluation.choice_graph(data_op)["choice_display_names"]
+    grid = _evaluation.param_grid(data_op)
+    assert len(grid) == 2
+    for sub_grid in grid:
+        assert "inner" in {str(choice_names[c]) for c in sub_grid}
+    assert (
+        data_op.skb.describe_param_grid()
+        == """\
+- inner: choose_int(1, 3, name='inner')
+  outer: 'x'
+- inner: choose_int(1, 3, name='inner')
+  outer: 'y'
+"""
+    )
 
 
 def test_param_grid_choice_before_X():
@@ -300,29 +355,174 @@ def test_describe_steps():
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
     >>> print(c.skb.describe_steps())
-    Var 'a'
+    Var 'a' -> _0
     Var 'b'
     Call 'func'
     Apply TableVectorizer
     Value int
     CallMethod 'amethod'
-    ( Var 'a' )*
-    ( Var 'a' )*
-    BinOp: add
+    Load _0 (Var 'a')
+    Load _0 (Var 'a')
+    BinOp: add -> _6
     Concat: 2 tables
     Value BoolChoice
     BinOp: add
     Var 'X'
-    ( Var 'a' )*
-    ( Var 'a' )*
-    ( BinOp: add )*
+    Load _6 (BinOp: add)
     IfElse <Var 'X'> ? 3 : <BinOp: add>
     Var 'item'
     GetItem <Var 'item'>
     GetAttr 'b'
     BinOp: add
-    * Cached, not recomputed
     """
+
+
+def test_describe_steps_labels_only_reused_nodes():
+    """
+    >>> import skrub
+    >>> a = skrub.var("a", 1)
+    >>> b = skrub.var("b", 2)
+    >>> c = a + b
+
+    when nothing is reused no node is numbered
+
+    >>> print(c.skb.describe_steps())
+    Var 'a'
+    Var 'b'
+    BinOp: add
+
+    >>> print((c * c).skb.describe_steps())
+    Var 'a'
+    Var 'b'
+    BinOp: add -> _2
+    Load _2 (BinOp: add)
+    BinOp: mul
+    """
+
+
+#
+# traversals of graphs that are not trees
+#
+# When a node is used several times, the DataOp's graph is a DAG rather than a
+# tree. The traversals must not explore such a node (and therefore its whole
+# subgraph) once per parent: that used to take a time exponential in the depth
+# of the graph, see https://github.com/skrub-data/skrub/issues/2288
+#
+
+
+def _reuse_chain(depth=10):
+    """
+    A DataOp in which each step uses the previous result 3 times.
+
+    The resulting graph has a few dozen nodes but the number of paths from the
+    root to the leaf is 3 ** depth.
+
+    We turn off eager_data_ops so that building the DataOp does not run the
+    checks (which are themselves traversals) and does not compute previews:
+    no result is cached in the nodes and `evaluate()` has to walk the whole graph.
+    """
+
+    @skrub.deferred
+    def _halve(x):
+        return x / 2
+
+    with skrub.config_context(eager_data_ops=False):
+        data_op = skrub.var("v", 8.0) * skrub.choose_float(1.0, 2.0, name="scale")
+        for _ in range(depth):
+            data_op = (data_op > 1).skb.if_else(_halve(data_op), data_op)
+    return data_op
+
+
+def _count_handle_data_op(monkeypatch, traversal_class, func):
+    """Call func() and return the number of handle_data_op calls."""
+    original = traversal_class.handle_data_op
+    n_calls = 0
+
+    def counting(self, data_op):
+        nonlocal n_calls
+        n_calls += 1
+        return (yield from original(self, data_op))
+
+    monkeypatch.setattr(traversal_class, "handle_data_op", counting)
+    func()
+    return n_calls
+
+
+@pytest.mark.parametrize(
+    "traversal_class_name, func",
+    [
+        pytest.param(name, func, id=name)
+        for (name, func) in [
+            ("_Evaluator", lambda d: _evaluation.evaluate(d, clear=True)),
+            ("_Printer", _evaluation.describe_steps),
+            ("_Cloner", _evaluation.clone),
+            ("_Graph", _evaluation.graph),
+            ("_ChoiceGraph", _evaluation.choice_graph),
+            ("_ChoiceEvaluator", _evaluation.eval_choices),
+            ("_FindNode", lambda d: (_evaluation.find_X(d), _evaluation.find_y(d))),
+            ("_FindConflicts", _evaluation.find_conflicts),
+            ("_FindArg", lambda d: _evaluation.find_arg(d, lambda arg: False)),
+            ("_FindFirstApply", _evaluation.find_first_apply),
+        ]
+    ],
+)
+def test_traversals_do_not_re_explore_shared_nodes(
+    traversal_class_name, func, monkeypatch
+):
+    data_op = _reuse_chain()
+    n_nodes = len(_evaluation.nodes(data_op))
+    n_calls = _count_handle_data_op(
+        monkeypatch, getattr(_evaluation, traversal_class_name), lambda: func(data_op)
+    )
+    # the traversal actually happened, and the number of visits is
+    # proportional to the number of nodes rather than to the number of paths.
+    assert 0 < n_calls <= 10 * n_nodes
+
+
+@pytest.mark.parametrize(
+    "func",
+    [
+        pytest.param(func, id=name)
+        for (name, func) in [
+            ("evaluate", lambda d: _evaluation.evaluate(d, clear=True)),
+            ("describe_steps", _evaluation.describe_steps),
+            ("clone", _evaluation.clone),
+            ("graph", _evaluation.graph),
+            ("choice_graph", _evaluation.choice_graph),
+            ("eval_choices", _evaluation.eval_choices),
+            ("find_X", _evaluation.find_X),
+            ("find_conflicts", _evaluation.find_conflicts),
+            (
+                "find_arg",
+                # the default skip_types would skip the Value node that
+                # contains the cycle
+                lambda d: _evaluation.find_arg(d, lambda arg: False, skip_types=()),
+            ),
+            ("find_first_apply", _evaluation.find_first_apply),
+        ]
+    ],
+)
+def test_circular_references_detected_by_all_traversals(func):
+    # Caching the results of the nodes we have already visited must not prevent
+    # the detection of cycles (the check happens when a computation is pushed on
+    # the stack, i.e. before the cache is looked up).
+    value = {}
+    value["a"] = [0, {"b": value}]
+    with skrub.config_context(eager_data_ops=False):
+        data_op = skrub.as_data_op(value)
+    with pytest.raises(ValueError, match="DataOps cannot contain circular references"):
+        func(data_op)
+
+
+def test_graph_records_all_the_edges_of_a_shared_node():
+    a = skrub.var("a", 1)
+    shared = a + 1
+    graph = _evaluation.graph(shared * shared)
+    assert len(graph["nodes"]) == 3
+    # the multiplication has 1 (deduplicated) child and 'shared' is not
+    # duplicated even though it is visited twice
+    assert graph["children"] == {2: [1], 1: [0]}
+    assert graph["parents"] == {1: [2], 0: [1]}
 
 
 def _generator_result(g):
