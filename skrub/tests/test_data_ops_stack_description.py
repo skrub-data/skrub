@@ -1,3 +1,4 @@
+import pickle
 import traceback
 from unittest.mock import Mock
 
@@ -33,6 +34,59 @@ def test_creation_stack_description(monkeypatch):
     a = skrub.var("a")
     assert a._skrub_impl.creation_stack_description() == ""
     assert a._skrub_impl.creation_stack_last_line() == ""
+
+
+def _make_var_in_helper():
+    return skrub.var("a")  # innermost frame
+
+
+def test_creation_stack_pickle():
+    # Check that DataOps with a non-empty creation stack can be (de)serialized
+    # correctly.
+    a = skrub.var("a") + 1  # created here
+    assert a._skrub_impl.creation_stack()
+    b = pickle.loads(pickle.dumps(a))
+    assert "created here" in b._skrub_impl.creation_stack_last_line()
+    assert (
+        b._skrub_impl.creation_stack_description()
+        == a._skrub_impl.creation_stack_description()
+    )
+
+
+def test_last_line_is_innermost_frame():
+    a = _make_var_in_helper()
+    last_line = a._skrub_impl.creation_stack_last_line()
+    assert "innermost frame" in last_line
+    assert "_make_var_in_helper" in last_line
+    assert "test_last_line_is_innermost_frame" not in last_line
+
+
+# .skb.full_report() needs a non-empty creation stack to link to
+# the file where each DataOp was created; those frames are always empty when
+# the DataOp is created inside _data_ops/tests/, so these tests must be here.
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_creation_stack_link(tmp_path):
+    report_dir = tmp_path / "report"
+    a = skrub.var("a") + 1
+    a.skb.full_report({"a": 1}, output_dir=report_dir, open=False)
+    source = next((report_dir / "python").glob("*.html")).read_text("utf-8")
+    assert "a = skrub.var" in source
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_creation_stack_link_unresolvable():
+    # a creation-stack frame whose source cannot be found
+    # (e.g. exec'd code with no matching linecache entry) must not crash the
+    # report; it is just shown without a link.
+    filename = "<test-fake-cell>"
+    namespace = {}
+    exec(compile("import skrub\nb = skrub.var('b') + 1\n", filename, "exec"), namespace)
+    report = namespace["b"].skb.full_report({"b": 1}, open=False)
+    assert report["error"] is None
+    text = (report["report_path"].parent / "node_1.html").read_text("utf-8")
+    assert "test-fake-cell" in text
 
 
 @pytest.fixture(params=[False, True])
