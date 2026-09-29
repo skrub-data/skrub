@@ -14,11 +14,10 @@ class ToCategorical(SingleColumnTransformer):
 
     Parameters
     ----------
-    accept_numeric : str, default="int"
-        How to handle numeric columns. If "int", will convert integer
-        columns to categorical. If "all", both float and integer columns
-        will be accepted. If `None`, no numeric
-        columns will be accepted.
+    accept_int : bool, default=False
+        How to handle numeric columns. If ``False``, no numeric
+        columns will be accepted. If ``True``, will convert integer
+        columns to categorical.
 
     Notes
     -----
@@ -34,14 +33,13 @@ class ToCategorical(SingleColumnTransformer):
     a polars column with dtype ``String``, is converted to a categorical
     column. Categorical columns are passed through.
 
-    If ``accept_numeric`` is set to ``"all"``, then both integer and float
-    columns are accepted and converted to categorical. If it is set to ``"int"``,
-    then only integer columns are accepted. The default value is ``"int"``.
+    If ``accept_int`` is set to ``True``, then integer columns are also
+    accepted and converted to categorical. The default value is ``False``.
 
     Any other type of column is rejected by raising a ``RejectColumn``
     exception. **Note:** the ``TableVectorizer`` only sends string or
     categorical columns to its ``low_cardinality_transformer``, regardless
-    of the inputted value of ``accept_numeric``. Therefore it is
+    of the inputted value of ``accept_int``. Therefore it is
     always safe to use a ``ToCategorical`` instance as the
     ``low_cardinality_transformer``.
 
@@ -167,8 +165,11 @@ class ToCategorical(SingleColumnTransformer):
     """
 
     def __init__(self, accept_int=False):
+        if not isinstance(accept_int, bool):
+            raise TypeError(
+                f"Expected `accept_int` to be a bool, got {type(accept_int).__name__}"
+            )
         self.accept_int = accept_int
-        super().__init__()
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -186,10 +187,9 @@ class ToCategorical(SingleColumnTransformer):
             The input transformed to Categorical.
         """
         self.all_outputs_ = [sbd.name(column)]
-
         if sbd.is_categorical(column):
             return column
-        if sbd.is_string(column) or sbd.is_integer(column) and self.accept_int is True:
+        if sbd.is_string(column) or (sbd.is_integer(column) and self.accept_int):
             return sbd.to_categorical(column)
         raise RejectColumn(
             f"Column {sbd.name(column)!r} does not contain only strings "
