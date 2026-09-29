@@ -1482,6 +1482,18 @@ def test_report(tmp_path):
     assert "global_no_eval" in no_eval_report["report_path"].read_text("utf-8")
 
 
+def test_report_eval_argument_errors():
+    learner = get_data_op_and_data("simple")[0].skb.make_learner()
+    with pytest.raises(TypeError, match="environment must be None"):
+        learner.report(environment={}, eval=False, open=False)
+    with pytest.raises(TypeError, match="mode must be None"):
+        learner.report(mode="fit", eval=False, open=False)
+    with pytest.raises(TypeError, match="environment cannot be None"):
+        learner.report(open=False)
+    with pytest.raises(TypeError, match="mode cannot be None"):
+        learner.report(environment={}, open=False)
+
+
 #
 # methods & attributes of the learners
 #
