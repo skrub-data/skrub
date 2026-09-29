@@ -57,7 +57,6 @@ Bugfixes
   involving deep computation graphs has become much faster.
   :pr:`2296` by :user:`Jérôme Dockès <jeromedockes>`.
 
-
 Deprecations
 ------------
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available

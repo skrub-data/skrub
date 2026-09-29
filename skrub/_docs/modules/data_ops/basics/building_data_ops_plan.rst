@@ -65,7 +65,7 @@ Result:
 ``df_do`` is a Data Op that wraps ``df``, so its preview shows the content of
 ``df``. Then, if we perform other operations on ``df_do`` by selecting a column
 and doubling it, we can see that all steps (the creation of the variable,
-selection, and the multiplicatoin) are now tracked by the final Data Op.
+selection, and the multiplication) are now tracked by the final Data Op.
 
 >>> col = df_do["col"]*2
 >>> col
