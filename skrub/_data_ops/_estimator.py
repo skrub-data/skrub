@@ -300,13 +300,13 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
                 "Creating the report for 'score' mode when .skb.with_scoring() "
                 "has been used is not implemented yet."
             )
-        from ._inspection import report
+        from . import _inspection
 
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
 
         report_kwargs["clear"] = True
-        result = report(
+        result = _inspection.report(
             self.data_op, environment=environment, mode=mode, **report_kwargs
         )
         if mode == "fit" and result["result"] is not None:
