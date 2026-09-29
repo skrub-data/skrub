@@ -335,7 +335,9 @@ def _make_full_report(
             estimator_doc = _get_doc(estimator)
             if isinstance(estimator, _NO_DOC_OR_SOURCE):
                 estimator_html_repr = None
+                estimator_type = None
             else:
+                estimator_type = estimator.__class__.__name__
                 try:
                     estimator_html_repr = outer_estimator._repr_html_()
                 except Exception:
@@ -344,6 +346,7 @@ def _make_full_report(
         else:
             estimator_html_repr = None
             estimator_doc = None
+            estimator_type = None
         if isinstance(node._skrub_impl, Call):
             source_url = _get_source_url(node._skrub_impl.func, output_dir)
             applied_func_name = node._skrub_impl.get_func_name()
@@ -374,6 +377,7 @@ def _make_full_report(
                 is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
                 node_status=node_status,
+                estimator_type=estimator_type,
                 estimator_html_repr=estimator_html_repr,
                 estimator_doc=estimator_doc,
                 source_url=source_url,

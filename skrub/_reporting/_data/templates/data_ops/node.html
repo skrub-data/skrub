@@ -94,14 +94,15 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                 </div>
                 {% endif %}
 
-                {% if node_type == "Apply" and (source_url is not none or estimator_doc or estimator_html_repr) %}
+                {% if node_type == "Apply" %}
                 <h3>Estimator applied in this step:</h3>
                 <div>
-                    {% if source_url is not none %}
                     <p>
-                        <a href="{{ source_url }}">source code</a>
+                        <code>{{ estimator_type }}</code>
+                        {% if source_url is not none %}
+                        : <a href="{{ source_url }}">source code</a>
+                        {% endif %}
                     </p>
-                    {% endif %}
 
                     {{ docstrings.render(estimator_doc) }}
 
