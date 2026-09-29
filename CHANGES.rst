@@ -26,6 +26,11 @@ New Features
   :func:`deferred` and for estimators applied with :meth:`.skb.apply
   <DataOp.skb.apply>`.
   :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to pass ``eval=False`` to :meth:`.skb.full_report
+  <DataOp.skb.full_report>` to generate the report, containing any statically
+  available information about the DataOp, without evaluating it / running any
+  computation.
+  :pr:`2308` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
