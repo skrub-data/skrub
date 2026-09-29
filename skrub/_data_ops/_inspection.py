@@ -189,11 +189,8 @@ def _get_stack_info(stack, output_dir):
     return result
 
 
-# Objects for which we don't show a docstring or link to source code. They can
-# be found e.g. in the `estimator` of an `Apply` node that has not been fitted
-# (so `estimator_` is not available): a DataOp or Choice that has not been
-# evaluated, or "passthrough" / None. Showing the docstring or source of their
-# class (DataOp, Choice, str, NoneType) would be misleading.
+# Objects for which we don't show a docstring or link to source code.
+# str, None, PassThrough can come from .skb.apply('passthrough'), .skb.apply(None)
 _NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None), PassThrough)
 
 

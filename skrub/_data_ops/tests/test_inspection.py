@@ -11,7 +11,6 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.model_selection import KFold
@@ -148,10 +147,19 @@ def test_unfitted_apply_no_doc_or_source(tmp_path, estimator):
     assert "docstring:" not in text
 
 
-class _Doubler(BaseEstimator):
+class _Doubler:
     """
     This is the docstring of _Doubler
     """
+
+    # Does not inherit from BaseEstimator so it has no _repr_html_: the report
+    # must still show its docstring and source.
+
+    def get_params(self, deep=True):
+        return {}
+
+    def set_params(self, **params):
+        return self
 
     def fit(self, X, y=None):
         return self
@@ -185,6 +193,19 @@ def test_estimator_doc_and_source(tmp_path, no_wrap):
         report_dir / "node_1.html"
     ).read_text("utf-8")
     assert "X * 2" in next((report_dir / "python").glob("*.html")).read_text("utf-8")
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+@pytest.mark.parametrize("no_wrap", [False, True])
+def test_fitted_passthrough_no_doc_or_source(tmp_path, no_wrap):
+    # "passthrough" is replaced by a PassThrough, wrapped in ApplyToCols or not
+    report_dir = tmp_path / "report"
+    skrub.X(pd.DataFrame({"a": [1]})).skb.apply(
+        "passthrough", no_wrap=no_wrap
+    ).skb.full_report(output_dir=report_dir, open=False)
+    text = (report_dir / "node_1.html").read_text("utf-8")
+    assert "source code" not in text
+    assert "docstring:" not in text
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
