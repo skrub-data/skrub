@@ -1,0 +1,13 @@
+<iframe srcdoc='{% include "render_dot.html" %}'
+        style="width:100%;border:none;"
+        id="{{ uuid }}">
+</iframe>
+<script>
+ window.addEventListener("message", e => {
+     if (e.data["{{ uuid }}_h"]) {
+         elem = document.getElementById("{{ uuid }}");
+         elem.style.height = e.data["{{ uuid }}_h"] + "px";
+         elem.style.width = e.data["{{ uuid }}_w"] + "px";
+     }
+ });
+</script>
