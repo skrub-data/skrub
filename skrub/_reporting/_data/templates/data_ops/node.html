@@ -1,3 +1,4 @@
+{% import "docstrings.html" as docstrings %}
 <!DOCTYPE html>
 <html>
 
@@ -101,17 +102,8 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                         <a href="{{ source_url }}">source code</a>
                     </p>
                     {% endif %}
-                    {% if estimator_doc %}
-                    <details class="docstring-details">
-                        <summary>
-                            <strong>docstring:</strong>
-                            <code>{{ estimator_doc.split("\n")[0] }}</code>
-                        </summary>
-                        <pre><code>
-{{- estimator_doc -}}
-                        </code></pre>
-                    </details>
-                    {% endif %}
+
+                    {{ docstrings.render(estimator_doc) }}
 
                     {% if estimator_html_repr %}
                     {{ estimator_html_repr | safe }}
@@ -126,17 +118,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     : <a href="{{ source_url }}">source code</a>
                     {% endif %}
 
-                    {% if applied_func_doc %}
-                    <details class="docstring-details">
-                        <summary>
-                            <strong>docstring:</strong>
-                            <code>{{ applied_func_doc.split("\n")[0] }}</code>
-                        </summary>
-                        <pre><code>
-{{- applied_func_doc -}}
-                        </code></pre>
-                    </details>
-                    {% endif %}
+                    {{ docstrings.render(applied_func_doc) }}
 
                 </div>
                 {% endif %}
