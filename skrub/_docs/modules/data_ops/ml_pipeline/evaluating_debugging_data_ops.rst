@@ -25,6 +25,12 @@ For each node in the plan, the report shows:
 Additionally, if computations fail in the plan, the report shows the offending
 node and the error message, which can help in debugging the plan.
 
+It is possible to pass ``eval=False`` to generate a report without actually
+evaluating the DataOp, without running any computations. In this case the
+information that is available without running anything (e.g. some applied
+function and estimator names and docstrings) is shown, but no outputs are
+displayed.
+
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
 they can be saved to a different location with the ``output_dir`` parameter.
 Note that the default path can be altered with the

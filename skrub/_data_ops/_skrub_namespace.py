@@ -1750,6 +1750,16 @@ class SkrubNamespace:
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
 
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
+
         Returns
         -------
         dict
@@ -1813,6 +1823,11 @@ class SkrubNamespace:
 
         data_op = self._data_op
         if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
             data_op = data_op.skb.clone()
             mode = "fit_transform"
             clear = True
