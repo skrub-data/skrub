@@ -113,6 +113,14 @@ def _node_status(data_op_graph, mode):
     return status
 
 
+# Some utilities for retrieving the source code for applied functions and
+# estimators, and for lines of code in the DataOp's definition stack trace. The
+# overall strategy is to get the source lines for a file from linecache, and do
+# a small sanity check by comparing the resulting source code with something we
+# already have from the DataOp itself: the `__name__` for functions & estimator
+# types, or the recorded `line` for DataOp creation stack frame summaries.
+
+
 def _read_source(source_path):
     lines = linecache.getlines(str(source_path))
     if not lines:
