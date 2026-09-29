@@ -25,11 +25,11 @@ pre, code {
     font-size: 1rem;
 }
 
-summary {
+.docstring-details summary {
     cursor: pointer;
 }
 
-details {
+.docstring-details {
     margin: 1em 0;
 }
 

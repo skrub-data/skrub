@@ -102,7 +102,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     </p>
                     {% endif %}
                     {% if estimator_doc %}
-                    <details>
+                    <details class="docstring-details">
                         <summary>
                             <strong>docstring:</strong>
                             <code>{{ estimator_doc.split("\n")[0] }}</code>
@@ -127,7 +127,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     {% endif %}
 
                     {% if applied_func_doc %}
-                    <details>
+                    <details class="docstring-details">
                         <summary>
                             <strong>docstring:</strong>
                             <code>{{ applied_func_doc.split("\n")[0] }}</code>

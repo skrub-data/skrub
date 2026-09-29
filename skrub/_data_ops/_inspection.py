@@ -1,4 +1,5 @@
 import datetime
+import functools
 import hashlib
 import html
 import inspect
@@ -197,6 +198,9 @@ _NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None), PassThrough)
 def _get_doc(obj):
     if isinstance(obj, _NO_DOC_OR_SOURCE):
         return None
+    # show the wrapped function's docstring rather than that of the partial class
+    while isinstance(obj, functools.partial):
+        obj = obj.func
     return inspect.getdoc(obj) or ""
 
 

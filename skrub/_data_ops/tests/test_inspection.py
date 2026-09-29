@@ -262,6 +262,14 @@ def test_get_source_url_mismatch(tmp_path):
     assert url == _inspection._get_source_url(_times_two, tmp_path)
 
 
+def test_get_doc_partial():
+    # for partials we show the docstring of the wrapped function
+    expected = _inspection._get_doc(_times_two)
+    assert _inspection._get_doc(functools.partial(_times_two)) == expected
+    nested = functools.partial(functools.partial(_times_two))
+    assert _inspection._get_doc(nested) == expected
+
+
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_stack_info_source_mismatch(tmp_path):
     # e.g. the DataOp was loaded from a cloudpickle and the lines in linecache
