@@ -22,7 +22,7 @@
                 {% include "graph-nav.html" %}
             </nav>
             <div class="node-details" {{ "data-has-error" if error is not none }}
-                {{ "data-is-skipped" if (error is none) and (report is none) }}>
+                {{ "data-is-skipped" if (error is none) and (report is none) and eval }}>
                 <h1>{{ node_nb }}: {{ node_repr }}</h1>
                 <nav class="mini-nav">
                     <ul>
@@ -117,13 +117,15 @@
                     </code>
                 </pre>
                 </div>
-                {% else %}
+                {% elif eval %}
                 <div>
                     <h2>This step did not run.</h2>
                     <p>
                         This step was not executed because its result was not needed or a previous step that it requires has failed.
                     </p>
                 </div>
+                {% else %}
+                <!-- report without evaluation: no results to show -->
                 {% endif %}
             </div>
         </div>

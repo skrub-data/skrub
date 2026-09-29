@@ -1707,6 +1707,7 @@ class SkrubNamespace:
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1809,7 +1810,12 @@ class SkrubNamespace:
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
@@ -1817,7 +1823,7 @@ class SkrubNamespace:
             clear = True
 
         return full_report(
-            self._data_op,
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1825,6 +1831,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before
