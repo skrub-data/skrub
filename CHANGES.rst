@@ -11,6 +11,10 @@ Ongoing development
 
 New Features
 ------------
+- Added :class:`CatEncoder`, a single column transformer that combines
+  :class:`~sklearn.preprocessing.OneHotEncoder` and
+  :class:`~sklearn.preprocessing.TargetEncoder`.
+  :pr:`2244` by :user:`Tomasz Kazimierczak <faithlesstomas>`.
 - It is now possible to enable persistent caching of estimators and functions
   used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
   `cache` in :func:`set_config`. This caching can be turned off on a
@@ -19,6 +23,18 @@ New Features
   <DataOp.skb.apply_func>`. See the :ref:`user guide
   <user_guide_data_ops_caching>` for more information.
   :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
+- The report created by :meth:`.skb.full_report <DataOp.skb.full_report>` or
+  :meth:`SkrubLearner.report` now contains links to source code where each node
+  was defined, and also the docstring and link to source code for functions
+  applied with :meth:`.skb.apply_func <DataOp.skb.apply_func>` or
+  :func:`deferred` and for estimators applied with :meth:`.skb.apply
+  <DataOp.skb.apply>`.
+  :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to pass ``eval=False`` to :meth:`.skb.full_report
+  <DataOp.skb.full_report>` to generate the report, containing any statically
+  available information about the DataOp, without evaluating it / running any
+  computation.
+  :pr:`2308` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
@@ -42,6 +58,9 @@ Changes
   scikit-learn has been increased to 1.5.2. :pr:`2280` by
   :user:`Riccardo Cappuzzo <rcap107>`.
 
+- The :class:`SessionEncoder` has been optimized to reduce its execution time.
+  Depending on backend, we measured up to 15x speedups compared to the previous
+  version. :pr:`2285` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -50,6 +69,9 @@ Bugfixes
   ``object`` column, so they used to be rejected, whereas the equivalent polars
   ``Date`` column was accepted.
   :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
+- Performance: the construction of :class:`DataOp` and :class:`SkrubLearner`
+  involving deep computation graphs has become much faster.
+  :pr:`2296` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------

@@ -29,12 +29,9 @@
 
     function showNodeStatus() {
         const graphDiv = document.getElementById('graph-nav');
-        console.log(graphDiv.dataset.nodeStatus);
         const nodeStatus = JSON.parse(graphDiv.dataset.nodeStatus);
-        console.log(nodeStatus);
         for (const nodeId in nodeStatus) {
             const nodeElem = document.getElementById(`node_${nodeId}`);
-            console.log(nodeElem);
             switch (nodeStatus[nodeId]) {
             case 'success':
                 nodeElem.classList.add('success-node');
@@ -42,9 +39,13 @@
             case 'error':
                 nodeElem.classList.add('error-node');
                 break;
-                default:
-                    nodeElem.classList.add('skipped-node');
-                    break;
+            case 'skipped':
+                nodeElem.classList.add('skipped-node');
+                break;
+            default:
+                // eval=False was passed to full_report(), no particular styling
+                // needed on any nodes.
+                break;
             }
         }
     }

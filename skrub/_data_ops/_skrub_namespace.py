@@ -1563,19 +1563,20 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add -> _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',
         compute the addition leaving the result of (a + b) on the stack, then
-        repeat this operation (but the second time no computation actually runs
-        because the result of evaluating ``c`` has been cached in-memory), and
-        finally evaluate the multiplication.
+        load the previous result again (the result of evaluating ``c`` has been
+        cached in-memory), and finally evaluate the multiplication.
+
+        As we can see results that are used several times are kept and not
+        re-computed; this is indicated in the printed list above by ``-> _2``
+        (storing, where 2 is an arbitrary id / memory location) and ``Load _2``
+        when reusing that result later.
         """
 
         return describe_steps(self._data_op)
@@ -1707,6 +1708,7 @@ class SkrubNamespace:
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1747,6 +1749,16 @@ class SkrubNamespace:
         title: str (default=None)
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
+
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
 
         Returns
         -------
@@ -1809,7 +1821,19 @@ class SkrubNamespace:
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
@@ -1817,7 +1841,7 @@ class SkrubNamespace:
             clear = True
 
         return full_report(
-            self._data_op,
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1825,6 +1849,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before
