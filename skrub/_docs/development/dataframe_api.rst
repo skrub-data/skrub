@@ -3,15 +3,95 @@
 The dispatch-based dataframe API
 =================================
 
-skrub targets both pandas and polars as first-class backends.  Rather than
-scattering ``if pandas ... else polars ...`` branches throughout the codebase, all
-dataframe and column operations are funneled through a thin dispatch layer that
-selects the right implementation at call time.  This guide explains how that
-layer works and how to extend it.
+skrub can be used with both pandas and polars dataframes without different
+behavior by the user. That is to say that when you pass a dataframe to a
+skrub function, it automatically detects which dataframe library is being
+used (which backend) and provides equivalent behavior, even though pandas
+and polars have different syntax (APIs). The user does not have to think
+about which type of dataframe is being inputted, instead this is all
+handled internally by the skrub library.
+
+Now a simple way to implement this would be to have separate code blocks in every
+skrub function for each condition  (e.g. ``if pandas ... else polars ...``)
+however this is quite cumbersome, and is not super extensible (what if we wanted
+to add support for another dataframe library?). Instead all the library specific
+behavior is encapsulated into a dispatch layer that selects the right implementation
+at call time. For most basic functions, this will be done using the ``sbd`` module.
+
+This guide explains how to use these generic ``sbd`` functions to write robust
+skrub functions that work with both pandas and polars.
 
 .. contents:: Contents
    :local:
    :depth: 1
+
+Using the API
+-------------
+
+Throughout skrub, we use a common dataframe module so that all functions are
+written with one internal implementation and any backend-specific behavior
+is handled within the dispatch layer. The most common usage is
+to import the module under the alias ``sbd`` (or occasionally ``ns`` in
+older code and docstrings):
+
+.. code-block:: python
+
+    import skrub._dataframe as sbd
+
+This is a private module; it is not part of the public skrub API.
+
+All public functions are re-exported from ``skrub/_dataframe/__init__.py``
+via ``from ._common import *``.  They are grouped conceptually in
+``_common.__all__``.
+
+Once imported, the sbd module can be used to perform dataframe operations
+such as getting column names, or checking the type of dataframe.
+
+For example, compare the two approaches:
+
+.. code-block:: python
+
+    # DISCOURAGED: messy imports required in each file
+    import pandas as pd
+
+    try:
+        import polars as pl
+    except ImportError:
+        pl = None
+
+    # PREFERRED: imports handled in single module
+    import skrub._dataframe as sbd
+
+    # DISCOURAGED: separate code blocks for each backend
+    col = ...
+    if isinstance(col, pd.Series):
+        if col.isna().any():
+            col = col.fillna(0)
+    elif pl is not None and isinstance(col, pl.Series):
+        if col.null_count() > 0:
+            col = col.fill_null(0)
+    else:
+        raise TypeError("Unsupported column type")
+
+    # PREFERRED: Works for a pandas Series or a polars Series
+    if sbd.has_nulls(col):
+        col = sbd.fill_nulls(col, 0)
+
+    # DISCOURAGED: more conditional checks for each backend
+    df = ...
+    if isinstance(df, pd.DataFrame):
+        n_rows, n_cols = df.shape
+        names = df.columns.tolist()
+    elif pl is not None and isinstance(df, pl.DataFrame):
+        n_rows, n_cols = df.shape
+        names = df.columns
+    else:
+        raise TypeError("Unsupported dataframe type")
+
+    # PREFERRED: Works for a pandas DataFrame or a polars DataFrame
+    n_rows, n_cols = sbd.shape(df)
+    names = sbd.column_names(df)
+
 
 How dispatching works
 ---------------------
@@ -82,39 +162,6 @@ Implementing library-specific code with ``specialize``
 
 The **last** registered specialisation wins for a given type; there is no
 priority ordering based on specificity.
-
-
-Using the API
--------------
-
-Throughout skrub, the module is imported under the alias ``sbd`` (or
-occasionally ``ns`` in older code and docstrings):
-
-.. code-block:: python
-
-    import skrub._dataframe as sbd
-
-This is a private module; it is not part of the public skrub API.
-
-All public functions are re-exported from ``skrub/_dataframe/__init__.py``
-via ``from ._common import *``.  They are grouped conceptually in
-``_common.__all__``.
-
-Example usage:
-
-.. code-block:: python
-
-    import skrub._dataframe as sbd
-
-    # Works for a pandas Series or a polars Series
-    col = ...
-    if sbd.has_nulls(col):
-        col = sbd.fill_nulls(col, 0)
-
-    # Works for a pandas DataFrame or a polars DataFrame
-    df = ...
-    n_rows, n_cols = sbd.shape(df)
-    names = sbd.column_names(df)
 
 
 Adding a function to ``_common.py``
