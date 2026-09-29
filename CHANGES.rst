@@ -73,7 +73,7 @@ Deprecations
 ------------
 - :meth:`DataOp.skb.full_report` has been renamed :meth:`DataOp.skb.report`.
   The old name is still available as a deprecated alias but will be removed in a
-  future release. :pr:`2309` by :user:`Jérôme Dockès <jeromedockes>`.
+  future release. :pr:`2310` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.
