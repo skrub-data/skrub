@@ -3,34 +3,38 @@
 The dispatch-based dataframe API
 =================================
 
-skrub can be used with both pandas and polars dataframes without different
-behavior by the user. That is to say that when you pass a dataframe to a
-skrub function, it automatically detects which dataframe library is being
-used (which backend) and provides equivalent behavior, even though pandas
-and polars have different syntax (APIs). The user does not have to think
-about which type of dataframe is being inputted, instead this is all
-handled internally by the skrub library.
+skrub can be used with both pandas and polars dataframes without
+requiring users to change how they interact with the library.
+That is to say that when you pass a dataframe to a skrub function,
+it automatically detects which dataframe library (i.e. which backend) is
+being used and provides equivalent behavior, even though pandas
+and polars have different syntax (ie. their APIs). The user does not have
+to think about which type of dataframe is being inputted, which
+is all handled internally by the skrub library.
 
-Now a simple way to implement this would be to have separate code blocks in every
-skrub function for each condition  (e.g. ``if pandas ... else polars ...``)
-however this is quite cumbersome, and is not super extensible (what if we wanted
-to add support for another dataframe library?). Instead all the library specific
-behavior is encapsulated into a dispatch layer that selects the right implementation
-at call time. For most basic functions, this will be done using the ``sbd`` module.
+Now a simple way to implement this would be to have separate code
+blocks in every skrub function for each condition
+(e.g. ``if pandas ... else polars ...``) however this is quite
+cumbersome, and is not super extensible (what if we wanted to add
+support for another dataframe library?). Instead, all the library specific
+behavior is encapsulated into a dispatch layer that selects the right
+implementation at call time. For most functions, this will be done
+using the ``sbd`` module.
 
-This guide explains how to use these generic ``sbd`` functions to write robust
-skrub functions that work with both pandas and polars.
+This guide explains how to use these generic (or backend-agnostic)
+``sbd`` functions to write robust skrub functions that work with
+both pandas and polars.
 
 .. contents:: Contents
    :local:
    :depth: 1
 
-Using the API
+Using the dispatch API as ``sbd``
 -------------
 
 Throughout skrub, we use a common dataframe module so that all functions are
-written with one internal implementation and any backend-specific behavior
-is handled within the dispatch layer. The most common usage is
+written with one internal implementation and where any backend-specific
+behavior is handled within the dispatch layer. The most common usage is
 to import the module under the alias ``sbd`` (or occasionally ``ns`` in
 older code and docstrings):
 
@@ -44,10 +48,11 @@ All public functions are re-exported from ``skrub/_dataframe/__init__.py``
 via ``from ._common import *``.  They are grouped conceptually in
 ``_common.__all__``.
 
-Once imported, the sbd module can be used to perform dataframe operations
+Once imported, the ``sbd`` module can be used to perform dataframe operations
 such as getting column names, or checking the type of dataframe.
 
-For example, compare the two approaches:
+For example, compare the two approaches (first handling both pandas and
+polars cases for each method) versus using ``sbd``:
 
 .. code-block:: python
 
@@ -93,8 +98,8 @@ For example, compare the two approaches:
     names = sbd.column_names(df)
 
 
-How dispatching works
----------------------
+The nitty gritty of dispatching
+--------------------------------
 
 The mechanism lives in ``skrub/_dispatch.py`` and is built on top of the
 standard library's :func:`functools.singledispatch`.
@@ -103,8 +108,7 @@ standard library's :func:`functools.singledispatch`.
 the first argument, dealing with the fact that polars is not a required dependency
 internally.
 
-The ``@dispatch`` decorator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**The ``@dispatch`` decorator**
 
 Applying ``@dispatch`` to a function converts it into a generic function and
 adds a ``specialize`` attribute:
@@ -126,8 +130,7 @@ In some cases, functions use a safe no-op default, rather than raising an except
 (e.g. ``reset_index`` which is a pandas concept and simply returns ``obj`` unchanged
 for everything else).
 
-Implementing library-specific code with ``specialize``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Implementing library-specific code with ``specialize``**
 
 .. code-block:: python
 
@@ -163,9 +166,9 @@ Implementing library-specific code with ``specialize``
 The **last** registered specialisation wins for a given type; there is no
 priority ordering based on specificity.
 
-
-Adding a function to ``_common.py``
-------------------------------------
+So you really want to add a new ``sbd`` function
+-------------------------------------------------
+**Adding a function to ``_common.py``**
 
 **Step 1 — write the generic function**
 
@@ -213,8 +216,7 @@ Add a test in ``skrub/_dataframe/tests/test_common.py`` using the
         df_module.assert_column_equal(result, expected)
 
 
-Defining dispatched functions outside ``_common.py``
-------------------------------------------------------
+**Defining dispatched functions outside ``_common.py``**
 
 Not all dispatched functions belong in ``_common.py``.  If the operation is
 tightly coupled to a specific transformer or sub-module and has no use
