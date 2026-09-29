@@ -1708,6 +1708,7 @@ class SkrubNamespace:
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1748,6 +1749,16 @@ class SkrubNamespace:
         title: str (default=None)
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
+
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
 
         Returns
         -------
@@ -1810,7 +1821,19 @@ class SkrubNamespace:
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
@@ -1818,7 +1841,7 @@ class SkrubNamespace:
             clear = True
 
         return full_report(
-            self._data_op,
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1826,6 +1849,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before

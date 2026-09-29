@@ -1,3 +1,4 @@
+{% import "docstrings.html" as docstrings %}
 <!DOCTYPE html>
 <html>
 
@@ -22,7 +23,7 @@
                 {% include "graph-nav.html" %}
             </nav>
             <div class="node-details" {{ "data-has-error" if error is not none }}
-                {{ "data-is-skipped" if (error is none) and (report is none) }}>
+                {{ "data-is-skipped" if (error is none) and (report is none) and eval }}>
                 <h1>{{ node_nb }}: {{ node_repr }}</h1>
                 <nav class="mini-nav">
                     <ul>
@@ -93,25 +94,17 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                 </div>
                 {% endif %}
 
-                {% if node_type == "Apply" and (source_url is not none or estimator_doc or estimator_html_repr) %}
+                {% if node_type == "Apply" %}
                 <h3>Estimator applied in this step:</h3>
                 <div>
-                    {% if source_url is not none %}
                     <p>
-                        <a href="{{ source_url }}">source code</a>
+                        <code>{{ estimator_type }}</code>
+                        {% if source_url is not none %}
+                        : <a href="{{ source_url }}">source code</a>
+                        {% endif %}
                     </p>
-                    {% endif %}
-                    {% if estimator_doc %}
-                    <details class="docstring-details">
-                        <summary>
-                            <strong>docstring:</strong>
-                            <code>{{ estimator_doc.split("\n")[0] }}</code>
-                        </summary>
-                        <pre><code>
-{{- estimator_doc -}}
-                        </code></pre>
-                    </details>
-                    {% endif %}
+
+                    {{ docstrings.render(estimator_doc) }}
 
                     {% if estimator_html_repr %}
                     {{ estimator_html_repr | safe }}
@@ -126,17 +119,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     : <a href="{{ source_url }}">source code</a>
                     {% endif %}
 
-                    {% if applied_func_doc %}
-                    <details class="docstring-details">
-                        <summary>
-                            <strong>docstring:</strong>
-                            <code>{{ applied_func_doc.split("\n")[0] }}</code>
-                        </summary>
-                        <pre><code>
-{{- applied_func_doc -}}
-                        </code></pre>
-                    </details>
-                    {% endif %}
+                    {{ docstrings.render(applied_func_doc) }}
 
                 </div>
                 {% endif %}
@@ -169,13 +152,15 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                     </code>
                 </pre>
                 </div>
-                {% else %}
+                {% elif eval %}
                 <div>
                     <h2>This step did not run.</h2>
                     <p>
                         This step was not executed because its result was not needed or a previous step that it requires has failed.
                     </p>
                 </div>
+                {% else %}
+                <!-- report without evaluation: no results to show -->
                 {% endif %}
             </div>
         </div>

@@ -101,15 +101,17 @@ def _get_output_dir(output_dir, overwrite):
     return output_dir
 
 
-def _node_status(data_op_graph, mode):
+def _node_status(data_op_graph, mode, eval):
     status = {}
     for node_id, node in data_op_graph["nodes"].items():
-        if mode in node._skrub_impl.results:
+        if not eval:
+            status[node_id] = "global_no_eval"
+        elif mode in node._skrub_impl.results:
             status[node_id] = "success"
         elif mode in node._skrub_impl.errors:
             status[node_id] = "error"
         else:
-            status[node_id] = "none"
+            status[node_id] = "skipped"
     return status
 
 
@@ -221,6 +223,7 @@ def full_report(
     output_dir=None,
     overwrite=False,
     title=None,
+    eval=True,
 ):
     if clear:
         clear_results(data_op, mode)
@@ -233,6 +236,7 @@ def full_report(
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
     finally:
         if clear:
@@ -247,20 +251,25 @@ def _make_full_report(
     output_dir=None,
     overwrite=False,
     title=None,
+    eval=True,
 ):
     _utils.check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
-    try:
-        # TODO dump report in callback instead of evaluating full DataOps plan
-        # first, so that we can clear intermediate results.
-        # See evaluate's `callback` parameter
-        result = evaluate(data_op, mode=mode, environment=environment, clear=False)
-        evaluate_error = None
-    except Exception as e:
+    if eval:
+        try:
+            # TODO dump report in callback instead of evaluating full DataOps plan
+            # first, so that we can clear intermediate results.
+            # See evaluate's `callback` parameter
+            result = evaluate(data_op, mode=mode, environment=environment, clear=False)
+            evaluate_error = None
+        except Exception as e:
+            result = None
+            evaluate_error = e
+    else:
         result = None
-        evaluate_error = e
+        evaluate_error = None
     g = graph(data_op)
-    node_status = _node_status(g, mode)
+    node_status = _node_status(g, mode, eval=eval)
     node_rindex = {id(node): k for k, node in g["nodes"].items()}
 
     def node_name_to_url(node_name):
@@ -272,7 +281,7 @@ def _make_full_report(
     svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status, "report_title": title}
+        {"svg": svg, "node_status": node_status, "report_title": title, "eval": eval}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
@@ -326,7 +335,9 @@ def _make_full_report(
             estimator_doc = _get_doc(estimator)
             if isinstance(estimator, _NO_DOC_OR_SOURCE):
                 estimator_html_repr = None
+                estimator_type = None
             else:
+                estimator_type = estimator.__class__.__name__
                 try:
                     estimator_html_repr = outer_estimator._repr_html_()
                 except Exception:
@@ -335,6 +346,7 @@ def _make_full_report(
         else:
             estimator_html_repr = None
             estimator_doc = None
+            estimator_type = None
         if isinstance(node._skrub_impl, Call):
             source_url = _get_source_url(node._skrub_impl.func, output_dir)
             applied_func_name = node._skrub_impl.get_func_name()
@@ -365,11 +377,13 @@ def _make_full_report(
                 is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
                 node_status=node_status,
+                estimator_type=estimator_type,
                 estimator_html_repr=estimator_html_repr,
                 estimator_doc=estimator_doc,
                 source_url=source_url,
                 applied_func_name=applied_func_name,
                 applied_func_doc=applied_func_doc,
+                eval=eval,
             )
         )
         out = output_dir / f"node_{i}.html"

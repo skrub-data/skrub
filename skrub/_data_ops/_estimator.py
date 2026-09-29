@@ -210,7 +210,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         self._set_is_fitted(mode)
         return result
 
-    def report(self, *, environment, mode, **full_report_kwargs):
+    def report(self, *, environment=None, mode=None, **full_report_kwargs):
         """Call the method specified by ``mode`` and return the result and full report.
 
         See :meth:`DataOp.skb.full_report` for more information.
@@ -221,9 +221,13 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
             Bindings for variables contained in the :class:`DataOp` that was
             used to create this learner
             (e.g. ``{"X": X_df, "other_table": df, ...}``).
+            Must be provided unless passing eval=False, in which case it must
+            be left to None (the default).
         mode : str
             The method to call in order to generate the report, such as
             ``"fit"``, ``"predict"``, etc.
+            Must be provided unless passing eval=False, in which case it must
+            be left to None (the default).
         full_report_kwargs : dict
             See :meth:`DataOp.skb.full_report`
 
@@ -268,6 +272,29 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         >>> predict_results['result']  # doctest: +SKIP
         array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
+        if not full_report_kwargs.get("eval", True):
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval=False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            if mode is not None:
+                raise TypeError(
+                    f"mode must be None when eval=False, got {type(mode).__name__!r}."
+                )
+            return self.data_op.skb.full_report(**full_report_kwargs)
+
+        if environment is None:
+            raise TypeError(
+                "environment cannot be None unless eval=False, "
+                "please provide an environment dictionary."
+            )
+        if mode is None:
+            raise TypeError(
+                "mode cannot be None unless eval=False, please pass an estimator "
+                "method name such as 'fit_transform', 'predict_proba', etc."
+            )
+
         if mode == "score" and find_scoring_node(self.data_op) is not None:
             raise NotImplementedError(
                 "Creating the report for 'score' mode when .skb.with_scoring() "

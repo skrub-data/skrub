@@ -78,6 +78,17 @@ def test_full_report_title():
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+def test_full_report_no_eval():
+    data_op = skrub.var("a", 12345) + 1
+    report = data_op.skb.full_report(open=False, eval=False)
+    assert report["result"] is None
+    assert report["error"] is None
+    assert "global_no_eval" in report["report_path"].read_text("utf-8")
+    with pytest.raises(TypeError, match="environment must be None"):
+        data_op.skb.full_report({"a": 1}, open=False, eval=False)
+
+
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_preview_subsample():
     X = datasets.fetch_employee_salaries().X
     preview = skrub.X(X).skb.subsample(n=3)._repr_html_()

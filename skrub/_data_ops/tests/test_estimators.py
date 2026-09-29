@@ -1470,6 +1470,29 @@ def test_report(tmp_path):
     assert score_report["error"] is None
     assert score_report["report_path"].is_relative_to(tmp_path)
 
+    # get a fresh unfitted learner
+    pipe = data_op.skb.make_learner()
+
+    no_eval_report = pipe.report(
+        eval=False, open=False, output_dir=tmp_path / "report", overwrite=True
+    )
+    assert not pipe.__sklearn_is_fitted__()
+    assert no_eval_report["result"] is None
+    assert no_eval_report["error"] is None
+    assert "global_no_eval" in no_eval_report["report_path"].read_text("utf-8")
+
+
+def test_report_eval_argument_errors():
+    learner = get_data_op_and_data("simple")[0].skb.make_learner()
+    with pytest.raises(TypeError, match="environment must be None"):
+        learner.report(environment={}, eval=False, open=False)
+    with pytest.raises(TypeError, match="mode must be None"):
+        learner.report(mode="fit", eval=False, open=False)
+    with pytest.raises(TypeError, match="environment cannot be None"):
+        learner.report(open=False)
+    with pytest.raises(TypeError, match="mode cannot be None"):
+        learner.report(environment={}, open=False)
+
 
 #
 # methods & attributes of the learners
