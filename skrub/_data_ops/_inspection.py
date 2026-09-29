@@ -15,8 +15,9 @@ from pathlib import Path
 import jinja2
 import numpy as np
 
-from .. import ApplyToCols, datasets
 from .. import _dataframe as sbd
+from .. import datasets
+from .._apply_to_cols import ApplyToCols
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
@@ -113,11 +114,10 @@ def _node_status(data_op_graph, mode):
 
 
 def _read_source(source_path):
-    # We don't call linecache.checkcache to avoid losing lines of files that
-    # have been deleted (e.g. jupyter tmp files).
     lines = linecache.getlines(str(source_path))
     if not lines:
-        # e.g. files like <python-input-0> (interactive repl)
+        # e.g. files like <python-input-0> (interactive repl), whose source (in
+        # python >= 3.13) is only available from the code object
         raise OSError(f"Could not find source code for {source_path}")
     return lines
 
@@ -148,14 +148,20 @@ def _get_source_url(obj, output_dir):
         return None
     try:
         obj = inspect.unwrap(obj)
-        source_path = inspect.getsourcefile(obj)
+        # same file as the one used by inspect.findsource (getsourcefile
+        # returns None for eg "<...>" files that are not in the linecache)
+        source_path = inspect.getsourcefile(obj) or inspect.getfile(obj)
         lines, line_no = inspect.getsourcelines(obj)
-        name = "lambda" if obj.__name__ == "<lambda>" else obj.__name__
-        if not re.search(rf"\b{re.escape(name)}\b", "".join(lines)):
+        if obj.__name__ == "<lambda>":
+            definition = r"\blambda\b"
+        else:
+            definition = rf"\b(?:def|class)\s+{re.escape(obj.__name__)}\b"
+        if not re.search(definition, "".join(lines)):
             # the file or line number do not match the definition of obj, eg
             # it is a func serialized by value in a cloudpickle dump and
             # inspect is returning the source lines for the file where the
-            # cloudpickle was loaded
+            # cloudpickle was loaded, or the file has been modified since obj
+            # was defined.
             return None
         source_lines = _read_source(source_path)
         source_file_url = _add_source_file(source_path, source_lines, output_dir)

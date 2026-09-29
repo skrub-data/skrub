@@ -228,6 +228,10 @@ def test_get_source_url_mismatch(tmp_path):
     f = types.FunctionType(code, _times_two.__globals__)
     assert _inspection._get_source_url(f, tmp_path) is None
 
+    # classes and lambdas
+    assert _inspection._get_source_url(_Doubler, tmp_path) is not None
+    assert _inspection._get_source_url(lambda x: x, tmp_path) is not None
+
     # wrapped function: the link must point to the wrapped function's file
     @functools.wraps(_times_two)
     def wrapper(x):
