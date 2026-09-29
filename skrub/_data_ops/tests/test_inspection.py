@@ -119,6 +119,35 @@ def test_full_report_dataop_estimator(tmp_path):
     assert report["result"] is None
 
 
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        skrub.choose_from([DummyClassifier(), "passthrough"], name="est"),
+        skrub.optional(DummyClassifier(), name="est"),
+        "passthrough",
+        None,
+    ],
+)
+def test_unfitted_apply_no_doc_or_source(tmp_path, estimator):
+    # When the Apply node is not evaluated (here because a value for its input
+    # is not provided), there is no fitted `estimator_` and the report falls
+    # back on the `estimator` passed to .skb.apply(). For choices,
+    # "passthrough" and None we must not show the doc or source of the Choice,
+    # str or NoneType class.
+    report_dir = tmp_path / "report"
+    e = skrub.var("a").skb.apply(estimator)
+    report = e.skb.full_report(
+        {},  # 'a' is missing from env so the apply does not get evaluated
+        output_dir=report_dir,
+        open=False,
+    )
+    assert report["error"] is not None
+    text = (report_dir / "node_1.html").read_text("utf-8")
+    assert "source code" not in text
+    assert "docstring:" not in text
+
+
 class _Doubler(BaseEstimator):
     """
     This is the docstring of _Doubler

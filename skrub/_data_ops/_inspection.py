@@ -184,8 +184,16 @@ def _get_stack_info(stack, output_dir):
     return result
 
 
+# Objects for which we don't show a docstring or link to source code. They can
+# be found e.g. in the `estimator` of an `Apply` node that has not been fitted
+# (so `estimator_` is not available): a DataOp or Choice that has not been
+# evaluated, or "passthrough" / None. Showing the docstring or source of their
+# class (DataOp, Choice, str, NoneType) would be misleading.
+_NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None))
+
+
 def _get_doc(obj):
-    if isinstance(obj, (DataOp, BaseChoice)):
+    if isinstance(obj, _NO_DOC_OR_SOURCE):
         return None
     return inspect.getdoc(obj) or ""
 
@@ -297,7 +305,7 @@ def _make_full_report(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
             estimator_doc = _get_doc(estimator)
-            if isinstance(estimator, DataOp):
+            if isinstance(estimator, _NO_DOC_OR_SOURCE):
                 estimator_html_repr = None
             else:
                 try:
