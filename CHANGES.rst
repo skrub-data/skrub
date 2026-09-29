@@ -25,7 +25,7 @@ New Features
   applied with :meth:`.skb.apply_func <DataOp.skb.apply_func>` or
   :func:`deferred` and for estimators applied with :meth:`.skb.apply
   <DataOp.skb.apply>`.
-  :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`
+  :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.

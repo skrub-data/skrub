@@ -143,7 +143,7 @@ def _add_source_file(source_path, source_lines, output_dir):
 def _get_source_url(obj, output_dir):
     if isinstance(obj, DataOp):
         return None
-    if not (callable(obj) or isinstance(obj, type)):
+    if not callable(obj):
         return None
     try:
         obj = inspect.unwrap(obj)
