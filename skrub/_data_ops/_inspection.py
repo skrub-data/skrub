@@ -112,23 +112,16 @@ def _node_status(data_op_graph, mode):
 
 
 def _read_source(source_path):
-    source_path = Path(source_path)
-    if source_path.is_file():
-        return source_path.read_text("utf-8")
-    # the file is not there anymore (eg jupyter tmp files for cells) or is
-    # not a real file; the source lines may still be in the line cache
-    # (this is similar to what inspect.findsource does)
+    # We don't call linecache.checkcache to avoid losing lines of files that
+    # have been deleted (e.g. jupyter tmp files).
     lines = linecache.getlines(str(source_path))
     if not lines:
-        # sometimes they cannot be retrieved there, e.g. functions defined
-        # in interactive shell in python 3.14 have a source file like
-        # <python-input-0> but there are no lines for it, or the line cache
-        # may have been flushed.
+        # e.g. files like <python-input-0> (interactive repl)
         raise OSError(f"Could not find source code for {source_path}")
-    return "".join(lines)
+    return lines
 
 
-def _add_source_file(source_path, source_code, output_dir):
+def _add_source_file(source_path, source_lines, output_dir):
     source_path = Path(source_path)
     path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
     python_dir = output_dir / "python"
@@ -138,7 +131,7 @@ def _add_source_file(source_path, source_code, output_dir):
     if not target_path.is_file():
         page_html = _get_template("python_module.html").render(
             {
-                "python_source_code": source_code,
+                "python_source_code": "".join(source_lines),
                 "source_file": str(source_path),
                 "module_name": source_path.stem,
             }
@@ -159,19 +152,15 @@ def _get_source_url(obj, output_dir):
         name = "lambda" if obj.__name__ == "<lambda>" else obj.__name__
         if not re.search(rf"\b{re.escape(name)}\b", "".join(lines)):
             # the file or line number do not match the definition of obj, eg
-            # it was loaded from a pickle or the file was modified.
+            # it is a func serialized by value in a cloudpickle dump and
+            # inspect is returning the source lines for the file where the
+            # cloudpickle was loaded
             return None
-        source_code = _read_source(source_path)
-        source_file_url = _add_source_file(source_path, source_code, output_dir)
+        source_lines = _read_source(source_path)
+        source_file_url = _add_source_file(source_path, source_lines, output_dir)
         return f"{source_file_url}#L{line_no}"
     except Exception:
         return None
-
-
-def _get_doc(obj):
-    if isinstance(obj, (DataOp, BaseChoice)):
-        return None
-    return inspect.getdoc(obj) or ""
 
 
 def _get_stack_info(stack, output_dir):
@@ -181,18 +170,23 @@ def _get_stack_info(stack, output_dir):
     for frame_summary in stack:
         try:
             filename, lineno = frame_summary.filename, frame_summary.lineno
-            source_code = _read_source(filename)
-            # the file may have changed since the stack was recorded
-            if not frame_summary.line.startswith(
-                source_code.splitlines()[lineno - 1].strip()
-            ):
+            source_lines = _read_source(filename)
+            # e.g. loaded from a pickle: the file may not be the one used to
+            # record the stack. Note FrameSummary lines are strip()-ped
+            if frame_summary.line != source_lines[lineno - 1].strip():
                 raise ValueError("source file does not match the recorded stack")
-            source_file_url = _add_source_file(filename, source_code, output_dir)
+            source_file_url = _add_source_file(filename, source_lines, output_dir)
             url = f"{source_file_url}#L{lineno}"
         except Exception:
             url = None
         result.append({"url": url, "frame": frame_summary})
     return result
+
+
+def _get_doc(obj):
+    if isinstance(obj, (DataOp, BaseChoice)):
+        return None
+    return inspect.getdoc(obj) or ""
 
 
 def full_report(

@@ -209,28 +209,21 @@ def test_get_source_url_mismatch(tmp_path):
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
-def test_stack_info_modified_source(tmp_path):
-    module = tmp_path / "my_module.py"
-    module.write_text("import skrub\nx = skrub.var('a')\n")
-    frame = traceback.FrameSummary(
-        str(module), 2, "<module>", line="x = skrub.var('a')"
-    )
-    stack = [frame]
-    (tmp_path / "report_ok").mkdir()
-    (tmp_path / "report_modified").mkdir()
-    info = _inspection._get_stack_info(stack, tmp_path / "report_ok")
-    assert info[0]["url"] is not None
-    module.write_text("# a new line\nimport skrub\nx = skrub.var('a')\n")
-    info = _inspection._get_stack_info(stack, tmp_path / "report_modified")
-    assert info[0]["url"] is None
-
-
-def _find_node_html(out, marker):
-    for node_file in sorted(out.glob("node_*.html")):
-        text = node_file.read_text("utf-8")
-        if marker in text:
-            return text
-    raise AssertionError(f"no node page contains {marker!r}")
+def test_stack_info_source_mismatch(tmp_path):
+    # e.g. the DataOp was loaded from a cloudpickle and the lines in linecache
+    # are for the wrong file (the one loading the pickle, not the one where the
+    # function was defined). In this case we should get no link
+    frame = traceback.FrameSummary("", 2, "<module>", line="x = skrub.var('a')")
+    same = tmp_path / "same.py"
+    same.write_text("import skrub\nx = skrub.var('a')\n")
+    other = tmp_path / "other.py"
+    other.write_text("import skrub\ny = 0\n")
+    out = tmp_path / "report"
+    out.mkdir()
+    for path, has_link in [(same, True), (other, False)]:
+        frame.filename = str(path)
+        info = _inspection._get_stack_info([frame], out)
+        assert (info[0]["url"] is not None) == has_link
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
