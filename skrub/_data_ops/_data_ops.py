@@ -1502,6 +1502,11 @@ class Apply(DataOpImpl):
                 allow_reject=allow_reject,
                 X=X,
             )
+            # Record if wrapping in ApplyToCols was done here for inspection.
+            self.estimator_was_wrapped_ = (
+                self.estimator_ is not estimator
+                and isinstance(self.estimator_, ApplyToCols)
+            )
             self._store_y_format(y)
 
         # 2. Call the appropriate estimator method

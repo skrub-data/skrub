@@ -17,11 +17,10 @@ import numpy as np
 
 from .. import _dataframe as sbd
 from .. import datasets
-from .._apply_to_cols import ApplyToCols
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import Repr, format_duration, random_string, short_repr
+from .._utils import PassThrough, Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseChoice, BaseNumericChoice, Choice
 from ._data_ops import Apply, Call, DataOp, SplitX, Value, Var
@@ -195,7 +194,7 @@ def _get_stack_info(stack, output_dir):
 # (so `estimator_` is not available): a DataOp or Choice that has not been
 # evaluated, or "passthrough" / None. Showing the docstring or source of their
 # class (DataOp, Choice, str, NoneType) would be misleading.
-_NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None))
+_NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None), PassThrough)
 
 
 def _get_doc(obj):
@@ -307,23 +306,23 @@ def _make_full_report(
         ]
         source_url = None
         if isinstance(node._skrub_impl, Apply):
-            estimator = getattr(
+            outer_estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
+            if getattr(node._skrub_impl, "estimator_was_wrapped_", False):
+                # unwrap the ApplyToCols
+                estimator = outer_estimator.transformer
+            else:
+                estimator = outer_estimator
             estimator_doc = _get_doc(estimator)
             if isinstance(estimator, _NO_DOC_OR_SOURCE):
                 estimator_html_repr = None
             else:
                 try:
-                    estimator_html_repr = estimator._repr_html_()
+                    estimator_html_repr = outer_estimator._repr_html_()
                 except Exception:
                     estimator_html_repr = None
-                if isinstance(estimator, ApplyToCols):
-                    estimator_doc = _get_doc(estimator.transformer)
-                    estimator_class = estimator.transformer.__class__
-                else:
-                    estimator_class = estimator.__class__
-                source_url = _get_source_url(estimator_class, output_dir)
+                source_url = _get_source_url(estimator.__class__, output_dir)
         else:
             estimator_html_repr = None
             estimator_doc = None
