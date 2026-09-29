@@ -43,6 +43,8 @@
                 nodeElem.classList.add('skipped-node');
                 break;
             default:
+                // eval=False was passed to full_report(), no particular styling
+                // needed on any nodes.
                 break;
             }
         }

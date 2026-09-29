@@ -79,12 +79,13 @@ def test_full_report_title():
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_full_report_no_eval():
-    data_op = skrub.var("a", 1) / skrub.var("b", 2)
+    data_op = skrub.var("a", 12345) + 1
     report = data_op.skb.full_report(open=False, eval=False)
     assert report["result"] is None
     assert report["error"] is None
-    with pytest.raises(TypeError, match="must be None"):
-        data_op.skb.full_report({"a": 1, "b": 0}, open=False, eval=False)
+    assert "global_no_eval" in report["report_path"].read_text("utf-8")
+    with pytest.raises(TypeError, match="environment must be None"):
+        data_op.skb.full_report({"a": 1}, open=False, eval=False)
 
 
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")

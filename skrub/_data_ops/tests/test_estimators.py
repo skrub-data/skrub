@@ -1470,6 +1470,17 @@ def test_report(tmp_path):
     assert score_report["error"] is None
     assert score_report["report_path"].is_relative_to(tmp_path)
 
+    # get a fresh unfitted learner
+    pipe = data_op.skb.make_learner()
+
+    no_eval_report = pipe.report(
+        eval=False, open=False, output_dir=tmp_path / "report", overwrite=True
+    )
+    assert not pipe.__sklearn_is_fitted__()
+    assert no_eval_report["result"] is None
+    assert no_eval_report["error"] is None
+    assert "global_no_eval" in no_eval_report["report_path"].read_text("utf-8")
+
 
 #
 # methods & attributes of the learners
