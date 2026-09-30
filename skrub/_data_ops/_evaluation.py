@@ -493,7 +493,7 @@ def _check_environment(environment, unused_names):
             # be merged after adding it.
             "list(data_op.skb.get_vars(all_named_ops=True) | "
             "data_op.skb.get_choices(named_only=True))\n"
-            "In a future version of skrub this warning will become an exception.\n",
+            "In a future version of skrub this warning may become an exception.\n",
             **kwargs,
         )
 
