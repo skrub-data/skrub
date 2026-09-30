@@ -41,8 +41,8 @@ new data:
 >>> learner.fit_transform({"a": 10, "b": 7})
 17
 
-When using Data Ops, it is important to ensure that all operations are being tracked
-by acting on the Data Ops, rather than (for example) the starting dataframe.
+When using DataOps, it is important to ensure that all operations are being tracked
+by acting on the DataOps, rather than (for example) the starting dataframe.
 Consider the following example:
 
 >>> import pandas as pd
@@ -62,10 +62,10 @@ Result:
 1    2
 2    3
 
-``df_do`` is a Data Op that wraps ``df``, so its preview shows the content of
+``df_do`` is a DataOp that wraps ``df``, so its preview shows the content of
 ``df``. Then, if we perform other operations on ``df_do`` by selecting a column
 and doubling it, we can see that all steps (the creation of the variable,
-selection, and the multiplication) are now tracked by the final Data Op.
+selection, and the multiplication) are now tracked by the final DataOp.
 
 >>> col = df_do["col"]*2
 >>> col
@@ -83,7 +83,7 @@ BinOp: mul
 
 On the other hand, working directly on ``df`` leads us to the same result, but
 the actual operations are not being tracked.
-By working only on Data Ops we ensure that all the operations done on the data
+By working only on DataOps we ensure that all the operations done on the data
 are added correctly to the computational graph, which then allows the resulting
 learner to execute all steps as intended.
 
