@@ -32,7 +32,14 @@ from ._data_ops import (
     Value,
     Var,
 )
-from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, X_NAME, Y_NAME, simple_repr
+from ._utils import (
+    IGNORE_EXTRA_KEYS_NAME,
+    IS_PREVIEW_DATA_ENV_NAME,
+    NULL,
+    X_NAME,
+    Y_NAME,
+    simple_repr,
+)
 
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
 
@@ -433,7 +440,7 @@ def _get_unused_names(data_op, ancestor_data_op, environment):
     if not isinstance(environment, typing.Mapping):
         # checked in _check_environment
         return []
-    if environment.get("_skrub_ignore_extra_keys", False):
+    if environment.get(IGNORE_EXTRA_KEYS_NAME, False):
         return []
     used_names = set(
         _named_nodes_and_choices(
@@ -480,7 +487,7 @@ def _check_environment(environment, unused_names):
             f"in the DataOp:\n{unused_names}.\n"
             "This usually indicates a mis-typed variable name.\n"
             "To avoid this warning, remove the extra keys from the environment\n"
-            "or add {'_skrub_ignore_extra_keys': True} to the environment.\n"
+            f"or add {{'{IGNORE_EXTRA_KEYS_NAME}': True}} to the environment.\n"
             "You can get all the names used in a DataOp (valid keys in the env) with:\n"
             # TODO: note: get_choices does not exist yet, this branch needs to
             # be merged after adding it.
@@ -564,7 +571,7 @@ def evaluate(
         callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
         clear_results(data_op, mode=mode)
     else:
-        callbacks = tuple(callbacks)
+        callbacks = ()
     try:
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
