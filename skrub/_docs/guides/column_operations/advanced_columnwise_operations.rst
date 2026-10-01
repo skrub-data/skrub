@@ -15,7 +15,7 @@ Advanced columnwise operations
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are situations in which information in a column may be encoded according
+There are situations in which information in a column is encoded according
 to a specific set of rules, and it may be beneficial to write a transformer that
 makes use of those rules to convert the starting column into separate features.
 
@@ -39,9 +39,9 @@ code of the municipality.
 2  69002   WB9M88
 
 We would like to be able to "unpack" the code so that we have a column for the
-department code and one for the commune code; the transformer should also be able to handle columns
+department code and one for the commune code. The transformer should also be able to handle columns
 that do not satisfy the format we specify by "rejecting" them.
-A "rejected" column should be passed through unchanged, as it cannot be handled
+A "rejected" column should pass through unchanged, as it cannot be handled
 by this particular transformer.
 
 |SingleColumnTransformer| and |RejectColumn| let us define a transformer that satisfies these
@@ -75,7 +75,7 @@ requirements:
 2              69          002
 
 We can use |ApplyToCols| to apply this transformer to the entire dataframe at once,
-and set ``allow_reject=True`` to let rejected columns through without changes:
+and set ``allow_reject=True`` to let rejected columns pass through without changes:
 
 >>> from skrub import ApplyToCols
 >>> ApplyToCols(ZipcodeParser(), allow_reject=True).fit_transform(df)
@@ -94,10 +94,10 @@ control over what columns should be modified.
 How to reject or ignore columns with |ApplyToCols| and |RejectColumn|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The combination of |ApplyToCols| and |RejectColumn| allows allows flexible manipulation
-and error checking of dataframe.
+The combination of |ApplyToCols| and |RejectColumn| allows flexible manipulation
+and error checking of dataframes.
 By default, the |RejectColumn| exception is raised if a column cannot be handled
-the transformer: this can be useful to detect errors at fit time.
+the transformer; this can be useful to detect errors at fit time.
 
 >>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
@@ -132,8 +132,8 @@ Traceback (most recent call last):
     ...
 skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
 
-The ``allow_reject`` parameter in |ApplyToCols| allows to apply the same transformer
-to all columns without having to worry about which columns will actually be converted:
+The ``allow_reject`` parameter in |ApplyToCols| allows the same transformer
+to be applied to all columns without having to worry about which columns will actually be converted,
 any rejected column is passed through unchanged.
 Here, |ToDatetime| is applied only to the "birthday" column, while "city" is passed
 through unchanged and no exception is raised.
