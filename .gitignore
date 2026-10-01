@@ -66,6 +66,7 @@ doc/reference/generated
 doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
+doc/development.rst
 doc/sg_execution_times.rst
 # All the rst files below are ignored: they get moved to doc/ from skrub/_docs
 # whenever the docs are being built, but they are not the authoritative copy
@@ -73,6 +74,7 @@ doc/sg_execution_times.rst
 # See conf.py for more detail.
 doc/*.rst
 doc/guides/
+doc/development/
 doc/modules/
 doc/tutorials/
 .DS_Store
