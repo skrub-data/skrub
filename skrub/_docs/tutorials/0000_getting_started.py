@@ -200,7 +200,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # If your use case involves more complex data preparation, hyperparameter tuning,
 # or model selection, if you want to build a multi-table pipeline that requires
 # assembling and preparing multiple tables, or if you want to ensure that the
-# data preparation can be reproduced exactly, you can use the skrub Data Ops,
+# data preparation can be reproduced exactly, you can use the skrub DataOps,
 # a powerful framework that provides tools to build complex data processing pipelines.
 # See the related :ref:`user guide <user_guide_data_ops_index>` and the
 # :ref:`data_ops_examples_ref`

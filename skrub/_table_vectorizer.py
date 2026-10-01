@@ -599,7 +599,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         ``specific_transformers``.
         Consider wrapping the ``TableVectorizer`` in  :class:`~skrub.ApplyToCols`
         to select or exclude specific columns from the processing. Alternatively,
-        the :ref:`skrub Data Ops <user_guide_data_ops_index>` allow for more complex
+        the :ref:`skrub DataOps <user_guide_data_ops_index>` allow for more complex
         pre-processing.
 
     drop_null_fraction : float or None, default=1.0

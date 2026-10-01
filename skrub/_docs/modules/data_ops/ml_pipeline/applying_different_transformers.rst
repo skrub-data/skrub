@@ -39,13 +39,11 @@ We encode the subjects with the :class:`~skrub.StringEncoder`:
 >>> from skrub import StringEncoder
 >>> enc_subject = grades.skb.select(cols="subject").skb.apply(StringEncoder(n_components=2))
 
-For the grades, we define a :func:`~skrub.deferred` function that maps the strings
-to the order we want.
-Remember that objects inside deferred functions are regular Python
-objects (more detail in :ref:`user_guide_data_ops_control_flow`).
+For the grades, we define a function that maps the strings to the order we want.
+The function is only called when the DataOp is
+evaluated (more detail in :ref:`user_guide_data_ops_control_flow`).
 
->>> @skrub.deferred
-... def encode_ordered(df):
+>>> def encode_ordered(df):
 ...     grade_order = {"A": 3, "B": 2, "C": 1}
 ...     return df["grade"].map(grade_order)
 >>> enc_grades = grades.skb.apply_func(encode_ordered)

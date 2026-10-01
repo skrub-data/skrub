@@ -81,9 +81,8 @@ Disabling previews and eager checks
 By default, as soon as a DataOp is defined, some validity checks are performed
 and the preview results are computed eagerly. In very complex DataOps plans
 (100+ nodes), running checks after adding each node can cause a noticeable overhead.
-To avoid this, it is possible to disable eager checks with the ``"eager_data_ops"``
-is easily achieved with the ``"eager_data_ops"`` :ref:`configuration
-<user_guide_configuration_parameters>` option.
+To avoid this, eager checks can be disabled with the ``eager_data_ops``
+:ref:`configuration <user_guide_configuration_parameters>` option.
 
 
 >>> with skrub.config_context(eager_data_ops=False):
