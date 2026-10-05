@@ -43,11 +43,7 @@ def attribute_error(obj, name, comment=None):
 
 class _CloudPickle:
     def __getstate__(self):
-        try:
-            state = dict(super().__getstate__())
-        except AttributeError:
-            # before python 3.11
-            state = self.__dict__.copy()
+        state = dict(super().__getstate__())
         for k in self._cloudpickle_attributes:
             state[k] = cloudpickle.dumps(state[k])
         return state

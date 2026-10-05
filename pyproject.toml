@@ -372,7 +372,7 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   # Sentence-transformers using a deprecated huggingface_hub function.
   # We avoid turning huggingface_hub warnings into errors, because they get
-  # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
+  # masked as OSErrors by sentence_transformers. See note in test_llm_encoder.
   'default::DeprecationWarning:huggingface_hub',
   # Ignore polars warning about horizontal concatenation being deprecated
   # We always expect dataframes to concatenate to have the same length, so the
@@ -387,7 +387,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

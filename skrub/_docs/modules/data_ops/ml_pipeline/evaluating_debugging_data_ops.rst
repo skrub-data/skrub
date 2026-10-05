@@ -1,15 +1,15 @@
 .. currentmodule:: skrub
 .. _user_guide_data_ops_evaluating_debugging_dataops:
 
-Evaluating and debugging the DataOps plan with :meth:`.skb.full_report() <DataOp.skb.full_report>`
-==================================================================================================
+Evaluating and debugging the DataOps plan with :meth:`.skb.report() <DataOp.skb.report>`
+===========================================================================================
 
 All operations on DataOps are recorded in a computational graph, which can be
-inspected with :meth:`.skb.full_report() <DataOp.skb.full_report>`. This method
+inspected with :meth:`.skb.report() <DataOp.skb.report>`. This method
 generates an HTML report that shows the full plan, including all nodes, their names,
 descriptions, and the transformations applied to the data. It is possible to give a
 title to the evaluation report this way:
-``my_data_op.skb.full_report(title="my title")``.
+``my_data_op.skb.report(title="my title")``.
 
 An example of the report can be found
 `here <../../../_static/credit_fraud_report/index.html>`_.
@@ -25,8 +25,14 @@ For each node in the plan, the report shows:
 Additionally, if computations fail in the plan, the report shows the offending
 node and the error message, which can help in debugging the plan.
 
+It is possible to pass ``eval=False`` to generate a report without actually
+evaluating the DataOp, without running any computations. In this case the
+information that is available without running anything (e.g. some applied
+function and estimator names and docstrings) is shown, but no outputs are
+displayed.
+
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
 they can be saved to a different location with the ``output_dir`` parameter.
 Note that the default path can be altered with the
-``SKRUB_DATA_DIR`` environment variable. See :ref:`user_guide_configuration_parameters`
+``SKB_DATA_DIRECTORY`` environment variable. See :ref:`user_guide_configuration_parameters`
 for more details.

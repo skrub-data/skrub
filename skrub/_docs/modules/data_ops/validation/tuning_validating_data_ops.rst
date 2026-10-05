@@ -178,7 +178,7 @@ cross-validation we must group products by seller. We do it with
 >>> pred = X.skb.apply(DummyClassifier(), y=y)
 >>> split = pred.skb.train_test_split()
 
-The train set only contains data from the "supermarket.com" seller.
+The train set only contains data from the "bestproducts.com" seller.
 
 >>> split["X_train"]
   description  price
@@ -187,7 +187,7 @@ The train set only contains data from the "supermarket.com" seller.
 4     charger     13
 
 
-The test set only contains data from the "bestproducts.com" seller.
+The test set only contains data from the "supermarket.com" seller.
 
 >>> split["X_test"]
    description  price

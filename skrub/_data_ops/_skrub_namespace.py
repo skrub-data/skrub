@@ -7,12 +7,14 @@ import warnings
 
 import numpy as np
 from sklearn import model_selection
+from sklearn.utils import deprecated
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
 from ._data_ops import (
     AppliedEstimator,
     Apply,
+    Call,
     Concat,
     DataOp,
     FreezeAfterFit,
@@ -24,7 +26,8 @@ from ._data_ops import (
     check_data_op,
     check_name,
     checked_data_op_constructor,
-    deferred,
+    checked_deferred_call_constructor,
+    prepare_call_fields,
 )
 from ._estimator import (
     ParamSearch,
@@ -48,7 +51,7 @@ from ._evaluation import (
 from ._inspection import (
     describe_param_grid,
     draw_data_op_graph,
-    full_report,
+    report,
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
@@ -159,6 +162,7 @@ class SkrubNamespace:
         allow_reject=False,
         unsupervised=False,
         kwargs=None,
+        no_cache=False,
     ):
         if kwargs is None:
             kwargs = {}
@@ -173,6 +177,7 @@ class SkrubNamespace:
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
                 kwargs=kwargs,
+                no_cache=no_cache,
             )
         )
         return data_op
@@ -195,6 +200,7 @@ class SkrubNamespace:
         predict_proba_kwargs=None,
         decision_function_kwargs=None,
         score_kwargs=None,
+        no_cache=False,
     ):
         """
         Apply an estimator that follows the scikit-learn API to a dataframe or numpy array.
@@ -268,6 +274,12 @@ class SkrubNamespace:
         score_kwargs : dict, optional, default=None
             Extra named arguments for ``score``. See the description of the
             ``fit_kwargs`` parameter.
+        no_cache : bool, default = False
+            If True, caching is forbidden for this estimator: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -451,9 +463,12 @@ class SkrubNamespace:
                 "decision_function": decision_function_kwargs,
                 "score": score_kwargs,
             },
+            no_cache=no_cache,
         )
 
-    def apply_func(self, func, *args, **kwargs):
+    @checked_deferred_call_constructor
+    @checked_data_op_constructor
+    def apply_func(self, func, *args, no_cache=False, **kwargs):
         r"""Apply the given function.
 
         This is a convenience function; ``X.skb.apply_func(func)`` is
@@ -469,6 +484,17 @@ class SkrubNamespace:
 
         kwargs
             named arguments passed to ``func``.
+
+        no_cache : bool, default = False
+            If True, caching is forbidden for this call: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            Note: if your function has a keyword-only parameter named
+            ``no_cache`` and you need to pass a value for it, use
+            :func:`skrub.deferred` instead of ``apply_func``.
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -515,7 +541,25 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        return deferred(func)(self._data_op, *args, **kwargs)
+        if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+            # stacklevel: 2 + the 2 decorators @checked_deferred_call_constructor
+            #                                  @checked_data_op_constructor
+            #             = 4
+            warnings.warn(
+                "A deferred function was passed to .skb.apply_func():\n"
+                f"{func!r}\nPlease pass the original, undecorated function instead. "
+                "(Note: it can be accessed from the deferred function as f.func).",
+                stacklevel=4,
+            )
+            no_cache = no_cache or func._skrub_no_cache
+            func = func.func
+        return DataOp(
+            Call(
+                **prepare_call_fields(func, no_cache=no_cache),
+                args=(self._data_op, *args),
+                kwargs=kwargs,
+            )
+        )
 
     @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
@@ -1493,7 +1537,7 @@ class SkrubNamespace:
         """Get a text representation of the computation graph.
 
         Usually the graphical representation provided by :meth:`DataOp.skb.draw_graph`
-        or :meth:`DataOp.skb.full_report` is more useful. This is a fallback for
+        or :meth:`DataOp.skb.report` is more useful. This is a fallback for
         inspecting the computation graph when only text output is available.
 
         Returns
@@ -1520,19 +1564,20 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add -> _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',
         compute the addition leaving the result of (a + b) on the stack, then
-        repeat this operation (but the second time no computation actually runs
-        because the result of evaluating ``c`` has been cached in-memory), and
-        finally evaluate the multiplication.
+        load the previous result again (the result of evaluating ``c`` has been
+        cached in-memory), and finally evaluate the multiplication.
+
+        As we can see results that are used several times are kept and not
+        re-computed; this is indicated in the printed list above by ``-> _2``
+        (storing, where 2 is an arbitrary id / memory location) and ``Load _2``
+        when reusing that result later.
         """
 
         return describe_steps(self._data_op)
@@ -1656,14 +1701,23 @@ class SkrubNamespace:
 
         return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
+    @deprecated(
+        "DataOp.skb.full_report has been renamed to DataOp.skb.report and will "
+        "be removed in a future version of skrub."
+    )
+    def full_report(self, *args, **kwargs):
+        """Deprecated alias for :meth:`DataOp.skb.report`."""
+        return self.report(*args, **kwargs)
+
     @_check_before
-    def full_report(
+    def report(
         self,
         environment=None,
         open=True,
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1705,6 +1759,16 @@ class SkrubNamespace:
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
 
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
+
         Returns
         -------
         dict
@@ -1743,7 +1807,7 @@ class SkrubNamespace:
 
         >>> import skrub
         >>> c = skrub.var('a', 1) / skrub.var('b', 2)
-        >>> report = c.skb.full_report(open=False)
+        >>> report = c.skb.report(open=False)
         >>> report['result']
         0.5
         >>> report['error']
@@ -1752,13 +1816,13 @@ class SkrubNamespace:
 
         We pass data:
 
-        >>> report = c.skb.full_report({'a': 33, 'b': 11 }, open=False)
+        >>> report = c.skb.report({'a': 33, 'b': 11 }, open=False)
         >>> report['result']
         3.0
 
         And if there was an error:
 
-        >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
+        >>> report = c.skb.report({'a': 1, 'b': 0}, open=False)
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
@@ -1766,15 +1830,27 @@ class SkrubNamespace:
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
             mode = "fit_transform"
             clear = True
 
-        return full_report(
-            self._data_op,
+        return report(
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1782,6 +1858,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before
@@ -2242,7 +2319,7 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.GridSearchCV``.
+            ``sklearn.model_selection.GridSearchCV``.
 
         Returns
         -------
@@ -3154,10 +3231,10 @@ class SkrubNamespace:
         -----
         If this method is used several times, all calls to it must be grouped
         -- there can be no other nodes in-between. For example
-        ``pred.skb.score_with('accuracy').skb.score_with('roc_auc')`` is allowed,
+        ``pred.skb.with_scoring('accuracy').skb.with_scoring('roc_auc')`` is allowed,
         whereas
-        ``pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`` is not.
-        Typically all the ``score_with`` calls happen at the very end of the
+        ``pred.skb.with_scoring('accuracy').skb.apply_func(a_function).skb.with_scoring('roc_auc')`` is not.
+        Typically all the ``with_scoring`` calls happen at the very end of the
         DataOp construction.
 
         Examples
@@ -3339,7 +3416,7 @@ class SkrubNamespace:
         """A user-defined description or comment about the DataOp.
 
         This can be set with :func:`DataOp.skb.set_description` and is displayed
-        in the execution report generated with :func:`~DataOp.skb.full_report()`
+        in the execution report generated with :meth:`DataOp.skb.report`
         or :func:`~skrub.SkrubLearner.report()`.
 
         Examples
@@ -3385,7 +3462,7 @@ class SkrubNamespace:
         -----
         The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
         passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
-        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
 
         Examples
         --------
@@ -3534,7 +3611,7 @@ class SkrubNamespace:
         -----
         The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
         passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
-        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
 
         Examples
         --------

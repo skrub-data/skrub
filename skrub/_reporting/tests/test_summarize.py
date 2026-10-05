@@ -12,19 +12,15 @@ from skrub._reporting._summarize import summarize_dataframe
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
-@pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 @pytest.mark.parametrize("with_associations", [False, True])
 @skip_polars_installed_without_pyarrow
-def test_summarize(
-    monkeypatch, df_module, air_quality, order_by, with_plots, with_associations
-):
+def test_summarize(monkeypatch, df_module, air_quality, with_plots, with_associations):
     monkeypatch.setattr(_column_associations, "_CATEGORICAL_THRESHOLD", 10)
     summary = summarize_dataframe(
         air_quality,
         with_plots=with_plots,
         with_associations=with_associations,
-        order_by=order_by,
         title="the title",
     )
     assert summary["title"] == "the title"
@@ -84,9 +80,6 @@ def test_summarize(
         0.75: 33.6,
         1.0: 78.3,
     }
-    if order_by is None:
-        assert len(summary["columns"][5]["histogram_data"]["bin_counts"]) == 10
-        assert len(summary["columns"][5]["histogram_data"]["bin_edges"]) == 11
     assert summary["columns"][7]["null_count"] == 9
     assert summary["columns"][7]["nulls_level"] == "warning"
     assert summary["columns"][8]["null_count"] == 17

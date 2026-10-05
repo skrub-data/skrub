@@ -1,6 +1,5 @@
 import pickle
 import re
-import sys
 import traceback
 import types
 
@@ -362,11 +361,8 @@ def test_inconsistent_subsampling():
     pred.skb.eval({"X": X_a, "y": y_a})
     # evaluating with subsampling raises
     with pytest.raises(
-        (ValueError, RuntimeError),
-        match=(
-            "(`y` was subsampled.*`X` was not)|(Evaluation of node <Apply"
-            " LogisticRegression> failed)"
-        ),
+        ValueError,
+        match="`y` was subsampled.*`X` was not",
     ):
         pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
 
@@ -435,10 +431,8 @@ def test_missing_var():
     assert e.skb.eval() == 1
     assert e.skb.eval({}) == 1
     with pytest.raises(
-        (KeyError, RuntimeError),
-        match=(
-            "(Evaluation of node <Var 'b'> failed|No value has been provided for 'b')"
-        ),
+        KeyError,
+        match="No value has been provided for 'b'",
     ):
         e.skb.eval({"a": 10})
 
@@ -501,7 +495,7 @@ def test_call_method_errors():
     # right away, before we add the call (when creating a GetAttr node)
     a = skrub.var("a", 0)
     with pytest.raises(
-        (AttributeError, RuntimeError),
+        RuntimeError,
         match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
     ):
         a.mark_as_X()
@@ -511,7 +505,7 @@ def test_call_method_errors():
     # call `.skb.eval()` and provide a value. By then the GetAttr + Call have
     # been collapsed in the graph into a CallMethod node, so the error
     # originates from a different place but it should provide the same info.
-    with pytest.raises((AttributeError, RuntimeError)) as exc:
+    with pytest.raises(AttributeError) as exc:
         a.skb.eval({"a": 0})
     assert "Did you mean `.skb.mark_as_X` and forget the `.skb`?" in "\n".join(
         traceback.format_exception(exc.value, exc.value, exc.tb)
@@ -718,7 +712,6 @@ def test_mark_as_X_missing_cv():
         skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
 def test_missing_var_message():
     data_op = (
         skrub.var("a", "a value")
@@ -749,7 +742,6 @@ def test_missing_var_message():
     )
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
 def test_missing_var_message_train_test_split():
     b = skrub.var("b")
     X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
@@ -770,3 +762,41 @@ def test_missing_var_message_train_test_split():
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
     )
+
+
+def test_apply_deferred_func():
+    # Test warning / error when user erroneously combines skrub.deferred
+    # and .skb.apply_func (or applies deferred twice)
+
+    def f(x):
+        return x + 1
+
+    x = skrub.var("x")
+
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"(?s)deferred function was passed to \.skb\.apply_func\(\)"
+            r".*pass the original, undecorated function instead"
+        ),
+    ):
+        out = x.skb.apply_func(skrub.deferred(f))
+    assert out.skb.eval({"x": 10}) == 11
+
+    with pytest.warns(
+        UserWarning,
+        match=r"(?s)skrub\.deferred was applied twice.*only be applied once",
+    ):
+        deferred_f = skrub.deferred(skrub.deferred(f))
+    assert deferred_f(x).skb.eval({"x": 10}) == 11
+
+    # When a deferred function is wrapped inside a DataOp it cannot be
+    # inspected when building the graph. We only discover the mistake when
+    # evaluating the DataOp at which point it is too late to correct / unwrap,
+    # so we get an error instead of a warning.
+
+    with pytest.raises(Exception) as e:
+        x.skb.apply_func(skrub.as_data_op(skrub.deferred(f))).skb.eval({"x": 10})
+
+    full_msg = "\n".join(traceback.format_exception(e.value, e.value, e.tb))
+    assert "pass the original, undecorated function instead" in full_msg
