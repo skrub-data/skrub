@@ -1292,9 +1292,6 @@ class Value(DataOpImpl):
     def compute(self, e, mode, environment):
         return e.value
 
-    def preview_if_available(self):
-        return self.value
-
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
