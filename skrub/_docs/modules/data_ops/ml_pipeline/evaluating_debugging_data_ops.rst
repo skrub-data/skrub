@@ -34,5 +34,5 @@ displayed.
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
 they can be saved to a different location with the ``output_dir`` parameter.
 Note that the default path can be altered with the
-``SKRUB_DATA_DIR`` environment variable. See :ref:`user_guide_configuration_parameters`
+``SKB_DATA_DIRECTORY`` environment variable. See :ref:`user_guide_configuration_parameters`
 for more details.

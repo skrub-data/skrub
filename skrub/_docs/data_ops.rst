@@ -68,7 +68,7 @@ example:
    auto_tutorials/1111_data_ops_quick_tour
 
 
-Data Ops basic concepts
+DataOps basic concepts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
@@ -82,7 +82,7 @@ Data Ops basic concepts
    modules/data_ops/basics/control_flow
    modules/data_ops/basics/data_ops_vs_alternatives
 
-Building a complex pipeline with the skrub Data Ops
+Building a complex pipeline with the skrub DataOps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::

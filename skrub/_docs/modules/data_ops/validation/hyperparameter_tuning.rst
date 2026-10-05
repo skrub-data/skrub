@@ -216,7 +216,7 @@ Result:
 1       1.0       0.0       0.0
 2       0.0       1.0       0.0
 
-We can see the generated parameter grid with :func:`DataOps.skb.describe_param_grid()`.
+We can see the generated parameter grid with :func:`DataOp.skb.describe_param_grid()`.
 
 >>> X_enc.skb.apply(drop).skb.describe_param_grid()
 "- choose_from({'number': …, 'text': …}): ['number', 'text']\n"
