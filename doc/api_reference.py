@@ -227,6 +227,7 @@ API_REFERENCE = {
                     "DataOp.skb.get_data",
                     "DataOp.skb.set_data",
                     "DataOp.skb.get_vars",
+                    "DataOp.skb.get_choices",
                     "DataOp.skb.make_learner",
                     "DataOp.skb.make_grid_search",
                     "DataOp.skb.make_randomized_search",

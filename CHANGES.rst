@@ -11,6 +11,11 @@ Ongoing Development
 
 New Features
 ------------
+- :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
+  with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
+  :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
+  similar to what :meth:`DataOp.skb.get_vars` does for variables.
+  :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
