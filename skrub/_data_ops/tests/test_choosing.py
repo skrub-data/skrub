@@ -252,7 +252,9 @@ def test_choice_repr():
     <Value list>
     Result:
     ―――――――
-    [choose_from([1, 2]), optional(ndarray(...))]
+    [1, array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])]
 
     >>> skrub.optional(0, name='a')
     optional(0, name='a')
