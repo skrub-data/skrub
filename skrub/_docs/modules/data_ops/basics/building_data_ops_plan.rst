@@ -83,7 +83,7 @@ BinOp: mul
 
 On the other hand, working directly on ``df`` leads us to the same result, but
 the actual operations are not being tracked.
-By working only on DataOps we ensure that all the operations done on the data
+By working only with the DataOps we ensure that all the operations done on the data
 are added correctly to the computational graph, which then allows the resulting
 learner to execute all steps as intended.
 

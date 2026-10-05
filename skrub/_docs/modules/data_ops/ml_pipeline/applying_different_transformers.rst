@@ -58,7 +58,7 @@ Result:
 4    2
 Name: grade, dtype: int64
 
-Finally, we combine the resulting dataframe and series using another deferred
+Finally, we combine the resulting dataframe and series using a deferred
 function.
 
 >>> @skrub.deferred
