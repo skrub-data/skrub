@@ -655,7 +655,7 @@ def choose_bool(*, name=None, default=True):
 
 
 def _check_bounds(low, high, log):
-    if high < low:
+    if high <= low:
         raise ValueError(
             f"'high' must be greater than 'low', got low={low}, high={high}"
         )

@@ -129,14 +129,11 @@ _BIN_OPS = [
     "__sub__",
     "__truediv__",
     "__xor__",
-    "__and__",
     "__or__",
 ]
 
 _UNARY_OPS = [
     "__abs__",
-    "__all__",
-    "__concat__",
     "__inv__",
     "__invert__",
     "__not__",
