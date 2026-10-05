@@ -2,6 +2,7 @@ import pickle
 import re
 import traceback
 import types
+import warnings
 
 import numpy as np
 import pytest
@@ -719,8 +720,11 @@ def test_missing_var_message():
         + skrub.choose_from(["?", "!"], name="c")
     )
     learner = data_op.skb.make_learner()
-    with pytest.raises(KeyError) as exc:
-        learner.fit({"bad_key": "another value"})
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+        with pytest.raises(KeyError) as exc:
+            learner.fit({"bad_key": "another value"})
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
     assert "bad_key" in full_msg
     assert "var_b_name" not in full_msg
@@ -747,21 +751,63 @@ def test_missing_var_message_train_test_split():
     X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
     # 'z' is extra but not 'b', even though 'b' is not needed for collecting X
     # it still exists in the DataOp as a whole.
-    with pytest.raises(KeyError, match=r"\['z'\]"):
-        X.skb.train_test_split({"z": 0, "b": 1})
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+        with pytest.raises(KeyError, match=r"\['z'\]"):
+            X.skb.train_test_split({"z": 0, "b": 1})
     # check that we still get the correct error when the env contains int (ID)
     # keys
-    with pytest.raises(KeyError, match=r"\['z'\]") as exc:
-        X.skb.train_test_split({"z": 0, b.skb.id: 1})
-    with pytest.raises(KeyError) as exc:
-        X.skb.train_test_split()
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+
+        with pytest.raises(KeyError, match=r"\['z'\]") as exc:
+            X.skb.train_test_split({"z": 0, b.skb.id: 1})
+        with pytest.raises(KeyError) as exc:
+            X.skb.train_test_split()
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
-    print(full_msg)
     assert "No value has been provided for 'a'" in full_msg
     assert (
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
     )
+
+
+def test_extra_key_warning():
+    a = skrub.var("a")
+    with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
+        a.skb.eval({"a": 0, "this_is_an_extra_key": 0})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        a.skb.eval(
+            {"a": 0, "this_is_an_extra_key": 0, "_skrub_ignore_extra_keys": True}
+        )
+
+
+def test_extra_key_warning_sub_data_op():
+    b = skrub.var("b")
+    X = (skrub.var("x") + skrub.var("a")).skb.mark_as_X() + b
+    # even though 'b' is not needed for collecting X
+    # it still exists in the DataOp as a whole so we should not get the warning
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        X.skb.train_test_split({"x": np.arange(20), "a": 0, "b": 1})
+    with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
+        X.skb.train_test_split(
+            {"x": np.arange(20), "a": 0, "b": 1, "this_is_an_extra_key": 0}
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        X.skb.train_test_split(
+            {
+                "x": np.arange(20),
+                "a": 0,
+                "b": 1,
+                "this_is_an_extra_key": 0,
+                "_skrub_ignore_extra_keys": True,
+            }
+        )
 
 
 def test_apply_deferred_func():
