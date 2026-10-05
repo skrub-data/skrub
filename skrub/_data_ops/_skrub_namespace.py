@@ -2412,7 +2412,7 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.GridSearchCV``.
+            ``sklearn.model_selection.GridSearchCV``.
 
         Returns
         -------
@@ -3324,10 +3324,10 @@ class SkrubNamespace:
         -----
         If this method is used several times, all calls to it must be grouped
         -- there can be no other nodes in-between. For example
-        ``pred.skb.score_with('accuracy').skb.score_with('roc_auc')`` is allowed,
+        ``pred.skb.with_scoring('accuracy').skb.with_scoring('roc_auc')`` is allowed,
         whereas
-        ``pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`` is not.
-        Typically all the ``score_with`` calls happen at the very end of the
+        ``pred.skb.with_scoring('accuracy').skb.apply_func(a_function).skb.with_scoring('roc_auc')`` is not.
+        Typically all the ``with_scoring`` calls happen at the very end of the
         DataOp construction.
 
         Examples

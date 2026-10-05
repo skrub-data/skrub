@@ -144,7 +144,7 @@ To use Optuna with a :class:`DataOp`, we just need to pass the Trial object
 to :meth:`DataOp.skb.make_learner`. This creates a :class:`SkrubLearner`
 initialized with the parameters picked by the optuna Trial.
 
-We can then cross-validate the:class:`SkrubLearner`, or score it however we prefer,
+We can then cross-validate the :class:`SkrubLearner`, or score it however we prefer,
 and return the score so that the optuna Study can take it into account.
 
 Here we return a single score (R²), but multi-objective

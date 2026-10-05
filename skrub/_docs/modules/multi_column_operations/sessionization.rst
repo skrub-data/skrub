@@ -65,7 +65,7 @@ within the training set at training time, and the test set at predict time. To
 ensure this is the case, any code that performs aggregation can be wrapped in a
 scikit-learn |BaseEstimator| (as shown in the
 :ref:`SessionEncoder example <sphx_glr_auto_examples_0110_session_encoder.py>`),
-otherwise the pipeline should use the skrub :ref:`Data Ops framework<user_guide_data_ops_plan>`.
+otherwise the pipeline should use the skrub :ref:`DataOps framework <user_guide_data_ops_plan>`.
 
 The |SessionEncoder| includes the ``suffix`` parameter (by default
 ``suffix="session_id"``) to specify what the name of the new column should be.
