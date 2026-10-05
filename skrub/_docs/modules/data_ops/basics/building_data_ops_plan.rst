@@ -42,7 +42,7 @@ new data:
 17
 
 When using DataOps, it is important to ensure that all operations are being tracked
-by acting on the DataOps, rather than (for example) the starting dataframe.
+by acting on the DataOp, rather than (for example) the starting dataframe.
 Consider the following example:
 
 >>> import pandas as pd
