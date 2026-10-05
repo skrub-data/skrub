@@ -237,7 +237,7 @@ salary = full_data["current_annual_salary"].skb.mark_as_y()
 
 from sklearn.preprocessing import TargetEncoder
 
-n_components = skrub.choose_int(10, 80, name="n_components")  # choose int in [10, 80[
+n_components = skrub.choose_int(10, 80, name="n_components")  # choose int in [10, 80]
 
 encoder = skrub.choose_from(  # choosing between 2 different estimators
     {

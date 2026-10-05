@@ -49,7 +49,7 @@ data
 #    By default subsampling is applied *only for previews*: the results
 #    shown when we display the plan, and the output of calling
 #    :meth:`.skb.preview() <DataOp.skb.preview>`. For other methods such as
-#    :meth:`.skb.get_learner() <DataOp.skb.get_learner>` or
+#    :meth:`.skb.make_learner() <DataOp.skb.make_learner>` or
 #    :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`, *no subsampling is
 #    done by default*. We can explicitly ask for it with ``keep_subsampling=True``
 #    as we will see below. Even when ``keep_subsampling=True``, subsampling is
