@@ -3,23 +3,22 @@
 The dispatch-based dataframe API
 =================================
 
-skrub can be used with both pandas and polars dataframes without
+skrub can be used with both pandas and polars dataframes-without
 requiring users to change how they interact with the library.
 That is to say that when you pass a dataframe to a skrub function,
-it automatically detects which dataframe library (i.e. which backend) is
-being used and provides equivalent behavior, even though pandas
+it automatically detects which library created the dataframe (i.e. which
+backend) and provides equivalent behavior, even though pandas
 and polars have different syntax (ie. their APIs). The user does not have
-to think about which type of dataframe is being inputted, which
-is all handled internally by the skrub library.
+to think about which type of dataframe is being inputted, it is all
+handled internally by the skrub library.
 
-Now a simple way to implement this would be to have separate code
-blocks in every skrub function for each condition
-(e.g. ``if pandas ... else polars ...``) however this is quite
-cumbersome, and is not super extensible (what if we wanted to add
-support for another dataframe library?). Instead, all the library specific
-behavior is encapsulated into a dispatch layer that selects the right
-implementation at call time. For most functions, this will be done
-using the ``sbd`` module.
+A straightforward implementation approach would be to include conditional code
+blocks in every skrub function to handle each backend separately
+(e.g. ``if pandas ... else polars ...``). However, this does not scale well
+(what if we wanted to add support for another dataframe library?). Instead,
+library-specific behavior is encapsulated into a dispatch layer that selects
+the appropriate implementation at call time. For most functions, this is
+accomplished through the ``sbd`` module.
 
 This guide explains how to use these generic (or backend-agnostic)
 ``sbd`` functions to write robust skrub functions that work with
@@ -32,26 +31,35 @@ both pandas and polars.
 Using the dispatch API as ``sbd``
 -------------
 
-Throughout skrub, we use a common dataframe module so that all functions are
-written with one internal implementation and where any backend-specific
-behavior is handled within the dispatch layer. The most common usage is
-to import the module under the alias ``sbd`` (or occasionally ``ns`` in
-older code and docstrings):
+Throughout skrub, a common dataframe module is used to ensure that all functions
+are written with a single internal implementation, with library-specific
+behavior handled within the dispatch layer. At runtime, this dispatch layer
+determines which dataframe backend is in use and executes the corresponding
+implementation. The module is typically imported under the alias ``sbd`` (or
+occasionally ``ns`` in older code and docstrings):
 
 .. code-block:: python
 
     import skrub._dataframe as sbd
 
-This is a private module; it is not part of the public skrub API.
+This is a private module; it is not part of the public skrub API. The functions
+within this module are for internal use by skrub developers.
 
-All public functions are re-exported from ``skrub/_dataframe/__init__.py``
-via ``from ._common import *``.  They are grouped conceptually in
-``_common.__all__``.
+Most dispatch functions are defined in ``skrub/_dataframe/_common.py`` and
+re-exported from ``skrub/_dataframe/__init__.py`` via ``from ._common import *``
+for convenience. They are grouped conceptually in ``_common.__all__``.
+Some encoders and transformers define additional dispatch functions
+in their own modules (e.g. ``_datetime_encoder.py`` and ``_to_float.py``) that
+are not part of ``skrub._dataframe`` but follow the same dispatch pattern.
 
 Once imported, the ``sbd`` module can be used to perform dataframe operations
-such as getting column names, or checking the type of dataframe.
+such as getting column names, or checking the type of dataframe. More
+information on building custom functions using the dispatch API is provided
+below.
 
-For example, compare the two approaches (first handling both pandas and
+**Example: Using the dispatch API**
+
+Compare the two approaches (first handling both pandas and
 polars cases for each method) versus using ``sbd``:
 
 .. code-block:: python
