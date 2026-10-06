@@ -489,8 +489,6 @@ def _check_environment(environment, unused_names):
             "To avoid this warning, remove the extra keys from the environment\n"
             f"or add {{'{IGNORE_EXTRA_KEYS_NAME}': True}} to the environment.\n"
             "You can get all the names used in a DataOp (valid keys in the env) with:\n"
-            # TODO: note: get_choices does not exist yet, this branch needs to
-            # be merged after adding it.
             "list(data_op.skb.get_vars(all_named_ops=True) | "
             "data_op.skb.get_choices(named_only=True))\n"
             "In a future version of skrub this warning may become an exception.\n",
