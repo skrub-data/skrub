@@ -11,7 +11,6 @@ Version: 0.1.0
 
 from __future__ import annotations
 
-import platform
 from dataclasses import dataclass, field
 
 import sklearn
@@ -141,107 +140,6 @@ def _to_new_tags(old_tags, estimator=None):
         _skip_test=old_tags["_skip_test"],
     )
 
-
-########################################################################################
-# Upgrading for scikit-learn 1.5
-########################################################################################
-
-
-if sklearn_version < parse_version("1.5"):
-    # chunking
-    # extmath
-    # fixes
-    from sklearn.utils import (
-        _IS_32BIT,
-        _approximate_mode,
-        _in_unstable_openblas_configuration,
-        gen_batches,
-        gen_even_slices,
-        get_chunk_n_rows,
-        safe_sqr,
-    )
-    from sklearn.utils import _chunk_generator as chunk_generator
-
-    _IS_WASM = platform.machine() in ["wasm32", "wasm64"]
-    # indexing
-    # mask
-    # missing
-    # optional dependencies
-    # user interface
-    # validation
-    from sklearn.utils import (
-        _determine_key_type,
-        _get_column_indices,
-        _print_elapsed_time,
-        _safe_assign,
-        _safe_indexing,
-        _to_object_array,
-        axis0_safe_slice,
-        check_matplotlib_support,
-        check_pandas_support,
-        indices_to_mask,
-        is_scalar_nan,
-        resample,
-        safe_mask,
-        shuffle,
-    )
-    from sklearn.utils import _is_pandas_na as is_pandas_na
-else:
-    # chunking
-    from sklearn.utils._chunking import (
-        chunk_generator,  # noqa: F401
-        gen_batches,  # noqa: F401
-        gen_even_slices,  # noqa: F401
-        get_chunk_n_rows,  # noqa: F401
-    )
-
-    # indexing
-    from sklearn.utils._indexing import (
-        _determine_key_type,  # noqa: F401
-        _get_column_indices,  # noqa: F401
-        _safe_assign,  # noqa: F401
-        _safe_indexing,  # noqa: F401
-        resample,  # noqa: F401
-        shuffle,  # noqa: F401
-    )
-
-    # mask
-    from sklearn.utils._mask import (
-        axis0_safe_slice,  # noqa: F401
-        indices_to_mask,  # noqa: F401
-        safe_mask,  # noqa: F401
-    )
-
-    # missing
-    from sklearn.utils._missing import (
-        is_pandas_na,  # noqa: F401
-        is_scalar_nan,  # noqa: F401
-    )
-
-    # optional dependencies
-    from sklearn.utils._optional_dependencies import (  # noqa: F401
-        check_matplotlib_support,
-        check_pandas_support,
-    )
-
-    # user interface
-    from sklearn.utils._user_interface import _print_elapsed_time  # noqa: F401
-
-    # extmath
-    from sklearn.utils.extmath import (
-        _approximate_mode,  # noqa: F401
-        safe_sqr,  # noqa: F401
-    )
-
-    # fixes
-    from sklearn.utils.fixes import (
-        _IS_32BIT,  # noqa: F401
-        _IS_WASM,  # noqa: F401
-        _in_unstable_openblas_configuration,  # noqa: F401
-    )
-
-    # validation
-    from sklearn.utils.validation import _to_object_array  # noqa: F401
 
 ########################################################################################
 # Upgrading for scikit-learn 1.6

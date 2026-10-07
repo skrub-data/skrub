@@ -1,12 +1,17 @@
 import base64
 import copy
 import datetime
+import functools
+import hashlib
 import html
+import inspect
 import io
+import linecache
 import numbers
 import re
 import shutil
 import sys
+import traceback
 import uuid
 import webbrowser
 from pathlib import Path
@@ -14,17 +19,16 @@ from pathlib import Path
 import jinja2
 import numpy as np
 import pydot
-from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import Repr, format_duration, random_string, short_repr
+from .._utils import PassThrough, Repr, format_duration, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice, Choice
-from ._data_ops import Apply, SplitX, Value, Var
+from ._choosing import BaseChoice, BaseNumericChoice, Choice
+from ._data_ops import Apply, Call, DataOp, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 
@@ -102,19 +106,120 @@ def _get_output_dir(output_dir, overwrite):
     return output_dir
 
 
-def _node_status(data_op_graph, mode):
+def _node_status(data_op_graph, mode, eval):
     status = {}
     for node_id, node in data_op_graph["nodes"].items():
-        if mode in node._skrub_impl.results:
+        if not eval:
+            status[node_id] = "global_no_eval"
+        elif mode in node._skrub_impl.results:
             status[node_id] = "success"
         elif mode in node._skrub_impl.errors:
             status[node_id] = "error"
         else:
-            status[node_id] = "none"
+            status[node_id] = "skipped"
     return status
 
 
-def full_report(
+# Some utilities for retrieving the source code for applied functions and
+# estimators, and for lines of code in the DataOp's definition stack trace. The
+# overall strategy is to get the source lines for a file from linecache, and do
+# a small sanity check by comparing the resulting source code with something we
+# already have from the DataOp itself: the `__name__` for functions & estimator
+# types, or the recorded `line` for DataOp creation stack frame summaries.
+
+
+def _read_source(source_path):
+    lines = linecache.getlines(str(source_path))
+    if not lines:
+        # e.g. files like <python-input-0> (interactive repl), whose source (in
+        # python >= 3.13) is only available from the code object
+        raise OSError(f"Could not find source code for {source_path}")
+    return lines
+
+
+def _add_source_file(source_path, source_lines, output_dir):
+    source_path = Path(source_path)
+    path_hash = hashlib.sha256(str(source_path).encode("utf-8")).hexdigest()
+    python_dir = output_dir / "python"
+    python_dir.mkdir(exist_ok=True)
+    target_file_name = f"{path_hash}.html"
+    target_path = python_dir / target_file_name
+    if not target_path.is_file():
+        page_html = _get_template("python_module.html").render(
+            {
+                "python_source_code": "".join(source_lines),
+                "source_file": str(source_path),
+                "module_name": source_path.stem,
+            }
+        )
+        target_path.write_text(page_html, "utf-8")
+    return f"python/{target_file_name}"
+
+
+def _get_source_url(obj, output_dir):
+    if isinstance(obj, DataOp):
+        return None
+    if not callable(obj):
+        return None
+    try:
+        obj = inspect.unwrap(obj)
+        # same file as the one used by inspect.findsource (getsourcefile
+        # returns None for eg "<...>" files that are not in the linecache)
+        source_path = inspect.getsourcefile(obj) or inspect.getfile(obj)
+        lines, line_no = inspect.getsourcelines(obj)
+        if obj.__name__ == "<lambda>":
+            definition = r"\blambda\b"
+        else:
+            definition = rf"\b(?:def|class)\s+{re.escape(obj.__name__)}\b"
+        if not re.search(definition, "".join(lines)):
+            # the file or line number do not match the definition of obj, eg
+            # it is a func serialized by value in a cloudpickle dump and
+            # inspect is returning the source lines for the file where the
+            # cloudpickle was loaded, or the file has been modified since obj
+            # was defined.
+            return None
+        source_lines = _read_source(source_path)
+        source_file_url = _add_source_file(source_path, source_lines, output_dir)
+        return f"{source_file_url}#L{line_no}"
+    except Exception:
+        return None
+
+
+def _get_stack_info(stack, output_dir):
+    if not stack:
+        return []
+    result = []
+    for frame_summary in traceback.StackSummary.from_list(stack):
+        try:
+            filename, lineno = frame_summary.filename, frame_summary.lineno
+            source_lines = _read_source(filename)
+            # e.g. loaded from a pickle: the file may not be the one used to
+            # record the stack. Note FrameSummary lines are strip()-ped
+            if frame_summary.line != source_lines[lineno - 1].strip():
+                raise ValueError("source file does not match the recorded stack")
+            source_file_url = _add_source_file(filename, source_lines, output_dir)
+            url = f"{source_file_url}#L{lineno}"
+        except Exception:
+            url = None
+        result.append({"url": url, "frame": frame_summary})
+    return result
+
+
+# Objects for which we don't show a docstring or link to source code.
+# str, None, PassThrough can come from .skb.apply('passthrough'), .skb.apply(None)
+_NO_DOC_OR_SOURCE = (DataOp, BaseChoice, str, type(None), PassThrough)
+
+
+def _get_doc(obj):
+    if isinstance(obj, _NO_DOC_OR_SOURCE):
+        return None
+    # show the wrapped function's docstring rather than that of the partial class
+    while isinstance(obj, functools.partial):
+        obj = obj.func
+    return inspect.getdoc(obj) or ""
+
+
+def report(
     data_op,
     environment=None,
     mode="preview",
@@ -123,11 +228,12 @@ def full_report(
     output_dir=None,
     overwrite=False,
     title=None,
+    eval=True,
 ):
     if clear:
         clear_results(data_op, mode)
     try:
-        return _make_full_report(
+        return _make_report(
             data_op,
             environment=environment,
             mode=mode,
@@ -135,13 +241,14 @@ def full_report(
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
     finally:
         if clear:
             clear_results(data_op, mode)
 
 
-def _make_full_report(
+def _make_report(
     data_op,
     environment=None,
     mode="preview",
@@ -149,19 +256,24 @@ def _make_full_report(
     output_dir=None,
     overwrite=False,
     title=None,
+    eval=True,
 ):
     output_dir = _get_output_dir(output_dir, overwrite)
-    try:
-        # TODO dump report in callback instead of evaluating full DataOps plan
-        # first, so that we can clear intermediate results.
-        # See evaluate's `callback` parameter
-        result = evaluate(data_op, mode=mode, environment=environment, clear=False)
-        evaluate_error = None
-    except Exception as e:
+    if eval:
+        try:
+            # TODO dump report in callback instead of evaluating full DataOps plan
+            # first, so that we can clear intermediate results.
+            # See evaluate's `callback` parameter
+            result = evaluate(data_op, mode=mode, environment=environment, clear=False)
+            evaluate_error = None
+        except Exception as e:
+            result = None
+            evaluate_error = e
+    else:
         result = None
-        evaluate_error = e
+        evaluate_error = None
     g = graph(data_op)
-    node_status = _node_status(g, mode)
+    node_status = _node_status(g, mode, eval=eval)
     node_rindex = {id(node): k for k, node in g["nodes"].items()}
 
     def node_name_to_url(node_name):
@@ -174,7 +286,7 @@ def _make_full_report(
     svg = graph_drawing.html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status, "report_title": title}
+        {"svg": svg, "node_status": node_status, "report_title": title, "eval": eval}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
@@ -215,16 +327,39 @@ def _make_full_report(
             }
             for n in g["parents"].get(i, [])
         ]
+        source_url = None
         if isinstance(node._skrub_impl, Apply):
-            estimator = getattr(
+            outer_estimator = getattr(
                 node._skrub_impl, "estimator_", node._skrub_impl.estimator
             )
-            if isinstance(estimator, BaseEstimator):
-                estimator_html_repr = estimator._repr_html_()
+            if getattr(node._skrub_impl, "estimator_was_wrapped_", False):
+                # unwrap the ApplyToCols
+                estimator = outer_estimator.transformer
             else:
+                estimator = outer_estimator
+            estimator_doc = _get_doc(estimator)
+            if isinstance(estimator, _NO_DOC_OR_SOURCE):
                 estimator_html_repr = None
+                estimator_type = None
+            else:
+                estimator_type = estimator.__class__.__name__
+                try:
+                    estimator_html_repr = outer_estimator._repr_html_()
+                except Exception:
+                    estimator_html_repr = None
+                source_url = _get_source_url(estimator.__class__, output_dir)
         else:
             estimator_html_repr = None
+            estimator_doc = None
+            estimator_type = None
+        if isinstance(node._skrub_impl, Call):
+            source_url = _get_source_url(node._skrub_impl.func, output_dir)
+            applied_func_name = node._skrub_impl.get_func_name()
+            applied_func_doc = _get_doc(node._skrub_impl.func)
+        else:
+            applied_func_name = None
+            applied_func_doc = None
+
         # TODO:
         #  - edit attributes to show node status (error, skipped)
         #  - edit instead of copy?
@@ -248,7 +383,9 @@ def _make_full_report(
                 error_msg=error_msg,
                 eval_duration=eval_duration,
                 env_key=env_key,
-                node_creation_stack_description=node._skrub_impl.creation_stack_description(),
+                node_creation_stack_info=_get_stack_info(
+                    node._skrub_impl.creation_stack(), output_dir
+                ),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
                 node_uuid=node._skrub_impl.uuid,
@@ -256,7 +393,13 @@ def _make_full_report(
                 is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
                 node_status=node_status,
+                estimator_type=estimator_type,
                 estimator_html_repr=estimator_html_repr,
+                estimator_doc=estimator_doc,
+                source_url=source_url,
+                applied_func_name=applied_func_name,
+                applied_func_doc=applied_func_doc,
+                eval=eval,
             )
         )
         out = output_dir / f"node_{i}.html"

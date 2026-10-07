@@ -27,6 +27,7 @@ from skrub._table_vectorizer import (
 )
 from skrub._to_float import ToFloat
 from skrub._to_str import ToStr
+from skrub._utils import PassThrough
 from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -593,36 +594,6 @@ def test_cleaner_invalid_cast_to_float32(df_module):
         Cleaner(cast_to_float32="wrong").fit_transform(X)
     with pytest.raises(TypeError, match="cast_to_float32.*must be a boolean"):
         Cleaner(cast_to_float32=None).fit_transform(X)
-
-
-def test_cleaner_numeric_dtype_deprecation(df_module):
-    X = df_module.make_dataframe(
-        {
-            "str_float": ["1.5", "2.5", "3.5"],
-            "float_col": [1.5, 2.5, 3.5],
-            "int_col": [1, 2, 3],
-        }
-    )
-    # Setting numeric_dtype="float32" should raise a DeprecationWarning ...
-    with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
-        out = Cleaner(numeric_dtype="float32").fit_transform(X)
-
-    # ... and behave identically to cast_to_float32=True and parse_numbers=True
-    expected = Cleaner(cast_to_float32=True, parse_numbers=True).fit_transform(X)
-    df_module.assert_frame_equal(out, expected)
-
-
-def test_cleaner_invalid_numeric_dtype(df_module):
-    X = _get_clean_dataframe(df_module)
-    with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
-        with pytest.raises(TypeError, match="Unsupported value for `numeric_dtype`"):
-            Cleaner(numeric_dtype="wrong").fit_transform(X)
-
-
-def test_cleaner_drop_if_unique_deprecation(df_module):
-    X = df_module.make_dataframe({"a": ["x", "y", "z"], "b": [1, 2, 3]})
-    with pytest.warns(DeprecationWarning, match="drop_if_unique.*deprecated"):
-        Cleaner(drop_if_unique=True).fit_transform(X)
 
 
 def test_cleaner_get_feature_names_out(df_module):
@@ -1277,3 +1248,119 @@ def test_duration_to_float(df_module):
     vectorizer = Cleaner()
     transformed = vectorizer.fit_transform(df)
     df_module.assert_column_equal(transformed["duration"], df["duration"])
+
+
+def make_test_df(df_module):
+    # The following lines help create a dummy dataset, containing columns
+    # of various types (numeric, datetime etc.) and a series of identical
+    # "passthrough columns" as defined here:
+
+    passthrough_column = [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "indigo",
+        "violet",
+    ]
+
+    df_dict = {
+        "numbers": [1, 2, 3, 4, 5, 6, None],
+        "low_card": ["up", "up", "up", "down", "down", "up", "down"],
+        "datetime": [
+            "2026-06-01",
+            "2026-06-04",
+            "2026-07-03",
+            "2026-05-29",
+            "2026-01-08",
+            "2026-06-20",
+            None,
+        ],
+        "uninformative": [False, False, False, False, False, False, False],
+    }
+    for i in range(1, 6):
+        df_dict[f"passthrough_{i}"] = passthrough_column
+
+    return df_module.make_dataframe(df_dict)
+
+
+@pytest.mark.parametrize("with_specific", [(True), (False)])
+def test_list_transformations_vectorizer(with_specific, df_module):
+    df = make_test_df(df_module)
+    vectorizer = TableVectorizer(
+        specific_transformers=[
+            (PassThrough(), [f"passthrough_{i}" for i in range(1, 6)])
+        ]
+        if with_specific
+        else [],
+        cardinality_threshold=3,
+    )
+    _ = vectorizer.fit_transform(df)
+    vectorizer_output = vectorizer.describe_transformations(max_cols=3)
+    n_null = 7 if not with_specific else 2
+    extra_null_lines = "    - passthrough_1\n    - ...\n" if not with_specific else ""
+
+    common_block = f"""Preprocessors
+=============
+Null values cleaned ({n_null} columns):
+    - low_card
+    - datetime
+{extra_null_lines}
+Processors by type
+==================
+PassThrough (numeric - 2 columns):
+    - numbers
+    - uninformative
+DatetimeEncoder (datetime - 1 columns):
+    - datetime
+OneHotEncoder (low_cardinality - 1 columns):
+    - low_card"""
+
+    extra_block = (
+        """
+No high_cardinality columns have been detected.
+
+Specific transformers
+=====================
+PassThrough (specific - 5 columns):
+    - passthrough_1
+    - passthrough_2
+    - passthrough_3
+    - ..."""
+        if with_specific
+        else """
+StringEncoder (high_cardinality - 5 columns):
+    - passthrough_1
+    - passthrough_2
+    - passthrough_3
+    - ..."""
+    )
+
+    expected_vectorizer_output = common_block + extra_block
+
+    for output, expected in zip(
+        vectorizer_output.split("\n"), expected_vectorizer_output.split("\n")
+    ):
+        assert output == expected
+
+
+def test_list_transformations_cleaner(df_module):
+    df = make_test_df(df_module)
+    vectorizer = Cleaner(drop_if_constant=True)
+    _ = vectorizer.fit_transform(df)
+
+    cleaner_output = vectorizer.describe_transformations(max_cols=3)
+
+    expected_cleaner_output = """Null values cleaned (7 columns):
+    - low_card
+    - datetime
+    - passthrough_1
+    - ...
+DropUninformative (1 columns):
+    - uninformative"""
+
+    for output, expected in zip(
+        cleaner_output.split("\n"), expected_cleaner_output.split("\n")
+    ):
+        assert output == expected
