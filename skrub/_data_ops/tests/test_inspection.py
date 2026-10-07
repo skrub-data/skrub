@@ -1,3 +1,4 @@
+import base64
 import builtins
 import functools
 import linecache
@@ -465,6 +466,20 @@ def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
     assert "Graphviz.load" in skrub.as_data_op(0).skb.draw_graph().html
+
+
+def test_js_rendering_font():
+    # The wasm graphviz cannot measure "sans-serif" text, so an explicit font
+    # is used for the dot source sent to the browser, but not for native
+    # rendering.
+    drawing = skrub.as_data_op(0).skb.draw_graph()
+    native_dot = drawing.graph.to_string()
+    assert "sans-serif" in native_dot
+    js_dot = base64.b64decode(drawing._base64()).decode("utf-8")
+    assert "sans-serif" not in js_dot
+    assert f"fontname={_inspection._JS_FONT_FAMILY}" in js_dot
+    # the graph itself was not modified
+    assert drawing.graph.to_string() == native_dot
 
 
 def test_repr_html_no_graphviz(monkeypatch):

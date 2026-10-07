@@ -4,7 +4,11 @@
  const dot = new TextDecoder().decode(Uint8Array.from(atob("{{ dot_base64 }}"), c => c.charCodeAt(0)));
  try {
      const graphviz = await Graphviz.load();
-     document.getElementById("{{ uuid }}").innerHTML = graphviz.dot(dot);
+     const container = document.getElementById("{{ uuid }}");
+     // graphviz only outputs the single family it was given; add fallbacks.
+     container.innerHTML = graphviz.dot(dot).replaceAll(
+         'font-family="Arial"', 'font-family="Arial,Helvetica,sans-serif"');
+     container.dispatchEvent(new CustomEvent("graph-rendered", {bubbles: true}));
  } catch (err) {
      document.getElementById("{{ uuid }}").textContent = "Error: " + err.message;
  }

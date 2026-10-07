@@ -282,7 +282,7 @@ def _make_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    graph_drawing = draw_data_op_graph(data_op, url=make_url)
+    graph_drawing = draw_data_op_graph(data_op, url=make_url, target="node-frame")
     svg = graph_drawing.html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
@@ -360,16 +360,6 @@ def _make_report(
             applied_func_name = None
             applied_func_doc = None
 
-        # TODO:
-        #  - edit attributes to show node status (error, skipped)
-        #  - edit instead of copy?
-        #  - rename svg to graph_drawing_fragment
-        #  - no need for highlightcurrentnode javascript function anymore
-        graph_drawing_copy = copy.deepcopy(graph_drawing)
-        dot_node = graph_drawing_copy.graph.get_node(_dot_id(i))[0]
-        dot_node.set_fillcolor("#15ed8f")
-        dot_node.set_style("filled")
-        svg = graph_drawing_copy.html_fragment
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,
@@ -391,8 +381,6 @@ def _make_report(
                 node_uuid=node._skrub_impl.uuid,
                 node_type=node._skrub_impl.__class__.__name__,
                 is_var=isinstance(node._skrub_impl, Var),
-                svg=svg,
-                node_status=node_status,
                 estimator_type=estimator_type,
                 estimator_html_repr=estimator_html_repr,
                 estimator_doc=estimator_doc,
@@ -413,6 +401,19 @@ def _make_report(
     return output
 
 
+# Font used for node labels when the graph is laid out by the wasm build of
+# graphviz in the browser. That build has no fontconfig and cannot measure
+# text: it estimates widths from a few well-known family names (Arial,
+# Helvetica, Times, Courier) and uses rough defaults for anything else (such as
+# the generic "sans-serif" used for native rendering, or a list of families),
+# so labels can overflow their boxes. Arial is estimated accurately, and
+# browsers render it with Arial or a metric-compatible font (Liberation Sans,
+# Arimo). "Helvetica" is estimated just as well but Firefox on Linux does not
+# map it to a metric-compatible font. The render_dot_fragment.html template
+# appends generic fallbacks to the font-family of the resulting SVG.
+_JS_FONT_FAMILY = "Arial"
+
+
 class GraphDrawing:
     def __init__(self, graph, force_js_rendering=False):
         self.graph = graph
@@ -422,7 +423,10 @@ class GraphDrawing:
         return self.force_js_rendering or not _utils.has_graphviz()
 
     def _base64(self):
-        dot = self.graph.to_string().encode("utf-8")
+        graph = copy.deepcopy(self.graph)
+        for node in graph.get_nodes():
+            node.set_fontname(_JS_FONT_FAMILY)
+        dot = graph.to_string().encode("utf-8")
         return base64.b64encode(dot).decode("ascii")
 
     @property
@@ -477,7 +481,12 @@ class GraphDrawing:
         return f"<{self.__class__.__name__}: use .open() to display>"
 
 
-def _node_kwargs(data_op, *, url=None, show_ids=False):
+def _node_kwargs(data_op, *, url=None, target=None, show_ids=False):
+    # `url` is a function mapping a node to the address of the page the node
+    # links to (graphviz's "URL" attribute: where the link goes). `target` is
+    # the name of the browsing context (e.g. an iframe) in which that page is
+    # opened (graphviz's "target" attribute: where the link opens). It is only
+    # used for nodes that have a link, so it has no effect without `url`.
     impl = data_op._skrub_impl
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
@@ -503,6 +512,8 @@ def _node_kwargs(data_op, *, url=None, show_ids=False):
         label = f"{label}\nid: {impl.uuid}"
     if url is not None and (computed_url := url(data_op)) is not None:
         kwargs["URL"] = computed_url
+        if target is not None:
+            kwargs["target"] = target
         label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
@@ -522,11 +533,13 @@ def _dot_id(n):
     return f"node_{n}"
 
 
-def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
+def draw_data_op_graph(
+    data_op, *, url=None, target=None, direction="TB", show_ids=False
+):
     g = graph(data_op)
     dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
-        kwargs = _node_kwargs(e, url=url, show_ids=show_ids)
+        kwargs = _node_kwargs(e, url=url, target=target, show_ids=show_ids)
         kwargs["id"] = _dot_id(node_id)
         node = pydot.Node(_dot_id(node_id), **kwargs)
         dot_graph.add_node(node)
