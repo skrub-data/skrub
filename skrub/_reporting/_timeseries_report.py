@@ -11,7 +11,8 @@ import polars as pl
 from plotly.express.colors import qualitative
 from plotly.subplots import make_subplots
 
-from .. import Cleaner, SelectCols
+from .. import Cleaner, DatetimeEncoder, SelectCols, ToDatetime
+from .. import _dataframe as sbd
 from .. import selectors as s
 
 
@@ -50,35 +51,42 @@ def calculate_label_width(name, char_width_px=10):
 
 
 def lttb(x, y, threshold=20):
-    # Convert Polars to pandas if needed
-    if hasattr(x, "to_pandas"):
-        x = x.to_pandas()
-    if hasattr(y, "to_pandas"):
-        y = y.to_pandas()
+    """Downsample time series data using the Largest Triangle Three
+    Buckets (LTTB) algorithm.
 
-    # Ensure they're pandas Series
-    if not isinstance(x, pd.Series):
-        x = pd.Series(x)
-    if not isinstance(y, pd.Series):
-        y = pd.Series(y)
+    Args:
+        x (pd.Series): Time series data (datetime or numeric).
+        y (pd.Series): Corresponding values.
+        threshold (int): Number of points to downsample to.
+
+    Returns:
+        tuple: Downsampled x and y as pd.Series.
+    """
 
     threshold = threshold
-    delta = (y.shape[0] - 2) / (threshold - 2)
+    n_data = sbd.shape(y)[0]
+    delta = (n_data - 2) / (threshold - 2)
     delta
-    # %%
-    for i in range(0, y.shape[0]):
-        print(i, int(np.floor(i * delta)))
-    # %%
+
     bin_edges = [int(np.floor(i * delta)) + 1 for i in range(1, threshold - 1)]
-    bin_edges.append(y.shape[0] - 1)
+    bin_edges.append(n_data - 1)
     bin_edges
-    # %%
-    # Convert datetime to numeric (int64 nanoseconds)
-    if pd.api.types.is_datetime64_any_dtype(x):
-        x = pd.Series(x.astype("int64"))
-    else:
-        x = pd.Series(pd.to_datetime(x, unit="us").astype("int64"))
-    downsampled = [(x.iloc[0], y.iloc[0])]
+    breakpoint()
+    try:
+        to_dt = ToDatetime(format=None)
+        to_dt.fit(x)
+        format = to_dt.format_
+        x = to_dt.transform(x)
+    except Exception:
+        print("x couldn't be transformed")
+    x_encoded = DatetimeEncoder(resolution=None, add_total_seconds=True).fit_transform(
+        x
+    )
+    # Extract total_seconds column (last column) as 1D array
+    x = np.asarray(x_encoded)[:, -1]
+    y = np.asarray(y)
+
+    downsampled = [(x[0], y[0])]
     for i in range(1, len(bin_edges[:-2])):
         index = lambda idx: bin_edges[idx]
         triangle = lambda p1, p2, p3: abs(
@@ -86,14 +94,14 @@ def lttb(x, y, threshold=20):
         )
 
         j = i + 1
-        x_bucket = x.iloc[index(i) : index(j)]
-        y_bucket = y.iloc[index(i) : index(j)]
+        x_bucket = x[index(i) : index(j)]
+        y_bucket = y[index(i) : index(j)]
 
         # print("x_bucket", x_bucket)
         # print("y_bucket", y_bucket)
         # print("centroid_x", x[index(j):index(j+1)])
-        centroid_x = x.iloc[index(j) : index(j + 1)].mean()
-        centroid_y = y.iloc[index(j) : index(j + 1)].mean()
+        centroid_x = x[index(j) : index(j + 1)].mean()
+        centroid_y = y[index(j) : index(j + 1)].mean()
 
         max = 0
         keep = None
@@ -103,9 +111,7 @@ def lttb(x, y, threshold=20):
             continue
 
         for point in zip(x_bucket, y_bucket):
-            area = triangle(
-                point, (centroid_x, centroid_y), (x.iloc[index(i)], y.iloc[index(i)])
-            )
+            area = triangle(point, (centroid_x, centroid_y), (x[index(i)], y[index(i)]))
             if area > max:
                 max = area
                 keep = point
@@ -113,10 +119,15 @@ def lttb(x, y, threshold=20):
         if keep is not None:
             downsampled.append(keep)
 
-    downsampled.append((x.iloc[-1], y.iloc[-1]))
+    downsampled.append((x[-1], y[-1]))
     # %%
     x_ds, y_ds = zip(*downsampled)
-    x_ds = pd.to_datetime(np.array(x_ds), unit="ns")  # Changed from 'us' to 'ns'
+    print(f"first x_ds type: {type(x_ds)}, first element type: {type(x_ds[0])}")
+    # Convert total seconds since Unix epoch back to datetime
+    # x_ds = sbd.to_datetime(pd.Series(x_ds), format=format)
+    print("x_ds is", x_ds)
+    print(f"second x_ds type: {type(x_ds)}, first element type: {type(x_ds[0])}")
+    x_ds = ToDatetime(format=format).fit_transform(x_ds)
     y_ds = np.array(y_ds)
 
     return x_ds, y_ds
