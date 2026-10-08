@@ -1,4 +1,5 @@
 import enum
+import os
 import re
 import shutil
 import time
@@ -125,6 +126,11 @@ def unique_renaming():
 
 
 def has_graphviz():
+    # (possibly temporary)
+    # Give beta-testers / maintainers an easy way to have skrub behave as
+    # if graphviz was not installed by defining an env variable.
+    if os.environ.get("SKB_NO_GRAPHVIZ") is not None:
+        return False
     try:
         import pydot
 

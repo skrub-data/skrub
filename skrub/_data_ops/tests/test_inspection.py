@@ -656,3 +656,8 @@ def test_describe_params():
     assert e.skb.describe_defaults() == expected
     assert e.skb.make_learner().describe_params() == expected
     assert skrub.X().skb.describe_defaults() == {}
+
+
+def test_has_graphviz_env_var(monkeypatch):
+    monkeypatch.setenv("SKB_NO_GRAPHVIZ", "")
+    assert not _utils.has_graphviz()
