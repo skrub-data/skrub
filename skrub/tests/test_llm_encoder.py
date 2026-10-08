@@ -23,8 +23,8 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer
+from skrub._llm_encoder import LLMEncoder, ModelNotFound, TextEncoder
 from skrub._single_column_transformer import RejectColumn
-from skrub._text_encoder import LLMEncoder, ModelNotFound, TextEncoder
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def test_missing_import_error(monkeypatch):
         st.fit(x)
 
 
-def test_text_encoder(df_module, encoder):
+def test_llm_encoder(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
     encoder = clone(encoder).set_params(n_components=2)
     X_out = encoder.fit_transform(X)

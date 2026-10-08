@@ -32,7 +32,7 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
     .. warning::
         The auxiliary table is stored in memory as part of the state of the transformer,
         which can lead to high memory usage if the auxiliary table is large.
-        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>` and
+        Consider using the :ref:`skrub DataOps <user_guide_data_ops_index>` and
         a standard dataframe library (Pandas or Polars) to perform the aggregation
         instead.
 

@@ -6,11 +6,30 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
+Ongoing Development
 ===================
 
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+0.11.0
+===================
+
+New Features
+------------
+- Added :class:`CatEncoder`, a single column transformer that combines
+  :class:`~sklearn.preprocessing.OneHotEncoder` and
+  :class:`~sklearn.preprocessing.TargetEncoder`.
+  :pr:`2244` by :user:`Tomasz Kazimierczak <faithlesstomas>`.
 - It is now possible to enable persistent caching of estimators and functions
   used in a :ref:`DataOp <user_guide_data_ops_index>`, by setting a value for
   `cache` in :func:`set_config`. This caching can be turned off on a
@@ -19,6 +38,18 @@ New Features
   <DataOp.skb.apply_func>`. See the :ref:`user guide
   <user_guide_data_ops_caching>` for more information.
   :pr:`2017` by :user:`Jérôme Dockès <jeromedockes>`.
+- The report created by :meth:`.skb.report <DataOp.skb.report>` or
+  :meth:`SkrubLearner.report` now contains links to source code where each node
+  was defined, and also the docstring and link to source code for functions
+  applied with :meth:`.skb.apply_func <DataOp.skb.apply_func>` or
+  :func:`deferred` and for estimators applied with :meth:`.skb.apply
+  <DataOp.skb.apply>`.
+  :pr:`2292` by :user:`Jérôme Dockès <jeromedockes>`.
+- It is now possible to pass ``eval=False`` to :meth:`.skb.report
+  <DataOp.skb.report>` to generate the report, containing any statically
+  available information about the DataOp, without evaluating it / running any
+  computation.
+  :pr:`2308` by :user:`Jérôme Dockès <jeromedockes>`.
 - It is now possible to unpack a :class:`DataOp` that evaluates to an iterable
   (of known size), for example ``first, second = data_op``. Each target becomes
   a DataOp that extracts one of the items.
@@ -53,9 +84,15 @@ Bugfixes
   ``object`` column, so they used to be rejected, whereas the equivalent polars
   ``Date`` column was accepted.
   :pr:`2231` by :user:`Sanjay Santhanam <Sanjays2402>`.
+- Performance: the construction of :class:`DataOp` and :class:`SkrubLearner`
+  involving deep computation graphs has become much faster.
+  :pr:`2296` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
+- :meth:`DataOp.skb.full_report` has been renamed :meth:`DataOp.skb.report`.
+  The old name is still available as a deprecated alias but will be removed in a
+  future release. :pr:`2310` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
   as an alias, but will be removed in a future release. :pr:`2255` by
   :user:`Riccardo Cappuzzo <rcap107>`.

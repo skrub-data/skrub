@@ -324,7 +324,11 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
       parameter. When ``cast_to_str=False`` (default), string conversion is
       skipped. When ``cast_to_str=True``, string conversion is applied.
 
-
+    The transformations applied to each column can be inspected in the
+    ``all_processing_steps_`` attribute, which maps each column name to a list of
+    the transformers that were applied to it.
+    :func:`~Cleaner.describe_transformations` provides a summary of the
+    transformations in plain text.
 
     Examples
     --------
@@ -599,7 +603,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         ``specific_transformers``.
         Consider wrapping the ``TableVectorizer`` in  :class:`~skrub.ApplyToCols`
         to select or exclude specific columns from the processing. Alternatively,
-        the :ref:`skrub Data Ops <user_guide_data_ops_index>` allow for more complex
+        the :ref:`skrub DataOps <user_guide_data_ops_index>` allow for more complex
         pre-processing.
 
     drop_null_fraction : float or None, default=1.0
@@ -733,6 +737,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     overriding the categorization described above. This is done by providing a
     list of pairs ``(transformer, list_of_columns)`` as the
     ``specific_transformers`` parameter.
+
+    The transformations applied to each column can be inspected in the ``all_processing_steps_``
+    attribute, which maps each column name to a list of the transformers that were applied to it.
+    :func:`~TableVectorizer.describe_transformations` provides a summary of the transformations
+    in plain text.
 
     Examples
     --------

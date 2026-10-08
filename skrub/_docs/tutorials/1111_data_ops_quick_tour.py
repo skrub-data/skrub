@@ -86,7 +86,7 @@ learner.predict({"employee_data": test_dataset.X, "salary": test_dataset.y})
 #
 # .. code:: python
 #
-#    pred.skb.full_report({"employee_data": test_dataset.X, "salary": test_dataset.y})
+#    pred.skb.report({"employee_data": test_dataset.X, "salary": test_dataset.y})
 #
 # As the output is usually quite large, it does not display inline in a
 # notebook but is instead opened in a separate browser tab. However here we
@@ -237,7 +237,7 @@ salary = full_data["current_annual_salary"].skb.mark_as_y()
 
 from sklearn.preprocessing import TargetEncoder
 
-n_components = skrub.choose_int(10, 80, name="n_components")  # choose int in [10, 80[
+n_components = skrub.choose_int(10, 80, name="n_components")  # choose int in [10, 80]
 
 encoder = skrub.choose_from(  # choosing between 2 different estimators
     {
