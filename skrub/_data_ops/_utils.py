@@ -124,17 +124,6 @@ def unique_renaming():
     return rename
 
 
-def graphviz_error_message():
-    return """\
-To display the DataOp graph as an image, please install Graphviz and make sure
-the 'dot' command is in your $PATH.
-Graphviz must be installed using your system's package manager rather than pip,
-for example 'brew install graphviz', 'apt install graphviz' or
-'conda install graphviz'.
-On macOS you may also need to run 'dot -c' to rebuild the plugin cache of Graphviz.
-https://graphviz.org/download/"""
-
-
 def has_graphviz():
     try:
         import pydot
@@ -150,4 +139,13 @@ def has_graphviz():
 def check_graphviz():
     if has_graphviz():
         return
-    raise RuntimeError(graphviz_error_message())
+    raise RuntimeError(
+        """To render the DataOp graph, please install Graphviz and make sure
+the 'dot' command is in your $PATH.
+Graphviz must be installed using your system's package manager rather than pip,
+for example 'brew install graphviz', 'apt install graphviz' or
+'conda install graphviz'.
+On macOS you may also need to run 'dot -c' to rebuild the plugin cache of Graphviz.
+https://graphviz.org/download/
+"""
+    )
