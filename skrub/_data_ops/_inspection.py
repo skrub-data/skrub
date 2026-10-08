@@ -34,19 +34,24 @@ from ._subsampling import uses_subsampling
 
 
 def _get_jinja_env():
+    templates_dir = (
+        Path(__file__).resolve().parents[1]
+        / "_reporting"
+        / "_data"
+        / "templates"
+        / "data_ops"
+    )
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(
-            Path(__file__).resolve().parents[1]
-            / "_reporting"
-            / "_data"
-            / "templates"
-            / "data_ops",
-            encoding="UTF-8",
-        ),
+        loader=jinja2.FileSystemLoader(templates_dir, encoding="UTF-8"),
         autoescape=True,
     )
     env.filters["format_duration"] = format_duration
     env.globals["uuid"] = str(uuid.uuid4())
+    # Not loaded as a template because it contains sequences that jinja would
+    # interpret. See wasm-graphviz/README.md
+    env.globals["graphviz_wasm_script"] = (
+        templates_dir / "wasm-graphviz" / "graphviz.js"
+    ).read_text("utf-8")
     return env
 
 
@@ -289,10 +294,14 @@ def _make_report(
             graph_drawing.graph.get_node(_dot_id(node_id))[0].set(
                 "class", f"{status}-node"
             )
-    svg = graph_drawing.html_fragment
+    svg = graph_drawing.html_fragment(include_graphviz=True)
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "report_title": title, "eval": eval}
+        {
+            "svg": svg,
+            "report_title": title,
+            "eval": eval,
+        }
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
@@ -425,19 +434,20 @@ _JS_FONT_FAMILY = "Arial"
 
 
 class GraphDrawing:
-    def __init__(self, graph, force_js_rendering=False):
+    def __init__(self, graph):
         self.graph = graph
-        self.force_js_rendering = force_js_rendering
 
-    def _use_js(self):
-        return self.force_js_rendering or not _utils.has_graphviz()
-
-    def _base64(self):
+    def _dot_for_js(self):
         graph = copy.deepcopy(self.graph)
         for node in graph.get_nodes():
             node.set_fontname(_JS_FONT_FAMILY)
-        dot = graph.to_string().encode("utf-8")
-        return base64.b64encode(dot).decode("ascii")
+        return graph.to_string()
+
+    def _render_js_template(self, template_name, **kwargs):
+        dot = self._dot_for_js().encode("utf-8")
+        return _get_template(template_name).render(
+            {"dot_base64": base64.b64encode(dot).decode("ascii"), **kwargs}
+        )
 
     @property
     def svg(self):
@@ -456,21 +466,22 @@ class GraphDrawing:
         return self.graph.create_png(encoding="utf-8")
 
     def _repr_html_(self):
-        if self._use_js():
-            return _get_template("render_dot_iframe.html").render(
-                {"dot_base64": self._base64()}
-            )
-        else:
+        if _utils.has_graphviz():
             return self.svg.decode("utf-8")
+        return self._render_js_template("render_dot_iframe.html")
 
-    @property
-    def html_fragment(self):
-        if self._use_js():
-            return _get_template("render_dot_fragment.html").render(
-                {"dot_base64": self._base64()}
-            )
-        else:
+    def html_fragment(self, include_graphviz=False):
+        """HTML to insert in a page.
+
+        Without graphviz the graph is drawn in the browser, by a library that is
+        either loaded from a CDN or, if `include_graphviz`, included in the
+        fragment so that it works without a network connection.
+        """
+        if _utils.has_graphviz():
             return self.svg.decode("utf-8")
+        return self._render_js_template(
+            "render_dot_fragment.html", include_graphviz=include_graphviz
+        )
 
     @property
     def dot(self):
@@ -478,12 +489,9 @@ class GraphDrawing:
 
     @property
     def html(self):
-        if self._use_js():
-            return _get_template("render_dot.html").render(
-                {"dot_base64": self._base64()}
-            )
-        else:
+        if _utils.has_graphviz():
             return _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
+        return self._render_js_template("render_dot.html", include_graphviz=True)
 
     def open(self):
         open_in_browser(self.html)

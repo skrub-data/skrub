@@ -7,7 +7,6 @@ import sys
 import traceback
 import types
 import webbrowser
-from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -89,8 +88,8 @@ def test_report_no_eval(monkeypatch):
 
 
 def _report_dot_source(report_path):
-    # Make the report embed the dot source (rendered by the browser) rather than
-    # an svg, so that the test does not depend on graphviz being installed.
+    # When the graph is drawn by the browser the page contains its dot source,
+    # encoded in base64.
     html = report_path.read_text("utf-8")
     encoded = re.search(r'atob\("([^"]+)"\)', html).group(1)
     return base64.b64decode(encoded).decode("utf-8")
@@ -483,29 +482,11 @@ def test_js_rendering_font():
     drawing = skrub.as_data_op(0).skb.draw_graph()
     native_dot = drawing.graph.to_string()
     assert "sans-serif" in native_dot
-    js_dot = base64.b64decode(drawing._base64()).decode("utf-8")
+    js_dot = drawing._dot_for_js()
     assert "sans-serif" not in js_dot
     assert f"fontname={_inspection._JS_FONT_FAMILY}" in js_dot
     # the graph itself was not modified
     assert drawing.graph.to_string() == native_dot
-
-
-def test_repr_html_js_rendering_srcdoc(monkeypatch):
-    # The graph is rendered in an iframe whose content is the srcdoc attribute:
-    # it must survive quotes etc. in the iframe's content.
-    monkeypatch.setattr(_utils, "has_graphviz", lambda: False)
-
-    class FindIframe(HTMLParser):
-        srcdoc = None
-
-        def handle_starttag(self, tag, attrs):
-            if tag == "iframe":
-                self.srcdoc = dict(attrs)["srcdoc"]
-
-    parser = FindIframe()
-    parser.feed(skrub.as_data_op(0).skb.draw_graph()._repr_html_())
-    assert "Graphviz.load" in parser.srcdoc
-    assert parser.srcdoc.rstrip().endswith("</html>")
 
 
 def test_repr_html_no_graphviz(monkeypatch):

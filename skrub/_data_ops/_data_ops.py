@@ -808,7 +808,7 @@ class DataOp:
             graph = graph_drawing.svg.decode("utf-8")
             graph = strip_xml_declaration(graph)
         except Exception:
-            graph = graph_drawing.html_fragment
+            graph = graph_drawing.html_fragment()
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
