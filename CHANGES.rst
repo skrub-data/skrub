@@ -14,6 +14,9 @@ New Features
 
 Changes
 -------
+- The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
+  not installed.
+  :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
