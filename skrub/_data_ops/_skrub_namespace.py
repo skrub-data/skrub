@@ -1516,7 +1516,7 @@ class SkrubNamespace:
 
     @_check_before
     def draw_graph(self, *, show_ids=False):
-        """Get an SVG string representing the computation graph.
+        """Get a drawing of the computation graph.
 
         In addition to the usual ``str`` methods, the result has an ``open()``
         method which displays it in a web browser window.
@@ -1528,6 +1528,16 @@ class SkrubNamespace:
            ``svg`` and ``png``, containing representations of the graph in
            those formats (as ``bytes`` objects), and a method ``.open()`` to
            display it in a browser window.
+
+        Notes
+        -----
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_,
+        which must be installed on the system with its package manager (not
+        with pip). If it is not installed, the ``svg`` and ``png`` attributes
+        raise an error, but the graph is still displayed by ``open()`` and in
+        notebooks: it is then drawn by the web browser, so JavaScript must be
+        enabled. In a notebook, the browser needs an internet connection to
+        download the library that draws the graph.
         """
 
         return draw_data_op_graph(self._data_op, show_ids=show_ids)
@@ -1726,6 +1736,10 @@ class SkrubNamespace:
         was defined, the time it took to run, and more) and a display of the
         intermediate result (or error). By default, the report is stored in
         a timestamped subdirectory of the skrub data folder.
+
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_ if it is
+        installed. Otherwise it is drawn by the web browser, so JavaScript must be
+        enabled; the report does not need an internet connection.
 
         .. note::
             When this function is invoked reports starting with ``full_data_op_report_``

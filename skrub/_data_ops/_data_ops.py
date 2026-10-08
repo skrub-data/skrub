@@ -50,7 +50,6 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
-from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
 from . import _caching, _utils
 from ._choosing import get_chosen_or_default
@@ -803,12 +802,7 @@ class DataOp:
         from ._inspection import node_report
         from ._subsampling import uses_subsampling
 
-        graph_drawing = self.skb.draw_graph()
-        try:
-            graph = graph_drawing.svg.decode("utf-8")
-            graph = strip_xml_declaration(graph)
-        except Exception:
-            graph = graph_drawing.html_fragment()
+        graph = self.skb.draw_graph().html_fragment()
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"

@@ -25,6 +25,7 @@ from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
+from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseChoice, BaseNumericChoice, Choice
@@ -294,11 +295,11 @@ def _make_report(
             graph_drawing.graph.get_node(_dot_id(node_id))[0].set(
                 "class", f"{status}-node"
             )
-    svg = graph_drawing.html_fragment(include_graphviz=True)
+    graph_html = graph_drawing.html_fragment(include_graphviz=True)
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {
-            "svg": svg,
+            "graph_html": graph_html,
             "report_title": title,
             "eval": eval,
         }
@@ -478,7 +479,7 @@ class GraphDrawing:
         fragment so that it works without a network connection.
         """
         if _utils.has_graphviz():
-            return self.svg.decode("utf-8")
+            return strip_xml_declaration(self.svg.decode("utf-8"))
         return self._render_js_template(
             "render_dot_fragment.html", include_graphviz=include_graphviz
         )
