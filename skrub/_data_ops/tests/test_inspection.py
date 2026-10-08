@@ -1,5 +1,4 @@
 import base64
-import builtins
 import functools
 import linecache
 import re
@@ -11,6 +10,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pandas as pd
+import pydot
 import pytest
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_selection import SelectKBest
@@ -19,6 +19,13 @@ from sklearn.model_selection import KFold
 import skrub
 from skrub import datasets
 from skrub._data_ops import _inspection, _utils
+
+
+@pytest.fixture
+def no_graphviz(monkeypatch):
+    # pydot is a required dependency but Graphviz (the dot executable) may not be
+    # installed
+    monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
 
 
 def test_output_dir(tmp_path):
@@ -72,8 +79,7 @@ def test_report_title():
     assert title in report["report_path"].read_text("utf-8")
 
 
-def test_report_no_eval(monkeypatch):
-    monkeypatch.setattr(_utils, "has_graphviz", lambda: False)
+def test_report_no_eval(no_graphviz):
     data_op = skrub.var("a", 12345) + 1
     report = data_op.skb.report(open=False, eval=False)
     assert report["result"] is None
@@ -95,19 +101,27 @@ def _report_dot_source(report_path):
     return base64.b64decode(encoded).decode("utf-8")
 
 
-def test_report_node_status(monkeypatch):
-    monkeypatch.setattr(_utils, "has_graphviz", lambda: False)
+def test_report_without_graphviz(no_graphviz):
     a = skrub.var("a")
     failing = a.skb.apply_func(lambda x: 1 / 0)
     data_op = failing + 1
     report = data_op.skb.report({"a": 1}, open=False)
     assert isinstance(report["error"], ZeroDivisionError)
-    assert (report["report_path"].parent / "placeholder.html").exists()
+    report_dir = report["report_path"].parent
+    index = (report_dir / "index.html").read_text("utf-8")
     dot = _report_dot_source(report["report_path"])
     # graphviz copies the "class" attribute to the svg, where it is used to
     # style the nodes (see data_ops.css).
     assert dot.count("error-node") == 1
     assert dot.count("skipped-node") == 1
+    # the library that draws the graph is in the page
+    assert "window.skrubGraphviz = " in index
+    # names shared by the pages, the graph and the scripts: clicking a node
+    # displays its page in the iframe, which tells the index which node is shown
+    assert 'name="node-frame"' in index and 'target="node-frame"' in dot
+    assert (report_dir / "placeholder.html").exists()
+    for page in index, (report_dir / "node_1.html").read_text("utf-8"):
+        assert "skrub-report-node-shown" in page
 
 
 def test_preview_subsample():
@@ -456,23 +470,43 @@ def test_svg_anchor_google_colab(monkeypatch):
     assert re.search(rb'<a target="_blank" xlink:title=".*SOME TEXT', svg)
 
 
-def test_no_pydot(monkeypatch):
-    monkeypatch.delitem(sys.modules, "pydot", raising=False)
-    builtin_import = builtins.__import__
+def test_draw_graph_without_graphviz(no_graphviz):
+    drawing = skrub.as_data_op(0).skb.draw_graph()
+    for attribute in "svg", "png":
+        with pytest.raises(RuntimeError, match="install Graphviz"):
+            getattr(drawing, attribute)
+    assert drawing.dot.startswith("digraph")
+    # the graph is drawn by the browser, and its source is never displayed
+    for html in drawing._repr_html_(), drawing.html_fragment():
+        assert "Graphviz.load" in html
+        assert "digraph" not in html
+    # the library is in the page only if asked (and in standalone pages), notebooks
+    # load it from a CDN
+    assert "skrubGraphviz = " not in drawing.html_fragment()
+    assert "skrubGraphviz = " in drawing.html_fragment(include_graphviz=True)
+    assert "skrubGraphviz = " in drawing.html
 
-    def _import(name, *args, **kwargs):
-        if name == "pydot":
-            raise ImportError(name)
-        return builtin_import(name, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "__import__", _import)
-    assert "Graphviz.load" in skrub.as_data_op(0).skb.draw_graph().html
+def test_vendored_graphviz_library():
+    env = _inspection._get_jinja_env()
+    library = env.globals["graphviz_wasm_script"]
+    assert "window.skrubGraphviz = {Graphviz:" in library
+    # it is written in a <script> element
+    assert "</script" not in library and "<!--" not in library
+    # notebooks load the same version of the library from a CDN
+    version = re.search(r"wasm-graphviz (\d+\.\d+\.\d+)", library).group(1)
+    fragment = env.loader.get_source(env, "render_dot_fragment.html")[0]
+    assert f"wasm-graphviz@{version}/" in fragment
 
 
-def test_no_graphviz(monkeypatch):
-    pydot = pytest.importorskip("pydot")
-    monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
-    assert "Graphviz.load" in skrub.as_data_op(0).skb.draw_graph().html
+def test_node_kwargs_link():
+    node = skrub.var("a")
+    assert "URL" not in _inspection._node_kwargs(node)
+    kwargs = _inspection._node_kwargs(node, url=lambda _: "page.html")
+    assert kwargs["URL"] == "page.html"
+    assert "target" not in kwargs
+    kwargs = _inspection._node_kwargs(node, url=lambda _: "page.html", target="frame")
+    assert kwargs["target"] == "frame"
 
 
 def test_js_rendering_font():
@@ -489,16 +523,7 @@ def test_js_rendering_font():
     assert drawing.graph.to_string() == native_dot
 
 
-def test_repr_html_no_graphviz(monkeypatch):
-    monkeypatch.delitem(sys.modules, "pydot", raising=False)
-    builtin_import = builtins.__import__
-
-    def _import(name, *args, **kwargs):
-        if name == "pydot":
-            raise ImportError(name)
-        return builtin_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", _import)
+def test_repr_html_no_graphviz(no_graphviz):
     # Without graphviz the graph is rendered by the browser, both for DataOps
     # without a preview value (only the graph is displayed) and with one (the
     # graph is in a dropdown).

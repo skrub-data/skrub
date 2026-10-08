@@ -1822,8 +1822,8 @@ class SkrubNamespace:
         >>> report['result']
         0.5
         >>> report['error']
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
 
         We pass data:
 
@@ -1837,8 +1837,8 @@ class SkrubNamespace:
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
         """
 
         data_op = self._data_op

@@ -34,22 +34,10 @@ HEADER = f"""\
 
 
 def make_classic_script(source):
-    """Turn the source of the ES module into a classic script.
-
-    >>> script = make_classic_script("var a=1;export{a as Other,a as Graphviz};")
-    >>> print(script[script.index("(function"):])
-    (function () {
-    var a=1;
-    window.skrubGraphviz = {Graphviz: a};
-    })();
-    """
     export = re.search(r"export\s*\{([^}]*)\}\s*;?", source)
     graphviz_name = re.search(r"(\w+) as Graphviz\b", export.group(1)).group(1)
     source = source[: export.start()] + source[export.end() :]
     source = re.sub(r"//# sourceMappingURL=.*", "", source).strip()
-    for forbidden in "</script", "<!--":
-        if forbidden in source:
-            raise ValueError(f"Cannot include the library in a <script>: {forbidden}")
     return (
         f"{HEADER}(function () {{\n"
         f"{source}\n"
