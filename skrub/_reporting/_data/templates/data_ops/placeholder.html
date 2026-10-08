@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ report_title if report_title else "DataOp report" }}</title>
+    <style>
+     {% include "data_ops.css" %}
+    </style>
+    {# The page displayed in the iframe of index.html when no node is selected. #}
+    {% with node_id=none %}{% include "node-shown-script.html" %}{% endwith %}
+</head>
+
+<body class="node-page">
+    <div class="node-details">
+        <p>Click on a node to display more information.</p>
+    </div>
+</body>
+
+</html>

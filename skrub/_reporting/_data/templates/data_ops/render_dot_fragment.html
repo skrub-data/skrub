@@ -8,9 +8,13 @@
      // graphviz only outputs the single family it was given; add fallbacks.
      container.innerHTML = graphviz.dot(dot).replaceAll(
          'font-family="Arial"', 'font-family="Arial,Helvetica,sans-serif"');
-     container.dispatchEvent(new CustomEvent("graph-rendered", {bubbles: true}));
+     // graphviz adds a <title> (name of the graph, nodes and edges) that
+     // browsers show as a tooltip. The tooltips we want are the nodes' own.
+     // Same as for the svg produced by native graphviz.
+     container.querySelectorAll("title").forEach(title => title.remove());
  } catch (err) {
      document.getElementById("{{ uuid }}").textContent = "Error: " + err.message;
  }
- parent.postMessage({ "{{ uuid }}_h": document.body.scrollHeight + 20, "{{ uuid }}_w": document.body.scrollWidth + 20}, "*");
+ // Let the page embedding the graph know that it is there (or failed).
+ document.getElementById("{{ uuid }}").dispatchEvent(new CustomEvent("graph-rendered", {bubbles: true}));
 </script>

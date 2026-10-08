@@ -283,13 +283,24 @@ def _make_report(
         return node_name_to_url(node_rindex[id(node)])
 
     graph_drawing = draw_data_op_graph(data_op, url=make_url, target="node-frame")
+    for node_id, status in node_status.items():
+        # graphviz adds the class to the node's <g> in the svg (see data_ops.css)
+        if status in ("error", "skipped"):
+            graph_drawing.graph.get_node(_dot_id(node_id))[0].set(
+                "class", f"{status}-node"
+            )
     svg = graph_drawing.html_fragment
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status, "report_title": title, "eval": eval}
+        {"svg": svg, "report_title": title, "eval": eval}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
+    # shown in the index's iframe when no node is selected
+    placeholder = jinja_env.get_template("placeholder.html").render(
+        {"report_title": title}
+    )
+    (output_dir / "placeholder.html").write_text(placeholder, "utf-8")
 
     for i, node in g["nodes"].items():
         report, error, error_msg = None, None, None
@@ -359,7 +370,6 @@ def _make_report(
         else:
             applied_func_name = None
             applied_func_doc = None
-
         node_page = jinja_env.get_template("node.html").render(
             dict(
                 report_title=title,

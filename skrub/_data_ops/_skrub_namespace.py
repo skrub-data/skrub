@@ -1802,9 +1802,6 @@ class SkrubNamespace:
 
         Examples
         --------
-        >>> # ignore this line:
-        >>> import pytest; pytest.skip('graphviz may not be installed')
-
         >>> import skrub
         >>> c = skrub.var('a', 1) / skrub.var('b', 2)
         >>> report = c.skb.report(open=False)

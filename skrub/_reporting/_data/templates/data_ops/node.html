@@ -9,19 +9,7 @@
     <style>
      {% include "data_ops.css" %}
     </style>
-    <script>
-     {#
-       Node pages are meant to be displayed in the iframe of index.html, which
-       holds the (single, persistent) graph. If a node page is opened on its
-       own, send the user to the index, showing this node.
-     #}
-     if (window.parent === window) {
-         window.location.replace("index.html#node_{{ node_nb }}");
-     } else {
-         window.parent.postMessage(
-             {type: "skrub-report-node-shown", nodeId: {{ node_nb }}}, "*");
-     }
-    </script>
+    {% with node_id=node_nb %}{% include "node-shown-script.html" %}{% endwith %}
 </head>
 
 <body class="node-page">
