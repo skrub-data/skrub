@@ -60,7 +60,7 @@ def lttb(x, y, threshold=20):
         threshold (int): Number of points to downsample to.
 
     Returns:
-        tuple: Downsampled x and y as pd.Series.
+        tuple: Downsampled x and y as pd.Series
     """
 
     threshold = threshold
@@ -75,7 +75,7 @@ def lttb(x, y, threshold=20):
     try:
         to_dt = ToDatetime(format=None)
         to_dt.fit(x)
-        format = to_dt.format_
+        # format = to_dt.format_ # TOFIX
         x = to_dt.transform(x)
     except Exception:
         print("x couldn't be transformed")
@@ -96,10 +96,6 @@ def lttb(x, y, threshold=20):
         j = i + 1
         x_bucket = x[index(i) : index(j)]
         y_bucket = y[index(i) : index(j)]
-
-        # print("x_bucket", x_bucket)
-        # print("y_bucket", y_bucket)
-        # print("centroid_x", x[index(j):index(j+1)])
         centroid_x = x[index(j) : index(j + 1)].mean()
         centroid_y = y[index(j) : index(j + 1)].mean()
 
@@ -122,13 +118,12 @@ def lttb(x, y, threshold=20):
     downsampled.append((x[-1], y[-1]))
     # %%
     x_ds, y_ds = zip(*downsampled)
-    print(f"first x_ds type: {type(x_ds)}, first element type: {type(x_ds[0])}")
+
+    x_ds = pd.Series(x_ds)
+    y_ds = pd.Series(y_ds)
+
     # Convert total seconds since Unix epoch back to datetime
-    # x_ds = sbd.to_datetime(pd.Series(x_ds), format=format)
-    print("x_ds is", x_ds)
-    print(f"second x_ds type: {type(x_ds)}, first element type: {type(x_ds[0])}")
-    x_ds = ToDatetime(format=format).fit_transform(x_ds)
-    y_ds = np.array(y_ds)
+    x_ds = pd.to_datetime(x_ds, unit="s")
 
     return x_ds, y_ds
 
