@@ -473,6 +473,10 @@ class GraphDrawing:
             return self.svg.decode("utf-8")
 
     @property
+    def dot(self):
+        return self.graph.to_string()
+
+    @property
     def html(self):
         if self._use_js():
             return _get_template("render_dot.html").render(
