@@ -324,7 +324,11 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
       parameter. When ``cast_to_str=False`` (default), string conversion is
       skipped. When ``cast_to_str=True``, string conversion is applied.
 
-
+    The transformations applied to each column can be inspected in the
+    ``all_processing_steps_`` attribute, which maps each column name to a list of
+    the transformers that were applied to it.
+    :func:`~Cleaner.describe_transformations` provides a summary of the
+    transformations in plain text.
 
     Examples
     --------
