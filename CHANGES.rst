@@ -79,6 +79,9 @@ Changes
 
 Bugfixes
 --------
+- :class:`SimilarityEncoder` counted n-grams longer than the string as a
+  negative number of windows, leading to an incorrect similarity score. Fixed in
+  :pr:`2311` by :user:`Sasha Mitchell <SashaMIT>`.
 - :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
   columns containing ``datetime.date`` objects. Pandas stores those in an
   ``object`` column, so they used to be rejected, whereas the equivalent polars
