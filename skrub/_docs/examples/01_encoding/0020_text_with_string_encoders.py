@@ -222,32 +222,6 @@ plot_box_results(results)
 #
 
 # %%
-# CatEncoder
-# ^^^^^^^^^^^^^^
-# The |CatEncoder| is a high cardinality encoder that uses a combination of
-# |OneHotEncoder| and |TargetEncoder| to produce vectors for categorical columns.
-# Specifically, |TargetEncoder| is added to the |OneHotEncoder| to produce a
-# vector representation of each category based on the target variable; rare
-# categories are marked as "infrequent".
-
-from skrub import CatEncoder
-
-cat_pipe = make_pipeline(
-    TableVectorizer(high_cardinality=CatEncoder()),
-    HistGradientBoostingClassifier(),
-)
-cat_results = cross_validate(cat_pipe, X, y, scoring="roc_auc")
-results.append(("CatEncoder", cat_results))
-
-plot_box_results(results)
-
-# %%
-# In this case, the |CatEncoder| cannot learn anything from the dataset: since
-# all the entries are unique, the |CatEncoder| cannot find any patterns in the data,
-# and for this reason its encodings are not useful for the classification task.
-
-
-# %%
 # Performance tradeoff
 # ------------------------
 # The performance of the |LLMEncoder| is significantly stronger than that of
@@ -261,7 +235,7 @@ import numpy as np
 
 def plot_performance_tradeoff(results):
     fig, ax = plt.subplots(figsize=(5, 4), dpi=200)
-    markers = ["s", "o", "^", "x", "D"]
+    markers = ["s", "o", "^", "x"]
     for idx, (name, result) in enumerate(results):
         ax.scatter(
             result["fit_time"],
