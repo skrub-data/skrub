@@ -1445,6 +1445,9 @@ class SkrubNamespace:
         DataOp.skb.set_name :
             Assign a name to a DataOp.
 
+        DataOp.skb.get_choices :
+            Similar function for getting the choices contained in the DataOp.
+
         Examples
         --------
         >>> import skrub
@@ -1502,7 +1505,19 @@ class SkrubNamespace:
 
         >>> learner.fit({'a': 2, 'b': 3})
         SkrubLearner(data_op=<BinOp: add>)
-        """
+
+        Similarly, choices can be obtained with ``get_choices``
+
+        >>> f = d + skrub.choose_from([1, 2], name='e')
+        >>> f.skb.get_choices()
+        {'e': choose_from([1, 2], name='e')}
+
+        So all the names that can be passed in an env, merging named DataOps
+        and choices, are obtained with:
+
+        >>> list(f.skb.get_vars(all_named_ops=True) | f.skb.get_choices(named_only=True))
+        ['a', 'b', 'c', 'e']
+        """  # noqa: E501
         from ._data_ops import Var
 
         found_nodes = named_nodes(self._data_op)
@@ -1512,6 +1527,84 @@ class SkrubNamespace:
             name: op
             for name, op in found_nodes.items()
             if isinstance(op._skrub_impl, Var)
+        }
+
+    @_check_before
+    def get_choices(self, named_only=False):
+        """
+        Get all the choices used in the DataOp.
+
+        Parameters
+        ----------
+        named_only : bool, default = False
+            If True, only choices that have their ``name`` attribute set are
+            returned. Those are the only names for which a value can be passed
+            in the environment passed to ``eval()``.
+
+            If False, all choices are returned. For choices that have a
+            ``name``, that ``name`` is their key in the returned dictionary.
+            For other choices, the key is arbitrary but stable for a same
+            DataOp and its clones, and is the same string that is used in the
+            parallel coordinate plots produced by
+            :meth:`ParamSearch.plot_results`.
+
+        Returns
+        -------
+        dict :
+            Keys are names, and values the corresponding choice object.
+
+        See Also
+        --------
+        DataOp.skb.get_vars :
+            Similar function for getting variables created with :func:`var` and
+            DataOps whose name was set with :meth:`.skb.set_name
+            <DataOp.skb.set_name>`.
+
+        DataOp.skb.describe_defaults :
+            Get a dictionary showing the default values for choices. Only
+            choices that actually get used in the default configuration are
+            shown.
+
+        SkrubLearner.get_named_params :
+            Get a dictionary mapping choice name to value in a SkrubLearner.
+
+        SkrubLearner.set_named_params :
+            Set choice values by name on a SkrubLearner.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> dop = (
+        ...     skrub.var("a")
+        ...     + skrub.choose_int(0, 10, name="b")
+        ...     + skrub.choose_float(0.0, 1.0)
+        ... )
+        >>> dop.skb.get_choices()
+        {'b': choose_int(0, 10, name='b'), 'choose_float(0.0, 1.0)': choose_float(0.0, 1.0)}
+
+        With ``named_only`` we can restrict to choices that have an actual name
+        and can be passed in an environment:
+
+        >>> dop.skb.get_choices(named_only=True)
+        {'b': choose_int(0, 10, name='b')}
+
+        Similarly, vars can be obtained:
+
+        >>> dop.skb.get_vars()
+        {'a': <Var 'a'>}
+
+        All the names that can be passed in the environment are thus obtained with:
+
+        >>> list(dop.skb.get_vars(all_named_ops=True) | dop.skb.get_choices(named_only=True))
+        ['a', 'b']
+        """  # noqa: E501
+        from ._evaluation import choice_graph
+
+        g = choice_graph(self._data_op, check_Xy=False)
+        if named_only:
+            return {c.name: c for c in g["choices"].values() if c.name is not None}
+        return {
+            name: g["choices"][c_id] for c_id, name in g["choice_display_names"].items()
         }
 
     @_check_before

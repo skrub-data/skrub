@@ -937,6 +937,42 @@ def test_get_vars():
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
 
 
+def test_get_choices():
+    a = skrub.var("a")
+    named = skrub.choose_float(0.0, 1.0, name="x")
+    unnamed = skrub.choose_from([1, 2])
+    d = a + named + unnamed
+
+    choices = d.skb.get_choices()
+    assert list(choices.keys()) == ["x", "choose_from([1, 2])"]
+    assert choices["x"] is named
+    assert choices["choose_from([1, 2])"] is unnamed
+    assert d.skb.get_choices(named_only=True) == {"x": named}
+    assert list(
+        d.skb.get_vars(all_named_ops=True) | d.skb.get_choices(named_only=True)
+    ) == [
+        "a",
+        "x",
+    ]
+
+
+def test_get_choices_unnamed_duplicate_display_names():
+    d = skrub.var("a") + skrub.choose_bool() + skrub.choose_bool()
+    assert list(d.skb.get_choices().keys()) == ["choose_bool()", "choose_bool()_1"]
+
+
+def test_get_choices_nested():
+    # choices nested inside the outcome of another choice are also found
+    e = skrub.choose_from(
+        [Ridge(alpha=skrub.choose_float(0.1, 1.0, name="alpha")), DummyRegressor()],
+        name="regressor",
+    ).as_data_op()
+    choices = e.skb.get_choices()
+    assert set(choices.keys()) == {"alpha", "regressor"}
+    assert choices["alpha"].name == "alpha"
+    assert choices["regressor"].name == "regressor"
+
+
 def test_set_data():
     a = skrub.var("a")
     b = skrub.var("b")
