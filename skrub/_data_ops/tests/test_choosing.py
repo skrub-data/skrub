@@ -81,6 +81,14 @@ def test_bad_bounds():
         skrub.choose_int(20, 10, name="c")
     with pytest.raises(ValueError, match=".*'low' must be > 0"):
         skrub.choose_float(0.0, 10.0, log=True, name="c")
+    # non-regression: `low == high` used to pass the bounds check and only
+    # fail later, deep inside scipy, when `log=True` and `.rvs()` is called.
+    with pytest.raises(ValueError, match="'high' must be greater"):
+        skrub.choose_float(5.0, 5.0, log=True, name="c")
+    with pytest.raises(ValueError, match="'high' must be greater"):
+        skrub.choose_float(5.0, 5.0, name="c")
+    with pytest.raises(ValueError, match="'high' must be greater"):
+        skrub.choose_int(5, 5, name="c")
 
 
 def test_bad_numeric_default():

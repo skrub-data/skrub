@@ -503,8 +503,12 @@ def evaluate(
 
     callbacks : list of functions
         Each will be called, in the provided order, after evaluating each node.
-        The signature is callback(data_op, result) where data_op is the DataOp
-        that was just evaluated and result is the resulting value.
+        The signature is callback(data_op, result, **kwargs) where data_op is
+        the DataOp that was just evaluated, result is the resulting value, and
+        kwargs currently includes ``duration`` (the time taken to evaluate
+        ``data_op``, as a float) and ``env_key`` (the key in the environment
+        from which the result was loaded, None if it was computed rather than
+        read from the env).
 
     ancestor_data_op : DataOp or None
         When we are evaluating a part of a DataOp (e.g. the X node only), pass
@@ -519,7 +523,7 @@ def evaluate(
         callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
         clear_results(data_op, mode=mode)
     else:
-        callbacks = ()
+        callbacks = tuple(callbacks)
     try:
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
