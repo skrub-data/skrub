@@ -30,4 +30,6 @@ large to include in every cell output.
 
 To update the library: change `VERSION` and `SHA256` in `make_classic_script.py`
 (and `LICENSE` if it changed), run the script, and update the CDN URL in
-`render_dot_fragment.html`. `test_make_classic_script` checks that they agree.
+`render_dot_fragment.html`. `test_vendored_graphviz_library` (in
+`skrub/_data_ops/tests/test_inspection.py`) checks that the version in the header
+of `graphviz.js` matches the one in `render_dot_fragment.html`.
