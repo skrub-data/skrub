@@ -29,7 +29,7 @@ _SINGLE_COL_LINE = (
 
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
 _SINGLE_COL_NOTE = (
-    f".. admonition:: A note on using single column transformations \n"
+    f".. tip:: A note on using single column transformations \n"
     f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
 )
 
@@ -215,7 +215,7 @@ class SingleColumnTransformer(SkrubBaseEstimator):
     def __init_subclass__(subclass, **kwargs):
         super().__init_subclass__(**kwargs)
         if subclass.__doc__ is not None:
-            subclass.__doc__ = _insert_after_first_paragraph(
+            subclass.__doc__ = _insert_before_parameters(
                 subclass.__doc__,
                 _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
             )
@@ -308,6 +308,31 @@ def _insert_after_first_paragraph(document, text_to_insert):
         output_lines.append(line if not line.strip() else " " * indent + line)
     output_lines.append("\n")
     output_lines.extend(doc_lines)
+    return "".join(output_lines)
+
+
+def _insert_before_parameters(document, text_to_insert):
+    split_doc = document.splitlines(True)
+    indent = min(
+        (
+            len(m.group(1))
+            for line in split_doc[1:]
+            if (m := re.match(r"^( *)\S", line)) is not None
+        ),
+        default=0,
+    )
+    doc_lines = iter(split_doc)
+    output_lines = []
+    for line in doc_lines:
+        if line.strip() == "Parameters":
+            for line_insert in text_to_insert.splitlines(True):
+                output_lines.append(
+                    line_insert
+                    if not line_insert.strip()
+                    else " " * indent + line_insert
+                )
+            output_lines.append("\n")
+        output_lines.append(line)
     return "".join(output_lines)
 
 
