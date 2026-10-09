@@ -14,6 +14,13 @@ New Features
 
 Changes
 -------
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name in the DataOp) now causes a warning displaying the extra keys to
+  help detect typos and mistakes. It can be silenced with the warnings module,
+  or, more robustly, by adding ``{"_skrub_ignore_extra_keys": True}`` to the
+  environment.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 
 Bugfixes
 --------
