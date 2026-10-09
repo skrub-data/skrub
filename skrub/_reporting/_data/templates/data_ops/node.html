@@ -9,19 +9,12 @@
     <style>
      {% include "data_ops.css" %}
     </style>
+    {% with node_id=node_nb %}{% include "node-shown-script.html" %}{% endwith %}
 </head>
 
-<body>
-    <button type="button" class="icon-button"
-        id="toggle-nav">{% include "icons/list.svg" %}</button>
-    {% if report_title %}
-    <h2 class="fixed-report-title">{{ report_title }}</h2>
-    {% endif %}
+<body class="node-page">
     <div class="data_op-node-wrapper">
         <div class="data_op-node">
-            <nav class="main-nav" data-is-open>
-                {% include "graph-nav.html" %}
-            </nav>
             <div class="node-details" {{ "data-has-error" if error is not none }}
                 {{ "data-is-skipped" if (error is none) and (report is none) and eval }}>
                 <h1>{{ node_nb }}: {{ node_repr }}</h1>
@@ -36,9 +29,6 @@
                             {% if node_nb < total_n_nodes - 1 %}
                             <a href="node_{{ node_nb + 1 }}.html">next</a>
                             {% endif %}
-                        </li>
-                        <li>
-                            <a href='index.html'>top</a>
                         </li>
                     </ul>
                 </nav>

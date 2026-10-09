@@ -1,53 +1,30 @@
 (function() {
+    // Node pages are displayed in the iframe and tell us which node they show
+    // (see node.html). We cannot read the iframe's location ourselves: for
+    // file:// URLs browsers treat it as cross-origin.
+    //
+    // The current node is highlighted with a CSS rule rather than by editing
+    // the graph, so that it does not matter whether the graph is already
+    // there: it may be rendered later by the browser (when graphviz is not
+    // installed).
+    const frame = document.getElementById('node-frame');
+    const highlightStyle = document.getElementById('current-node-style');
 
-    function highlightCurrentNode() {
-        const graphDiv = document.getElementById('graph-nav');
-        const currentNode = graphDiv.dataset.currentNodeId;
-        const nodeElem = document.getElementById(currentNode);
-        if (nodeElem === null){
+    window.addEventListener('message', (event) => {
+        if (event.source !== frame.contentWindow) {
             return;
         }
-        nodeElem.classList.add('current-node');
-    }
-    highlightCurrentNode();
-
-    function toggleNav() {
-        const nav = document.querySelector("nav");
-        if (nav === null){
+        if (!event.data || event.data.type !== 'skrub-report-node-shown') {
             return;
         }
-        if (nav.hasAttribute("data-is-open")) {
-            nav.removeAttribute("data-is-open");
-        } else {
-            nav.setAttribute("data-is-open", "");
-        }
-    }
-    const toggleNavButton = document.getElementById('toggle-nav');
-    if (toggleNavButton !== null){
-        toggleNavButton.addEventListener("click", toggleNav);
-    }
+        const nodeId = event.data.nodeId;
+        // nodeId is null for pages that do not show a particular node
+        highlightStyle.textContent = (nodeId === null) ? '' : (
+            `#node_${Number(nodeId)} polygon {` +
+            ' fill: var(--current-node-color); stroke-width: 3; }');
+    });
 
-    function showNodeStatus() {
-        const graphDiv = document.getElementById('graph-nav');
-        const nodeStatus = JSON.parse(graphDiv.dataset.nodeStatus);
-        for (const nodeId in nodeStatus) {
-            const nodeElem = document.getElementById(`node_${nodeId}`);
-            switch (nodeStatus[nodeId]) {
-            case 'success':
-                nodeElem.classList.add('success-node');
-                break;
-            case 'error':
-                nodeElem.classList.add('error-node');
-                break;
-            case 'skipped':
-                nodeElem.classList.add('skipped-node');
-                break;
-            default:
-                // eval=False was passed to .skb.report(), no particular styling
-                // needed on any nodes.
-                break;
-            }
-        }
-    }
-    showNodeStatus();
+    document.getElementById('toggle-nav').addEventListener('click', () => {
+        document.querySelector('nav').toggleAttribute('data-is-open');
+    });
 })();

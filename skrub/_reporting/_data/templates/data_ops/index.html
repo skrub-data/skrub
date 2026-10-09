@@ -8,17 +8,34 @@
     <style>
      {% include "data_ops.css" %}
     </style>
+    <style id="current-node-style"></style>
 </head>
 
-<body>
-    {% if report_title %}
-        <h1>{{ report_title }}</h1>
-    {% endif %}
-    <p>
-        Click on a node to display more information.
-    </p>
-    <div id="graph-nav" data-node-status='{{ node_status | tojson }}'>
-        {{ svg | safe }}
+<body class="report-index">
+    <header class="report-header">
+        <button type="button" class="icon-button"
+            id="toggle-nav">{% include "icons/list.svg" %}</button>
+        {% if report_title %}
+        <h2 class="report-title">{{ report_title }}</h2>
+        {% endif %}
+    </header>
+    <div class="data_op-node-wrapper">
+        <div class="data_op-node">
+            {#
+              The graph is only shown in this page, and it is drawn only once.
+              Node pages are displayed in the iframe next to it; clicking on a
+              node of the graph targets that iframe, and node pages tell this
+              page which node they show (see data_ops-report.js).
+            #}
+            <nav class="main-nav" data-is-open>
+                <div id="graph-nav">
+                    {{ graph_html | safe }}
+                </div>
+            </nav>
+            <iframe id="node-frame" name="node-frame" class="node-frame"
+                    title="Details of the selected node"
+                    src="placeholder.html"></iframe>
+        </div>
     </div>
 </body>
 <script>

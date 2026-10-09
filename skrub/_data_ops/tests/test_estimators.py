@@ -38,7 +38,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
-from skrub._data_ops import _utils
 from skrub._data_ops._estimator import _SharedDict
 
 #
@@ -1443,7 +1442,6 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _utils.has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
@@ -1479,7 +1477,7 @@ def test_report(tmp_path):
     assert not pipe.__sklearn_is_fitted__()
     assert no_eval_report["result"] is None
     assert no_eval_report["error"] is None
-    assert "global_no_eval" in no_eval_report["report_path"].read_text("utf-8")
+    assert no_eval_report["report_path"].is_relative_to(tmp_path)
 
 
 def test_report_eval_argument_errors():

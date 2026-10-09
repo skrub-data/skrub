@@ -50,7 +50,6 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
-from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
 from . import _caching, _utils
 from ._choosing import get_chosen_or_default
@@ -803,21 +802,10 @@ class DataOp:
         from ._inspection import node_report
         from ._subsampling import uses_subsampling
 
-        try:
-            graph = self.skb.draw_graph().svg.decode("utf-8")
-            graph = strip_xml_declaration(graph)
-            has_graph = True
-        except Exception:
-            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
-            has_graph = False
+        graph = self.skb.draw_graph().html_fragment()
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            if has_graph:
-                return f"<div>{graph}</div>"
-            return (
-                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
-                f"</div><div>{graph}</div></div>"
-            )
+            return f"<div>{graph}</div>"
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"

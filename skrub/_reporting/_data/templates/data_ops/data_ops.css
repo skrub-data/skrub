@@ -49,7 +49,7 @@ pre, code {
 
 .data_op-node {
     display: flex;
-    height: calc(100vh - 24px - 24px);
+    height: 100%;
 }
 
 .data_op-node > * {
@@ -59,18 +59,51 @@ pre, code {
 }
 
 .data_op-node > nav.main-nav {
-    padding-top: 24px;
     border-right: 2px solid #ccc;
     flex-shrink: 0;
-}
-
-.fixed-report-title ~ .data_op-node-wrapper > .data_op-node > nav.main-nav {
-    padding-top: 30px;
 }
 
 .node-details {
     flex-grow: 1;
     flex-shrink: 1;
+}
+
+.data_op-node > nav.main-nav {
+    resize: horizontal;
+    min-width: 8rem;
+    /* A wide graph scrolls rather than squeezing the node details. */
+    max-width: 75vw;
+    box-sizing: border-box;
+}
+
+.data_op-node > .node-frame {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+/* Node pages are displayed inside the iframe of the index page: they fill it
+   and scroll as a whole. */
+.node-page {
+    margin: 0;
+}
+
+.node-page .data_op-node {
+    display: block;
+    height: auto;
+}
+
+.node-page .data_op-node > * {
+    max-height: none;
+    overflow-y: visible;
+}
+
+.node-page .node-details {
+    min-height: 100vh;
 }
 
 .node-details[data-has-error]{
@@ -108,10 +141,6 @@ pre, code {
     display: none;
 }
 
-.main-nav[data-is-open] + .node-details {
-    min-width: min(95%, 25rem);
-}
-
 .nav-legend-current-node {
     display: flex;
     background: var(--current-node-color);
@@ -124,32 +153,48 @@ pre, code {
     margin-top: 2rem;
 }
 
-.current-node polygon {
+/* Layout of the index page: a header (toggle button and report title), below
+   it the graph and the iframe displaying the selected node. */
+.report-index {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 
-    fill: var(--current-node-color);
-    stroke-width: 3;
+.report-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+}
+
+.report-index > .data_op-node-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.report-index .data_op-node {
+    flex: 1;
+    min-height: 0;
 }
 
 .icon-button {
-    position: absolute;
-    left: 5px;
-    top: 10px;
+    flex: none;
     padding: 2px;
     width: 24px;
     height: 24px;
 }
 
-.fixed-report-title {
-    position: absolute;
+.report-title {
+    margin: 0;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90%;
-    left: 40px;
-    top: 5px;
-    padding: 2px;
-    padding-top: 0;
-    margin: 0;
 }
 
 .error-node polygon {

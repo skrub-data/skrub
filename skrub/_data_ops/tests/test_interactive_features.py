@@ -73,7 +73,7 @@ def test_key_completions():
 def test_repr_html():
     a = skrub.var("thename", "thevalue")
     r = a._repr_html_()
-    if "Please install" in r:
+    if "Graphviz.load" in r:
         pytest.skip("graphviz not installed")
     assert "thename" in r and "thevalue" in r
     a = skrub.var("thename", skrub.datasets.toy_orders().orders)
@@ -337,7 +337,8 @@ def test_format():
 
 def test_estimator_repr_html():
     # diagrams generated for scikit-learn estimators should contain the graph
-    # drawing.
+    # drawing (an svg, or the script that draws it in the browser if graphviz is
+    # not installed).
 
     old_sklearn = parse_version(sklearn.__version__) < parse_version("1.7")
 
@@ -354,7 +355,7 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in learner_repr
     else:
-        assert svg in learner_repr
+        assert svg in learner_repr or "Graphviz.load" in learner_repr
 
     X, y = make_classification()
     learner.fit({"X": X, "y": y})
@@ -362,13 +363,13 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in learner_repr
     else:
-        assert svg in learner._repr_html_()
+        assert svg in learner_repr or "Graphviz.load" in learner_repr
 
     rand_search_repr = data_op.skb.make_randomized_search()._repr_html_()
     if old_sklearn:
         assert data_op_repr in rand_search_repr
     else:
-        assert svg in rand_search_repr
+        assert svg in rand_search_repr or "Graphviz.load" in rand_search_repr
         assert "n_iter" in rand_search_repr
         assert "randomized search" in rand_search_repr
 
@@ -376,7 +377,7 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in grid_search_repr
     else:
-        assert svg in grid_search_repr
+        assert svg in grid_search_repr or "Graphviz.load" in grid_search_repr
         assert "n_jobs" in grid_search_repr
         assert "grid search" in grid_search_repr
 
@@ -387,5 +388,5 @@ def test_estimator_repr_html():
     if old_sklearn:
         assert data_op_repr in optuna_search_repr
     else:
-        assert svg in optuna_search_repr
+        assert svg in optuna_search_repr or "Graphviz.load" in optuna_search_repr
         assert "n_iter" in optuna_search_repr
