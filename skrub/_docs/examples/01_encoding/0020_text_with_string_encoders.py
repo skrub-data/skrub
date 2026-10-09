@@ -20,6 +20,9 @@ available in skrub.
 .. |StringEncoder| replace::
      :class:`~skrub.StringEncoder`
 
+.. |CatEncoder| replace::
+     :class:`~skrub.CatEncoder`
+
 .. |TableReport| replace::
      :class:`~skrub.TableReport`
 
@@ -70,82 +73,17 @@ TableReport(X)
 y = X.pop("is_toxic").map({"Toxic": 1, "Not Toxic": 0})
 
 # %%
-# GapEncoder
-# ^^^^^^^^^^
-# First, let's vectorize our text column using the |GapEncoder|, one of the
-# `high cardinality categorical encoders <https://inria.hal.science/hal-02171256v4>`_
-# provided by skrub.
-# As introduced in the :ref:`previous example<example_encodings>`, the |GapEncoder|
-# performs matrix factorization for topic modeling. It builds latent topics by
-# capturing combinations of substrings that frequently co-occur, and encoded vectors
-# correspond to topic activations.
 #
-# To interpret these latent topics, we select for each of them a few labels from
-# the input data with the highest activations. In the example below we select 3 labels
-# to summarize each topic.
-from skrub import GapEncoder
-
-gap = GapEncoder(n_components=30)
-X_trans = gap.fit_transform(X["text"])
-# Add the original text as a first column
-X_trans.insert(0, "text", X["text"])
-TableReport(X_trans)
-
-# %%
-# We can use a heatmap to highlight the highest activations, making them more visible
-# for comparison against the original text and vectors above.
-
-import numpy as np
-from matplotlib import pyplot as plt
-
-
-def plot_gap_feature_importance(X_trans):
-    x_samples = X_trans.pop("text")
-
-    # We slightly format the topics and labels for them to fit on the plot.
-    topic_labels = [x.replace("text: ", "") for x in X_trans.columns]
-    labels = x_samples.str[:50].values + "..."
-
-    # We clip large outliers to make activations more visible.
-    X_trans = np.clip(X_trans, a_min=None, a_max=200)
-
-    plt.figure(figsize=(10, 10), dpi=200)
-    plt.imshow(X_trans.T)
-
-    plt.yticks(
-        range(len(topic_labels)),
-        labels=topic_labels,
-        ha="right",
-        size=12,
-    )
-    plt.xticks(range(len(labels)), labels=labels, size=12, rotation=50, ha="right")
-
-    plt.colorbar().set_label(label="Topic activations", size=13)
-    plt.ylabel("Latent topics", size=14)
-    plt.xlabel("Data entries", size=14)
-    plt.tight_layout()
-    plt.show()
-
-
-plot_gap_feature_importance(X_trans.head())
-
-# %%
-# Now that we have an understanding of the vectors produced by the |GapEncoder|,
-# let's evaluate its performance in toxicity classification. The |GapEncoder| excels
-# at handling categorical columns with high cardinality, but here the column consists
-# of free-form text. Sentences are generally longer, with more unique ngrams than
-# high cardinality categories.
-#
-# To benchmark the performance of the |GapEncoder| against the toxicity dataset,
-# we integrate it into a |TableVectorizer|, as introduced in the
+# To benchmark the performance of the various encoders against the toxicity dataset,
+# we integrate them into a |TableVectorizer|, as introduced in the
 # :ref:`previous example<example_encodings>`,
 # and create a |pipeline| by appending a |HistGradientBoostingClassifier|, which
-# consumes the vectors produced by the |GapEncoder|.
+# consumes the vectors produced by each encoder.
 #
-# We set ``n_components`` to 30; however, to achieve the best performance, we would
-# need to find the optimal value for this hyperparameter using either |GridSearchCV|
-# or |RandomizedSearchCV|. We skip this part to keep the computation time for this
-# small example.
+# We set ``n_components`` of each encoder to 30; however, to achieve the best
+# performance, we would need to find the optimal value for this hyperparameter
+# using either |GridSearchCV| or |RandomizedSearchCV|. We skip this part to keep
+# the computation time for this small example.
 #
 # Recall that the ROC AUC is a metric that quantifies the ranking power of estimators,
 # where a random estimator scores 0.5, and an oracle —providing perfect predictions—
@@ -156,96 +94,41 @@ from sklearn.pipeline import make_pipeline
 
 from skrub import TableVectorizer
 
-
+# %%
+# We use a boxplot to visualize the distribution of ROC AUC scores across folds
+# for each encoder.
+import matplotlib.pyplot as plt
 def plot_box_results(named_results):
     fig, ax = plt.subplots()
     names, scores = zip(
         *[(name, result["test_score"]) for name, result in named_results]
     )
-    ax.boxplot(scores)
-    ax.set_xticks(range(1, len(names) + 1), labels=list(names), size=12)
-    ax.set_ylabel("ROC AUC", size=14)
-    plt.title(
+    ax.boxplot(scores, orientation="horizontal")
+    ax.set_yticks(range(1, len(names) + 1), labels=list(names), size=12)
+    ax.set_xlabel("ROC AUC", size=14)
+    ax.set_title(
         "AUC distribution across folds (higher is better)",
         size=14,
     )
     plt.show()
 
-
 results = []
-
-# %%
-# Now we can evaluate the performance of the |GapEncoder| in toxicity classification.
-
-gap_pipe = make_pipeline(
-    TableVectorizer(high_cardinality=GapEncoder(n_components=30)),
-    HistGradientBoostingClassifier(),
-)
-gap_results = cross_validate(gap_pipe, X, y, scoring="roc_auc")
-results.append(("GapEncoder", gap_results))
-
-plot_box_results(results)
-
-# %%
-# MinHashEncoder
-# ^^^^^^^^^^^^^^
-# We now compare these results with the |MinHashEncoder|, which is faster
-# and produces vectors better suited for tree-based estimators like
-# |HistGradientBoostingClassifier|. To do this, we can simply replace
-# the |GapEncoder| with the |MinHashEncoder| in the previous pipeline
-# using ``set_params()``.
-
-from skrub import MinHashEncoder
-
-minhash_pipe = make_pipeline(
-    TableVectorizer(high_cardinality=MinHashEncoder(n_components=30)),
-    HistGradientBoostingClassifier(),
-)
-minhash_results = cross_validate(minhash_pipe, X, y, scoring="roc_auc")
-results.append(("MinHashEncoder", minhash_results))
-
-plot_box_results(results)
-
-# %%
-# Remarkably, the vectors produced by the |MinHashEncoder| offer less predictive
-# power than those from the |GapEncoder| on this dataset.
-#
-# LLMEncoder
-# ^^^^^^^^^^^
-# Let's now shift our focus to pre-trained deep learning encoders. Our previous
-# encoders are syntactic models that we trained directly on the toxicity dataset.
-# To generate more powerful vector representations for free-form text and diverse
-# entries, we can instead use semantic models, such as BERT, which have been trained
-# on very large datasets.
-#
-# |LLMEncoder| enables you to integrate any Sentence Transformer model from the
-# Hugging Face Hub (or from your local disk) into your |pipeline| to transform a text
-# column in a dataframe. By default, |LLMEncoder| uses the e5-small-v2 model.
-from skrub import LLMEncoder
-
-text_encoder = LLMEncoder(
-    "sentence-transformers/paraphrase-albert-small-v2",
-    device="cpu",
-)
-
-text_encoder_pipe = make_pipeline(
-    TableVectorizer(high_cardinality=text_encoder),
-    HistGradientBoostingClassifier(),
-)
-text_encoder_results = cross_validate(text_encoder_pipe, X, y, scoring="roc_auc")
-results.append(("LLMEncoder", text_encoder_results))
-
-plot_box_results(results)
 
 # %%
 # StringEncoder
 # ^^^^^^^^^^^^^
-# |LLMEncoder| embeddings are very strong, but they are also quite expensive to
-# use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
-# which works by first performing a tf-idf (computing vectors of rescaled word
-# counts of the text `wiki <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_), and then
+# First, let's vectorize our text column using the |StringEncoder|, which is a
+# simple and fast encoder for strings, and is used as the default encoder for
+# string columns in skrub.
+#
+# The |StringEncoder| works by first performing a tf-idf
+# (computing vectors of rescaled word counts of the text
+# `wiki <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_), and then
 # following it with TruncatedSVD to reduce the number of dimensions to, in this
 # case, 30.
+# The |StringEncoder| can typically produce good quality vectors for text and is
+# quite fast to compute.
+
 from skrub import StringEncoder
 
 string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb", random_state=0)
@@ -260,8 +143,113 @@ results.append(("StringEncoder", string_encoder_results))
 
 plot_box_results(results)
 
+# %%
+# LLMEncoder
+# ^^^^^^^^^^^
+# A far more powerful alternative to the |StringEncoder| is the |LLMEncoder|, which
+# leverages pre-trained deep learning models to generate vector representations of text.
+# The |StringEncoder| and |CatEncoder| are syntactic models that we trained directly
+# on the toxicity dataset.
+# The |LLMEncoder| is a semantic model that has been trained on a large corpus of
+# text, allowing it to capture the meaning and context of words and phrases.
+# To generate more powerful vector representations for free-form text and diverse
+# entries, we can instead use semantic models, such as BERT, which have been trained
+# on very large datasets.
+#
+# |LLMEncoder| enables you to integrate any Sentence Transformer model from the
+# Hugging Face Hub (or from your local disk) into your |pipeline| to transform a text
+# column in a dataframe. By default, |LLMEncoder| uses the e5-small-v2 model.
+from skrub import LLMEncoder
+
+llm_encoder = LLMEncoder(
+    "sentence-transformers/paraphrase-albert-small-v2",
+    device="cpu",
+)
+
+llm_encoder_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=llm_encoder),
+    HistGradientBoostingClassifier(),
+)
+llm_encoder_results = cross_validate(llm_encoder_pipe, X, y, scoring="roc_auc")
+results.append(("LLMEncoder", llm_encoder_results))
+
+plot_box_results(results)
 
 # %%
+# GapEncoder
+# ^^^^^^^^^^
+# We now evaluate the performance of the |GapEncoder|
+# (`reference paper <https://inria.hal.science/hal-02171256v4>`_),
+# a high cardinality encoder that performs matrix factorization for topic modeling.
+# The |GapEncoder| builds latent topics by capturing combinations of substrings
+# that frequently co-occur, and encoded vectors correspond to topic activations.
+# The |GapEncoder| typically works well for categorical columns with high
+# cardinality, but here the column consists of free-form text.
+# Sentences are generally longer, with more unique ngrams than high cardinality
+# categories.
+from skrub import GapEncoder
+
+gap = GapEncoder(n_components=30)
+gap_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=GapEncoder(n_components=30)),
+    HistGradientBoostingClassifier(),
+)
+gap_results = cross_validate(gap_pipe, X, y, scoring="roc_auc")
+results.append(("GapEncoder", gap_results))
+
+plot_box_results(results)
+
+# %%
+# MinHashEncoder
+# ^^^^^^^^^^^^^^
+# The |MinHashEncoder| is faster and produces vectors better suited for
+# tree-based estimators like |HistGradientBoostingClassifier|.
+
+from skrub import MinHashEncoder
+
+minhash_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=MinHashEncoder(n_components=30)),
+    HistGradientBoostingClassifier(),
+)
+minhash_results = cross_validate(minhash_pipe, X, y, scoring="roc_auc")
+results.append(("MinHashEncoder", minhash_results))
+
+plot_box_results(results)
+
+# %%
+# Remarkably, the vectors produced by the |MinHashEncoder| offer less predictive
+# power than those from all the other encoders, despite being faster to compute.
+#
+
+# %%
+# CatEncoder
+# ^^^^^^^^^^^^^^
+# The |CatEncoder| is a high cardinality encoder that uses a combination of
+# |OneHotEncoder| and |TargetEncoder| to produce vectors for categorical columns.
+# Specifically, |TargetEncoder| is added to the |OneHotEncoder| to produce a
+# vector representation of each category based on the target variable; rare
+# categories are marked as "infrequent".
+
+from skrub import CatEncoder
+
+cat_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=CatEncoder()),
+    HistGradientBoostingClassifier(),
+)
+cat_results = cross_validate(cat_pipe, X, y, scoring="roc_auc")
+results.append(("CatEncoder", cat_results))
+
+plot_box_results(results)
+
+# %%
+# In this case, the |CatEncoder| cannot learn anything from the dataset: since
+# all the entries are unique, the |CatEncoder| cannot find any patterns in the data,
+# and for this reason its encodings are not useful for the classification task.
+
+
+# %%
+# Performance tradeoff
+# ------------------------
 # The performance of the |LLMEncoder| is significantly stronger than that of
 # the syntactic encoders, which is expected. But how long does it take to load
 # and vectorize text on a CPU using a Sentence Transformer model? Below, we display
@@ -269,10 +257,11 @@ plot_box_results(results)
 # not training the Sentence Transformer model, the "fitting time" refers to the
 # time taken for vectorization.
 
+import numpy as np
 
 def plot_performance_tradeoff(results):
     fig, ax = plt.subplots(figsize=(5, 4), dpi=200)
-    markers = ["s", "o", "^", "x"]
+    markers = ["s", "o", "^", "x", "D"]
     for idx, (name, result) in enumerate(results):
         ax.scatter(
             result["fit_time"],
