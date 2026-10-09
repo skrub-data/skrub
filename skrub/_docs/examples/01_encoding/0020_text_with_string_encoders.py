@@ -20,9 +20,6 @@ available in skrub.
 .. |StringEncoder| replace::
      :class:`~skrub.StringEncoder`
 
-.. |CatEncoder| replace::
-     :class:`~skrub.CatEncoder`
-
 .. |TableReport| replace::
      :class:`~skrub.TableReport`
 
@@ -148,7 +145,7 @@ plot_box_results(results)
 # ^^^^^^^^^^^
 # A far more powerful alternative to the |StringEncoder| is the |LLMEncoder|, which
 # leverages pre-trained deep learning models to generate vector representations of text.
-# The |StringEncoder| and |CatEncoder| are syntactic models that we trained directly
+# The |StringEncoder| is a syntactic models that we trained directly
 # on the toxicity dataset.
 # The |LLMEncoder| is a semantic model that has been trained on a large corpus of
 # text, allowing it to capture the meaning and context of words and phrases.
