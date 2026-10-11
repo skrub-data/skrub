@@ -63,6 +63,7 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         M_features=100,
         R_order=2,
         exclude_cols=None,
+        max_sample=10000,
     ):
         self.tau_card = tau_card
         self.tau_miss = tau_miss
@@ -71,6 +72,7 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         self.M_features = M_features
         self.R_order = R_order
         self.exclude_cols = exclude_cols
+        self.max_sample = max_sample
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -90,9 +92,10 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
             dataframe
                 The transformed input.
             """
-        self.filter = self._filter(X)
-        X_subsample = self._subsample()
-        output = self._generate_features(X_subsample, y=y)
+        # sample 10% of the data up to max_sample
+        n = min(X.shape[0] * 0.10, max_sample=self.max_sample)
+        self.filter = self._filter(sbd.sample(X, n))
+        output = self._generate_features(X, y=y)
         # for sklearn DO I NEED THESE TOO?
         # self.feature_names_in_ = self._preprocessors[0].feature_names_out_
         # self.n_features_in_ = len(self.feature_names_in_)
@@ -109,7 +112,9 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         low_card = ~s.cardinality_below(self.tau_card)
         missing = ~s.has_nulls(self.tau_miss)
         f_mode_threshold = s.cols(lambda col: f_mode[col] < self.tau_mode)
-        top_N_features = s.cols(f_mode.keys()[: self.max_base_feats])
+        top_N_features = s.cols(
+            f_mode.keys()[: min(self.max_base_feats, len(f_mode.keys()))]
+        )
         excluded = s.cols(self.exclude_cols) if self.exclude_cols else s.none
 
         filter = (
@@ -120,21 +125,25 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
             & top_N_features
             & ~excluded
         )
-        self._X_filtered = s.select(X, self._columns_for_fe)
 
         return filter
 
-    def _subsample(self, X, max_samples=10000):
-        if sbd.shape():
-            self._indices = sbd.subsample_indices(self.X, self.y, max_samples=10000)
-            X_subsample = sbd.select_rows(self.X, self._indices)
-
-        else:
-            self._indices = None
-            X_subsample = self.X
-
-        return X_subsample
-
     def _generate_features(self, X, y=None):
         # combinatorics
+        # combinations = itertools.combinations(X.columns, 2)
+        # permutations = itertools.permutations(X.columns, 2)
+
+        # add = random.sample(
+        #     list(combinations), min(self.M_features, len(list(combinations)))
+        # )
+        # subtract = random.sample(
+        #     list(permutations), min(self.M_features, len(list(permutations)))
+        # )
+        # multiply = random.sample(
+        #     list(combinations), min(self.M_features, len(list(combinations)))
+        # )
+        # divide = random.sample(
+        #     list(permutations), min(self.M_features, len(list(permutations)))
+        # )
+
         pass
