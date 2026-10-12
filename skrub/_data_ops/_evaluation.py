@@ -436,27 +436,27 @@ class _Evaluator(_DataOpTraversal):
         )
 
 
-def _get_unused_names(data_op, ancestor_data_op, environment):
+def _get_unused_keys(data_op, ancestor_data_op, environment):
     if not isinstance(environment, typing.Mapping):
         # checked in _check_environment
         return []
     if environment.get(IGNORE_EXTRA_KEYS_NAME, False):
         return []
-    used_names = set(
-        _named_nodes_and_choices(
-            ancestor_data_op if ancestor_data_op is not None else data_op
-        )
+    used_keys = _all_names_and_ids(
+        ancestor_data_op if ancestor_data_op is not None else data_op
     )
-    return list(
+    return sorted(
         {
             k
             for k in environment.keys()
-            if isinstance(k, str) and not k.startswith("_skrub_")
-        }.difference(used_names)
+            if isinstance(k, int)
+            or (isinstance(k, str) and not k.startswith("_skrub_"))
+        }.difference(used_keys),
+        key=str,
     )
 
 
-def _check_environment(environment, unused_names):
+def _check_environment(environment, unused_keys):
     if environment is None:
         return
     if not isinstance(environment, typing.Mapping):
@@ -476,7 +476,7 @@ def _check_environment(environment, unused_names):
             f"contains {description}. This argument should only "
             "contain actual values on which to run the computation."
         )
-    if unused_names:
+    if unused_keys:
         if sys.version_info >= (3, 12):
             kwargs = {"skip_file_prefixes": (str(Path(__file__).parents[1]),)}
         else:
@@ -484,7 +484,7 @@ def _check_environment(environment, unused_names):
         warnings.warn(
             "The following keys were passed in the environment but "
             "have no corresponding variable (or choice) "
-            f"in the DataOp:\n{unused_names}.\n"
+            f"in the DataOp:\n{unused_keys}.\n"
             "This usually indicates a mis-typed variable name.\n"
             "To avoid this warning, remove the extra keys from the environment\n"
             f"or add {{'{IGNORE_EXTRA_KEYS_NAME}': True}} to the environment.\n"
@@ -498,7 +498,7 @@ def _check_environment(environment, unused_names):
     # Notes about checking the env keys:
     #
     # - env ⊂ variables: we check that there are no extra keys in
-    #   `environment`, i.e. all keys in `environment` correspond to a name in
+    #   `environment`, i.e. all keys in `environment` correspond to a name (or ID) in
     #   the DataOp. However in some cases users can naturally end up using a bigger
     #   environment than what is needed. For example they want to evaluate a
     #   sub-DataOp (such as the result of `.skb.find()` or `.skb.find_X_y()`),
@@ -557,14 +557,14 @@ def evaluate(
 
     ancestor_data_op : DataOp or None
         When we are evaluating a part of a DataOp (e.g. the X node only), pass
-        this so that we can look at all the variable names of the full DataOp
+        this so that we can look at all the node names and IDs of the full DataOp
         when producing error messages about missing or extra keys in the
         environment. It is not used for other purposes than inspecting the
-        variable an choice names it contains. In particular it is not
+        variable and choice names and IDs it contains. In particular it is not
         evaluated.
     """
-    unused_names = _get_unused_names(data_op, ancestor_data_op, environment)
-    _check_environment(environment, unused_names)
+    unused_keys = _get_unused_keys(data_op, ancestor_data_op, environment)
+    _check_environment(environment, unused_keys)
     if clear:
         callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
         clear_results(data_op, mode=mode)
@@ -578,14 +578,14 @@ def evaluate(
         if environment is not None and not environment.get(IS_PREVIEW_DATA_ENV_NAME):
             # user passed an explicit environment rather than using the
             # variables' preview values.
-            e.add_note(_uninitialized_variable_msg(e.name, unused_names))
+            e.add_note(_uninitialized_variable_msg(e.name, unused_keys))
         raise
     finally:
         if clear:
             clear_results(data_op, mode=mode)
 
 
-def _uninitialized_variable_msg(missing_name, unused_names):
+def _uninitialized_variable_msg(missing_name, unused_keys):
     msg = (
         "- Note that preview values passed to initialize skrub variables\n"
         "  are ignored by default whenever we pass "
@@ -596,11 +596,11 @@ def _uninitialized_variable_msg(missing_name, unused_names):
         f"skrub.var({missing_name!r}, value=..., becomes_default=True)\n"
         "  to always retain the initialization value as a default."
     )
-    if unused_names:
+    if unused_keys:
         msg += (
             "\n- WARNING: the following keys were passed in the environment but "
             "have no corresponding variable (or choice) in the DataOp:\n"
-            f"  {unused_names}"
+            f"  {unused_keys}"
         )
     return msg
 
@@ -1357,22 +1357,27 @@ def find_scoring_node(data_op):
     )
 
 
-def _named_nodes_and_choices(data_op):
+def _all_names_and_ids(data_op):
     """
-    Return all DataOps or choices that have a name.
+    Return all names and IDs (valid keys in an environment) from DataOp and
+    choice nodes.
 
     (slightly faster & simpler than calling choices() and nodes() separately)
     """
-    named = {}
+    keys = set()
 
     def pred(obj):
-        name = obj._skrub_impl.name if isinstance(obj, DataOp) else obj.name
+        if isinstance(obj, DataOp):
+            keys.add(obj._skrub_impl.uuid)
+            name = obj._skrub_impl.name
+        else:
+            name = obj.name
         if name is not None:
-            named[name] = obj
+            keys.add(name)
         return False
 
     find_node(data_op, pred)
-    return named
+    return keys
 
 
 def needs_eval(obj, return_node=False):
