@@ -55,6 +55,16 @@ def test_fast_ngram_similarity():
     assert np.allclose(feature_matrix, feature_matrix_fast)
 
 
+def test_similarity_encoder_self_similarity_when_ngram_exceeds_string():
+    # n-grams longer than the string are absent. Counting those windows as a
+    # negative length made the fast path report self-similarity 3.
+    enc = SimilarityEncoder(ngram_range=(2, 5))
+    X = [["a"]]
+    enc.fit(X)
+    assert enc.transform(X, fast=True)[0, 0] == pytest.approx(1)
+    assert enc.transform(X, fast=False)[0, 0] == pytest.approx(1)
+
+
 def test_parameters():
     X = [["foo"], ["baz"]]
     X2 = [["foo"], ["bar"]]

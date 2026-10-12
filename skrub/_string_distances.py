@@ -19,13 +19,15 @@ def get_ngram_count(string, ngram_range):
     * this can be generalized to n-grams by changing 3 by n.
     * when given an ngram_range, we can sum this formula over all possible
       ngrams.
+    * a window longer than the string is not an n-gram, so it contributes 0
+      rather than a negative count.
 
     """
     min_n, max_n = ngram_range
     ngram_count = 0
 
     for i in range(min_n, max_n + 1):
-        ngram_count += len(string) - i + 1
+        ngram_count += max(len(string) - i + 1, 0)
 
     return ngram_count
 
