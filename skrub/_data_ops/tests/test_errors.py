@@ -776,13 +776,20 @@ def test_missing_var_message_train_test_split():
 
 def test_extra_key_warning():
     a = skrub.var("a")
+    b = a + 1
     with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
         a.skb.eval({"a": 0, "this_is_an_extra_key": 0})
+    with pytest.warns(UserWarning, match=r"(?s).*\[12345, 'this_is_an_extra_key'\]"):
+        b.skb.eval({"a": 0, 12345: 0, "this_is_an_extra_key": 0})
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         a.skb.eval(
             {"a": 0, "this_is_an_extra_key": 0, "_skrub_ignore_extra_keys": True}
         )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        # the ID of a node is a valid key
+        b.skb.eval({"a": 0, b.skb.id: 5})
 
 
 def test_extra_key_warning_sub_data_op():
@@ -792,7 +799,7 @@ def test_extra_key_warning_sub_data_op():
     # it still exists in the DataOp as a whole so we should not get the warning
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        X.skb.train_test_split({"x": np.arange(20), "a": 0, "b": 1})
+        X.skb.train_test_split({"x": np.arange(20), "a": 0, b.skb.id: 1})
     with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
         X.skb.train_test_split(
             {"x": np.arange(20), "a": 0, "b": 1, "this_is_an_extra_key": 0}
