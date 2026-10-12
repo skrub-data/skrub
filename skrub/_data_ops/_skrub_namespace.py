@@ -1583,7 +1583,7 @@ class SkrubNamespace:
         {'b': choose_int(0, 10, name='b'), 'choose_float(0.0, 1.0)': choose_float(0.0, 1.0)}
 
         With ``named_only`` we can restrict to choices that have an actual name
-        and can be passed in an environment:
+        (only choices with a name can be passed in an environment):
 
         >>> dop.skb.get_choices(named_only=True)
         {'b': choose_int(0, 10, name='b')}
