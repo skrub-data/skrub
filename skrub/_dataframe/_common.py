@@ -813,7 +813,12 @@ def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
     if col.dtype == pl.Categorical:
-        return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
+        if (
+            parse_version(pl.__version__).base_version
+            < parse_version("2.0.0").base_version
+        ):
+            return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
+        return col.cat.physical().cast(pl.Float32)
     return col.cast(pl.Float32, strict=strict)
 
 
