@@ -261,7 +261,7 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
         for i, aux_table in enumerate(aux_tables):
             if isinstance(aux_table, str) and aux_table == "X":
                 aux_tables[i] = X
-            elif not hasattr(aux_table, "__dataframe__"):
+            elif not sbd.is_dataframe(aux_table):
                 raise ValueError(
                     "`aux_tables` must be an iterable containing dataframes and/or the"
                     " string 'X'"
