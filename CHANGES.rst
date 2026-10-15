@@ -19,9 +19,11 @@ New Features
 
 Changes
 -------
-- :class:`DatetimeEncoder` resolution: string with datetime and timezones are
-candidates for extraction, even if HH:MM:SS is 00:00:00.
-:pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- Whenever a datetime column is timezone-aware, it will be treated like a full
+  datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
+  feature is extracted by default, even if all items in the column have their
+  time at ``00:00:00``.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Bugfixes
 --------
