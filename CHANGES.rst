@@ -19,9 +19,17 @@ New Features
 
 Changes
 -------
+- :class:`DatetimeEncoder` resolution: string with datetime and timezones are
+candidates for extraction, even if HH:MM:SS is 00:00:00.
+:pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Bugfixes
 --------
+- :class:`DatetimeEncoder` no longer raises
+  `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
+  identify a date vs a datetime with `col.dt.normalize()` against some specific
+  timezoned string datetime.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Deprecations
 ------------
