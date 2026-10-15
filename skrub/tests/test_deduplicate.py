@@ -1,3 +1,5 @@
+import warnings
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -143,6 +145,39 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
 
 
 joblib.register_parallel_backend("testing", DummyBackend)
+
+
+@pytest.mark.parametrize(
+    "X",
+    [
+        # Too few unique entries for silhouette score (only 2 unique values)
+        ["black", "black", "black", "blac"],
+        # Too few unique entries (3 unique values, only 1 cluster possible)
+        ["black", "white", "black", "black", "blac"],
+        # 4 unique values but still not enough for clustering to succeed
+        ["black", "black", "black", "black", "white", "white", "white", "red", "green"],
+    ],
+)
+def test_deduplicate_failure_returns_input(X):
+    result = deduplicate(X)
+    assert isinstance(result, list)
+    assert result == X
+
+
+@pytest.mark.parametrize(
+    "X",
+    [
+        ["black", "black", "black", "blac"],
+        ["black", "white", "black", "black", "blac"],
+    ],
+)
+def test_deduplicate_warn(X):
+    with pytest.warns(UserWarning, match="Returning the input unchanged"):
+        deduplicate(X, warn=True)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        deduplicate(X, warn=False)  # raises if any warning is emitted
 
 
 @skip_if_no_parallel
