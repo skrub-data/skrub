@@ -282,35 +282,6 @@ def _wrap_add_check_single_column(f):
         return transform
 
 
-def _insert_after_first_paragraph(document, text_to_insert):
-    split_doc = document.splitlines(True)
-    indent = min(
-        (
-            len(m.group(1))
-            for line in split_doc[1:]
-            if (m := re.match(r"^( *)\S", line)) is not None
-        ),
-        default=0,
-    )
-    doc_lines = iter(split_doc)
-    output_lines = []
-    for line in doc_lines:
-        output_lines.append(line)
-        if line.strip():
-            break
-    for line in doc_lines:
-        output_lines.append(line)
-        if not line.strip():
-            break
-    else:
-        output_lines.append("\n")
-    for line in text_to_insert.splitlines(True):
-        output_lines.append(line if not line.strip() else " " * indent + line)
-    output_lines.append("\n")
-    output_lines.extend(doc_lines)
-    return "".join(output_lines)
-
-
 def _insert_before_parameters(document, text_to_insert):
     split_doc = document.splitlines(True)
     indent = min(
@@ -321,18 +292,21 @@ def _insert_before_parameters(document, text_to_insert):
         ),
         default=0,
     )
+    block_to_insert = [
+        line_insert if not line_insert.strip() else " " * indent + line_insert
+        for line_insert in text_to_insert.splitlines(True)
+    ]
+    inserted = False
     doc_lines = iter(split_doc)
     output_lines = []
-    for i, line in enumerate(doc_lines):
-        if line.strip() == "Parameters" or i == len(split_doc) - 1:
-            for line_insert in text_to_insert.splitlines(True):
-                output_lines.append(
-                    line_insert
-                    if not line_insert.strip()
-                    else " " * indent + line_insert
-                )
+    for line in doc_lines:
+        if line.strip() == "Parameters":
+            output_lines.extend(block_to_insert)
             output_lines.append("\n")
+            inserted = True
         output_lines.append(line)
+    if not inserted:
+        output_lines.extend(block_to_insert)
     return "".join(output_lines)
 
 
