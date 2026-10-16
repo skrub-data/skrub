@@ -32,6 +32,10 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :meth:`deduplicate` no longer fails when the input contains missing values;
+  missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
+  remaining strings are deduplicated.
+  :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
 
 Deprecations
 ------------
