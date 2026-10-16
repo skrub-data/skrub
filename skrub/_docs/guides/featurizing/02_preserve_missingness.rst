@@ -50,6 +50,20 @@ retained and imputed:
 >>> result["price"].tolist()
 [10.0, 20.0, 30.0, 40.0, 50.0]
 
+
+The fitted pipeline also adds indicators for new rows. The selected input
+columns are unchanged after fitting, even when the missingness pattern changes:
+
+>>> new_rows = pd.DataFrame({
+...     "measurement": [None, 8.0],
+...     "price": [15.0, 25.0],
+... })
+>>> transformed = pipeline.transform(new_rows)
+>>> transformed["missingindicator_measurement"].tolist()
+[True, False]
+>>> int(transformed["measurement"].isna().sum())
+0
+
 To select *only* columns whose missing fraction exceeds a threshold, use
 ``s.has_nulls(proportion=0.4)`` instead. For example, a threshold of
 ``0.4`` selects columns with **more than 40%** missing values. The default
