@@ -323,8 +323,8 @@ def _insert_before_parameters(document, text_to_insert):
     )
     doc_lines = iter(split_doc)
     output_lines = []
-    for line in doc_lines:
-        if line.strip() == "Parameters":
+    for i, line in enumerate(doc_lines):
+        if line.strip() == "Parameters" or i == len(split_doc) - 1:
             for line_insert in text_to_insert.splitlines(True):
                 output_lines.append(
                     line_insert
