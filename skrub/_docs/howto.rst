@@ -32,6 +32,7 @@ Featurizing dataframes
    :maxdepth: 1
 
    guides/featurizing/01_describe_transformations.rst
+   guides/featurizing/02_preserve_missingness.rst
 
 Utilities
 ---------
