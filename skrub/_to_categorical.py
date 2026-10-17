@@ -1,3 +1,5 @@
+"""Convert low-cardinality string or categorical columns to Categorical dtype."""
+
 from . import _dataframe as sbd
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 

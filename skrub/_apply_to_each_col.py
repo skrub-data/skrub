@@ -1,3 +1,5 @@
+"""Apply a single-column transformer independently to each selected column."""
+
 import itertools
 
 from joblib import Parallel, delayed

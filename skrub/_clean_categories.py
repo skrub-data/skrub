@@ -1,3 +1,5 @@
+"""Ensure categorical columns have consistent string categories across backends."""
+
 import numpy as np
 
 from . import _dataframe as sbd

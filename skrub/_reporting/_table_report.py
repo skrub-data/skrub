@@ -1,3 +1,5 @@
+"""Implement the interactive TableReport class for summarizing dataframes."""
+
 import codecs
 import functools
 import json

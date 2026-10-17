@@ -1,3 +1,5 @@
+"""Pytest configuration and shared dataframe fixtures for skrub tests."""
+
 import datetime
 import inspect
 from types import SimpleNamespace

@@ -1,3 +1,5 @@
+"""Base estimator class for skrub transformers."""
+
 from sklearn.base import BaseEstimator
 
 

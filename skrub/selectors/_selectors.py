@@ -1,3 +1,5 @@
+"""Built-in column selectors based on names, patterns, dtypes, and cardinality."""
+
 import fnmatch
 import numbers
 import re

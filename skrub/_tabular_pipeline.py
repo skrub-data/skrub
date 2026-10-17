@@ -1,3 +1,5 @@
+"""Create default scikit-learn pipelines tailored for tabular data."""
+
 from sklearn import ensemble
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline, make_pipeline

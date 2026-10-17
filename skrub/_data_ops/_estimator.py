@@ -1,3 +1,5 @@
+"""Scikit-learn-compatible learner and parameter search interfaces for skrub DataOps."""
+
 # Scikit-learn-ish interface to the skrub DataOps
 import copy
 import itertools

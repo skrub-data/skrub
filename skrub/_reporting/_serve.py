@@ -1,3 +1,5 @@
+"""Serve and open generated HTML TableReports in a web browser."""
+
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler

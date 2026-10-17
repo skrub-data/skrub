@@ -1,3 +1,5 @@
+"""Convert numeric and numeric-string columns to 32-bit floats."""
+
 from . import _dataframe as sbd
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer

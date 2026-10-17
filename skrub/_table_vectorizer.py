@@ -1,3 +1,5 @@
+"""Cleaner and TableVectorizer for end-to-end dataframe preprocessing."""
+
 import reprlib
 from collections import UserDict
 from collections.abc import Iterable

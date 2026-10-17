@@ -1,3 +1,5 @@
+"""Wrap a transformer into ApplyToEachCol or ApplyToSubFrame."""
+
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
 from ._single_column_transformer import is_single_column_transformer

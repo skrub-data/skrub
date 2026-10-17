@@ -1,3 +1,5 @@
+"""Convert non-numeric, non-datetime columns to string columns."""
+
 from . import _dataframe as sbd
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 

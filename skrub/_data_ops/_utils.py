@@ -1,3 +1,5 @@
+"""Internal utilities for DataOps serialization, formatting, and graphviz checks."""
+
 import enum
 import re
 import shutil

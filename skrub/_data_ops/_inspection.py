@@ -1,3 +1,5 @@
+"""Generate HTML execution reports and computation graph drawings for DataOps."""
+
 import datetime
 import functools
 import hashlib

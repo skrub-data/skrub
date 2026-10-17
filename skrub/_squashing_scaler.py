@@ -1,3 +1,5 @@
+"""Robust numerical scaling and outlier squashing for tabular data."""
+
 import numbers
 
 import numpy as np

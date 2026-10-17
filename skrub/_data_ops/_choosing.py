@@ -1,3 +1,5 @@
+"""Hyperparameter choice objects for skrub DataOps."""
+
 import dataclasses
 import functools
 import numbers

@@ -1,3 +1,5 @@
+"""Apply a dataframe transformer to a selected subset of columns."""
+
 from sklearn.base import TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 

@@ -1,3 +1,5 @@
+"""Transformers for selecting or dropping dataframe columns."""
+
 from sklearn.base import TransformerMixin, check_is_fitted
 
 from . import selectors as s

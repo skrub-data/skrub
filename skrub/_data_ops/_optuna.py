@@ -1,3 +1,5 @@
+"""Optuna-based hyperparameter search for skrub DataOps."""
+
 import contextlib
 import itertools
 import pathlib

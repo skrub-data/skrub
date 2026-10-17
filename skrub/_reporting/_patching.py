@@ -1,3 +1,5 @@
+"""Monkey-patch pandas and polars dataframe display to render TableReport."""
+
 import importlib
 
 from ._table_report import TableReport

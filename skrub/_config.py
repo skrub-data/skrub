@@ -1,3 +1,5 @@
+"""Global and thread-local configuration management for skrub."""
+
 import numbers
 import os
 import threading

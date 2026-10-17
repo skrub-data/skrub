@@ -1,3 +1,5 @@
+"""Join a main table to an auxiliary table using machine learning interpolation."""
+
 import warnings
 
 import joblib

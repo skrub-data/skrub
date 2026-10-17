@@ -1,3 +1,5 @@
+"""Backend-agnostic dataframe and column operations for pandas and polars."""
+
 import builtins
 import warnings
 from collections.abc import Mapping, Sequence
