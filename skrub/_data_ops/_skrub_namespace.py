@@ -1,3 +1,5 @@
+"""Implement the .skb namespace accessor on DataOp objects."""
+
 import functools
 import pickle
 import re

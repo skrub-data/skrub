@@ -1,3 +1,5 @@
+"""Formatting, quantization, and JSON serialization helpers for TableReport."""
+
 import base64
 import json
 import numbers

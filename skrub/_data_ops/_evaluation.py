@@ -1,3 +1,5 @@
+"""Utilities for evaluating, cloning, and traversing skrub DataOps graphs."""
+
 # Utilities to manipulate DataOps: evaluating, cloning, building parameter
 # grids etc.
 #

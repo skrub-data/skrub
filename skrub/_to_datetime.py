@@ -1,3 +1,5 @@
+"""Parse string or date columns into Datetime columns."""
+
 import datetime
 import warnings
 

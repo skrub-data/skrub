@@ -1,3 +1,5 @@
+"""Drop columns found to be uninformative based on missingness or constancy."""
+
 import numbers
 import warnings
 

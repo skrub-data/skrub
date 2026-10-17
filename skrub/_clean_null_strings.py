@@ -1,3 +1,5 @@
+"""Replace common string representations of missing values with nulls."""
+
 from collections.abc import Sequence
 
 from . import _dataframe as sbd

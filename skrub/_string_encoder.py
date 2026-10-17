@@ -1,3 +1,5 @@
+"""Encode string categorical columns using n-gram TF-IDF and SVD."""
+
 import warnings
 
 from sklearn.base import TransformerMixin

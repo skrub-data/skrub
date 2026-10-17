@@ -1,3 +1,5 @@
+"""Helper functions for downloading, extracting, and loading skrub datasets."""
+
 import hashlib
 import json
 import os

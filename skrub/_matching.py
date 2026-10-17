@@ -1,3 +1,5 @@
+"""Statistical matching helpers for fuzzy joining of tables."""
+
 import numpy as np
 from scipy import sparse
 from sklearn.neighbors import NearestNeighbors

@@ -1,3 +1,5 @@
+"""Validate and sanitize input dataframes and column names."""
+
 import warnings
 
 import numpy as np

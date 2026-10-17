@@ -1,3 +1,5 @@
+"""Define the DataOp class and computation graph nodes for skrub DataOps."""
+
 # This module defines the DataOp class, which represents skrub DataOps.
 #
 # Accessing an attribute or method of a DataOp creates a new node in the

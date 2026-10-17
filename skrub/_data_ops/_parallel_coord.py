@@ -1,3 +1,5 @@
+"""Parallel coordinates plots for visualizing DataOps hyperparameter search results."""
+
 import textwrap
 
 import numpy as np

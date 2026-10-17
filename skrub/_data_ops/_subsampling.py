@@ -1,3 +1,5 @@
+"""Subsampling configuration and helpers for DataOps previews and evaluation."""
+
 import numpy as np
 
 from .. import _dataframe as sbd

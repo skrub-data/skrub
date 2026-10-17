@@ -1,3 +1,5 @@
+"""CLI utility for pruning old entries from the DataOps cache directory."""
+
 import argparse
 
 import joblib

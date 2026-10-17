@@ -1,3 +1,5 @@
+"""General internal utility functions and helper classes."""
+
 import collections
 import importlib
 import itertools

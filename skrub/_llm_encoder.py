@@ -1,3 +1,5 @@
+"""Encode text columns using pretrained language models from Hugging Face."""
+
 import functools
 import numbers
 import os
