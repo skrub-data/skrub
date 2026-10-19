@@ -1,4 +1,5 @@
 import pathlib
+import sys
 import warnings
 
 import pytest
@@ -72,6 +73,18 @@ def test_default_config():
         "data_ops_open_graph_dropdown",
     }
     assert set(cfg.keys()) == expected_keys
+
+
+def test_get_default_data_dir_does_not_create_directory(monkeypatch, tmp_path):
+    home = tmp_path / "home"
+
+    with monkeypatch.context() as mp:
+        mp.setenv("USERPROFILE" if sys.platform == "win32" else "HOME", str(home))
+
+        data_dir = _get_default_data_dir()
+
+    assert data_dir == str(home / "skrub_data")
+    assert not (home / "skrub_data").exists()
 
 
 def test_deprecated_env_var_warning(monkeypatch, tmp_path):
