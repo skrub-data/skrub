@@ -464,7 +464,9 @@ def test_no_pydot(monkeypatch):
 
 def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
-    monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
+    monkeypatch.setattr(
+        pydot.Dot, "create_svg", Mock(side_effect=Exception()), raising=False
+    )
     with pytest.raises(RuntimeError, match="please install Pydot and Graphviz"):
         skrub.as_data_op(0).skb.draw_graph()
 
