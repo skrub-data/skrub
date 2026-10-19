@@ -174,7 +174,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         and all events are considered to belong to the same user (or group).
 
 
-    session_gap : int, default=1800
+    session_gap : int or float, default=1800
         The maximum gap (in seconds) between events in a session. If the gap
         between two events exceeds this value, they are considered to be in
         different sessions. Default is 1800 seconds (30 minutes).
