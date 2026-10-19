@@ -52,11 +52,15 @@ def _is_date(col):
 @_is_date.specialize("pandas", argument_type="Column")
 def _is_date_pandas(col):
     col = sbd.drop_nulls(col)
+    if col.dt.tz is not None:
+        return False
     return (col.dt.normalize() == col).all()
 
 
 @_is_date.specialize("polars", argument_type="Column")
 def _is_date_polars(col):
+    if col.dtype.time_zone is not None:
+        return False
     return (col.dt.date() == col).all()
 
 
@@ -114,7 +118,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         "day", "hour", "minute", "second", "microsecond", or "nanosecond". For
         example, ``resolution="day"`` generates the features "year", "month",
         and "day" only. If the input column contains dates with no time
-        information, time features ("hour", "minute", … ) are never extracted.
+        information, time features ("hour", "minute", … ) and no timezone are
+        never extracted.
         If ``None``, the features listed above are not extracted (but day of
         the week and total seconds may still be extracted, see below).
 

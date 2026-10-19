@@ -26,9 +26,19 @@ Changes
   warnings module, or, more robustly, by adding
   ``{"_skrub_ignore_extra_keys": True}`` to the environment.
   :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
+- Whenever a datetime column is timezone-aware, it will be treated like a full
+  datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
+  feature is extracted by default, even if all items in the column have their
+  time at ``00:00:00``.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Bugfixes
 --------
+- :class:`DatetimeEncoder` no longer raises
+  `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
+  identify a date vs a datetime with `col.dt.normalize()` against some specific
+  timezoned string datetime.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Deprecations
 ------------
