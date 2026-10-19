@@ -35,6 +35,11 @@ class DropUninformative(SingleColumnTransformer):
         of use in practice. It is therefore deprecated and will be removed in a
         future version.
 
+    Attributes
+    ----------
+    drop_ : bool
+        Whether the column was found to be uninformative and should be dropped.
+
     See Also
     --------
     Cleaner :
@@ -68,6 +73,8 @@ class DropUninformative(SingleColumnTransformer):
     >>> du = DropUninformative()
     >>> du.fit_transform(df["col1"])
     []
+    >>> du.drop_
+    True
 
     It is also possible to drop constant columns, or specify a lower null fraction
     threshold:

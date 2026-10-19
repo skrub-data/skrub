@@ -252,15 +252,16 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
                 " string 'X'. If you are using a single auxiliary table, convert your"
                 " current`aux_tables` into [`aux_tables`]."
             )
+
         # Check `X` input type
-        if not hasattr(X, "__dataframe__"):
+        if not sbd.is_dataframe(X):
             raise TypeError(f"`X` must be a dataframe, got {type(X)}.")
 
         # Check `aux_tables` input types
         for i, aux_table in enumerate(aux_tables):
             if isinstance(aux_table, str) and aux_table == "X":
                 aux_tables[i] = X
-            elif not hasattr(aux_table, "__dataframe__"):
+            elif not sbd.is_dataframe(aux_table):
                 raise ValueError(
                     "`aux_tables` must be an iterable containing dataframes and/or the"
                     " string 'X'"
