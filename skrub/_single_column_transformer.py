@@ -300,7 +300,9 @@ def _insert_before_parameters(document, text_to_insert):
     doc_lines = iter(split_doc)
     output_lines = []
     for line in doc_lines:
-        if line.strip() == "Parameters" or line.strip() == "Examples":
+        if not inserted and (
+            line.strip() == "Parameters" or line.strip() == "Examples"
+        ):
             output_lines.extend(block_to_insert)
             output_lines.append("\n")
             inserted = True
