@@ -215,7 +215,7 @@ class SingleColumnTransformer(SkrubBaseEstimator):
     def __init_subclass__(subclass, **kwargs):
         super().__init_subclass__(**kwargs)
         if subclass.__doc__ is not None:
-            subclass.__doc__ = _insert_before_parameters(
+            subclass.__doc__ = _insert_after_first_paragraph(
                 subclass.__doc__,
                 _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
             )
@@ -282,7 +282,15 @@ def _wrap_add_check_single_column(f):
         return transform
 
 
-def _insert_before_parameters(document, text_to_insert):
+def _insert_after_first_paragraph(document, text_to_insert):
+    # Takes a docstring and inserts a custom piece of text at the bottom of
+    # its first paragraph, by assuming that the subsequent paragraphs are
+    # always marked with a title followed by a line consisting of only '-'
+    # characters.
+
+    if document == "":
+        return text_to_insert
+
     split_doc = document.splitlines(True)
     indent = min(
         (
@@ -298,15 +306,24 @@ def _insert_before_parameters(document, text_to_insert):
     ]
     inserted = False
     doc_lines = iter(split_doc)
+    curr_line = next(doc_lines)
     output_lines = []
-    for line in doc_lines:
-        if not inserted and (
-            line.strip() == "Parameters" or line.strip() == "Examples"
+
+    for next_line in doc_lines:
+        # Looks ahead to the line after the one being read, and inserts
+        # the custom block if it is the first encountered line of '-'s
+        if (
+            not inserted
+            and len(next_line) > 0
+            and next_line.strip().count("-") == len(next_line.strip())
         ):
             output_lines.extend(block_to_insert)
             output_lines.append("\n")
             inserted = True
-        output_lines.append(line)
+        output_lines.append(curr_line)
+        curr_line = next_line
+
+    output_lines.append(curr_line)
     if not inserted:
         output_lines.extend(block_to_insert)
     return "".join(output_lines)
