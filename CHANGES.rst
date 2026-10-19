@@ -27,6 +27,9 @@ Changes
 
 Bugfixes
 --------
+-  The ``skrub_data`` directory is now created lazily, only when data or reports need to be written, instead of being created when importing ``skrub``. This
+  also allows configuring the data directory after importing ``skrub``.
+  :pr:`2350` by :user:`PiyushKumar74110 <PiyushKumar74110>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
@@ -1834,11 +1837,6 @@ Bug-fixes
 ---------
 
 * Multiprocessing exception in notebook. :pr:`154` by :user:`Lilian Boulard <LilianBoulard>`
-* The ``skrub_data`` directory is now created lazily, only when data or reports
-  need to be written, instead of being created when importing ``skrub``. This
-  also allows configuring the data directory after importing ``skrub``.
-  :pr:`2350` by :user:`PiyushKumar74110 <PiyushKumar74110>`.
-
 
 Dirty-cat Release 0.0.7
 ========================
