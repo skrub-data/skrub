@@ -11,12 +11,27 @@ Ongoing Development
 
 New Features
 ------------
+- :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
+  with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
+  :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
+  similar to what :meth:`DataOp.skb.get_vars` does for variables.
+  :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
+- Whenever a datetime column is timezone-aware, it will be treated like a full
+  datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
+  feature is extracted by default, even if all items in the column have their
+  time at ``00:00:00``.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Bugfixes
 --------
+- :class:`DatetimeEncoder` no longer raises
+  `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
+  identify a date vs a datetime with `col.dt.normalize()` against some specific
+  timezoned string datetime.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
 
 Deprecations
 ------------
@@ -79,6 +94,9 @@ Changes
 
 Bugfixes
 --------
+- :class:`SimilarityEncoder` counted n-grams longer than the string as a
+  negative number of windows, leading to an incorrect similarity score. Fixed in
+  :pr:`2311` by :user:`Sasha Mitchell <SashaMIT>`.
 - :class:`ToDatetime` (and therefore :class:`TableVectorizer`) now accepts pandas
   columns containing ``datetime.date`` objects. Pandas stores those in an
   ``object`` column, so they used to be rejected, whereas the equivalent polars

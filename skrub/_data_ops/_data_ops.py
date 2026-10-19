@@ -129,14 +129,11 @@ _BIN_OPS = [
     "__sub__",
     "__truediv__",
     "__xor__",
-    "__and__",
     "__or__",
 ]
 
 _UNARY_OPS = [
     "__abs__",
-    "__all__",
-    "__concat__",
     "__inv__",
     "__invert__",
     "__not__",
@@ -1291,9 +1288,6 @@ class Value(DataOpImpl):
 
     def compute(self, e, mode, environment):
         return e.value
-
-    def preview_if_available(self):
-        return self.value
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"

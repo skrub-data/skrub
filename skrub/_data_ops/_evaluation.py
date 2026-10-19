@@ -503,8 +503,12 @@ def evaluate(
 
     callbacks : list of functions
         Each will be called, in the provided order, after evaluating each node.
-        The signature is callback(data_op, result) where data_op is the DataOp
-        that was just evaluated and result is the resulting value.
+        The signature is callback(data_op, result, **kwargs) where data_op is
+        the DataOp that was just evaluated, result is the resulting value, and
+        kwargs currently includes ``duration`` (the time taken to evaluate
+        ``data_op``, as a float) and ``env_key`` (the key in the environment
+        from which the result was loaded, None if it was computed rather than
+        read from the env).
 
     ancestor_data_op : DataOp or None
         When we are evaluating a part of a DataOp (e.g. the X node only), pass
@@ -519,7 +523,7 @@ def evaluate(
         callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
         clear_results(data_op, mode=mode)
     else:
-        callbacks = ()
+        callbacks = tuple(callbacks)
     try:
         return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             data_op
@@ -1064,6 +1068,7 @@ def _expand_grid(graph, grid):
     for outcome_idx in choice_range(choice_id):
         new_subgrid = grid.copy()
         graph = graph.copy()
+        graph["children"] = graph["children"].copy()
         graph["children"][None] = (
             graph["children"].get((choice_id, outcome_idx), []) + remaining[1:]
         )
@@ -1492,6 +1497,10 @@ class _FindFirstApply(_DataOpTraversal):
 
     def handle_choice(self, choice):
         return (yield choice.chosen_outcome_or_default())
+
+    def handle_choice_match(self, choice_match):
+        outcome = yield choice_match.choice
+        return (yield choice_match.outcome_mapping[outcome])
 
     def handle_data_op(self, data_op):
         if isinstance(data_op._skrub_impl, Apply):

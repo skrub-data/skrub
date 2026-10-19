@@ -600,3 +600,30 @@ def test_eval_fit():
     assert _evaluation.evaluate(dop, mode="fit") == 1
     learner = dop.skb.make_learner()
     assert learner.fit({}) is learner
+
+
+def test_find_first_apply_choice_match():
+    # Non-regression: _FindFirstApply must only descend into the chosen (or
+    # default) outcome of a `choice.match()`, not visit every branch.
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.svm import LinearSVC
+
+    a = skrub.var("a")
+    choice = skrub.choose_from(["logreg", "svc"], name="classifier")
+    matched = choice.match(
+        {
+            "logreg": a.skb.apply(LogisticRegression()),
+            "svc": a.skb.apply(LinearSVC()),
+        }
+    )
+    data_op = matched.as_data_op()
+
+    choice.chosen_outcome_idx = 0
+    first = _evaluation.find_first_apply(data_op)
+    assert isinstance(first._skrub_impl.estimator, LogisticRegression)
+    assert "predict_proba" in _evaluation.supported_modes(data_op)
+
+    choice.chosen_outcome_idx = 1
+    first = _evaluation.find_first_apply(data_op)
+    assert isinstance(first._skrub_impl.estimator, LinearSVC)
+    assert "predict_proba" not in _evaluation.supported_modes(data_op)
