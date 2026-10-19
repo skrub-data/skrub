@@ -2242,7 +2242,7 @@ class SplitX(DataOpImpl):
         return (yield self.X)
 
     def __repr__(self):
-        return "<X>"
+        return f"<X>\nX and y will be split with: {_utils.simple_repr(self.cv)}"
 
 
 def _scorer_repr(scorer_info):
