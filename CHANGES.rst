@@ -27,6 +27,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer counts unused pandas categories as distinct
+  values or includes them among the most frequent values. This also fixes
+  constant-column detection after filtering a categorical column.
+  :pr:`XXXX` by :user:`Aryan Ganjoo <AryanRG>`.
+
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
