@@ -314,7 +314,7 @@ def _insert_after_first_paragraph(document, text_to_insert):
         # the custom block if it is the first encountered line of '-'s
         if (
             not inserted
-            and len(next_line) > 0
+            and len(next_line.strip()) > 0
             and next_line.strip().count("-") == len(next_line.strip())
         ):
             output_lines.extend(block_to_insert)
