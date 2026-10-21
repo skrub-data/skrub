@@ -29,7 +29,7 @@ _SINGLE_COL_LINE = (
 
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
 _SINGLE_COL_NOTE = (
-    f".. hint:: A note on using single column transformations \n"
+    f".. note:: A note on using single column transformations \n"
     f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
 )
 
@@ -283,10 +283,8 @@ def _wrap_add_check_single_column(f):
 
 
 def _insert_after_first_paragraph(document, text_to_insert):
-    # Takes a docstring and inserts a custom piece of text at the bottom of
-    # its first paragraph, by assuming that the subsequent paragraphs are
-    # always marked with a title followed by a line consisting of only '-'
-    # characters.
+    # Inserts `text_to_insert` above the first rst-style title (line underlined with
+    # '---') in `document`, or at the end if there is none.
 
     if document == "":
         return text_to_insert
@@ -300,33 +298,19 @@ def _insert_after_first_paragraph(document, text_to_insert):
         ),
         default=0,
     )
-    block_to_insert = [
+    note = [
         line_insert if not line_insert.strip() else " " * indent + line_insert
         for line_insert in text_to_insert.splitlines(True)
     ]
-    inserted = False
-    doc_lines = iter(split_doc)
-    curr_line = next(doc_lines)
-    output_lines = []
 
-    for next_line in doc_lines:
-        # Looks ahead to the line after the one being read, and inserts
-        # the custom block if it is the first encountered line of '-'s
-        if (
-            not inserted
-            and len(next_line.strip()) > 0
-            and next_line.strip().count("-") == len(next_line.strip())
-        ):
-            output_lines.extend(block_to_insert)
-            output_lines.append("\n")
-            inserted = True
-        output_lines.append(curr_line)
-        curr_line = next_line
-
-    output_lines.append(curr_line)
-    if not inserted:
-        output_lines.extend(block_to_insert)
-    return "".join(output_lines)
+    title_idx = next(
+        (i for i, line in enumerate(split_doc[1:]) if re.match(r"^\s*---+\s*$", line)),
+        len(split_doc),
+    )
+    head = "".join(split_doc[:title_idx]).rstrip()
+    inserted = "".join(note)
+    tail = "".join(split_doc[title_idx:])
+    return "".join([head, "\n\n" if head else "", inserted, "\n" if tail else "", tail])
 
 
 def is_single_column_transformer(transformer):
