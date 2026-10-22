@@ -32,6 +32,12 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :class:`LLMEncoder` no longer loads a separate copy of the language model for
+  each column it encodes, e.g. in :class:`ApplyToCols` or
+  :class:`TableVectorizer`. The model is now loaded once per process and shared
+  by all encoders that use the same ``model_name`` and ``device``, which
+  reduces memory usage.
+  :pr:`XXXX` by :user:`Félix Lefebvre <flefebv>`.
 
 Deprecations
 ------------
