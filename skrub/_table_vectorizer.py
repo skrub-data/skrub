@@ -727,8 +727,8 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         different transformer instance is used for each column separately;
         multivariate transformations are therefore not supported.
 
-    Before encoding, the ``TableVectorizer`` applies to each column the same
-    preprocessing steps as the :class:`Cleaner`, with some options always enabled:
+    Before encoding, ``TableVectorizer`` applies to each column the same
+    preprocessing steps as :class:`Cleaner`, with some options always enabled:
 
     - ``CleanNullStrings()``: replace strings used to represent missing values
       with NA markers.
