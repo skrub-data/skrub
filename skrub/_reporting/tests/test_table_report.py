@@ -170,11 +170,11 @@ def test_duration(df_module):
     "filename_type",
     ["str", "Path", "text_file_object", "binary_file_object"],
 )
-def test_write_html(tmp_path, pd_module, filename_type):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file(tmp_path, pd_module, filename_type, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df)
-
-    tmp_file_path = tmp_path / Path("report.html")
+    report = TableReport(df, title="the title")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     # making sure we are closing the open files, and dealing with the first
     # condition which doesn't require opening any file
@@ -188,83 +188,34 @@ def test_write_html(tmp_path, pd_module, filename_type):
         else:
             filename = tmp_file_path
 
-        report.write_html(filename)
+        getattr(report, f"write_{output_format}")(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, encoding="utf-8") as file:
-        saved_content = file.read()
-    assert "</html>" in saved_content
+    saved_content = tmp_file_path.read_text(encoding="utf-8")
+    if output_format == "html":
+        assert "</html>" in saved_content
+    else:  # output_format == "json"
+        assert saved_content == report.json()
+        assert json.loads(saved_content)["title"] == "the title"
 
 
-def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file_with_not_utf8_encoding(tmp_path, pd_module, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
-    tmp_file_path = tmp_path / Path("report.html")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     with open(tmp_file_path, "w", encoding="latin-1") as file:
-        encoding = getattr(file, "encoding", None)
         with pytest.raises(
             ValueError,
             match=(
                 "If `file` is a text file it should use utf-8 encoding; got:"
-                f" {encoding!r}"
+                f" {file.encoding!r}"
             ),
         ):
-            report.write_html(file)
+            getattr(report, f"write_{output_format}")(file)
 
-    with open(tmp_file_path, encoding="latin-1") as file:
-        saved_content = file.read()
-    assert "</html>" not in saved_content
-
-
-@pytest.mark.parametrize(
-    "filename_type",
-    ["str", "Path", "text_file_object", "binary_file_object"],
-)
-def test_write_json(tmp_path, pd_module, filename_type):
-    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df, title="the title")
-
-    tmp_file_path = tmp_path / Path("report.json")
-
-    with contextlib.ExitStack() as stack:
-        if filename_type == "str":
-            filename = str(tmp_file_path)
-        elif filename_type == "text_file_object":
-            filename = stack.enter_context(open(tmp_file_path, "w", encoding="utf-8"))
-        elif filename_type == "binary_file_object":
-            filename = stack.enter_context(open(tmp_file_path, "wb"))
-        else:
-            filename = tmp_file_path
-
-        report.write_json(filename)
-        assert tmp_file_path.exists()
-
-    with open(tmp_file_path, encoding="utf-8") as file:
-        saved_content = file.read()
-    assert saved_content == report.json()
-    assert json.loads(saved_content)["title"] == "the title"
-
-
-def test_write_json_with_not_utf8_encoding(tmp_path, pd_module):
-    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df)
-    tmp_file_path = tmp_path / Path("report.json")
-
-    with open(tmp_file_path, "w", encoding="latin-1") as file:
-        encoding = getattr(file, "encoding", None)
-        with pytest.raises(
-            ValueError,
-            match=(
-                "If `file` is a text file it should use utf-8 encoding; got:"
-                f" {encoding!r}"
-            ),
-        ):
-            report.write_json(file)
-
-    with open(tmp_file_path, encoding="latin-1") as file:
-        saved_content = file.read()
-    assert saved_content == ""
+    assert tmp_file_path.read_text(encoding="latin-1") == ""
 
 
 @pytest.mark.parametrize("indent", [None, 2, "\t"])
