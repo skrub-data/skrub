@@ -146,9 +146,12 @@ pred.skb.cross_validate(cv=5, scoring="roc_auc").round(3)
 learner = pred.skb.make_learner(fitted=True)
 
 # %%
-# The learner is an ordinary predictor: we give it a table with the same
-# input columns as the training table, and it returns a prediction for every
-# row. Here are the held-out patients, with only their measurements -- the
+# The learner predictor, but unlike a scikit-learn predictor, it DataOps work
+# with an arbitrary set of input tables (feature engineering can happen across
+# tables), so it takes a dictionary with keys the name of the inputs of our
+# pipeline, as defined when we created them with the 'var' statement.
+# 
+# Here new data are the held-out patients, with only their measurements -- the
 # target is not something we would have for new patients.
 
 new_patients = test.drop(columns="cardio")
