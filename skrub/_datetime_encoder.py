@@ -2,7 +2,6 @@
 This module provides the implementation of the DatetimeEncoder.
 """
 
-import sys
 from datetime import UTC, datetime
 
 import numpy as np
@@ -85,6 +84,9 @@ def _get_dt_feature_pandas(col, feature):
         return col.dt.day_of_week + 1
     if feature == "day_of_year":
         return col.dt.day_of_year
+    if feature.startswith("holidays_"):
+        country_iso = feature.split("_")[1]
+        return _is_holidays(col, country_iso)
 
     assert feature in _TIME_LEVELS
     return getattr(col.dt, feature)
@@ -100,6 +102,23 @@ def _get_dt_feature_polars(col, feature):
         return col.dt.ordinal_day()
     assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
+
+
+def _is_holidays(col, country):
+    # TODO: common code pandas / polars ?
+    try:
+        import holidays
+    except ModuleNotFoundError:
+        raise ValueError(
+            "add_holidays is set but holidays package is missing, please "
+            "install it or remove the add_holidays option"
+        )
+    try:
+        country_holidays = holidays.country_holidays(country)
+    except NotImplementedError:
+        raise ValueError(f"Unknown country: {country} for holidays")
+
+    return col.dt.apply(lambda x: x in country_holidays)
 
 
 class DatetimeEncoder(SingleColumnTransformer):
@@ -363,12 +382,6 @@ class DatetimeEncoder(SingleColumnTransformer):
         self.add_total_seconds = add_total_seconds
         self.add_day_of_year = add_day_of_year
         self.periodic_encoding = periodic_encoding
-        if add_holidays:
-            if "holidays" not in sys.modules:
-                raise ValueError(
-                    "add_holidays is set but holidays package is missing, please"
-                    "install it or remove the add_holidays option"
-                )
         self.add_holidays = add_holidays
 
     def fit_transform(self, column, y=None):
