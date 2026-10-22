@@ -727,6 +727,32 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         different transformer instance is used for each column separately;
         multivariate transformations are therefore not supported.
 
+    Before encoding, the ``TableVectorizer`` applies to each column the same
+    preprocessing steps as the :class:`Cleaner` (see its "Notes" section for
+    details), with some options always enabled:
+
+    - ``CleanNullStrings()``: replace strings used to represent missing values
+      with NA markers.
+
+    - :class:`DropUninformative`: drop columns that contain only missing values
+      (``drop_null_fraction``), a single constant value (``drop_if_constant``),
+      or only unique values (``drop_if_unique``).
+
+    - :class:`ToDatetime`: parse datetimes represented as strings, using
+      ``datetime_format`` if provided.
+
+    - :class:`DurationToFloat`: convert duration columns to a number of seconds.
+
+    - :class:`ToFloat`: convert numeric columns, and string columns whose
+      non-missing values can all be parsed as numbers, to ``float32``.
+
+    - ``CleanCategories()``: force consistent typing of categorical columns.
+
+    - ``ToStr()``: convert columns to strings unless they are numerical,
+      categorical, or datetime.
+
+    These steps are not applied to columns listed in ``specific_transformers``.
+
     The transformer for each kind of column can be configured with the corresponding
     parameter. A transformer is expected to be a `compatible scikit-learn transformer
     <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
