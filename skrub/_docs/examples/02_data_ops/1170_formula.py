@@ -150,7 +150,7 @@ learner = pred.skb.make_learner(fitted=True)
 # with an arbitrary set of input tables (feature engineering can happen across
 # tables), so it takes a dictionary with keys the name of the inputs of our
 # pipeline, as defined when we created them with the 'var' statement.
-# 
+#
 # Here new data are the held-out patients, with only their measurements -- the
 # target is not something we would have for new patients.
 
