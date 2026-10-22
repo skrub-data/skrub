@@ -16,6 +16,9 @@ New Features
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
   similar to what :meth:`DataOp.skb.get_vars` does for variables.
   :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`TableReport.write_json` stores the report data into a JSON file,
+  similar to :meth:`TableReport.write_html`.
+  :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
 
 Changes
 -------
@@ -26,6 +29,9 @@ Changes
   warnings module, or, more robustly, by adding
   ``{"_skrub_ignore_extra_keys": True}`` to the environment.
   :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
+- The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
+  not installed.
+  :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
