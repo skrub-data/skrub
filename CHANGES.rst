@@ -30,6 +30,12 @@ Changes
   feature is extracted by default, even if all items in the column have their
   time at ``00:00:00``.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- New :ref:`example <example_formula>` on building the features of a
+  statistical model with :ref:`DataOps <user_guide_data_ops_index>`, as an
+  alternative to R-style formulas: a non-linear feature (body mass index), a
+  spline basis fitted on the training set only, and the interpretation of a
+  linear model's coefficients.
+  :pr:`2368` by :user:`Gael Varoquaux <GaelVaroquaux>`.
 
 Bugfixes
 --------
