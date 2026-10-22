@@ -1,6 +1,7 @@
 import numbers
 import os
 import threading
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -46,6 +47,23 @@ def _load_cache_env_var():
     if cache.lower() in ("true", "1"):
         return True
     return cache
+
+
+def _get_deprecated_int_env(new_var, deprecated_var, default):
+    """Get an int config from env, warning if the deprecated name is used."""
+    new_val = os.environ.get(new_var)
+    if new_val is not None:
+        return int(new_val)
+    deprecated_val = os.environ.get(deprecated_var)
+    if deprecated_val is not None:
+        warnings.warn(
+            f"The environment variable '{deprecated_var}' is deprecated. "
+            f"Please use '{new_var}' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return int(deprecated_val)
+    return default
 
 
 def _parse_env_bool(env_variable_name, default):

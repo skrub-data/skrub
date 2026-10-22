@@ -1,10 +1,12 @@
 import pathlib
+import warnings
 
 import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
 from skrub._config import (
+    _get_deprecated_int_env,
     _load_cache_env_var,
     _parse_env_bool,
     get_cache_dir,
@@ -187,6 +189,37 @@ def test_wrong_verbosity():
     with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
         with config_context(table_report_verbosity=-1):
             pass
+
+
+def test_get_deprecated_int_env_deprecated_var(monkeypatch):
+    """Deprecated env var is used with a warning when the new one is not set."""
+    with monkeypatch.context() as mp:
+        mp.delenv("SKB_NEW_VAR", raising=False)
+        mp.setenv("SKB_OLD_VAR", "42")
+        with pytest.warns(DeprecationWarning, match="'SKB_OLD_VAR' is deprecated"):
+            result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
+        assert result == 42
+
+
+def test_get_deprecated_int_env_new_var_takes_precedence(monkeypatch):
+    """New env var takes precedence over deprecated one, no warning emitted."""
+    with monkeypatch.context() as mp:
+        mp.setenv("SKB_NEW_VAR", "20")
+        mp.setenv("SKB_OLD_VAR", "99")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
+        assert result == 20
+        assert not any(issubclass(w.category, DeprecationWarning) for w in caught)
+
+
+def test_get_deprecated_int_env_default(monkeypatch):
+    """Returns default when neither env var is set."""
+    with monkeypatch.context() as mp:
+        mp.delenv("SKB_NEW_VAR", raising=False)
+        mp.delenv("SKB_OLD_VAR", raising=False)
+        result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
+    assert result == 30
 
 
 def test_cache_dir(tmp_path):
