@@ -54,7 +54,7 @@ skrub.TableReport(df)
 #
 # Before writing any feature code, we keep 20% of the patients aside. Whatever
 # we build next is fitted on the training rows only, and the test rows are
-# used at the end to see how it behaves on patients it has never met.
+# used at the end to see how it behaves on patients it has never seen.
 
 train, test = train_test_split(df, test_size=0.2, random_state=0)
 train.shape, test.shape
@@ -63,8 +63,8 @@ train.shape, test.shape
 # Building the features
 # ---------------------
 #
-# The features are described by a skrub plan. We start from the training table
-# and mark where the input and the target live:
+# We build the features with a skrub DataOps. We start from the training table,
+# separate the input and the target, and tell skrub which is which:
 # :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` and
 # :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`. The target is only needed
 # to fit the model; predictions only require the input columns.
@@ -81,12 +81,10 @@ y = data["cardio"].skb.mark_as_y()
 # ratio a linear model would never find on its own from the two columns. The
 # age, given in days, becomes a number of years.
 
-bmi = X["weight"] / (X["height"] / 100) ** 2
-age = X["age"] / 365.25
+X['bmi'] = X["weight"] / (X["height"] / 100) ** 2
+X['age'] = X["age"] / 365.25
 
-features = X.assign(bmi=bmi, age=age).skb.select(
-    ["age", "gender", "ap_hi", "ap_lo", "bmi"]
-)
+features = X[["age", "gender", "ap_hi", "ap_lo", "bmi"]]
 features
 
 # %%
