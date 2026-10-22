@@ -728,8 +728,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         multivariate transformations are therefore not supported.
 
     Before encoding, the ``TableVectorizer`` applies to each column the same
-    preprocessing steps as the :class:`Cleaner` (see its "Notes" section for
-    details), with some options always enabled:
+    preprocessing steps as the :class:`Cleaner`, with some options always enabled:
 
     - ``CleanNullStrings()``: replace strings used to represent missing values
       with NA markers.
