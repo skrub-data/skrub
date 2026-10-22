@@ -162,32 +162,35 @@ UNCHANGED = Unchanged()
 
 
 def set_config(
-    use_table_report_data_ops=None,
-    table_report_plots_threshold=None,
-    table_report_associations_threshold=None,
-    table_report_n_rows=None,
-    table_report_verbosity=None,
-    subsampling_seed=None,
+    use_table_report_data_ops=UNCHANGED,
+    table_report_plots_threshold=UNCHANGED,
+    table_report_associations_threshold=UNCHANGED,
+    table_report_n_rows=UNCHANGED,
+    table_report_verbosity=UNCHANGED,
+    subsampling_seed=UNCHANGED,
     # Deprecated parameters kept for backward compatibility
-    max_plot_columns=None,
-    max_association_columns=None,
-    enable_subsampling=None,
-    float_precision=None,
-    cardinality_threshold=None,
-    data_dir=None,
+    max_plot_columns=UNCHANGED,
+    max_association_columns=UNCHANGED,
+    enable_subsampling=UNCHANGED,
+    float_precision=UNCHANGED,
+    cardinality_threshold=UNCHANGED,
+    data_dir=UNCHANGED,
     cache=UNCHANGED,
     target_cache_size=UNCHANGED,
-    eager_data_ops=None,
-    data_ops_open_graph_dropdown=None,
+    eager_data_ops=UNCHANGED,
+    data_ops_open_graph_dropdown=UNCHANGED,
 ):
     """Set global skrub configuration.
 
+    All parameters default to ``UNCHANGED``, which keeps their current values.
+    Passing ``None`` sets a parameter to ``None`` if it accepts that value;
+    it does not leave the parameter unchanged.
+
     Parameters
     ----------
-    use_table_report_data_ops : bool, default=None
+    use_table_report_data_ops : bool
         The type of HTML representation used for the dataframes preview in skrub
-        DataOps. If ``None``, falls back to the current configuration, which is ``True``
-        by default.
+        DataOps. Default is ``True``.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
@@ -196,7 +199,7 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
-    table_report_plots_threshold : int, default=None
+    table_report_plots_threshold : int
         Maximum number of columns for which distribution plots are generated
         in :class:`~skrub.TableReport` when ``plot_distributions="auto"``
         (the default). Dataframes with more columns will skip plots.
@@ -205,7 +208,7 @@ def set_config(
         This configuration can also be set with the ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``
         environment variable.
 
-    table_report_associations_threshold : int, default=None
+    table_report_associations_threshold : int
         Maximum number of columns for which associations are computed
         in :class:`~skrub.TableReport` when ``compute_associations="auto"``
         (the default). Dataframes with more columns will skip associations.
@@ -214,7 +217,7 @@ def set_config(
         This configuration can also be set with the
         ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD`` environment variable.
 
-    table_report_n_rows : int, default=None
+    table_report_n_rows : int
         Set the default number of rows displayed in :class:`~skrub.TableReport`
         when the ``n_rows`` parameter is not explicitly passed. Default is 10.
 
@@ -222,19 +225,20 @@ def set_config(
         environment variable.
 
 
-    table_report_verbosity : int, default=None
+    table_report_verbosity : int
         Set the level of verbosity of the :class:`~skrub.TableReport`.
         Default is 1 (print the progress bar). Refer to the ``TableReport``
         documentation for more details.
 
-    subsampling_seed : int, default=None
+    subsampling_seed : int or None
         Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
+        Default is 0. If ``None``, subsampling is non-deterministic.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
-    enable_subsampling : {'default', 'disable', 'force'}, default=None
+    enable_subsampling : {'default', 'disable', 'force'}
         Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
@@ -247,24 +251,23 @@ def set_config(
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
 
-    float_precision : int, default=3
+    float_precision : int
         Control the number of significant digits shown when formatting floats.
         Applies overall precision rather than fixed decimal places. Default is 3.
 
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
         environment variable.
 
-    cardinality_threshold : int, default=40
+    cardinality_threshold : int
         Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
         Control the threshold value used to warn user if they have
-        high cardinality columns in there dataset.
+        high cardinality columns in their dataset. Default is 40.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
-    data_dir : str or pathlib.Path, default=None
-        Set the data directory path for skrub datasets. If ``None``, falls back to
-        the current configuration.
+    data_dir : str or pathlib.Path
+        Set the data directory path for skrub datasets.
 
         - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
           path, that path will be used.
@@ -274,8 +277,8 @@ def set_config(
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
 
-    cache : bool or str, default=False
-        Caching to use for the evaluation of DataOps.
+    cache : bool, str, pathlib.Path or None
+        Caching to use for the evaluation of DataOps. Default is ``False``.
 
         - If False (or None), no caching is used.
         - If True, the cache directory is in a default location (data_dir / _cache).
@@ -298,11 +301,12 @@ def set_config(
 
         See :ref:`user_guide_data_ops_caching` for more information about caching.
 
-    eager_data_ops : bool, default=True
+    eager_data_ops : bool
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
         checks are delayed until the DataOp is actually used (e.g. by calling
         ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+        Default is ``True``.
 
         This option is used to speed-up the creation of large DataOps
         containing many nodes. It can also be useful in rare cases where a
@@ -316,12 +320,12 @@ def set_config(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
-    data_ops_open_graph_dropdown : bool, default=False
+    data_ops_open_graph_dropdown : bool
         When displaying a DataOp that has a preview value in a jupyter
         notebook, should the dropdown that reveals the computational graph
         drawing be open (if True) or close (if False). This option mostly
         exists to control the display of DataOps in the skrub documentation
-        examples. This configuration can also be set with the
+        examples. Default is ``False``. This configuration can also be set with the
         ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
 
 
@@ -337,7 +341,7 @@ def set_config(
     >>> from skrub import set_config
     >>> set_config(use_table_report_data_ops=True)  # doctest: +SKIP
     """
-    if max_plot_columns is not None:
+    if max_plot_columns is not UNCHANGED:
         warnings.warn(
             "'max_plot_columns' is deprecated. Use 'table_report_plots_threshold'"
             " instead.",
@@ -347,7 +351,7 @@ def set_config(
         if max_plot_columns != "all":
             table_report_plots_threshold = max_plot_columns
 
-    if max_association_columns is not None:
+    if max_association_columns is not UNCHANGED:
         warnings.warn(
             "'max_association_columns' is deprecated. Use"
             " 'table_report_associations_threshold' instead.",
@@ -358,7 +362,7 @@ def set_config(
             table_report_associations_threshold = max_association_columns
 
     local_config = _get_threadlocal_config()
-    if use_table_report_data_ops is not None:
+    if use_table_report_data_ops is not UNCHANGED:
         if not isinstance(use_table_report_data_ops, bool):
             raise ValueError(
                 "'use_table_report_data_ops' must be a boolean, got "
@@ -366,7 +370,7 @@ def set_config(
             )
         local_config["use_table_report_data_ops"] = use_table_report_data_ops
 
-    if table_report_plots_threshold is not None:
+    if table_report_plots_threshold is not UNCHANGED:
         if (
             not isinstance(table_report_plots_threshold, numbers.Integral)
             or table_report_plots_threshold < 0
@@ -377,7 +381,7 @@ def set_config(
             )
         local_config["table_report_plots_threshold"] = table_report_plots_threshold
 
-    if table_report_associations_threshold is not None:
+    if table_report_associations_threshold is not UNCHANGED:
         if (
             not isinstance(table_report_associations_threshold, numbers.Integral)
             or table_report_associations_threshold < 0
@@ -390,7 +394,7 @@ def set_config(
             table_report_associations_threshold
         )
 
-    if table_report_n_rows is not None:
+    if table_report_n_rows is not UNCHANGED:
         if (
             not isinstance(table_report_n_rows, numbers.Integral)
             or table_report_n_rows < 1
@@ -401,7 +405,7 @@ def set_config(
             )
         local_config["table_report_n_rows"] = table_report_n_rows
 
-    if table_report_verbosity is not None:
+    if table_report_verbosity is not UNCHANGED:
         if (
             not isinstance(table_report_verbosity, numbers.Integral)
             or table_report_verbosity < 0
@@ -412,11 +416,11 @@ def set_config(
             )
         local_config["table_report_verbosity"] = table_report_verbosity
 
-    if subsampling_seed is not None:
+    if subsampling_seed is not UNCHANGED:
         np.random.RandomState(subsampling_seed)  # check seed
         local_config["subsampling_seed"] = subsampling_seed
 
-    if enable_subsampling is not None:
+    if enable_subsampling is not UNCHANGED:
         if enable_subsampling not in (options := ("default", "force", "disable")):
             raise ValueError(
                 f"'enable_subsampling' options are {options!r}, got "
@@ -424,14 +428,14 @@ def set_config(
             )
         local_config["enable_subsampling"] = enable_subsampling
 
-    if float_precision is not None:
+    if float_precision is not UNCHANGED:
         if not isinstance(float_precision, numbers.Integral) or float_precision <= 0:
             raise ValueError(
                 f"'float_precision' must be a positive integer, got {float_precision!r}"
             )
         local_config["float_precision"] = float_precision
 
-    if cardinality_threshold is not None:
+    if cardinality_threshold is not UNCHANGED:
         if (
             not isinstance(cardinality_threshold, numbers.Integral)
             or cardinality_threshold < 0
@@ -440,8 +444,13 @@ def set_config(
                 "'cardinality_threshold' must be a positive "
                 f"integer, got {cardinality_threshold!r}"
             )
+        local_config["cardinality_threshold"] = cardinality_threshold
 
-    if data_dir is not None:
+    if data_dir is not UNCHANGED:
+        if not isinstance(data_dir, (str, os.PathLike)):
+            raise ValueError(
+                f"'data_dir' must be a str or a pathlib.Path, got {data_dir!r}"
+            )
         data_dir = Path(data_dir).expanduser().resolve()
         local_config["data_dir"] = str(data_dir)
 
@@ -451,10 +460,10 @@ def set_config(
     if target_cache_size is not UNCHANGED:
         local_config["target_cache_size"] = target_cache_size
 
-    if eager_data_ops is not None:
+    if eager_data_ops is not UNCHANGED:
         local_config["eager_data_ops"] = eager_data_ops
 
-    if data_ops_open_graph_dropdown is not None:
+    if data_ops_open_graph_dropdown is not UNCHANGED:
         local_config["data_ops_open_graph_dropdown"] = bool(
             data_ops_open_graph_dropdown
         )
@@ -463,29 +472,34 @@ def set_config(
 @contextmanager
 def config_context(
     *,
-    use_table_report_data_ops=None,
-    table_report_plots_threshold=None,
-    table_report_associations_threshold=None,
-    table_report_n_rows=None,
-    table_report_verbosity=None,
-    subsampling_seed=None,
+    use_table_report_data_ops=UNCHANGED,
+    table_report_plots_threshold=UNCHANGED,
+    table_report_associations_threshold=UNCHANGED,
+    table_report_n_rows=UNCHANGED,
+    table_report_verbosity=UNCHANGED,
+    subsampling_seed=UNCHANGED,
     # Deprecated parameters kept for backward compatibility
-    max_plot_columns=None,
-    max_association_columns=None,
-    enable_subsampling=None,
-    float_precision=None,
-    cardinality_threshold=None,
-    data_dir=None,
+    max_plot_columns=UNCHANGED,
+    max_association_columns=UNCHANGED,
+    enable_subsampling=UNCHANGED,
+    float_precision=UNCHANGED,
+    cardinality_threshold=UNCHANGED,
+    data_dir=UNCHANGED,
     cache=UNCHANGED,
     target_cache_size=UNCHANGED,
-    eager_data_ops=None,
-    data_ops_open_graph_dropdown=None,
+    eager_data_ops=UNCHANGED,
+    data_ops_open_graph_dropdown=UNCHANGED,
 ):
     """Context manager for global skrub configuration.
 
+    All parameters default to ``UNCHANGED``, which keeps their current values.
+    Passing ``None`` sets a parameter to ``None`` if it accepts that value;
+    it does not leave the parameter unchanged. The original configuration is
+    restored when exiting the context.
+
     Parameters
     ----------
-    use_table_report_data_ops : bool, default=None
+    use_table_report_data_ops : bool
         The type of HTML representation used for the dataframes preview in skrub
         DataOps. Default is ``True``.
 
@@ -496,40 +510,41 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
-    table_report_n_rows : int, default=None
+    table_report_n_rows : int
         Set the default number of rows displayed in :class:`~skrub.TableReport`
         when the ``n_rows`` parameter is not explicitly passed. Default is 10.
 
         This configuration can also be set with the ``SKB_TABLE_REPORT_N_ROWS``
         environment variable.
 
-    table_report_verbosity : int, default=None
+    table_report_verbosity : int
         Set the level of verbosity of the :class:`~skrub.TableReport`.
-        Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
-        more details.
+        Default is 1 (print the progress bar). Refer to the ``TableReport``
+        documentation for more details.
 
-    table_report_plots_threshold : int, default=None
+    table_report_plots_threshold : int
         Maximum number of columns for which distribution plots are generated
         when ``plot_distributions="auto"`` (the default). Default is 30.
 
         This configuration can also be set with the ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``
         environment variable.
 
-    table_report_associations_threshold : int, default=None
+    table_report_associations_threshold : int
         Maximum number of columns for which associations are computed
         when ``compute_associations="auto"`` (the default). Default is 30.
 
         This configuration can also be set with the
         ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``environment variable.
 
-    subsampling_seed : int, default=None
+    subsampling_seed : int or None
         Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
+        Default is 0. If ``None``, subsampling is non-deterministic.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
-    enable_subsampling : {'default', 'disable', 'force'}, default=None
+    enable_subsampling : {'default', 'disable', 'force'}
         Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
@@ -542,24 +557,23 @@ def config_context(
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
 
-    float_precision : int, default=3
+    float_precision : int
         Control the number of significant digits shown when formatting floats.
         Applies overall precision rather than fixed decimal places. Default is 3.
 
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
         environment variable.
 
-    cardinality_threshold : int, default=40
+    cardinality_threshold : int
         Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
         Control the threshold value used to warn user if they have
-        high cardinality columns in their dataset.
+        high cardinality columns in their dataset. Default is 40.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
-    data_dir : str or pathlib.Path, default=None
-        Set the data directory path for skrub datasets. If ``None``, falls back to
-        the current configuration.
+    data_dir : str or pathlib.Path
+        Set the data directory path for skrub datasets.
 
         - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
           path, that path will be used.
@@ -569,8 +583,8 @@ def config_context(
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
 
-    cache : bool or str, default=False
-        Caching to use for the evaluation of DataOps.
+    cache : bool, str, pathlib.Path or None
+        Caching to use for the evaluation of DataOps. Default is ``False``.
 
         - If False (or None), no caching is used.
         - If True, the cache directory is in a default location (data_dir / _cache).
@@ -593,11 +607,12 @@ def config_context(
 
         See :ref:`user_guide_data_ops_caching` for more information about caching.
 
-    eager_data_ops : bool, default=True
+    eager_data_ops : bool
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
         checks are delayed until the DataOp is actually used (e.g. by calling
         ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+        Default is ``True``.
 
         This option is used to speed-up the creation of large DataOps
         containing many nodes. It can also be useful in rare cases where a
@@ -611,12 +626,12 @@ def config_context(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
-    data_ops_open_graph_dropdown : bool, default=False
+    data_ops_open_graph_dropdown : bool
         When displaying a DataOp that has a preview value in a jupyter
         notebook, should the dropdown that reveals the computational graph
         drawing be open (if True) or close (if False). This option mostly
         exists to control the display of DataOps in the skrub documentation
-        examples. This configuration can also be set with the
+        examples. Default is ``False``. This configuration can also be set with the
         ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
 
     Yields
