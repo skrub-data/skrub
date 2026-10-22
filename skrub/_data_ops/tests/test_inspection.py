@@ -97,7 +97,7 @@ def _report_dot_source(report_path):
     # When the graph is drawn by the browser the page contains its dot source,
     # encoded in base64.
     html = report_path.read_text("utf-8")
-    if found := re.search(r'atob\("([^"]+)"\)', html) is None:
+    if (found := re.search(r'atob\("([^"]+)"\)', html)) is None:
         raise ValueError("The report does not contain an embedded dot graph")
     return base64.b64decode(found.group(1)).decode("utf-8")
 
