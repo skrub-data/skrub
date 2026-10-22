@@ -1,7 +1,6 @@
 import numbers
 import os
 import threading
-import warnings
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -49,23 +48,6 @@ def _load_cache_env_var():
     return cache
 
 
-def _get_deprecated_int_env(new_var, deprecated_var, default):
-    """Get an int config from env, warning if the deprecated name is used."""
-    new_val = os.environ.get(new_var)
-    if new_val is not None:
-        return int(new_val)
-    deprecated_val = os.environ.get(deprecated_var)
-    if deprecated_val is not None:
-        warnings.warn(
-            f"The environment variable '{deprecated_var}' is deprecated. "
-            f"Please use '{new_var}' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return int(deprecated_val)
-    return default
-
-
 def _parse_env_bool(env_variable_name, default):
     value = os.getenv(env_variable_name, default)
     if isinstance(value, bool):
@@ -82,11 +64,11 @@ def _parse_env_bool(env_variable_name, default):
 
 _global_config = {
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
-    "table_report_plots_threshold": _get_deprecated_int_env(
-        "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
+    "table_report_plots_threshold": int(
+        os.environ.get("SKB_TABLE_REPORT_PLOTS_THRESHOLD", 30)
     ),
-    "table_report_associations_threshold": _get_deprecated_int_env(
-        "SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD", "SKB_MAX_ASSOCIATION_COLUMNS", 30
+    "table_report_associations_threshold": int(
+        os.environ.get("SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD", 30)
     ),
     "table_report_n_rows": int(os.environ.get("SKB_TABLE_REPORT_N_ROWS", 10)),
     "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
@@ -154,9 +136,6 @@ def set_config(
     table_report_n_rows=None,
     table_report_verbosity=None,
     subsampling_seed=None,
-    # Deprecated parameters kept for backward compatibility
-    max_plot_columns=None,
-    max_association_columns=None,
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
@@ -322,26 +301,6 @@ def set_config(
     >>> from skrub import set_config
     >>> set_config(use_table_report_data_ops=True)  # doctest: +SKIP
     """
-    if max_plot_columns is not None:
-        warnings.warn(
-            "'max_plot_columns' is deprecated. Use 'table_report_plots_threshold'"
-            " instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if max_plot_columns != "all":
-            table_report_plots_threshold = max_plot_columns
-
-    if max_association_columns is not None:
-        warnings.warn(
-            "'max_association_columns' is deprecated. Use"
-            " 'table_report_associations_threshold' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if max_association_columns != "all":
-            table_report_associations_threshold = max_association_columns
-
     local_config = _get_threadlocal_config()
     if use_table_report_data_ops is not None:
         if not isinstance(use_table_report_data_ops, bool):
@@ -454,9 +413,6 @@ def config_context(
     table_report_n_rows=None,
     table_report_verbosity=None,
     subsampling_seed=None,
-    # Deprecated parameters kept for backward compatibility
-    max_plot_columns=None,
-    max_association_columns=None,
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
@@ -626,8 +582,6 @@ def config_context(
         table_report_n_rows=table_report_n_rows,
         table_report_verbosity=table_report_verbosity,
         subsampling_seed=subsampling_seed,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
