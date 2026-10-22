@@ -16,6 +16,9 @@ New Features
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
   similar to what :meth:`DataOp.skb.get_vars` does for variables.
   :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`TableReport.write_json` stores the report data into a JSON file,
+  similar to :meth:`TableReport.write_html`.
+  :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
 
 Changes
 -------
