@@ -35,8 +35,6 @@ def _get_default_data_dir():
     else:
         data_home = Path.home() / "skrub_data"
 
-    data_home.mkdir(parents=True, exist_ok=True)
-
     return str(data_home)
 
 
