@@ -144,6 +144,7 @@ def test_repr():
     X and y will be split with: KFold(n_splits=10, random_state=None, shuffle=False)
     >>> skrub.var('df').skb.mark_as_X(cv=KFold(10), split_kwargs={}).skb.set_name('design matrix')
     <design matrix | X>
+    X and y will be split with: KFold(n_splits=10, random_state=None, shuffle=False)
     >>> from sklearn.preprocessing import StandardScaler, RobustScaler
     >>> skrub.X().skb.apply(StandardScaler())
     <Apply StandardScaler>
