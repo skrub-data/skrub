@@ -29,7 +29,7 @@ Changes
   alternative to R-style formulas: a non-linear feature (body mass index), a
   spline basis fitted on the training set only, and the interpretation of a
   linear model's coefficients.
-  :pr:`XXXX` by :user:`Gael Varoquaux <GaelVaroquaux>`.
+  :pr:`2368` by :user:`Gael Varoquaux <GaelVaroquaux>`.
 
 Bugfixes
 --------
