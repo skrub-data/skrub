@@ -23,7 +23,7 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer
-from skrub._llm_encoder import LLMEncoder, ModelNotFound, TextEncoder
+from skrub._llm_encoder import LLMEncoder, ModelNotFound
 from skrub._single_column_transformer import RejectColumn
 
 
@@ -248,13 +248,3 @@ def test_categorical_features(df_module, encoder):
 
     out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert len(sbd.column_names(out)) == 30
-
-
-def test_deprecated_text_encoder_warning(df_module):
-    # We need to define a new encoder with the proper class rather than reusing
-    # the fixture (which is a LLMEncoder)
-    with pytest.warns(FutureWarning, match="TextEncoder is deprecated.*"):
-        TextEncoder(
-            model_name="sentence-transformers/paraphrase-albert-small-v2",
-            device="cpu",
-        )

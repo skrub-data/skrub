@@ -43,6 +43,9 @@ Deprecations
   variable. Use ``SKB_DATA_DIRECTORY`` instead.
   :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
+- Removed the deprecated ``TextEncoder`` alias. Use :class:`LLMEncoder` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
 0.11.0
 ===================
 

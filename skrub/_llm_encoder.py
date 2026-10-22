@@ -5,7 +5,6 @@ import warnings
 from pathlib import Path
 
 from sklearn.decomposition import PCA
-from sklearn.utils import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -453,10 +452,3 @@ class LLMEncoder(SingleColumnTransformer):
             f"{self.input_name_}_{str(i).zfill(num_digits)}"
             for i in range(self.n_components_)
         ]
-
-
-@deprecated(
-    "TextEncoder has been renamed to LLMEncoder and will be removed in version 0.12."
-)
-class TextEncoder(LLMEncoder):
-    pass
