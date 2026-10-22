@@ -79,13 +79,27 @@ print(f"R2 score: {scores.mean():.3f} ± {scores.std():.3f}")
 # one-line change.
 hgb_results = cross_validate(skrub.tabular_pipeline("regressor"), X, y, cv=3)
 
-for name, results in [("TabICL", tabicl_results), ("HGBT", hgb_results)]:
+named_results = [("TabICL", tabicl_results), ("HGBT", hgb_results)]
+for name, results in named_results:
     scores = results["test_score"]
     duration = results["fit_time"].mean() + results["score_time"].mean()
     print(
         f"{name:<7} R2 score: {scores.mean():.3f} ± {scores.std():.3f}"
         f"  (fit + predict time: {duration:.1f} s)"
     )
+
+# %%
+# We use a boxplot to visualize the distribution of R2 scores across folds
+# for each model.
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+names, scores = zip(*[(name, result["test_score"]) for name, result in named_results])
+ax.boxplot(scores, orientation="horizontal")
+ax.set_yticks(range(1, len(names) + 1), labels=list(names), size=12)
+ax.set_xlabel("R2 score", size=14)
+ax.set_title("R2 distribution across folds (higher is better)", size=14)
+plt.show()
 
 # %%
 # On this small subset, TabICL gives better predictions than the default
