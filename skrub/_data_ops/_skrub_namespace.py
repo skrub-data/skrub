@@ -3913,6 +3913,6 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.find_X_y()
-        {'X': <X>, 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        {'X': <X>..., 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
         """  # noqa: E501
         return find_X_y_and_cv(self._data_op)
