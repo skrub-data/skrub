@@ -1,6 +1,6 @@
 """
-Using TabICL with skrub
-=======================
+Skrub as preprocessing for Table Foundation Models
+==================================================
 
 `TabICL <https://github.com/soda-inria/tabicl>`_ is an open source tabular
 foundation model: its a powerful predictor that doesn't need hyper-parameter tuning. In this example, skrub takes care of
