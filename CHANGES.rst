@@ -37,11 +37,11 @@ Deprecations
 ------------
 - Removed the deprecated ``splitter`` parameter of :meth:`.skb.train_test_split
   <DataOp.skb.train_test_split>`. Use ``split_func`` instead.
-  :pr:`XXXX` by :user:`Nour Cheour <Nour-Cheour>`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
 - Removed support for the deprecated ``SKRUB_DATA_DIRECTORY`` environment
   variable. Use ``SKB_DATA_DIRECTORY`` instead.
-  :pr:`XXXX` by :user:`Nour Cheour <Nour-Cheour>`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
 0.11.0
 ===================
