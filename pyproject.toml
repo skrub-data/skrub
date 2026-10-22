@@ -138,6 +138,7 @@ sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+tabicl = "*"
 
 [tool.pixi.feature.lint.dependencies]
 python = ">=3.13,<3.14"
