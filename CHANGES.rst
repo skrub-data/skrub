@@ -16,11 +16,14 @@ New Features
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
   similar to what :meth:`DataOp.skb.get_vars` does for variables.
   :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`TableReport.write_json` stores the report data into a JSON file,
+  similar to :meth:`TableReport.write_html`.
+  :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
 - :func:`column_associations` and the associations tab of :class:`TableReport`
   now also report Spearman's rank correlation coefficient. Kendall's Tau can
   be computed as well by passing ``compute_kendall=True`` to
   :func:`column_associations` or :class:`TableReport`.
-  :pr:`XXXX` by :user:`NAME <GITHUB_HANDLE>`.
+  :pr:`2365` by :user:`Sebastien Melo <SebastienMelo>`.
 
 Changes
 -------
