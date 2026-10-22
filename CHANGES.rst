@@ -27,6 +27,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
