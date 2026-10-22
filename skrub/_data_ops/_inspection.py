@@ -388,6 +388,7 @@ def _make_report(
                 node_children=node_children,
                 node_parents=node_parents,
                 node_repr=_utils.simple_repr(node),
+                node_repr_details="\n".join(short_repr(node).splitlines()[1:]),
                 report=report,
                 error=error,
                 error_msg=error_msg,

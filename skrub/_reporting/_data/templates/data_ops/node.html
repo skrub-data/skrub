@@ -17,7 +17,8 @@
         <div class="data_op-node">
             <div class="node-details" {{ "data-has-error" if error is not none }}
                 {{ "data-is-skipped" if (error is none) and (report is none) and eval }}>
-                <h1>{{ node_nb }}: {{ node_repr }}</h1>
+                <h1>{{ node_repr }}</h1>
+                <div><pre><code>{{ node_repr_details }}</code></pre></div>
                 <nav class="mini-nav">
                     <ul>
                         <li>
