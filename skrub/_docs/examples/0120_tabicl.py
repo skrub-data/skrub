@@ -50,9 +50,8 @@ skrub.TableReport(X)
 #     )
 #
 # String columns with at most 10 unique values are passed through as-is, since
-# TabICL handles them natively. String columns with more unique values are
-# encoded with a :class:`~skrub.StringEncoder`, and datetimes are encoded with
-# a :class:`~skrub.DatetimeEncoder` that adds periodic spline features. TabICL
+# TabICL handles them natively, while columns with more unique values are
+# encoded with a :class:`~skrub.StringEncoder`. TabICL
 # handles missing values and scaling by itself, so no imputer or scaler is
 # added.
 from tabicl import TabICLRegressor
