@@ -3,8 +3,7 @@ Using TabICL with skrub
 =======================
 
 `TabICL <https://github.com/soda-inria/tabicl>`_ is an open source tabular
-foundation model: it makes predictions on a new table without any
-dataset-specific training of its weights. In this example, skrub takes care of
+foundation model: its a powerful predictor that doesn't need hyper-parameter tuning. In this example, skrub takes care of
 preparing the dataframe, and TabICL makes the predictions.
 
 .. note::
