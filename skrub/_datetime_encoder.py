@@ -2,6 +2,7 @@
 This module provides the implementation of the DatetimeEncoder.
 """
 
+import sys
 from datetime import UTC, datetime
 
 import numpy as np
@@ -355,12 +356,20 @@ class DatetimeEncoder(SingleColumnTransformer):
         add_total_seconds=True,
         add_day_of_year=False,
         periodic_encoding=None,
+        add_holidays=None,
     ):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
         self.add_day_of_year = add_day_of_year
         self.periodic_encoding = periodic_encoding
+        if add_holidays:
+            if "holidays" not in sys.modules:
+                raise ValueError(
+                    "add_holidays is set but holidays package is missing, please"
+                    "install it or remove the add_holidays option"
+                )
+        self.add_holidays = add_holidays
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
