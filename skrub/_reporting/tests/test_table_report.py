@@ -217,6 +217,73 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
     assert "</html>" not in saved_content
 
 
+@pytest.mark.parametrize(
+    "filename_type",
+    ["str", "Path", "text_file_object", "binary_file_object"],
+)
+def test_write_json(tmp_path, pd_module, filename_type):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df, title="the title")
+
+    tmp_file_path = tmp_path / Path("report.json")
+
+    with contextlib.ExitStack() as stack:
+        if filename_type == "str":
+            filename = str(tmp_file_path)
+        elif filename_type == "text_file_object":
+            filename = stack.enter_context(open(tmp_file_path, "w", encoding="utf-8"))
+        elif filename_type == "binary_file_object":
+            filename = stack.enter_context(open(tmp_file_path, "wb"))
+        else:
+            filename = tmp_file_path
+
+        report.write_json(filename)
+        assert tmp_file_path.exists()
+
+    with open(tmp_file_path, encoding="utf-8") as file:
+        saved_content = file.read()
+    assert saved_content == report.json()
+    assert json.loads(saved_content)["title"] == "the title"
+
+
+def test_write_json_with_not_utf8_encoding(tmp_path, pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+    tmp_file_path = tmp_path / Path("report.json")
+
+    with open(tmp_file_path, "w", encoding="latin-1") as file:
+        encoding = getattr(file, "encoding", None)
+        with pytest.raises(
+            ValueError,
+            match=(
+                "If `file` is a text file it should use utf-8 encoding; got:"
+                f" {encoding!r}"
+            ),
+        ):
+            report.write_json(file)
+
+    with open(tmp_file_path, encoding="latin-1") as file:
+        saved_content = file.read()
+    assert saved_content == ""
+
+
+@pytest.mark.parametrize("indent", [None, 2, "\t"])
+def test_json_indent(tmp_path, pd_module, indent):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    json_str = report.json(indent=indent)
+    assert json.loads(json_str) == report.dict()
+    if indent is None:
+        assert "\n" not in json_str
+    else:
+        assert f'\n{indent if isinstance(indent, str) else " " * indent}"' in json_str
+
+    tmp_file_path = tmp_path / Path("report.json")
+    report.write_json(tmp_file_path, indent=indent)
+    assert tmp_file_path.read_text(encoding="utf-8") == json_str
+
+
 @skip_polars_installed_without_pyarrow
 def test_verbosity_parameter(df_module, capsys):
     df = df_module.make_dataframe(
