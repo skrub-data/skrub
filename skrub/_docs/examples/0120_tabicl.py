@@ -36,11 +36,24 @@ skrub.TableReport(X)
 # ---------------------
 #
 # :func:`~skrub.tabular_pipeline` recognizes TabICL estimators and configures
-# the :class:`~skrub.TableVectorizer` accordingly: low-cardinality string
-# columns are passed through as-is, high-cardinality string columns are encoded
-# with a :class:`~skrub.StringEncoder`, and datetimes are encoded with a
-# :class:`~skrub.DatetimeEncoder`. TabICL handles missing values and scaling
-# by itself, so no imputer or scaler is added.
+# the :class:`~skrub.TableVectorizer` differently from the default. It is
+# equivalent to:
+#
+# .. code-block:: python
+#
+#     skrub.TableVectorizer(
+#         low_cardinality="passthrough",
+#         high_cardinality=skrub.StringEncoder(),
+#         cardinality_threshold=10,
+#         datetime=skrub.DatetimeEncoder(periodic_encoding="spline"),
+#     )
+#
+# String columns with at most 10 unique values are passed through as-is, since
+# TabICL handles them natively. String columns with more unique values are
+# encoded with a :class:`~skrub.StringEncoder`, and datetimes are encoded with
+# a :class:`~skrub.DatetimeEncoder` that adds periodic spline features. TabICL
+# handles missing values and scaling by itself, so no imputer or scaler is
+# added.
 from tabicl import TabICLRegressor
 
 model = skrub.tabular_pipeline(TabICLRegressor())
@@ -80,6 +93,12 @@ for name, results in [("TabICL", tabicl_results), ("HGBT", hgb_results)]:
 # pipeline, at the cost of a longer computation time. This comparison is
 # only meant to show how easily models can be swapped: results depend a lot
 # on the dataset and its size.
+#
+# Note that TabICL does not need hyperparameter tuning: it works well with its
+# default parameters. The data preparation, however, still has parameters that
+# can matter, such as the number of components of the
+# :class:`~skrub.StringEncoder`. These can be tuned like in any scikit-learn
+# pipeline, for example with :class:`~sklearn.model_selection.GridSearchCV`.
 
 # %%
 # Conclusion
