@@ -97,8 +97,9 @@ def _report_dot_source(report_path):
     # When the graph is drawn by the browser the page contains its dot source,
     # encoded in base64.
     html = report_path.read_text("utf-8")
-    encoded = re.search(r'atob\("([^"]+)"\)', html).group(1)
-    return base64.b64decode(encoded).decode("utf-8")
+    if found := re.search(r'atob\("([^"]+)"\)', html) is None:
+        raise ValueError("The report does not contain an embedded dot graph")
+    return base64.b64decode(found.group(1)).decode("utf-8")
 
 
 def test_report_without_graphviz(no_graphviz):
@@ -494,7 +495,9 @@ def test_vendored_graphviz_library():
     # it is written in a <script> element
     assert "</script" not in library and "<!--" not in library
     # notebooks load the same version of the library from a CDN
-    version = re.search(r"wasm-graphviz (\d+\.\d+\.\d+)", library).group(1)
+    if (found := re.search(r"wasm-graphviz (\d+\.\d+\.\d+)", library)) is None:
+        raise ValueError("Graphviz version not found in vendored library")
+    version = found.group(1)
     fragment = env.loader.get_source(env, "render_dot_fragment.html")[0]
     assert f"wasm-graphviz@{version}/" in fragment
 
