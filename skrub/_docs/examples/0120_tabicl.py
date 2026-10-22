@@ -38,7 +38,6 @@ skrub.TableReport(X)
 #
 # :func:`~skrub.tabular_pipeline` recognizes TabICL estimators and configures
 # the :class:`~skrub.TableVectorizer` with the following configuration:
-# the :class:`~skrub.TableVectorizer` differently from the default. It is
 #
 # .. code-block:: python
 #
@@ -51,9 +50,8 @@ skrub.TableReport(X)
 #
 # String columns with at most 10 unique values are passed through as-is, since
 # TabICL handles them natively, while columns with more unique values are
-# encoded with a :class:`~skrub.StringEncoder`. TabICL
-# handles missing values and scaling by itself, so no imputer or scaler is
-# added.
+# encoded with a :class:`~skrub.StringEncoder`. TabICL handles missing values
+# and scaling by itself, so no imputer or scaler is added.
 from tabicl import TabICLRegressor
 
 # To keep this example fast, we use a single estimator. Results would probably
