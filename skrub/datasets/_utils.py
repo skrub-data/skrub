@@ -211,6 +211,7 @@ def get_data_dir(name=None, data_home=None):
     data_dir = get_data_home(data_home)
     if name is not None:
         data_dir = data_dir / name
+    data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
 
