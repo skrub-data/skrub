@@ -19,6 +19,12 @@ New Features
 
 Changes
 -------
+- :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
+  default for every parameter.
+  Explicit ``None`` values are no longer treated as "leave unchanged" and are
+  validated like other values. ``cache=None`` still disables caching and
+  ``target_cache_size=None`` still disables cache pruning.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
