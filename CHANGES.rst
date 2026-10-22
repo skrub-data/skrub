@@ -46,6 +46,10 @@ Deprecations
 - Removed the deprecated ``TextEncoder`` alias. Use :class:`LLMEncoder` instead.
   :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
+- Removed the deprecated parameter ``drop_if_unique`` of
+  :class:`DropUninformative` and :class:`TableVectorizer`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
 - Removed the deprecated parameters ``max_plot_columns`` and
   ``max_association_columns`` of :func:`set_config` and :func:`config_context`,
   and the corresponding environment variables ``SKB_MAX_PLOT_COLUMNS`` and
