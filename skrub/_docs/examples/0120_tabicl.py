@@ -28,7 +28,7 @@ import skrub
 from skrub.datasets import fetch_employee_salaries
 
 data = fetch_employee_salaries()
-X, y = data.X.iloc[:1000], data.y.iloc[:1000]
+X, y = data.X.iloc[:500], data.y.iloc[:500]
 skrub.TableReport(X)
 
 # %%
@@ -81,40 +81,10 @@ for name, results in [("TabICL", tabicl_results), ("HGBT", hgb_results)]:
 # only meant to show how easily models can be swapped: results depend a lot
 # on the dataset and its size.
 
-
-# %%
-# Tuning the data preparation with DataOps
-# ----------------------------------------
-#
-# :func:`~skrub.tabular_pipeline` uses fixed parameters for the data
-# preparation. With :ref:`skrub DataOps <user_guide_data_ops_index>`, we can
-# build the same pipeline step by step and tune some of its parameters. Here
-# we try two values for the number of components used by the
-# :class:`~skrub.StringEncoder` to encode high-cardinality string columns.
-X_var, y_var = skrub.X(X), skrub.y(y)
-
-vectorizer = skrub.TableVectorizer(
-    low_cardinality="passthrough",
-    cardinality_threshold=10,
-    high_cardinality=skrub.StringEncoder(
-        n_components=skrub.choose_from([10, 30], name="n_components")
-    ),
-    datetime=skrub.DatetimeEncoder(periodic_encoding="spline"),
-)
-pred = X_var.skb.apply(vectorizer).skb.apply(TabICLRegressor(), y=y_var)
-pred.skb.draw_graph()
-
-# %%
-# We then run a grid search over the two candidates, with the same 3-fold
-# cross-validation as before.
-search = pred.skb.make_grid_search(cv=3, fitted=True)
-search.results_
-
 # %%
 # Conclusion
 # ----------
 #
 # skrub prepares the dataframe for TabICL in a single line with
 # :func:`~skrub.tabular_pipeline`, which also makes it easy to compare TabICL
-# with other models. When we want more control over the data preparation,
-# DataOps let us build the pipeline step by step and tune its parameters.
+# with other models.
