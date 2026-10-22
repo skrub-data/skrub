@@ -438,6 +438,7 @@ def test_full_report_deprecated():
     assert report["result"] == 0
 
 
+# Generating svg or png requires graphviz to be installed (unlike generating html)
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="requires graphviz")
 def test_draw_graph():
     data_op = skrub.as_data_op(0)
@@ -452,6 +453,7 @@ def test_draw_graph():
     assert g._repr_png_().startswith(b"\x89PNG")
 
 
+# Generating svg or png requires graphviz to be installed (unlike generating html)
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="requires graphviz")
 def test_draw_graph_split_x():
     # mark_as_X with a splitter creates a SplitX node which is already labelled
@@ -463,6 +465,7 @@ def test_draw_graph_split_x():
     assert "X:\u2002X" not in svg
 
 
+# Generating svg or png requires graphviz to be installed (unlike generating html)
 @pytest.mark.skipif(not _utils.has_graphviz(), reason="requires graphviz")
 def test_svg_anchor_google_colab(monkeypatch):
     """non-regression test for #1589"""
