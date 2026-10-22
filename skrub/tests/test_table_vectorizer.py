@@ -213,7 +213,6 @@ def test_get_preprocessors(df_module):
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_unique=False,
         n_jobs=1,
         parse_numbers=True,
         cast_to_float32=True,
@@ -224,7 +223,6 @@ def test_get_preprocessors(df_module):
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_unique=False,
         n_jobs=1,
         parse_numbers=True,
     )
@@ -234,7 +232,6 @@ def test_get_preprocessors(df_module):
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_unique=False,
         n_jobs=1,
         cast_to_float32=True,
     )
@@ -244,7 +241,6 @@ def test_get_preprocessors(df_module):
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_unique=False,
         n_jobs=1,
         parse_numbers=False,
     )
