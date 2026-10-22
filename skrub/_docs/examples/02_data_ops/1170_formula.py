@@ -18,6 +18,10 @@ power of Python and pandas for feature engineering, combined with
 scikit-learn transformers -- which matters to separate train and test data
 properly.
 
+The benefit of this approach is that we can write sophisticated feature
+engineering code in plain Python, but drawing in any scikit-learn compatible
+transformer for machine learning components.
+
 .. currentmodule:: skrub
 
 """
@@ -26,11 +30,10 @@ properly.
 # The data
 # --------
 #
-# We use the Cardiovascular Disease dataset from OpenML (dataset id 45547):
-# 70,000 patients described by clinical measurements, and a binary target,
-# ``cardio``. The OpenML version stores several columns as pandas categories
-# holding integers; we turn them into plain numbers so that we can compute
-# with them below.
+# We use the Cardiovascular Disease dataset from OpenML: 70,000 patients
+# described by clinical measurements, and a binary target, ``cardio``. The
+# OpenML version stores several columns as pandas categories holding integers;
+# we turn them into plain numbers so that we can compute with them below.
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,8 +84,8 @@ y = data["cardio"].skb.mark_as_y()
 # ratio a linear model would never find on its own from the two columns. The
 # age, given in days, becomes a number of years.
 
-X['bmi'] = X["weight"] / (X["height"] / 100) ** 2
-X['age'] = X["age"] / 365.25
+X = X.assign(bmi=X["weight"] / (X["height"] / 100) ** 2)
+X = X.assign(age=X["age"] / 365.25)
 
 features = X[["age", "gender", "ap_hi", "ap_lo", "bmi"]]
 features
@@ -105,16 +108,13 @@ splines = features.skb.apply(SplineTransformer(n_knots=4), cols=["bmi"]).skb.set
 splines
 
 # %%
-# Fitting and predicting
-# ----------------------
+# The predictor
+# --------------
 #
-# The last step is the predictor. It stays a linear model -- a logistic
-# regression -- even though the spline basis lets it capture a non-linear
-# effect, because a linear model is what we can interpret. A scaler first puts
+# The last step is the predictor. We use a linear model -- a logistic
+# regression -- as a linear model is great for interpretability.
+# The spline basis lets it capture a non-linear effect. A scaler first puts
 # the columns on comparable scales.
-#
-# ``make_learner(fitted=True)`` then fits the whole plan at once: the BMI, the
-# knots, the scaler and the regression.
 
 pred = (
     splines.skb.apply(StandardScaler())
@@ -123,6 +123,26 @@ pred = (
     .skb.set_name("model")
 )
 
+# %%
+# Cross-validation: Evaluating the pipeline
+# -----------------------------------------
+#
+# With the full pipeline assembled, we can evaluate it with cross-validation
+# on the training rows, leaving the test set untouched. The splines have
+# parameters learned from the data -- the position of their knots -- and
+# DataOps make sure that, in each fold, they are learned on the training part
+# only and that the held-out part is projected onto the same basis.
+
+pred.skb.cross_validate(cv=5, scoring="roc_auc").round(3)
+
+# %%
+# A learner that can be applied to new data
+# -------------------------------------------
+#
+# To get a learner that can be applied to new data, we call
+# ``make_learner(fitted=True)``. This fits all the transformations at once:
+# the BMI, the spline basis, the scaler, and the regression, on the data that
+# was provided in the beginning, when we defined the 'train' variable.
 learner = pred.skb.make_learner(fitted=True)
 
 # %%
@@ -143,8 +163,8 @@ print("ROC AUC:", round(roc_auc_score(test["cardio"], probabilities), 3))
 #
 # The fitted model is linear, so each coefficient says how a column pushes the
 # predicted log-odds up or down. The blood pressure dominates; the spline
-# terms are smaller individually, and they only make sense together, as the
-# curve they draw.
+# terms are smaller individually, and they only make sense together, as we'll
+# see below.
 #
 # The column names come from the model itself, which guarantees that they line
 # up with the coefficients.
