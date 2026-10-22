@@ -19,6 +19,7 @@ from ._column_associations import column_associations
 from ._dataframe._common import raise_dispatch_unregistered_type
 from ._dispatch import dispatch
 from ._select_cols import DropCols
+from ._check_input import CheckInputDataFrame
 
 
 @dispatch
@@ -138,7 +139,8 @@ class DropSimilar(TransformerMixin, SkrubBaseEstimator):
             raise ValueError(
                 f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
-
+        self.check_input_ = CheckInputDataFrame()
+        X = self.check_input_.fit_transform(X)
         association_df = column_associations(X, compute_pearson=False)
         self.column_associations_ = s.select(
             association_df, ["left_column_name", "right_column_name", "cramer_v"]
@@ -156,5 +158,6 @@ class DropSimilar(TransformerMixin, SkrubBaseEstimator):
         return new_X
 
     def transform(self, X):
+        X = self.check_input_.transform(X)
         check_is_fitted(self)
         return self._dropper.transform(X)
