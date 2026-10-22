@@ -38,7 +38,7 @@ skrub.TableReport(X)
 #
 # :func:`~skrub.tabular_pipeline` recognizes TabICL estimators and configures
 # the :class:`~skrub.TableVectorizer` differently from the default. It is
-# equivalent to:
+# the :class:`~skrub.TableVectorizer` differently from the default. It is
 #
 # .. code-block:: python
 #
