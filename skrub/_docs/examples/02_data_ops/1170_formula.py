@@ -70,7 +70,7 @@ train.shape, test.shape
 # separate the input and the target, and tell skrub which is which:
 # :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` and
 # :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`. The target is only needed
-# to fit the model; predictions only require the input columns.
+# to fit the model; while predictions only build upon the input columns.
 
 data = skrub.var("data", train)
 
