@@ -162,6 +162,13 @@ class TableReport:
         * "distributions": Shows plots of column distributions
         * "associations": Shows column associations and similarities
 
+    compute_kendall : bool, default=False
+        Whether to also compute Kendall's Tau rank correlation coefficient in
+        the associations. Cramér's V, Pearson's and Spearman's correlation
+        coefficients are always computed, but Kendall's Tau is slower to
+        compute so it is only computed when requested. Ignored if the
+        associations are not computed (see ``compute_associations``).
+
     See Also
     --------
     patch_display :
@@ -256,6 +263,7 @@ class TableReport:
         plot_distributions="auto",
         compute_associations="auto",
         open_tab="table",
+        compute_kendall=False,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -288,6 +296,7 @@ class TableReport:
                 f"'open_tab' must be one of {valid_tabs}, got {open_tab!r}."
             )
         self.open_tab = open_tab
+        self.compute_kendall = compute_kendall
 
         self._summary_kwargs = {
             "max_top_slice_size": -(n_rows // -2),
@@ -347,6 +356,7 @@ class TableReport:
             self.dataframe,
             with_plots=self.plot_distributions,
             with_associations=self.compute_associations,
+            with_kendall=self.compute_kendall,
             title=self.title,
             **self._summary_kwargs,
         )

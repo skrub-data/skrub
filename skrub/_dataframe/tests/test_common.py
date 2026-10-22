@@ -757,12 +757,20 @@ def test_mean(df_module):
 
 
 @skip_polars_installed_without_pyarrow
-def test_corr(df_module):
+@pytest.mark.parametrize(
+    "corr_func, method",
+    [
+        (ns.pearson_corr, "pearson"),
+        (ns.spearman_corr, "spearman"),
+        (ns.kendall_corr, "kendall"),
+    ],
+)
+def test_corr(df_module, corr_func, method):
     df = df_module.example_dataframe
 
-    # Make sure we use Pandas to compute Pearson's correlation.
-    expected_corr = ns.to_pandas(df).corr(numeric_only=True)
-    corr = ns.copy_index(expected_corr, ns.to_pandas(ns.pearson_corr(df)))
+    # Make sure we use Pandas to compute the correlation.
+    expected_corr = ns.to_pandas(df).corr(method=method, numeric_only=True)
+    corr = ns.copy_index(expected_corr, ns.to_pandas(corr_func(df)))
 
     pd.testing.assert_frame_equal(corr, expected_corr)
 
