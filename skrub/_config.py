@@ -13,22 +13,8 @@ def _get_default_data_dir():
 
     Returns the path to SKB_DATA_DIRECTORY if set and absolute,
     otherwise defaults to ~/skrub_data.
-
-    Deprecated env var SKRUB_DATA_DIRECTORY is still supported with a warning.
     """
-    # Check for the new env var first
     data_home_envar = os.environ.get("SKB_DATA_DIRECTORY")
-
-    # Check for deprecated env var
-    if not data_home_envar:
-        deprecated_envar = os.environ.get("SKRUB_DATA_DIRECTORY")
-        if deprecated_envar:
-            warnings.warn(
-                "The environment variable 'SKRUB_DATA_DIRECTORY' is deprecated. "
-                "Please use 'SKB_DATA_DIRECTORY' instead.",
-                DeprecationWarning,
-            )
-            data_home_envar = deprecated_envar
 
     if data_home_envar and (path := Path(data_home_envar)).is_absolute():
         data_home = path
@@ -271,8 +257,7 @@ def set_config(
         - Otherwise, the default is ``~/skrub_data``.
 
         This configuration can also be set with the ``SKB_DATA_DIRECTORY``
-        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
-        supported with a deprecation warning.
+        environment variable.
 
     cache : bool or str, default=False
         Caching to use for the evaluation of DataOps.
@@ -566,8 +551,7 @@ def config_context(
         - Otherwise, the default is ``~/skrub_data``.
 
         This configuration can also be set with the ``SKB_DATA_DIRECTORY``
-        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
-        supported with a deprecation warning.
+        environment variable.
 
     cache : bool or str, default=False
         Caching to use for the evaluation of DataOps.
