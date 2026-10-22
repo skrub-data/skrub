@@ -23,7 +23,8 @@ with skrub: `TabICL string handling tutorial
 #
 # We use the employee salaries dataset: the goal is to predict the salary of
 # an employee from information such as their department, position title and
-# hiring date. We only keep the first 1000 rows to keep the memory pressure and runtime of the example low. 
+# hiring date. We only keep the first 1000 rows to keep the memory pressure
+# and runtime of the example low.
 import skrub
 from skrub.datasets import fetch_employee_salaries
 
