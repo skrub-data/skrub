@@ -37,7 +37,7 @@ Bugfixes
   :class:`TableVectorizer`. The model is now loaded once per process and shared
   by all encoders that use the same ``model_name`` and ``device``, which
   reduces memory usage.
-  :pr:`XXXX` by :user:`Félix Lefebvre <flefebv>`.
+  :pr:`2367` by :user:`Félix Lefebvre <flefebv>`.
 
 Deprecations
 ------------
