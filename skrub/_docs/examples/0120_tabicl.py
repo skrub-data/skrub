@@ -56,7 +56,9 @@ skrub.TableReport(X)
 # added.
 from tabicl import TabICLRegressor
 
-model = skrub.tabular_pipeline(TabICLRegressor())
+# To keep this example fast, we use a single estimator. Results would probably
+# be a bit better with the default ``n_estimators=8``, but it is more expensive.
+model = skrub.tabular_pipeline(TabICLRegressor(n_estimators=1))
 model
 
 # %%
