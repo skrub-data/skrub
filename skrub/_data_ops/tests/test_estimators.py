@@ -1099,19 +1099,6 @@ def test_iter_cv_splits():
     assert list(s["row_indices_test"]) == [1]
 
 
-def test_train_test_split_splitter_renaming():
-    # TODO remove when `splitter` is removed in 0.7.0
-    X = skrub.X(list(range(10)))
-
-    def split(X, shuffle):
-        return train_test_split(X, shuffle=shuffle)
-
-    with pytest.warns(FutureWarning, match="`splitter`.*has been renamed"):
-        assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
-            range(7)
-        )
-
-
 def _make_grouped_data():
     return pd.DataFrame(
         {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}

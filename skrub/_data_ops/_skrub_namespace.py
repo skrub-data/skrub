@@ -2290,16 +2290,6 @@ class SkrubNamespace:
         overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
         ignored, and the function passed to ``train_test_split`` is used instead.
         """
-        if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
-            warnings.warn(
-                (
-                    "The `splitter` parameter of `.skb.train_test_split` has been"
-                    " renamed `split_func`. Using it will raise an error in a future"
-                    " release of skrub."
-                ),
-                category=FutureWarning,
-            )
-            split_func = splitter
         environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
