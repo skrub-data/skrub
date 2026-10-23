@@ -4,26 +4,22 @@ from .._utils import short_repr
 from . import _estimator, _evaluation, _utils
 
 
-class _Delegate:
-    def __set_name__(self, owner, name):
-        self.name = name
-
-    def __get__(self, obj, owner=None):
-        if obj is None:
-            raise AttributeError(self.name)
-        return getattr(obj.learner, self.name)
-
-
 class SklearnAdapter(BaseEstimator):
     def __init__(self, learner):
         self.learner = learner
 
-    set_params = _Delegate()
-    get_params = _Delegate()
-    __sklearn_tags__ = _Delegate()
+    def get_params(self):
+        return self.learner.get_params()
+
+    def set_params(self, **params):
+        self.learner.set_params(**params)
+        return self
 
     def __sklearn_clone__(self):
         return self.__class__(clone(self.learner))
+
+    def __sklearn_tags__(self):
+        return self.learner.__sklearn_tags__()
 
     def _get_params_html(self, deep=True, doc_link=""):
         # Function called by scikit-learn to display the estimator params in
@@ -42,6 +38,9 @@ class SklearnAdapter(BaseEstimator):
         return _estimator._SklearnParamsReprHtml(html)
 
     def __getattr__(self, name):
+        if name == "learner":
+            # not set yet (e.g. during unpickling / copy): avoid infinite recursion
+            _utils.attribute_error(self, name)
         if name not in _evaluation.supported_modes(self.learner.data_op):
             try:
                 return getattr(self.learner, name)
@@ -52,7 +51,9 @@ class SklearnAdapter(BaseEstimator):
             env = kwargs | {"X": X}
             if y is not None:
                 env["y"] = y
-            return getattr(self.learner, name)(env)
+            result = getattr(self.learner, name)(env)
+            # ``fit`` must return the adapter to allow ``est.fit(X, y).predict(X)``
+            return self if name == "fit" else result
 
         f.__name__ = name
         return f
