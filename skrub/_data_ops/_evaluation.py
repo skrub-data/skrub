@@ -273,7 +273,7 @@ class _DataOpTraversal:
         return data_op
 
     def handle_estimator(self, estimator):
-        all_params = estimator.get_params()
+        all_params = estimator.get_params(deep=False)
         if (get := getattr(estimator, "__skrub_quoted_params__", None)) is not None:
             quoted = get()
         else:
