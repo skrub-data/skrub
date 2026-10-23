@@ -176,6 +176,9 @@ class _DataOpWrapperMixin(_CloudPickle):
             html = f"<div>{data_op_html}</div>"
         return _SklearnParamsReprHtml(html)
 
+    def __skrub_quoted_params__(self):
+        return ["data_op"]
+
 
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):

@@ -273,7 +273,14 @@ class _DataOpTraversal:
         return data_op
 
     def handle_estimator(self, estimator):
-        params = yield estimator.get_params()
+        all_params = estimator.get_params(deep=False)
+        if (get := getattr(estimator, "__skrub_quoted_params__", None)) is not None:
+            quoted = get()
+        else:
+            quoted = []
+        to_eval = {k: v for k, v in all_params.items() if k not in quoted}
+        rest = {k: v for k, v in all_params.items() if k in quoted}
+        params = (yield to_eval) | rest
         estimator = skl_clone(estimator)
         estimator.set_params(**params)
         return estimator
