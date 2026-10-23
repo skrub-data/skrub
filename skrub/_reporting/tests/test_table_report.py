@@ -381,6 +381,29 @@ def test_compute_associations_parameter(df_module):
 
 
 @skip_polars_installed_without_pyarrow
+def test_compute_kendall_parameter(df_module):
+    x = np.arange(1, 11, dtype=float)
+    df = df_module.make_dataframe({"x": x, "y": np.exp(x)})
+
+    # By default, Pearson's and Spearman's correlations are shown, not Kendall's
+    report = TableReport(df)
+    (asso,) = report._summary["top_associations"]
+    assert asso["pearson_corr"] == pytest.approx(0.7168704)
+    assert asso["spearman_corr"] == pytest.approx(1.0)
+    assert "kendall_corr" not in asso
+    html = report.html()
+    assert "Pearson's Correlation" in html
+    assert "Spearman's Correlation" in html
+    assert "Kendall's Tau" not in html
+
+    report = TableReport(df, compute_kendall=True)
+    (asso,) = report.dict()["top_associations"]
+    assert asso["spearman_corr"] == pytest.approx(1.0)
+    assert asso["kendall_corr"] == pytest.approx(1.0)
+    assert "Kendall's Tau" in report.html()
+
+
+@skip_polars_installed_without_pyarrow
 def test_combined_parameters(df_module):
     df15 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}

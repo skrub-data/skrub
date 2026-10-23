@@ -14,9 +14,11 @@ as additional information in other tabs.
 
 - The **Stats** tab reports high-level statistics for each column.
 - The **Distribution** tab collects summary plots for each column (max 30 by default).
-- The **Associations** tab shows `Cramer V <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
-  and `Pearson correlation <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
-  between columns.
+- The **Associations** tab shows `Cramer V <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_,
+  `Pearson correlation <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+  and `Spearman correlation <https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient>`_
+  between columns. `Kendall's Tau <https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient>`_
+  can be added with ``compute_kendall=True``.
 - Built-in filters allow selection of columns by dtype and other conditions.
 
 The |TableReport| of a table can be generated as follows:
