@@ -17,7 +17,10 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 dataset = skrub.datasets.fetch_employee_salaries()
 
 # %%
-# Define a DataOp that does transformations similar to the TableVectorizer
+# Creating an example DataOp
+# --------------------------
+#
+# We define a DataOp that does transformations similar to the TableVectorizer
 
 # %%
 X = skrub.var("X").skb.apply(skrub.Cleaner())
@@ -43,6 +46,9 @@ feat = num.skb.concat([low_card, high_card, datetime], axis=1)
 feat
 
 # %%
+# Creating & using the scikit-learn estimator
+# -------------------------------------------
+#
 # Now we make a learner, asking for the sklearn-like interface. It is used as
 # ``tv.fit_transform(X)`` (whereas the default ``.skb.make_learner()`` behavior
 # would require ``tv.fit_transform({'X': X})``)
@@ -82,6 +88,9 @@ grid_search = GridSearchCV(pipeline, tv.get_param_grid(key_prefix="tv__")).fit(
 pd.DataFrame(grid_search.cv_results_)[["param_tv__0:n_components", "mean_test_score"]]
 
 # %%
+# Using the estimator in another DataOp
+# -------------------------------------
+#
 # Note: as our table vectorizer is a normal scikit-learn estimator, it can
 # easily be used with ``.skb.apply``.
 
