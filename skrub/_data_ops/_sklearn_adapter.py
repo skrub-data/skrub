@@ -83,7 +83,6 @@ class SklearnAdapter(BaseEstimator):
                         outcome_names = list(map(short_repr, choice.outcomes))
                     else:
                         outcome_names = choice.outcome_names
-                    outcome_names = [f"{i}:{n}" for i, n in enumerate(outcome_names)]
                     new_value = [
                         f"{outcome_idx}:{outcome_names[outcome_idx]}"
                         for outcome_idx in choice_range
