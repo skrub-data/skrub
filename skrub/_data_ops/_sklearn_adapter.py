@@ -12,11 +12,18 @@ class SklearnAdapter(BaseEstimator):
     def __init__(self, learner):
         self.learner = learner
 
-    def get_params(self):
-        return self.learner.get_params()
+    def get_params(self, deep=True):
+        return self.learner.get_params(deep=deep)
 
     def set_params(self, **params):
         self.learner.set_params(**params)
+        return self
+
+    def get_named_params(self):
+        return self.learner.get_named_params()
+
+    def set_named_params(self, **params):
+        self.learner.set_named_params(**params)
         return self
 
     def __sklearn_clone__(self):
