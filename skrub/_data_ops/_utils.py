@@ -39,7 +39,7 @@ def attribute_error(obj, name, comment=None):
     msg = f"{obj.__class__.__name__!r} object has no attribute {name!r}"
     if comment:
         msg = f"{msg}.\n{comment}"
-    raise AttributeError(msg)
+    raise AttributeError(msg) from None
 
 
 class _CloudPickle:

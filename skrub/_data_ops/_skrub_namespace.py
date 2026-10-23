@@ -1967,7 +1967,14 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def make_learner(self, *, fitted=False, keep_subsampling=False, choose="default"):
+    def make_learner(
+        self,
+        *,
+        fitted=False,
+        keep_subsampling=False,
+        choose="default",
+        with_sklearn_interface=False,
+    ):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -2031,6 +2038,17 @@ class SkrubNamespace:
             :meth:`optuna.Study.optimize <optuna.study.Study.optimize>` (as
             shown in this :ref:`example <example_optuna_choices>`) can be used
             to automatically select the best hyperparameters.
+
+        with_sklearn_interface : bool, default=False
+            If True, the returned learner follows the scikit-learn interface,
+            i.e. its methods accept parameters X (and y). So it is fitted with
+            ``estimator.fit(X, y)``. The default behavior is
+            ``with_sklearn_interface=False``, in which case the input to those
+            methods is a dictionary containing values for all the variables in
+            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
+            For ``with_sklearn_interface=True`` to be possible, the DataOp must
+            have a variable named X, optionally a variable named y, and no
+            other variables.
 
         Returns
         -------
@@ -2133,11 +2151,15 @@ class SkrubNamespace:
         learner.set_params(**params)
 
         _check_can_be_pickled(learner)
-        if not fitted:
-            return learner
-        return learner.fit(
-            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-        )
+        if fitted:
+            learner.fit(
+                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+            )
+        if with_sklearn_interface:
+            from ._sklearn_adapter import XySkrubLearner
+
+            learner = XySkrubLearner(learner)
+        return learner
 
     @_check_before
     def train_test_split(
