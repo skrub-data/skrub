@@ -2418,7 +2418,14 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+    def make_grid_search(
+        self,
+        *,
+        fitted=False,
+        keep_subsampling=False,
+        with_sklearn_interface=False,
+        **kwargs,
+    ):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -2443,6 +2450,17 @@ class SkrubNamespace:
             Therefore it is an error to pass ``keep_subsampling=True`` and
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
+
+        with_sklearn_interface : bool, default=False
+            If True, the returned learner follows the scikit-learn interface,
+            i.e. its methods accept parameters X (and y). So it is fitted with
+            ``estimator.fit(X, y)``. The default behavior is
+            ``with_sklearn_interface=False``, in which case the input to those
+            methods is a dictionary containing values for all the variables in
+            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
+            For ``with_sklearn_interface=True`` to be possible, the DataOp must
+            have a variable named X, optionally a variable named y, and no
+            other variables.
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -2523,11 +2541,15 @@ class SkrubNamespace:
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
         )
-        if not fitted:
-            return search
-        return search.fit(
-            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-        )
+        if fitted:
+            search.fit(
+                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+            )
+        if with_sklearn_interface:
+            from ._sklearn_adapter import XyParamSearch
+
+            search = XyParamSearch(search)
+        return search
 
     @_check_before
     def make_randomized_search(
@@ -2552,6 +2574,7 @@ class SkrubNamespace:
         study_name=None,
         sampler=None,
         timeout=None,
+        with_sklearn_interface=False,
     ):
         """Find the best parameters with randomized search.
 
@@ -2684,6 +2707,17 @@ class SkrubNamespace:
                 relies on multithreading. This means threads are used (rather
                 than processes) regardless of the joblib backend.
 
+        with_sklearn_interface : bool, default=False
+            If True, the returned learner follows the scikit-learn interface,
+            i.e. its methods accept parameters X (and y). So it is fitted with
+            ``estimator.fit(X, y)``. The default behavior is
+            ``with_sklearn_interface=False``, in which case the input to those
+            methods is a dictionary containing values for all the variables in
+            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
+            For ``with_sklearn_interface=True`` to be possible, the DataOp must
+            have a variable named X, optionally a variable named y, and no
+            other variables.
+
         Returns
         -------
         ParamSearch or OptunaParamSearch
@@ -2810,11 +2844,19 @@ class SkrubNamespace:
                 sampler=sampler,
                 timeout=timeout,
             )
-        if not fitted:
-            return search
-        return search.fit(
-            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-        )
+        if fitted:
+            search.fit(
+                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+            )
+        if with_sklearn_interface:
+            from ._sklearn_adapter import XyOptunaSearch, XyParamSearch
+
+            search = (
+                XyParamSearch(search)
+                if backend == "sklearn"
+                else XyOptunaSearch(search)
+            )
+        return search
 
     @_check_before
     def iter_learners_grid(self):
