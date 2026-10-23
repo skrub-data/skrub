@@ -3,6 +3,14 @@ from sklearn.base import BaseEstimator, clone
 from .._utils import short_repr
 from . import _evaluation, _utils
 
+# Estimator methods that are evaluation modes of a DataOp (see
+# ``_evaluation.supported_modes``) and that must be translated from
+# ``method(X, y)`` to ``learner.method({"X": X, "y": y})``. Any other attribute
+# is forwarded as-is to the wrapped learner.
+_MODES = frozenset(
+    ["preview", "fit", "fit_transform", "transform", *_utils.FITTED_PREDICTOR_METHODS]
+)
+
 
 def can_use_sklearn_interface(data_op):
     return "X" in data_op.skb.get_vars(all_named_ops=True)
@@ -39,11 +47,15 @@ class SklearnAdapter(BaseEstimator):
         if name == "learner":
             # not set yet (e.g. during unpickling / copy): avoid infinite recursion
             _utils.attribute_error(self, name)
-        if name not in _evaluation.supported_modes(self.learner.data_op):
+        if name not in [_utils.ESTIMATOR_METHODS, "preview"]:
+            # not an estimator method: no (X, y) translation needed, and no need
+            # to inspect the DataOp
             try:
                 return getattr(self.learner, name)
             except AttributeError:
                 _utils.attribute_error(self, name)
+        if name not in _evaluation.supported_modes(self.learner.data_op):
+            _utils.attribute_error(self, name)
 
         def f(X, y=None, **kwargs):
             env = kwargs | {"X": X}
