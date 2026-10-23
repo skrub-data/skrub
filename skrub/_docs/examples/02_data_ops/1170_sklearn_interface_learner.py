@@ -91,6 +91,7 @@ pd.DataFrame(grid_search.cv_results_)[["param_tv__0:n_components", "mean_test_sc
 # Using the estimator in another DataOp
 # -------------------------------------
 #
+
 # Note: as our table vectorizer is a normal scikit-learn estimator, it can
 # easily be used with ``.skb.apply``.
 

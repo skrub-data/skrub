@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, clone
 
 from .._utils import short_repr
-from . import _estimator, _evaluation, _utils
+from . import _evaluation, _utils
 
 
 def can_use_sklearn_interface(data_op):
@@ -32,21 +32,8 @@ class SklearnAdapter(BaseEstimator):
     def __sklearn_tags__(self):
         return self.learner.__sklearn_tags__()
 
-    def _get_params_html(self, deep=True, doc_link=""):
-        # Function called by scikit-learn to display the estimator params in
-        # diagram.
-        # We override it to display the graph instead of just the default which
-        # would be 'data_op: repr(self.data_op)'
-
-        data_op_html = self.learner.data_op._repr_html_()
-        sklearn_params = super()._get_params_html()
-        sklearn_params.pop("data_op")
-        if sklearn_params:
-            sklearn_html = sklearn_params._repr_html_inner()
-            html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
-        else:
-            html = f"<div>{data_op_html}</div>"
-        return _estimator._SklearnParamsReprHtml(html)
+    def _get_params_html(self, *args, **kwargs):
+        return self.learner._get_params_html(*args, **kwargs)
 
     def __getattr__(self, name):
         if name == "learner":
@@ -69,6 +56,8 @@ class SklearnAdapter(BaseEstimator):
         f.__name__ = name
         return f
 
+
+class XySkrubLearner(SklearnAdapter):
     def get_param_grid(self, key_prefix=""):
         param_grid = _evaluation.param_grid(self.learner.data_op)
         graph = _evaluation.choice_graph(self.learner.data_op)
@@ -92,10 +81,6 @@ class SklearnAdapter(BaseEstimator):
                 new_subgrid[f"{key_prefix}{new_key}"] = new_value
             new_grid.append(new_subgrid)
         return new_grid
-
-
-class XySkrubLearner(SklearnAdapter):
-    pass
 
 
 class XyParamSearch(SklearnAdapter):
