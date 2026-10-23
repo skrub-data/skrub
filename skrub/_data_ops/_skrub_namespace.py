@@ -70,6 +70,18 @@ def _var_values_provided(data_op, environment):
     return bool(intersection)
 
 
+def _check_sklearn_interface(data_op, with_sklearn_interface):
+    if not with_sklearn_interface:
+        return
+    from ._sklearn_adapter import can_use_sklearn_interface
+
+    if not can_use_sklearn_interface(data_op):
+        raise ValueError(
+            "`with_sklearn_interface=True` requires the DataOp to have a variable "
+            "(or a named node) called 'X', but none was found."
+        )
+
+
 def _check_keep_subsampling(fitted, keep_subsampling):
     if not fitted and keep_subsampling:
         raise ValueError(
@@ -2045,10 +2057,12 @@ class SkrubNamespace:
             ``estimator.fit(X, y)``. The default behavior is
             ``with_sklearn_interface=False``, in which case the input to those
             methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
-            For ``with_sklearn_interface=True`` to be possible, the DataOp must
-            have a variable named X, optionally a variable named y, and no
-            other variables.
+            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
+            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
+            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
+            DataOp must have at least a variable (or node) with name "X". Other
+            variable values can be passed via extra arguments: ``fit(X, y,
+            other_var=10)``.
 
         Returns
         -------
@@ -2120,6 +2134,7 @@ class SkrubNamespace:
         from . import _evaluation
 
         _check_keep_subsampling(fitted, keep_subsampling)
+        _check_sklearn_interface(self._data_op, with_sklearn_interface)
 
         learner = SkrubLearner(self.clone())
         if isinstance(choose, str) and choose == "default":
@@ -2457,10 +2472,12 @@ class SkrubNamespace:
             ``estimator.fit(X, y)``. The default behavior is
             ``with_sklearn_interface=False``, in which case the input to those
             methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
-            For ``with_sklearn_interface=True`` to be possible, the DataOp must
-            have a variable named X, optionally a variable named y, and no
-            other variables.
+            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
+            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
+            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
+            DataOp must have at least a variable (or node) with name "X". Other
+            variable values can be passed via extra arguments: ``fit(X, y,
+            other_var=10)``.
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -2536,6 +2553,7 @@ class SkrubNamespace:
         Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
         _check_keep_subsampling(fitted, keep_subsampling)
+        _check_sklearn_interface(self._data_op, with_sklearn_interface)
         _check_grid_search_possible(self._data_op)
 
         search = ParamSearch(
@@ -2713,10 +2731,12 @@ class SkrubNamespace:
             ``estimator.fit(X, y)``. The default behavior is
             ``with_sklearn_interface=False``, in which case the input to those
             methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"users": ..., "orders": ..., ...})``.
-            For ``with_sklearn_interface=True`` to be possible, the DataOp must
-            have a variable named X, optionally a variable named y, and no
-            other variables.
+            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
+            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
+            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
+            DataOp must have at least a variable (or node) with name "X". Other
+            variable values can be passed via extra arguments: ``fit(X, y,
+            other_var=10)``.
 
         Returns
         -------
@@ -2792,6 +2812,7 @@ class SkrubNamespace:
             raise ValueError(f"backend must be 'sklearn' or 'optuna', got: {backend}")
 
         _check_keep_subsampling(fitted, keep_subsampling)
+        _check_sklearn_interface(self._data_op, with_sklearn_interface)
 
         if backend == "sklearn":
             optuna_params = dict(

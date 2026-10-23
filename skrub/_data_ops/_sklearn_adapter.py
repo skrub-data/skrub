@@ -4,6 +4,10 @@ from .._utils import short_repr
 from . import _estimator, _evaluation, _utils
 
 
+def can_use_sklearn_interface(data_op):
+    return "X" in data_op.skb.get_vars(all_named_ops=True)
+
+
 class SklearnAdapter(BaseEstimator):
     def __init__(self, learner):
         self.learner = learner
