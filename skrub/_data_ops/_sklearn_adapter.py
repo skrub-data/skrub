@@ -47,7 +47,7 @@ class SklearnAdapter(BaseEstimator):
         if name == "learner":
             # not set yet (e.g. during unpickling / copy): avoid infinite recursion
             _utils.attribute_error(self, name)
-        if name not in [_utils.ESTIMATOR_METHODS, "preview"]:
+        if name not in ["preview", *_utils.ESTIMATOR_METHODS]:
             # not an estimator method: no (X, y) translation needed, and no need
             # to inspect the DataOp
             try:
