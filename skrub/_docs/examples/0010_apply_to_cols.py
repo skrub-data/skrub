@@ -14,7 +14,8 @@ Hands-On with Column Selection and Transformers
 .. |ColumnTransformer| replace:: :class:`~sklearn.compose.ColumnTransformer`
 
 In this example, we show how to create flexible pipelines by selecting
-and transforming dataframe columns using arbitrary logic with |ApplyToCols|.
+and transforming dataframe columns using arbitrary logic with
+|ApplyToCols|.
 
 """
 
