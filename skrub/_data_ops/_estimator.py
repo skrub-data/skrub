@@ -179,6 +179,9 @@ class _DataOpWrapperMixin(_CloudPickle):
     def __skrub_quoted_params__(self):
         return ["data_op"]
 
+    def with_sklearn_interface(self):
+        return self._sklearn_interface_wrapper()(self)
+
 
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
@@ -835,6 +838,12 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         DataOp).
         """
         return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
+
+    @staticmethod
+    def _sklearn_interface_wrapper():
+        from ._sklearn_adapter import XySkrubLearner
+
+        return XySkrubLearner
 
 
 def _to_Xy_pipeline(learner, environment):
@@ -1603,6 +1612,12 @@ class ParamSearch(_BaseParamSearch):
         sklearn_html = search_params._repr_html_inner()
         html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
         return _SklearnParamsReprHtml(html)
+
+    @staticmethod
+    def _sklearn_interface_wrapper():
+        from ._sklearn_adapter import XyParamSearch
+
+        return XyParamSearch
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):

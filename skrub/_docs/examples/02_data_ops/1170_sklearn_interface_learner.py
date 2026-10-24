@@ -54,8 +54,13 @@ feat
 # would require ``tv.fit_transform({'X': X})``)
 
 # %%
-tv = feat.skb.make_learner(with_sklearn_interface=True)
+tv = feat.skb.make_learner().with_sklearn_interface()
 tv
+
+# %% Alternative API to get the same object. TODO choose between the 2 APIs
+
+# %%
+tv = feat.skb.make_learner(with_sklearn_interface=True)
 
 # %%
 # This means our estimator can be used like any other scikit-learn transformer, e.g. in a Pipeline
@@ -91,7 +96,6 @@ pd.DataFrame(grid_search.cv_results_)[["param_tv__0:n_components", "mean_test_sc
 # Using the estimator in another DataOp
 # -------------------------------------
 #
-
 # Note: as our table vectorizer is a normal scikit-learn estimator, it can
 # easily be used with ``.skb.apply``.
 
