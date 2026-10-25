@@ -1364,3 +1364,25 @@ DropUninformative (1 columns):
         cleaner_output.split("\n"), expected_cleaner_output.split("\n")
     ):
         assert output == expected
+
+
+def test_geometry_columns_warning():
+    gpd = pytest.importorskip("geopandas")
+    shapely_geometry = pytest.importorskip("shapely.geometry")
+    gdf = gpd.GeoDataFrame(
+        {"city": ["Paris", "Berlin", "Madrid"]},
+        geometry=[
+            shapely_geometry.Point(2.35, 48.86),
+            shapely_geometry.Point(13.40, 52.52),
+            shapely_geometry.Point(-3.70, 40.42),
+        ],
+    )
+    with pytest.warns(UserWarning, match=r"\['geometry'\] contain GeoPandas"):
+        TableVectorizer().fit_transform(gdf)
+
+    # No warning when the geometry column is handled by a specific transformer.
+    tv = TableVectorizer(specific_transformers=[("drop", ["geometry"])])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=".*GeoPandas.*")
+        out = tv.fit_transform(gdf)
+    assert "geometry" not in sbd.column_names(out)
