@@ -1,4 +1,6 @@
-from sklearn.base import BaseEstimator, clone
+import re
+
+from sklearn.base import BaseEstimator
 
 from .._utils import short_repr
 from . import _evaluation, _utils
@@ -12,12 +14,15 @@ class SklearnAdapter(BaseEstimator):
     def __init__(self, learner):
         self.learner = learner
 
-    def get_params(self, deep=True):
-        return self.learner.get_params(deep=deep)
-
     def set_params(self, **params):
-        self.learner.set_params(**params)
-        return self
+        dataop_params, rest = {}, {}
+        for k, v in params.items():
+            if re.match(r"\d+:", k):
+                dataop_params[k] = v
+            else:
+                rest[k] = v
+        super().set_params(**rest)
+        self.learner.set_params(**dataop_params)
 
     def get_named_params(self):
         return self.learner.get_named_params()
@@ -26,14 +31,8 @@ class SklearnAdapter(BaseEstimator):
         self.learner.set_named_params(**params)
         return self
 
-    def __sklearn_clone__(self):
-        return self.__class__(clone(self.learner))
-
     def __sklearn_tags__(self):
         return self.learner.__sklearn_tags__()
-
-    def _get_params_html(self, *args, **kwargs):
-        return self.learner._get_params_html(*args, **kwargs)
 
     def __getattr__(self, name):
         if name == "learner":
@@ -60,8 +59,6 @@ class SklearnAdapter(BaseEstimator):
         f.__name__ = name
         return f
 
-
-class XySkrubLearner(SklearnAdapter):
     def get_param_grid(self, key_prefix=""):
         param_grid = _evaluation.param_grid(self.learner.data_op)
         graph = _evaluation.choice_graph(self.learner.data_op)
@@ -85,11 +82,3 @@ class XySkrubLearner(SklearnAdapter):
                 new_subgrid[f"{key_prefix}{new_key}"] = new_value
             new_grid.append(new_subgrid)
         return new_grid
-
-
-class XyParamSearch(SklearnAdapter):
-    pass
-
-
-class XyOptunaSearch(SklearnAdapter):
-    pass

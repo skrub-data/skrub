@@ -339,12 +339,6 @@ class OptunaParamSearch(_BaseParamSearch):
             self.best_learner_ = best_learner
         return self
 
-    @staticmethod
-    def _sklearn_interface_wrapper():
-        from ._sklearn_adapter import XyOptunaSearch
-
-        return XyOptunaSearch
-
 
 class _XyOptunaParamSearch(_XyPipelineMixin, OptunaParamSearch):
     def __init__(

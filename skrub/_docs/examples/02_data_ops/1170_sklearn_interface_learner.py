@@ -57,11 +57,6 @@ feat
 tv = feat.skb.make_learner().with_sklearn_interface()
 tv
 
-# %% Alternative API to get the same object. TODO choose between the 2 APIs
-
-# %%
-tv = feat.skb.make_learner(with_sklearn_interface=True)
-
 # %%
 # This means our estimator can be used like any other scikit-learn transformer, e.g. in a Pipeline
 

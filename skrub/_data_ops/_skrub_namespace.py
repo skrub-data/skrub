@@ -70,18 +70,6 @@ def _var_values_provided(data_op, environment):
     return bool(intersection)
 
 
-def _check_sklearn_interface(data_op, with_sklearn_interface):
-    if not with_sklearn_interface:
-        return
-    from ._sklearn_adapter import can_use_sklearn_interface
-
-    if not can_use_sklearn_interface(data_op):
-        raise ValueError(
-            "`with_sklearn_interface=True` requires the DataOp to have a variable "
-            "(or a named node) called 'X', but none was found."
-        )
-
-
 def _check_keep_subsampling(fitted, keep_subsampling):
     if not fitted and keep_subsampling:
         raise ValueError(
@@ -1979,14 +1967,7 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def make_learner(
-        self,
-        *,
-        fitted=False,
-        keep_subsampling=False,
-        choose="default",
-        with_sklearn_interface=False,
-    ):
+    def make_learner(self, *, fitted=False, keep_subsampling=False, choose="default"):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -2050,19 +2031,6 @@ class SkrubNamespace:
             :meth:`optuna.Study.optimize <optuna.study.Study.optimize>` (as
             shown in this :ref:`example <example_optuna_choices>`) can be used
             to automatically select the best hyperparameters.
-
-        with_sklearn_interface : bool, default=False
-            If True, the returned learner follows the scikit-learn interface,
-            i.e. its methods accept parameters X (and y). So it is fitted with
-            ``estimator.fit(X, y)``. The default behavior is
-            ``with_sklearn_interface=False``, in which case the input to those
-            methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
-            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
-            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
-            DataOp must have at least a variable (or node) with name "X". Other
-            variable values can be passed via extra arguments: ``fit(X, y,
-            other_var=10)``.
 
         Returns
         -------
@@ -2134,7 +2102,6 @@ class SkrubNamespace:
         from . import _evaluation
 
         _check_keep_subsampling(fitted, keep_subsampling)
-        _check_sklearn_interface(self._data_op, with_sklearn_interface)
 
         learner = SkrubLearner(self.clone())
         if isinstance(choose, str) and choose == "default":
@@ -2166,15 +2133,11 @@ class SkrubNamespace:
         learner.set_params(**params)
 
         _check_can_be_pickled(learner)
-        if fitted:
-            learner.fit(
-                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-            )
-        if with_sklearn_interface:
-            from ._sklearn_adapter import XySkrubLearner
-
-            learner = XySkrubLearner(learner)
-        return learner
+        if not fitted:
+            return learner
+        return learner.fit(
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+        )
 
     @_check_before
     def train_test_split(
@@ -2433,14 +2396,7 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def make_grid_search(
-        self,
-        *,
-        fitted=False,
-        keep_subsampling=False,
-        with_sklearn_interface=False,
-        **kwargs,
-    ):
+    def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -2465,19 +2421,6 @@ class SkrubNamespace:
             Therefore it is an error to pass ``keep_subsampling=True`` and
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
-
-        with_sklearn_interface : bool, default=False
-            If True, the returned learner follows the scikit-learn interface,
-            i.e. its methods accept parameters X (and y). So it is fitted with
-            ``estimator.fit(X, y)``. The default behavior is
-            ``with_sklearn_interface=False``, in which case the input to those
-            methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
-            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
-            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
-            DataOp must have at least a variable (or node) with name "X". Other
-            variable values can be passed via extra arguments: ``fit(X, y,
-            other_var=10)``.
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -2553,21 +2496,16 @@ class SkrubNamespace:
         Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
         _check_keep_subsampling(fitted, keep_subsampling)
-        _check_sklearn_interface(self._data_op, with_sklearn_interface)
         _check_grid_search_possible(self._data_op)
 
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
         )
-        if fitted:
-            search.fit(
-                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-            )
-        if with_sklearn_interface:
-            from ._sklearn_adapter import XyParamSearch
-
-            search = XyParamSearch(search)
-        return search
+        if not fitted:
+            return search
+        return search.fit(
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+        )
 
     @_check_before
     def make_randomized_search(
@@ -2592,7 +2530,6 @@ class SkrubNamespace:
         study_name=None,
         sampler=None,
         timeout=None,
-        with_sklearn_interface=False,
     ):
         """Find the best parameters with randomized search.
 
@@ -2725,19 +2662,6 @@ class SkrubNamespace:
                 relies on multithreading. This means threads are used (rather
                 than processes) regardless of the joblib backend.
 
-        with_sklearn_interface : bool, default=False
-            If True, the returned learner follows the scikit-learn interface,
-            i.e. its methods accept parameters X (and y). So it is fitted with
-            ``estimator.fit(X, y)``. The default behavior is
-            ``with_sklearn_interface=False``, in which case the input to those
-            methods is a dictionary containing values for all the variables in
-            the DataOp: ``fit({"some_input": ..., "other_input": ..., ...})``.
-            When ``with_sklearn_interface=True``, when ``fit(X, y)`` is called,
-            the DataOp is passed an environment ``{"X": X, "y": y}``. So the
-            DataOp must have at least a variable (or node) with name "X". Other
-            variable values can be passed via extra arguments: ``fit(X, y,
-            other_var=10)``.
-
         Returns
         -------
         ParamSearch or OptunaParamSearch
@@ -2812,7 +2736,6 @@ class SkrubNamespace:
             raise ValueError(f"backend must be 'sklearn' or 'optuna', got: {backend}")
 
         _check_keep_subsampling(fitted, keep_subsampling)
-        _check_sklearn_interface(self._data_op, with_sklearn_interface)
 
         if backend == "sklearn":
             optuna_params = dict(
@@ -2865,19 +2788,11 @@ class SkrubNamespace:
                 sampler=sampler,
                 timeout=timeout,
             )
-        if fitted:
-            search.fit(
-                env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
-            )
-        if with_sklearn_interface:
-            from ._sklearn_adapter import XyOptunaSearch, XyParamSearch
-
-            search = (
-                XyParamSearch(search)
-                if backend == "sklearn"
-                else XyOptunaSearch(search)
-            )
-        return search
+        if not fitted:
+            return search
+        return search.fit(
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
+        )
 
     @_check_before
     def iter_learners_grid(self):
