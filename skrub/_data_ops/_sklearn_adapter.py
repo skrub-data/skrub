@@ -3,16 +3,30 @@ import re
 from sklearn.base import BaseEstimator
 
 from .._utils import short_repr
-from . import _evaluation, _utils
+from . import _estimator, _evaluation, _utils
 
 
-def can_use_sklearn_interface(data_op):
-    return "X" in data_op.skb.get_vars(all_named_ops=True)
+def check_sklearn_interface(data_op, X, y):
+    all_names = data_op.skb.get_vars(all_named_ops=True)
+    if X not in all_names:
+        raise ValueError(
+            f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
+            f"a variable or node named {X!r} but none was found."
+        )
+    if not _estimator.data_op_needs_y(data_op):
+        return
+    if y not in all_names:
+        raise ValueError(
+            f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
+            f"a variable or node named {y!r} but none was found."
+        )
 
 
 class SklearnAdapter(BaseEstimator):
-    def __init__(self, learner):
+    def __init__(self, learner, X="X", y="y"):
         self.learner = learner
+        self.X = X
+        self.y = y
 
     def set_params(self, **params):
         dataop_params, rest = {}, {}
@@ -23,6 +37,7 @@ class SklearnAdapter(BaseEstimator):
                 rest[k] = v
         super().set_params(**rest)
         self.learner.set_params(**dataop_params)
+        return self
 
     def get_named_params(self):
         return self.learner.get_named_params()
@@ -49,9 +64,9 @@ class SklearnAdapter(BaseEstimator):
             _utils.attribute_error(self, name)
 
         def f(X, y=None, **kwargs):
-            env = kwargs | {"X": X}
+            env = kwargs | {self.X: X}
             if y is not None:
-                env["y"] = y
+                env[self.y] = y
             result = getattr(self.learner, name)(env)
             # ``fit`` must return the adapter to allow ``est.fit(X, y).predict(X)``
             return self if name == "fit" else result

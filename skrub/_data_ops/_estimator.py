@@ -179,10 +179,11 @@ class _DataOpWrapperMixin(_CloudPickle):
     def __skrub_quoted_params__(self):
         return ["data_op"]
 
-    def with_sklearn_interface(self):
-        from ._sklearn_adapter import SklearnAdapter
+    def with_sklearn_interface(self, X="X", y="y"):
+        from ._sklearn_adapter import SklearnAdapter, check_sklearn_interface
 
-        return SklearnAdapter(self)
+        check_sklearn_interface(self.data_op, X, y)
+        return SklearnAdapter(self, X, y)
 
 
 @set_module("skrub")
@@ -989,17 +990,27 @@ class _CachingXyPipeline(_XyPipeline):
         return super()._eval_in_mode("score", X, y=y)
 
 
+def data_op_needs_y(data_op):
+    def is_apply_and_needs_y(node):
+        if not isinstance(node, DataOp):
+            # node is a choice object
+            return False
+        if not isinstance(node._skrub_impl, Apply):
+            return False
+        return node._skrub_impl.y is not None
+
+    return data_op.skb.find(is_apply_and_needs_y) is not None
+
+
 def _compute_X_y_and_cv(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
     nodes = find_X_y_and_cv(data_op.skb.clone())
     if "X" not in nodes:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
-    if "y" not in nodes:
-        first = find_first_apply(data_op)
-        if first is not None and getattr(first._skrub_impl, "y", None) is not None:
-            # the estimator requests a y so some node must have been
-            # marked as y
-            raise ValueError('DataOp should have a node marked with "mark_as_y()"')
+    if "y" not in nodes and data_op_needs_y(data_op):
+        # the estimator requests a y so some node must have been
+        # marked as y
+        raise ValueError('DataOp should have a node marked with "mark_as_y()"')
     values = evaluate(
         nodes,
         mode="fit_transform",
