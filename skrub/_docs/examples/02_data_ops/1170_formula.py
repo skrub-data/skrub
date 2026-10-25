@@ -146,7 +146,7 @@ pred.skb.cross_validate(cv=5, scoring="roc_auc").round(3)
 learner = pred.skb.make_learner(fitted=True)
 
 # %%
-# The learner predictor, but unlike a scikit-learn predictor, it DataOps work
+# The learner is a predictor, but unlike a scikit-learn predictor, its work
 # with an arbitrary set of input tables (feature engineering can happen across
 # tables), so it takes a dictionary with keys the name of the inputs of our
 # pipeline, as defined when we created them with the 'var' statement.
