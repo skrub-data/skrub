@@ -59,6 +59,7 @@ or in a different environment:
 >>> file = io.BytesIO()
 >>> pickle.dump(learner, file)
 >>> file.seek(0)
+0
 >>> loaded_learner = pickle.load(file)
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
