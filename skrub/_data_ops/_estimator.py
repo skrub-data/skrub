@@ -218,7 +218,7 @@ class _DataOpWrapperMixin(_CloudPickle):
 
         Returns
         -------
-        XySkrubLearner
+        :class:`skrub.XySkrubLearner`
             A wrapper that adapts this learner to the standard scikit-learn
             ``fit(X, y)`` interface.
 

@@ -7,7 +7,8 @@ Turn a DataOp into a "standard" scikit-learn estimator
 
 When our DataOp only needs 2 inputs X, and y, we can get a learner that accepts
 the usual scikit-learn inputs rather than a dictionary like SkrubLearners
-normally do, by using :meth:`SkrubLearner.with_sklearn_interface`.
+normally do, by using :meth:`SkrubLearner.with_sklearn_interface` to obtain the
+learner wrapped in a :class:`XySkrubLearner`.
 
 """
 
@@ -79,19 +80,24 @@ cross_validate(
 )
 
 # %%
-# ... or in a GridSearchCV. ``get_param_grid`` prepares for us the param grid
-# that we can pass to GridSearchCV from the choices in the data op (which we
-# could also combined with our own parameter ranges for other scikit-learn
-# estimators in the Pipeline).
+# ... or in a GridSearchCV. :meth:`XySkrubLearner.get_param_grid` prepares for
+# us the parameter grid that we can pass to GridSearchCV from the choices in
+# the data op. If we provide our own grid for the other steps, it takes care of
+# combining the 2 grids for us.
 
 # %%
 from sklearn.model_selection import GridSearchCV
 import pandas as pd
 
-grid_search = GridSearchCV(pipeline, tv.get_param_grid(key_prefix="tv__")).fit(
-    dataset.X, dataset.y
-)
-pd.DataFrame(grid_search.cv_results_)[["param_tv__0:n_components", "mean_test_score"]]
+hgb_grid = {"hgb__learning_rate": [0.2, 0.5]}
+
+grid_search = GridSearchCV(
+    pipeline, tv.get_param_grid(key_prefix="tv__", outer_grid=hgb_grid)
+).fit(dataset.X, dataset.y)
+
+pd.DataFrame(grid_search.cv_results_)[
+    ["param_hgb__learning_rate", "param_tv__0:n_components", "mean_test_score"]
+].sort_values("mean_test_score", ascending=False)
 
 # %%
 # Using the estimator in another DataOp

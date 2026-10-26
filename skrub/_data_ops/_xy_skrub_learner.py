@@ -1,4 +1,24 @@
+# Adapter to expose the standard scikit-learn interface fit(X, y) for a
+# SkrubLearner (or ParamSearch or OptunaParamSearch).
+# See _DataOpWrapperMixin.with_sklearn_interface for more information.
+#
+# Note: this may seem superficially similar to the _XyPipeline (and param
+# search counterparts) defined in _estimator. However they serve different
+# purposes and have different behavior.
+#
+# _XyPipeline is an internal class that is used in a transient way during
+# parameter search and cross-validation. It stores the environment as an
+# attribute and sends the X and y passed to estimator methods to the nodes
+# marked with .skb.mark_as_X() and .skb.mark_as_y().
+#
+# The class defined here is for skrub users. It does _not_ store any data in
+# attributes, instead other variables than X and y must be passed as kwargs
+# (and the typical intended usage is for DataOps that do not require anything
+# else than X and y). X and y are sent to the nodes with matching names or IDs.
+
+import itertools
 import re
+from collections.abc import Mapping
 
 from sklearn.base import BaseEstimator
 
@@ -119,12 +139,65 @@ class XySkrubLearner(BaseEstimator):
         f.__name__ = name
         return f
 
-    def get_param_grid(self, key_prefix=""):
-        param_grid = _evaluation.param_grid(self.learner.data_op)
+    def get_param_grid(self, key_prefix="", outer_grid=None):
+        """
+        Get a param grid for this learner (use with GridSearchCV, RandomizedSearchCV).
+
+        .. note:
+
+            The recommended way to tune hyperparameters is to use the skrub
+            DataOp methods :meth:`DataOp.skb.make_randomized_search()`,
+            :meth:`DataOp.skb.make_grid_search()` rather than the scikit-learn
+            meta-estimators.
+
+        Parameters
+        ----------
+        key_prefix : str, default = ""
+            Keys in the grid are prefixed with this string. Typically this is
+            the path to reach the learner in a metaestimator such as a
+            pipeline, for example ``'vectorizer__'`` if the learner is in a
+            pipeline step named ``'vectorizer'``.
+
+        outer_grid : dict, list of dicts or None, default = None
+            Outer param grid for other steps in a pipeline. This function
+            returns an augmented parameter grid in which the learner's
+            parameter ranges have been inserted.
+
+        Returns
+        -------
+        list of dict
+            The parameter grid.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.pipeline import Pipeline
+        >>> from sklearn.linear_model import Ridge
+
+        >>> encoder = (
+        ...     skrub.var("X")
+        ...     .skb.apply(
+        ...         skrub.StringEncoder(
+        ...             n_components=skrub.choose_from([10, 20, 30], name="n_components")
+        ...         )
+        ...     )
+        ...     .skb.make_learner()
+        ...     .with_sklearn_interface()
+        ... )
+
+        >>> pipe = Pipeline([("encoder", encoder), ("ridge", Ridge())])
+        >>> outer_grid = {"ridge__alpha": [.1, 1., 10.]}
+
+        We obtain a grid that can be passed to GridSearchCV that can be used for tuning
+        jointly the parameters of the Ridge and of the skrub learner:
+
+        >>> encoder.get_param_grid("encoder__", outer_grid)
+        [{'ridge__alpha': [0.1, 1.0, 10.0], 'encoder__0:n_components': ['0:10', '1:20', '2:30']}]
+        """  # noqa: E501
         graph = _evaluation.choice_graph(self.learner.data_op)
-        new_grid = []
-        for subgrid in param_grid:
-            new_subgrid = {}
+        learner_grid = []
+        for subgrid in _evaluation.param_grid(self.learner.data_op):
+            learner_subgrid = {}
             for choice_id, choice_range in subgrid.items():
                 choice = graph["choices"][choice_id]
                 new_key = f"{choice_id}:{graph['choice_display_names'][choice_id]}"
@@ -139,6 +212,13 @@ class XySkrubLearner(BaseEstimator):
                     ]
                 else:
                     new_value = choice_range
-                new_subgrid[f"{key_prefix}{new_key}"] = new_value
-            new_grid.append(new_subgrid)
-        return new_grid
+                learner_subgrid[f"{key_prefix}{new_key}"] = new_value
+            learner_grid.append(learner_subgrid)
+        if outer_grid is None:
+            outer_grid = {}
+        if isinstance(outer_grid, Mapping):
+            outer_grid = [outer_grid]
+        return [
+            out_g | learner_g
+            for out_g, learner_g in itertools.product(outer_grid, learner_grid)
+        ]
