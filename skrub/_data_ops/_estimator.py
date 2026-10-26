@@ -177,6 +177,16 @@ class _DataOpWrapperMixin(_CloudPickle):
         return _SklearnParamsReprHtml(html)
 
     def __skrub_quoted_params__(self):
+        """
+        Estimator params (attributes) that are a DataOp but that should be
+        treated as a quoted expressions: they are data, not code, and should
+        not be evaluated and replaced with their value while evaluating the
+        estimator itself.
+
+        For example in Ridge(alpha=<some dataop or choice>) alpha should be
+        evaluated, but the data_op attribute of a
+        SkrubLearner(data_op=<some dataop>) passed to .skb.apply() should not.
+        """
         return ["data_op"]
 
     def with_sklearn_interface(self, X="X", y="y"):

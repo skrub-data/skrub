@@ -218,6 +218,9 @@ class XySkrubLearner(BaseEstimator):
             outer_grid = {}
         if isinstance(outer_grid, Mapping):
             outer_grid = [outer_grid]
+        # As the outer grid keys are for other steps there should be no name
+        # clash (+ the learner's key formatting is very specific). For simplicity
+        # we don't do validation on the outer grid.
         return [
             out_g | learner_g
             for out_g, learner_g in itertools.product(outer_grid, learner_grid)
