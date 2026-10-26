@@ -57,7 +57,10 @@ class SklearnAdapter(BaseEstimator):
             # not an estimator method: no (X, y) translation needed, and no need
             # to inspect the DataOp
             try:
-                return getattr(self.learner, name)
+                attr = getattr(self.learner, name)
+                if name == "best_learner_":
+                    attr = SklearnAdapter(attr)
+                return attr
             except AttributeError:
                 _utils.attribute_error(self, name)
         if name not in _evaluation.supported_modes(self.learner.data_op):

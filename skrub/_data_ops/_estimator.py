@@ -180,6 +180,28 @@ class _DataOpWrapperMixin(_CloudPickle):
         return ["data_op"]
 
     def with_sklearn_interface(self, X="X", y="y"):
+        """Wrap this object in a scikit-learn-style estimator.
+
+        The returned estimator has methods such as ``fit(X, y)`` and
+        ``predict(X)`` instead of taking a dictionary of variable values,
+        i.e. of accepting ``fit({"something": ..., "something_else": ...})``
+        like SkrubLearners normally do.
+
+        Parameters
+        ----------
+        X : str, default="X"
+            Name of the variable (or named node) of the DataOp that receives
+            the ``X`` argument.
+
+        y : str, default="y"
+            Name of the variable (or named node) of the DataOp that receives
+            the ``y`` argument. Only required if the DataOp uses a ``y``.
+
+        Returns
+        -------
+        estimator
+            An estimator that follows the scikit-learn interface.
+        """
         from ._sklearn_adapter import SklearnAdapter, check_sklearn_interface
 
         check_sklearn_interface(self.data_op, X, y)

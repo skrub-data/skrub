@@ -2,9 +2,11 @@
 Turn a DataOp into a "standard" scikit-learn estimator
 ======================================================
 
-When our DataOp contains only variables 'X', and 'y', we can get a learner that
-accepts the usual scikit-learn inputs X, y rather than a dictionary like
-SkrubLearners normally do.
+.. currentmodule:: skrub
+
+When our DataOp only needs 2 inputs X, and y, we can get a learner that accepts
+the usual scikit-learn inputs rather than a dictionary like SkrubLearners
+normally do, by using :meth:`SkrubLearner.with_sklearn_interface`.
 
 """
 
@@ -51,7 +53,10 @@ feat
 #
 # Now we make a learner, asking for the sklearn-like interface. It is used as
 # ``tv.fit_transform(X)`` (whereas the default ``.skb.make_learner()`` behavior
-# would require ``tv.fit_transform({'X': X})``)
+# would require ``tv.fit_transform({'X': X})``). On any skrub learner calling
+# :meth:`SkrubLearner.with_sklearn_interface` returns such an estimator that
+# executes the same DataOp but exposes the scikit-learn (X, y) interface
+# instead of the skrub (env dict) one.
 
 # %%
 tv = feat.skb.make_learner().with_sklearn_interface()
