@@ -1386,3 +1386,20 @@ def test_geometry_columns_warning():
         warnings.filterwarnings("error", message=".*GeoPandas.*")
         out = tv.fit_transform(gdf)
     assert "geometry" not in sbd.column_names(out)
+
+
+def test_geometry_columns_warning_without_geopandas():
+    # Only the dtype name is checked, so a fake dtype named "geometry" is
+    # enough to test the warning when geopandas is not installed.
+    class GeometryDtype(pd.CategoricalDtype):
+        name = "geometry"
+
+    values = ["a", "b", "c"]
+    df = pd.DataFrame(
+        {
+            "city": ["Paris", "Berlin", "Madrid"],
+            "geometry": pd.Series(values, dtype=GeometryDtype(values)),
+        }
+    )
+    with pytest.warns(UserWarning, match=r"\['geometry'\] contain GeoPandas"):
+        TableVectorizer().fit_transform(df)
