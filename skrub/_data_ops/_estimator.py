@@ -231,6 +231,11 @@ class _DataOpWrapperMixin(_CloudPickle):
         <DataOp.skb.make_grid_search>` and :meth:`.skb.make_randomized_search()
         <DataOp.skb.make_randomized_search>`).
 
+        >>> import sklearn
+        >>> from sklearn.utils.fixes import parse_version
+        >>> if parse_version(sklearn.__version__) < parse_version("1.9"):
+        ...     import pytest
+        ...     raise pytest.skip()
         >>> import skrub
         >>> from sklearn.preprocessing import TargetEncoder
         >>> from sklearn.model_selection import KFold
