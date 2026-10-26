@@ -21,6 +21,8 @@ import re
 from collections.abc import Mapping
 
 from sklearn.base import BaseEstimator
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
 
 from .._utils import set_module, short_repr
 from . import _estimator, _evaluation, _utils
@@ -108,17 +110,23 @@ class XySkrubLearner(BaseEstimator):
         self.learner.set_named_params(**params)
         return self
 
-    def __sklearn_tags__(self):
-        return self.learner.__sklearn_tags__()
+    if hasattr(BaseEstimator, "__sklearn_tags__"):
+
+        def __sklearn_tags__(self):
+            return self.learner.__sklearn_tags__()
+
+    def __sklearn_is_fitted__(self):
+        try:
+            check_is_fitted(self.learner)
+        except NotFittedError:
+            return False
+        return True
 
     def __getattr__(self, name):
         if name == "learner":
             # not set yet (e.g. during unpickling / copy): avoid infinite recursion
             _utils.attribute_error(self, name)
-        if name.startswith("_") and name not in [
-            "_estimator_type",
-            "__sklearn_is_fitted__",
-        ]:
+        if name.startswith("_") and name != "_estimator_type":
             _utils.attribute_error(self, name)
         if name not in ["preview", *_utils.ESTIMATOR_METHODS]:
             # not an estimator method: no (X, y) translation needed, and no need
