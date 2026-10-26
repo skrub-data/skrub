@@ -269,6 +269,7 @@ API_REFERENCE = {
                     "SkrubLearner",
                     "ParamSearch",
                     "OptunaParamSearch",
+                    "XySkrubLearner",
                 ],
                 "template": "base.rst",
             },

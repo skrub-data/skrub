@@ -23,6 +23,22 @@ def check_sklearn_interface(data_op, X, y):
 
 
 class XySkrubLearner(BaseEstimator):
+    """
+    Wrapper to expose a standard scikit-learn interface to a skrub learner.
+
+    This class is not usually instantiated manually, but by calling
+    :meth:`.with_sklearn_interface() <SkrubLearner.with_sklearn_interface>`
+    on a skrub learner. Skrub learners are created from a :class:`DataOp` with
+    :meth:`.skb.make_learner() <DataOp.skb.make_learner>`,
+    :meth:`.skb.make_randomized_search() <DataOp.skb.make_randomized_search>`,
+    etc.
+
+    The wrapped learner can be retrieved from the ``learner`` attribute.
+
+    See :meth:`.with_sklearn_interface() <SkrubLearner.with_sklearn_interface>`
+    for details.
+    """
+
     def __init__(self, learner, X="X", y="y"):
         self.learner = learner
         self.X = X

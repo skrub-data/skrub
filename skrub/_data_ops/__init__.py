@@ -20,6 +20,7 @@ from ._choosing import (
 from ._data_ops import DataOp, X, as_data_op, deferred, eval_mode, var, y
 from ._estimator import ParamSearch, SkrubLearner, cross_validate
 from ._optuna import OptunaParamSearch
+from ._xy_skrub_learner import XySkrubLearner
 
 __all__ = [
     "DataOp",
@@ -33,6 +34,7 @@ __all__ = [
     "SkrubLearner",
     "ParamSearch",
     "OptunaParamSearch",
+    "XySkrubLearner",
     #
     "choose_bool",
     "choose_float",

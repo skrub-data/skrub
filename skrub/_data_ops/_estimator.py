@@ -180,12 +180,25 @@ class _DataOpWrapperMixin(_CloudPickle):
         return ["data_op"]
 
     def with_sklearn_interface(self, X="X", y="y"):
-        """Wrap this object in a scikit-learn-style estimator.
+        """
+        Wrap this learner in an estimator exposing the standard scikit-learn interface.
 
-        The returned estimator has methods such as ``fit(X, y)`` and
-        ``predict(X)`` instead of taking a dictionary of variable values,
-        i.e. of accepting ``fit({"something": ..., "something_else": ...})``
-        like SkrubLearners normally do.
+        Learners created from a :class:`DataOp` with :meth:`.skb.make_learner()
+        <DataOp.skb.make_learner>`, :meth:`.skb.make_randomized_search()
+        <DataOp.skb.make_randomized_search>`, etc. accept their inputs as a
+        dictionary, because there are no restrictions on the number and type of
+        inputs they can process:
+        ``learner.fit({"some_input": ..., "some_other_input": ..., ...})``.
+
+        When we need the standard scikit-learn interface ``fit(X, y)`` we can
+        wrap our learner in a :class:`XySkrubLearner` by calling
+        :meth:`SkrubLearner.with_sklearn_interface`. The returned estimator
+        accepts X, y and kwargs and those are put in a dictionary that is
+        passed to the wrapped SkrubLearner (or ParamSearch, or OptunaSearch).
+
+        The parameters ``X`` and ``y`` give the names of variables that should
+        be bound to the ``X`` and ``y`` arguments passed to ``fit``,
+        ``predict``, etc. (by default "X" and "y").
 
         Parameters
         ----------
@@ -199,9 +212,171 @@ class _DataOpWrapperMixin(_CloudPickle):
 
         Returns
         -------
-        estimator
-            An estimator that follows the scikit-learn interface.
-        """
+        XySkrubLearner
+            A wrapper that adapts this learner to the standard scikit-learn
+            ``fit(X, y)`` interface.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.preprocessing import TargetEncoder
+        >>> from sklearn.model_selection import KFold
+
+        **Example data**
+
+        >>> data = skrub.datasets.toy_orders()
+        >>> orders_df, delayed_col = data["X"], data["y"]
+        >>> orders_df
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+
+        >>> delayed_col
+        0    False
+        1    False
+        2     True
+        3    False
+        Name: delayed, dtype: bool
+
+        **Skrub learner and scikit-learn adapter**
+
+        Let us define a DataOp that preprocesses the orders dataframe,
+        and build the corresponding skrub learner:
+
+        >>> cv = KFold(2)
+        >>> learner = (
+        ...     skrub.var("X")
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("y"), cols="product")
+        ... ).skb.make_learner()
+
+        The SkrubLearner accepts an 'environment' dictionary, containing
+        values for all the variables in the DataOp (here, X and y):
+
+        >>> learner.fit_transform({"X": orders_df, "y": delayed_col})
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        If we need an estimator that has the standard scikit-learn
+        interface, we can use ``with_sklearn_interface()``:
+
+        >>> learner.with_sklearn_interface().fit_transform(orders_df, delayed_col)
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        In this case the ``X`` and ``y`` passed to ``fit_transform`` are
+        mapped to the ``"X"`` and ``"y"`` keys in the environment.
+
+        If the DataOp contains no supervised estimators, ``y`` can be
+        omitted. Here ``y`` is needed because the TargetEncoder requires
+        it.
+
+        **The learner and its wrapper share state.**
+
+        The estimator returned by ``with_sklearn_interface`` wraps the
+        original learner (and not a copy), so any fitted attributes are
+        shared. Thus it can also be obtained from an already-fitted
+        model. Here our ``learner`` has been fitted, so we can call
+        ``transform``:
+
+        >>> learner.with_sklearn_interface().transform(orders_df, delayed_col)
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.0
+        1   2         3     2020.0         4.0       4.0      0.4
+        2   3         5     2020.0         4.0       4.0      0.4
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        The wrapped learner can be obtained from the ``learner``
+        attribute:
+
+        >>> learner.with_sklearn_interface().learner is learner
+        True
+
+        **Using different variable names than X and y.**
+
+        If the names of our variables are different than ``"X"`` and
+        ``"y"``, we can specify the names to use in the call to
+        ``with_sklearn_interface``. For example here we use the names
+        ``"orders"`` and ``"delayed"`` instead:
+
+        >>> learner = (
+        ...     skrub.var("orders")
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("delayed"), cols="product")
+        ... ).skb.make_learner()
+
+        >>> learner.fit_transform({"orders": orders_df, "delayed": delayed_col})
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        >>> learner.with_sklearn_interface(X="orders", y="delayed").fit_transform(
+        ...     orders_df, delayed_col
+        ... )
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        **Additional variables can be passed as kwargs.**
+
+        When our DataOp has more than those 2 inputs, additional data can
+        be passed to the sklearn interface through kwargs. Suppose we
+        have a third table containing information about the products:
+
+        >>> products_df = data.products
+        >>> products_df
+          product  price
+        0     cup      5
+        1     pen      2
+        2   spoon      3
+
+        >>> learner = (
+        ...     skrub.var("orders")
+        ...     .merge(skrub.var("products"), on="product")  # ⟵ Add the price information
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("delayed"), cols="product")
+        ... ).skb.make_learner()
+
+        In the usual SkrubLearner interface, bindings for all the
+        variables are passed in the environment:
+
+        >>> learner.fit_transform(
+        ...     {"orders": orders_df, "delayed": delayed_col, "products": products_df}
+        ... )
+           ID  quantity  date_year  date_month  date_day  price  product
+        0   1         2     2020.0         4.0       3.0      2      0.5
+        1   2         3     2020.0         4.0       4.0      5      1.0
+        2   3         5     2020.0         4.0       4.0      5      0.0
+        3   4         1     2020.0         4.0       5.0      3      0.0
+
+        In the scikit-learn-compatible wrapper, additional inputs are
+        passed as named arguments (the name corresponds to the variable
+        name, here "products"):
+
+        >>> learner.with_sklearn_interface(X="orders", y="delayed").fit_transform(
+        ...     orders_df, delayed_col, products=products_df
+        ... )
+           ID  quantity  date_year  date_month  date_day  price  product
+        0   1         2     2020.0         4.0       3.0      2      0.5
+        1   2         3     2020.0         4.0       4.0      5      1.0
+        2   3         5     2020.0         4.0       4.0      5      0.0
+        3   4         1     2020.0         4.0       5.0      3      0.0
+        """  # noqa: E501
         from ._xy_skrub_learner import XySkrubLearner, check_sklearn_interface
 
         check_sklearn_interface(self.data_op, X, y)
