@@ -67,6 +67,7 @@ from sklearn.model_selection import cross_validate
 
 tabicl_results = cross_validate(model, X, y, cv=3)
 scores = tabicl_results["test_score"]
+del model
 print(f"R2 score: {scores.mean():.3f} ± {scores.std():.3f}")
 
 # %%
