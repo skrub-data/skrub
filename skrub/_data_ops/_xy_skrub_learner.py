@@ -22,7 +22,7 @@ def check_sklearn_interface(data_op, X, y):
         )
 
 
-class SklearnAdapter(BaseEstimator):
+class XySkrubLearner(BaseEstimator):
     def __init__(self, learner, X="X", y="y"):
         self.learner = learner
         self.X = X
@@ -59,7 +59,7 @@ class SklearnAdapter(BaseEstimator):
             try:
                 attr = getattr(self.learner, name)
                 if name == "best_learner_":
-                    attr = SklearnAdapter(attr)
+                    attr = XySkrubLearner(attr)
                 return attr
             except AttributeError:
                 _utils.attribute_error(self, name)

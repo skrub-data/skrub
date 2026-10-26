@@ -202,10 +202,10 @@ class _DataOpWrapperMixin(_CloudPickle):
         estimator
             An estimator that follows the scikit-learn interface.
         """
-        from ._sklearn_adapter import SklearnAdapter, check_sklearn_interface
+        from ._xy_skrub_learner import XySkrubLearner, check_sklearn_interface
 
         check_sklearn_interface(self.data_op, X, y)
-        return SklearnAdapter(self, X, y)
+        return XySkrubLearner(self, X, y)
 
 
 @set_module("skrub")
