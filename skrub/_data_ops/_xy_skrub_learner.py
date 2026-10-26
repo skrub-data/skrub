@@ -2,17 +2,17 @@ import re
 
 from sklearn.base import BaseEstimator
 
-from .._utils import short_repr
+from .._utils import set_module, short_repr
 from . import _estimator, _evaluation, _utils
 
 
 def check_sklearn_interface(data_op, X, y):
-    if not isinstance(X, (str, int)):
+    if not isinstance(X, (str, int)) or isinstance(X, bool):
         raise TypeError(
             "Expected X to be a string or int; "
             f"got object of type: {X.__class__.__name__!r}"
         )
-    if y is not None and not isinstance(X, (str, int)):
+    if y is not None and not isinstance(y, (str, int)) or isinstance(y, bool):
         raise TypeError(
             "Expected y to be a string, int, or None; "
             f"got object of type: {y.__class__.__name__!r}"
@@ -47,6 +47,7 @@ def check_sklearn_interface(data_op, X, y):
         )
 
 
+@set_module("skrub")
 class XySkrubLearner(BaseEstimator):
     """
     Wrapper to expose a standard scikit-learn interface to a skrub learner.
@@ -100,7 +101,7 @@ class XySkrubLearner(BaseEstimator):
             try:
                 attr = getattr(self.learner, name)
                 if name == "best_learner_":
-                    attr = XySkrubLearner(attr)
+                    attr = XySkrubLearner(attr, self.X, self.y)
                 return attr
             except AttributeError:
                 _utils.attribute_error(self, name)
