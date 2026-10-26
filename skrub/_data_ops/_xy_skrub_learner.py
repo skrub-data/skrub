@@ -12,7 +12,7 @@ def check_sklearn_interface(data_op, X, y):
             "Expected X to be a string or int; "
             f"got object of type: {X.__class__.__name__!r}"
         )
-    if y is not None and not isinstance(y, (str, int)) or isinstance(y, bool):
+    if y is not None and (not isinstance(y, (str, int)) or isinstance(y, bool)):
         raise TypeError(
             "Expected y to be a string, int, or None; "
             f"got object of type: {y.__class__.__name__!r}"
