@@ -214,7 +214,7 @@ class XySkrubLearner(BaseEstimator):
                     new_value = choice_range
                 learner_subgrid[f"{key_prefix}{new_key}"] = new_value
             learner_grid.append(learner_subgrid)
-        if outer_grid is None:
+        if not outer_grid:
             outer_grid = {}
         if isinstance(outer_grid, Mapping):
             outer_grid = [outer_grid]
