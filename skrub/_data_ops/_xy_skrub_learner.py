@@ -115,6 +115,11 @@ class XySkrubLearner(BaseEstimator):
         if name == "learner":
             # not set yet (e.g. during unpickling / copy): avoid infinite recursion
             _utils.attribute_error(self, name)
+        if name.startswith("_") and name not in [
+            "_estimator_type",
+            "__sklearn_is_fitted__",
+        ]:
+            _utils.attribute_error(self, name)
         if name not in ["preview", *_utils.ESTIMATOR_METHODS]:
             # not an estimator method: no (X, y) translation needed, and no need
             # to inspect the DataOp
@@ -143,7 +148,7 @@ class XySkrubLearner(BaseEstimator):
         """
         Get a param grid for this learner (use with GridSearchCV, RandomizedSearchCV).
 
-        .. note:
+        .. note::
 
             The recommended way to tune hyperparameters is to use the skrub
             DataOp methods :meth:`DataOp.skb.make_randomized_search()`,
