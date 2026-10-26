@@ -344,8 +344,12 @@ def test_epoch_seconds_rejects_bool(df_module):
         ToDatetime(epoch_seconds=True).fit_transform(col)
 
 
-def test_epoch_seconds_conversion_failure():
-    col = pd.Series([1e20], name="ts")
+def test_epoch_seconds_conversion_failure(monkeypatch):
+    def fail(*args, **kwargs):
+        raise ValueError("could not convert")
+
+    monkeypatch.setattr("skrub._to_datetime._epoch_seconds_to_datetime", fail)
+    col = pd.Series([1640995200], name="ts")
     with pytest.raises(RejectColumn, match="seconds since epoch"):
         ToDatetime(epoch_seconds=True).fit_transform(col)
 
