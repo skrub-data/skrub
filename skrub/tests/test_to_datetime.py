@@ -14,6 +14,7 @@ from skrub._to_datetime import (
     ToDatetime,
     _cast_date_objects,
     _convert_time_zone,
+    _epoch_seconds_to_datetime,
     _get_time_zone,
     to_datetime,
 )
@@ -223,7 +224,12 @@ def test_to_datetime_func(df_module, datetime_col):
 
 
 @pytest.mark.parametrize(
-    "func", [partial(_convert_time_zone, time_zone=None), _get_time_zone]
+    "func",
+    [
+        partial(_convert_time_zone, time_zone=None),
+        _get_time_zone,
+        _epoch_seconds_to_datetime,
+    ],
 )
 def test_error_dispatch(func):
     # Make codecov happy
@@ -299,3 +305,54 @@ def test_object_column_that_is_not_dates_is_still_rejected():
 
     with pytest.raises(RejectColumn):
         ToDatetime().fit_transform(pd.Series([date(2002, 1, 1), "hello"], name="when"))
+
+
+@pytest.mark.parametrize("values", [[1640995200, None], [1640995200.0, None]])
+def test_epoch_seconds(df_module, values):
+    col = df_module.make_column("ts", values)
+    encoder = ToDatetime(epoch_seconds=True)
+    out = encoder.fit_transform(col)
+    assert sbd.is_any_date(out)
+    assert encoder.format_ is None
+    assert encoder.output_time_zone_ is None
+    assert sbd.to_list(sbd.fill_nulls(strftime(out, ISO), "????")) == [
+        "2022-01-01T00:00:00",
+        "????",
+    ]
+    transformed = encoder.transform(df_module.make_column("ts", [0, 86400]))
+    assert sbd.dtype(transformed) == encoder.output_dtype_
+    assert to_iso(transformed) == ["1970-01-01T00:00:00", "1970-01-02T00:00:00"]
+
+
+def test_epoch_seconds_fractional(df_module):
+    col = df_module.make_column("ts", [1640995200.5])
+    out = ToDatetime(epoch_seconds=True).fit_transform(col)
+    assert sbd.to_list(strftime(out, "%Y-%m-%dT%H:%M:%S.%f"))[0].startswith(
+        "2022-01-01T00:00:00.5"
+    )
+
+
+def test_epoch_seconds_default_rejects_numbers(df_module):
+    col = df_module.make_column("ts", [1640995200])
+    with pytest.raises(RejectColumn, match="does not contain strings"):
+        ToDatetime().fit_transform(col)
+
+
+def test_epoch_seconds_rejects_bool(df_module):
+    col = df_module.make_column("ts", [True, False])
+    with pytest.raises(RejectColumn, match="does not contain strings"):
+        ToDatetime(epoch_seconds=True).fit_transform(col)
+
+
+def test_epoch_seconds_conversion_failure():
+    col = pd.Series([1e20], name="ts")
+    with pytest.raises(RejectColumn, match="seconds since epoch"):
+        ToDatetime(epoch_seconds=True).fit_transform(col)
+
+
+@skip_polars_installed_without_pyarrow
+def test_epoch_seconds_still_parses_strings(df_module):
+    col = df_module.make_column("ts", ["2022-01-01T00:00:00"])
+    encoder = ToDatetime(epoch_seconds=True)
+    assert to_iso(encoder.fit_transform(col)) == ["2022-01-01T00:00:00"]
+    assert encoder.format_ == ISO
