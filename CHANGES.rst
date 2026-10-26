@@ -22,7 +22,7 @@ New Features
 - :class:`ToDatetime` has a new ``epoch_seconds`` parameter. When set to
   ``True``, numeric columns are interpreted as seconds since the Unix epoch and
   converted to (UTC, time zone naive) datetimes.
-  :pr:`XXXX` by :user:`YOUR NAME <your-github-handle>`.
+  :pr:`2379` by :user:`Turki <turki013>`.
 
 Changes
 -------
