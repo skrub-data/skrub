@@ -194,7 +194,7 @@ class _DataOpWrapperMixin(_CloudPickle):
         wrap our learner in a :class:`XySkrubLearner` by calling
         :meth:`SkrubLearner.with_sklearn_interface`. The returned estimator
         accepts X, y and kwargs and those are put in a dictionary that is
-        passed to the wrapped SkrubLearner (or ParamSearch, or OptunaSearch).
+        passed to the wrapped SkrubLearner (or ParamSearch, or OptunaParamSearch).
 
         The parameters ``X`` and ``y`` give the names of variables that should
         be bound to the ``X`` and ``y`` arguments passed to ``fit``,
@@ -202,13 +202,19 @@ class _DataOpWrapperMixin(_CloudPickle):
 
         Parameters
         ----------
-        X : str, default="X"
-            Name of the variable (or named node) of the DataOp that receives
-            the ``X`` argument.
+        X : str or int, default="X"
+            :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
+            node (usually a :func:`variable <skrub.var>`) in the DataOp that
+            receives the ``X`` argument.
 
-        y : str, default="y"
-            Name of the variable (or named node) of the DataOp that receives
-            the ``y`` argument. Only required if the DataOp uses a ``y``.
+        y : str or int or None, default="y"
+            :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
+            node (usually a :func:`variable <skrub.var>`) in the DataOp that
+            receives the ``y`` argument. Only required if the DataOp uses a ``y``.
+
+            (Passing ``None`` explicitly disables passing any ``y`` even if one
+            is provided to the estimator method. Usually leaving the default is
+            fine even for DataOps that do not use a ``y``.)
 
         Returns
         -------
@@ -218,6 +224,13 @@ class _DataOpWrapperMixin(_CloudPickle):
 
         Examples
         --------
+        We show examples with :meth:`.skb.make_learner()
+        <DataOp.skb.make_learner>` here, which returns a :class:`SkrubLearner`,
+        but this method works similarly for :class:`ParamSearch` and
+        :class:`OptunaParamSearch` (created by :meth:`.skb.make_grid_search()
+        <DataOp.skb.make_grid_search>` and :meth:`.skb.make_randomized_search()
+        <DataOp.skb.make_randomized_search>`).
+
         >>> import skrub
         >>> from sklearn.preprocessing import TargetEncoder
         >>> from sklearn.model_selection import KFold
@@ -330,6 +343,12 @@ class _DataOpWrapperMixin(_CloudPickle):
         1   2         3     2020.0         4.0       4.0      1.0
         2   3         5     2020.0         4.0       4.0      0.0
         3   4         1     2020.0         4.0       5.0      0.0
+
+        Moreover, the names to which we map ``X`` and ``y`` are not required to
+        belong to skrub variables (created with :func:`var()`, shown here).
+        They can be any type of node with a name (set with
+        :meth:`.skb.set_name() <DataOp.skb.set_name>`), or they can also be a
+        node ID rather than a string (see :attr:`.skb.id <DataOp.skb.id>`).
 
         **Additional variables can be passed as kwargs.**
 

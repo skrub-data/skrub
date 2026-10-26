@@ -1,8 +1,9 @@
 """
+.. currentmodule:: skrub
+.. _example_with_sklearn_interface:
+
 Turn a DataOp into a "standard" scikit-learn estimator
 ======================================================
-
-.. currentmodule:: skrub
 
 When our DataOp only needs 2 inputs X, and y, we can get a learner that accepts
 the usual scikit-learn inputs rather than a dictionary like SkrubLearners

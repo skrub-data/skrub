@@ -7,18 +7,43 @@ from . import _estimator, _evaluation, _utils
 
 
 def check_sklearn_interface(data_op, X, y):
-    all_names = data_op.skb.get_vars(all_named_ops=True)
-    if X not in all_names:
+    if not isinstance(X, (str, int)):
+        raise TypeError(
+            "Expected X to be a string or int; "
+            f"got object of type: {X.__class__.__name__!r}"
+        )
+    if y is not None and not isinstance(X, (str, int)):
+        raise TypeError(
+            "Expected y to be a string, int, or None; "
+            f"got object of type: {y.__class__.__name__!r}"
+        )
+    all_nodes = _evaluation.nodes(data_op)
+    all_names, all_ids = set(), set()
+    for node in all_nodes:
+        all_ids.add(node._skrub_impl.uuid)
+        if (name := node._skrub_impl.name) is not None:
+            all_names.add(name)
+    if isinstance(X, str) and X not in all_names:
         raise ValueError(
             f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
             f"a variable or node named {X!r} but none was found."
         )
-    if not _estimator.data_op_needs_y(data_op):
+    if isinstance(X, int) and X not in all_ids:
+        raise ValueError(
+            f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
+            f"a variable or node with ID {X!r} but none was found."
+        )
+    if y is None or not _estimator.data_op_needs_y(data_op):
         return
-    if y not in all_names:
+    if isinstance(y, str) and y not in all_names:
         raise ValueError(
             f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
             f"a variable or node named {y!r} but none was found."
+        )
+    if isinstance(y, int) and y not in all_ids:
+        raise ValueError(
+            f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
+            f"a variable or node with ID {y!r} but none was found."
         )
 
 
@@ -84,7 +109,7 @@ class XySkrubLearner(BaseEstimator):
 
         def f(X, y=None, **kwargs):
             env = kwargs | {self.X: X}
-            if y is not None:
+            if y is not None and self.y is not None:
                 env[self.y] = y
             result = getattr(self.learner, name)(env)
             # ``fit`` must return the adapter to allow ``est.fit(X, y).predict(X)``
