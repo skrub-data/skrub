@@ -90,6 +90,8 @@ __all__ = [
     "std",
     "mean",
     "pearson_corr",
+    "spearman_corr",
+    "kendall_corr",
     "sort",
     "value_counts",
     "quantile",
@@ -1143,6 +1145,36 @@ def _pearson_corr_pandas(df):
 @pearson_corr.specialize("polars", argument_type="DataFrame")
 def _pearson_corr_polars(df):
     return pl.from_pandas(_pearson_corr_pandas(df.to_pandas()))
+
+
+@dispatch
+def spearman_corr(df):
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
+
+
+@spearman_corr.specialize("pandas", argument_type="DataFrame")
+def _spearman_corr_pandas(df):
+    return df.corr(method="spearman", numeric_only=True)
+
+
+@spearman_corr.specialize("polars", argument_type="DataFrame")
+def _spearman_corr_polars(df):
+    return pl.from_pandas(_spearman_corr_pandas(df.to_pandas()))
+
+
+@dispatch
+def kendall_corr(df):
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
+
+
+@kendall_corr.specialize("pandas", argument_type="DataFrame")
+def _kendall_corr_pandas(df):
+    return df.corr(method="kendall", numeric_only=True)
+
+
+@kendall_corr.specialize("polars", argument_type="DataFrame")
+def _kendall_corr_polars(df):
+    return pl.from_pandas(_kendall_corr_pandas(df.to_pandas()))
 
 
 @dispatch

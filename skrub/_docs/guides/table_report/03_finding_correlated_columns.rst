@@ -11,10 +11,14 @@ In addition to |TableReport|'s **Associations** tab, you can compute association
 using the |column_associations| function, which returns a dataframe containing the
 associations.
 
-Reported metrics include `Cramer’s V statistic <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
-and `Pearson’s Correlation Coefficient <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_.
+Reported metrics include `Cramer’s V statistic <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_,
+`Pearson’s Correlation Coefficient <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+and `Spearman’s Rank Correlation Coefficient <https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient>`_.
+`Kendall’s Tau <https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient>`_
+can also be computed by passing ``compute_kendall=True``, both to |column_associations|
+and to |TableReport|; it is not computed by default because it is slower.
 The result is returned as a dataframe that contains the column name and idx for the
-left and the right table, and both associations; results are sorted in descending order
+left and the right table, and the associations; results are sorted in descending order
 by Cramer’s V association.
 
 This can be useful to have access to the information used in the |TableReport|
@@ -30,9 +34,9 @@ also used by the |DropSimilar| transformer to select which columns should be dro
     df = pd.read_csv(path)
     column_associations(df).head()
 
-          left_column_name  left_column_idx        right_column_name  right_column_idx  cramer_v  pearson_corr
-    0           department                1          department_name                 2  1.000000           NaN
-    1  assignment_category                4    current_annual_salary                 8  0.635525           NaN
-    2             division                3      assignment_category                 4  0.601097           NaN
-    3  assignment_category                4  employee_position_title                 5  0.496814           NaN
-    4             division                3  employee_position_title                 5  0.416034           NaN
+          left_column_name  left_column_idx        right_column_name  right_column_idx  cramer_v  pearson_corr  spearman_corr
+    0           department                1          department_name                 2  1.000000           NaN            NaN
+    1  assignment_category                4    current_annual_salary                 8  0.635525           NaN            NaN
+    2             division                3      assignment_category                 4  0.601097           NaN            NaN
+    3  assignment_category                4  employee_position_title                 5  0.496814           NaN            NaN
+    4             division                3  employee_position_title                 5  0.416034           NaN            NaN

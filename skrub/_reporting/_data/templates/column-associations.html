@@ -38,6 +38,7 @@
     </div>
 
     {% elif summary["top_associations"] %}
+    {% set with_kendall = "kendall_corr" in summary["top_associations"][0] %}
 
     <div class="horizontal-scroll vertical-scroll-table-wrapper">
     <table class="pure-table pure-table-bordered sticky-header-table">
@@ -47,6 +48,10 @@
                 <th scope="col">Column 2</th>
                 <th scope="col"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
                 <th scope="col"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient">Spearman's Correlation</a></th>
+                {% if with_kendall %}
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient">Kendall's Tau</a></th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -66,6 +71,18 @@
                     {{ association["pearson_corr"] | format_number }}
                     {%- endif -%}
                 </td>
+                <td>
+                    {%- if not (association["spearman_corr"] | is_null) -%}
+                    {{ association["spearman_corr"] | format_number }}
+                    {%- endif -%}
+                </td>
+                {% if with_kendall %}
+                <td>
+                    {%- if not (association["kendall_corr"] | is_null) -%}
+                    {{ association["kendall_corr"] | format_number }}
+                    {%- endif -%}
+                </td>
+                {% endif %}
             </tr>
         {% endfor %}
         </tbody>
@@ -77,6 +94,9 @@
         <a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a> statistic is a number between 0 and 1.
         When it is close to 1 the columns are strongly associated — they contain similar information.
         In this case, one of them may be redundant and for some models (such as linear models) it might be beneficial to remove it.
+        For pairs of numeric columns, correlation coefficients between -1 and 1 are also shown:
+        Pearson's measures how close the relationship is to a linear one, while
+        rank correlations (Spearman's{% if with_kendall %} and Kendall's{% endif %}) measure how close it is to a monotonic one.
     </div>
 
     {% elif summary['n_columns'] == 1 %}
