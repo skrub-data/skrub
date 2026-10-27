@@ -2,6 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
+from sklearn.base import is_classifier
 from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier
@@ -25,9 +26,11 @@ def test_xy_skrub_learner():
         .with_sklearn_interface()
     )
     assert not transformer.__sklearn_is_fitted__()
-    assert transformer.fit_transform(X).shape == (10, 2)
+    assert transformer.fit(X) is transformer
     assert transformer.__sklearn_is_fitted__()
+    assert transformer.transform(X).shape == (10, 2)
     assert not hasattr(transformer, "predict")
+    assert not is_classifier(transformer)
 
     # check pickling
 
@@ -54,6 +57,8 @@ def test_xy_skrub_learner():
     )
     predictor.fit(X, y)
     assert predictor.predict(X).shape == y.shape
+    assert predictor.classes_.shape == (2,)
+    assert is_classifier(predictor)
 
 
 def test_bad_X_y_names():
@@ -63,6 +68,8 @@ def test_bad_X_y_names():
 
     with pytest.raises(TypeError, match="Expected X to be a string"):
         learner.with_sklearn_interface(X=np.ones((3, 2)))
+    with pytest.raises(TypeError, match="Expected X to be a string"):
+        learner.with_sklearn_interface(X=True)
     with pytest.raises(TypeError, match="Expected y to be a string"):
         learner.with_sklearn_interface(y=np.ones(3))
 
@@ -89,15 +96,20 @@ def test_xy_search():
     # wrapping the output of make_*_search in a xylearner
     X, y = make_classification(n_samples=10)
     predictor = (
-        skrub.X()
+        skrub.var("a")
+        .skb.mark_as_X()
         .skb.apply(PCA(n_components=skrub.choose_from([2, 3], name="n_components")))
-        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.apply(DummyClassifier(), y=skrub.var("b").skb.mark_as_y())
         .skb.make_grid_search()
-        .with_sklearn_interface()
+        .with_sklearn_interface("a", "b")
     )
     predictor.fit(X, y)
     assert predictor.results_.shape[0] == 2
     assert isinstance(predictor.best_learner_, skrub.XySkrubLearner)
+    assert predictor.best_learner_.X == "a"
+    assert predictor.best_learner_.y == "b"
+    assert predictor.predict(X).shape == y.shape
+    assert predictor.best_learner_.predict(X).shape == y.shape
 
 
 def test_search_xy_learner():
