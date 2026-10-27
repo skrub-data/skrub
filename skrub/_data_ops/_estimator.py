@@ -232,6 +232,29 @@ class _DataOpWrapperMixin(_CloudPickle):
             A wrapper that adapts this learner to the standard scikit-learn
             ``fit(X, y)`` interface.
 
+        See Also
+        --------
+        XySkrubLearner :
+            The class of the returned estimator.
+        XySkrubLearner.get_param_grid :
+            Param grid for tuning the learner's choices with scikit-learn's
+            ``GridSearchCV`` or ``RandomizedSearchCV``.
+        DataOp.skb.make_learner :
+            Get a skrub learner for a DataOp.
+
+        Notes
+        -----
+        The returned estimator can be used wherever a scikit-learn estimator is
+        expected, for example in a :class:`~sklearn.pipeline.Pipeline`, with
+        :func:`sklearn.model_selection.cross_validate`, or as the ``estimator``
+        in :meth:`DataOp.skb.apply` to nest the DataOp in another one. Skrub
+        functions that expect a skrub learner, such as
+        :func:`skrub.cross_validate`, should be given the original learner
+        instead.
+
+        See also the :ref:`user guide <user_guide_data_ops_sklearn_interface>`
+        and this :ref:`example <example_with_sklearn_interface>`.
+
         Examples
         --------
         We show examples with :meth:`.skb.make_learner()
@@ -425,6 +448,10 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
     DataOp, or by accessing the ``best_learner_`` attribute of a :class:`ParamSearch`
     after fitting it.
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`SkrubLearner.with_sklearn_interface` to obtain an estimator with the
+    standard scikit-learn interface.
     """
 
     def __init__(self, data_op):
@@ -1791,6 +1818,10 @@ class ParamSearch(_BaseParamSearch):
     This class is not meant to be instantiated manually, ``ParamSearch``
     objects are created by calling :meth:`~DataOp.skb.make_grid_search()` or
     :meth:`~DataOp.skb.make_randomized_search()` on a DataOp.
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`ParamSearch.with_sklearn_interface` to obtain an estimator with the
+    standard scikit-learn interface.
     """
 
     def __init__(self, data_op, search):

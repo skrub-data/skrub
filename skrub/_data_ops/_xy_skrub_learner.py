@@ -83,8 +83,26 @@ class XySkrubLearner(BaseEstimator):
 
     The wrapped learner can be retrieved from the ``learner`` attribute.
 
-    See :meth:`.with_sklearn_interface() <SkrubLearner.with_sklearn_interface>`
-    for details.
+    Parameters
+    ----------
+    learner : SkrubLearner, ParamSearch or OptunaParamSearch
+        The learner to wrap.
+
+    X : str or int, default="X"
+        Name or ID of the node that receives the ``X`` argument.
+
+    y : str or int or None, default="y"
+        Name or ID of the node that receives the ``y`` argument.
+
+    See Also
+    --------
+    SkrubLearner.with_sklearn_interface :
+        Create a ``XySkrubLearner``. See this method for all the details.
+
+    Notes
+    -----
+    See the :ref:`user guide <user_guide_data_ops_sklearn_interface>` and this
+    :ref:`example <example_with_sklearn_interface>` for more information.
     """
 
     def __init__(self, learner, X="X", y="y"):
@@ -188,7 +206,9 @@ class XySkrubLearner(BaseEstimator):
         Returns
         -------
         list of dict
-            The parameter grid.
+            The parameter grid. If the wrapped learner is a hyperparameter
+            search (:class:`ParamSearch` or :class:`OptunaParamSearch`), it
+            does its own tuning and adds nothing to the provided grid.
 
         Examples
         --------
