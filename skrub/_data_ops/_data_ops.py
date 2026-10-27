@@ -1524,8 +1524,9 @@ class Apply(DataOpImpl):
             # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
+                fit_args = (X,) if y is None else (X, y)
                 self.estimator_, _, self.estimator_id_ = _MEMORY.call_fitting_method(
-                    self.estimator_, "fit", (X, y), fit_kwargs, no_cache=no_cache
+                    self.estimator_, "fit", fit_args, fit_kwargs, no_cache=no_cache
                 )
             predict_kwargs = yield from self._eval_kwargs("predict")
             pred = _MEMORY.call_non_fitting_method(
@@ -1540,7 +1541,9 @@ class Apply(DataOpImpl):
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
 
-        if "fit" in method_name:
+        if y is None:
+            args = (X,)
+        elif "fit" in method_name:
             args = (X,) if self.unsupervised else (X, y)
         elif method_name == "score":
             args = (X, y)

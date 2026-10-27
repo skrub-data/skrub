@@ -13,6 +13,7 @@ from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV
 from sklearn.model_selection import GroupKFold, train_test_split
+from sklearn.pipeline import Pipeline
 from sklearn.utils import check_random_state
 
 import skrub
@@ -1161,3 +1162,69 @@ def test_find_X_y():
     assert Xy["y"] is y
     assert Xy["cv"] is kfold
     assert Xy["split_kwargs"]["groups"] is groups
+
+
+def test_apply_SkrubLearner():
+    X, y = make_classification(n_samples=10)
+    inner_learner = (
+        skrub.var("X")
+        .skb.apply(LogisticRegression(), y=skrub.var("y"))
+        .skb.make_learner()
+    )
+    outer_learner = (
+        skrub.as_data_op({"X": skrub.var("X", X), "y": skrub.var("y", y)})
+        .skb.apply(inner_learner)
+        .skb.make_learner(fitted=True)
+    )
+    assert outer_learner.predict({"X": X, "y": None}).shape == y.shape
+
+
+def test_apply_XySkrubLearner():
+    X, y = make_classification(n_samples=10)
+    inner_learner = (
+        skrub.var("a")
+        .skb.apply(LogisticRegression(), y=skrub.var("b"))
+        .skb.make_learner()
+        .with_sklearn_interface(X="a", y="b")
+    )
+    outer_learner = (
+        skrub.var("c")
+        .skb.apply(inner_learner, y=skrub.var("d"))
+        .skb.make_learner()
+        .fit({"c": X, "d": y})
+    )
+    assert outer_learner.predict({"c": X}).shape == y.shape
+
+
+def test_apply_SkrubLearner_choices_not_evaluated():
+    # The data_op of a SkrubLearner passed to .skb.apply() is data, not code:
+    # its choices are not part of the outer DataOp. Otherwise the 2 choices
+    # named "C" would clash.
+    X, y = make_classification(n_samples=10)
+    inner_learner = (
+        skrub.var("X")
+        .skb.apply(
+            LogisticRegression(C=skrub.choose_float(0.1, 1.0, name="C")),
+            y=skrub.var("y"),
+        )
+        .skb.make_learner()
+    )
+    outer_learner = (
+        skrub.as_data_op({"X": skrub.var("X", X), "y": skrub.var("y", y)})
+        .skb.apply(skrub.choose_from({"inner": inner_learner}, name="C"))
+        .skb.make_learner(fitted=True)
+    )
+    assert list(outer_learner.get_named_params()) == ["C"]
+    assert outer_learner.predict({"X": X, "y": None}).shape == y.shape
+
+
+def test_apply_meta_estimator_with_choice():
+    # choices nested in the params of an estimator's sub-estimators
+    X, y = make_classification(n_samples=10)
+    pipe = Pipeline(
+        [("ridge", Ridge(alpha=skrub.choose_from([0.1, 1.0], name="alpha")))]
+    )
+    learner = skrub.var("X").skb.apply(pipe, y=skrub.var("y")).skb.make_learner()
+    assert list(learner.get_named_params()) == ["alpha"]
+    learner.fit({"X": X, "y": y})
+    assert learner.predict({"X": X}).shape == y.shape

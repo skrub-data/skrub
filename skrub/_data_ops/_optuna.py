@@ -136,6 +136,10 @@ class OptunaParamSearch(_BaseParamSearch):
     Attributes of interest are ``best_learner_``, ``best_score_``,
     ``results_``, ``detailed_results_``, and ``study_`` (the Optuna study used
     to find hyperparameters).
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`OptunaParamSearch.with_sklearn_interface` to obtain an estimator
+    with the standard scikit-learn interface.
     """
 
     def __init__(

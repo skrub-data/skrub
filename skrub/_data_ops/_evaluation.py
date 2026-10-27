@@ -273,7 +273,15 @@ class _DataOpTraversal:
         return data_op
 
     def handle_estimator(self, estimator):
-        params = yield estimator.get_params()
+        params = estimator.get_params(deep=False)
+        if hasattr(estimator, "__skrub_quoted_params__"):
+            # Those attributes should not be evaluated.
+            # Currently, that is only the `data_op` attribute of skrub learners.
+            # They will get cloned when we clone the estimator itself, but we
+            # don't evaluate them / replace them with their value.
+            quoted = estimator.__skrub_quoted_params__()
+            params = {k: v for k, v in params.items() if k not in quoted}
+        params = yield params
         estimator = skl_clone(estimator)
         estimator.set_params(**params)
         return estimator
