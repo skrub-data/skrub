@@ -2,6 +2,8 @@ import builtins
 import sys
 
 import pytest
+import numpy as np
+import pandas as pd
 
 from skrub import _dataframe as sbd
 from skrub._drop_similar import DropSimilar, _filter_associations
@@ -135,3 +137,16 @@ def test_without_pyarrow(monkeypatch):
     result = DropSimilar().fit_transform(example_dataframe)
 
     assert result.columns == ["original"]
+
+
+def test_non_string_column_names():
+    X = pd.DataFrame(np.eye(3))
+    ds = DropSimilar()
+
+    out = ds.fit_transform(X)
+    assert out.shape == (3, 3)
+    assert list(out.columns) == ["0", "1", "2"]
+
+    out = ds.transform(X)
+    assert out.shape == (3, 3)
+    assert list(out.columns) == ["0", "1", "2"]
