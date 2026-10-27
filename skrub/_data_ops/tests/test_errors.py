@@ -6,7 +6,9 @@ import types
 import numpy as np
 import pytest
 from sklearn.datasets import make_classification
+from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier
+from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -288,6 +290,13 @@ def test_missing_X_or_y():
         ValueError, match=r'DataOp should have a node marked with "mark_as_y\(\)"'
     ):
         X.skb.mark_as_X().skb.apply(LogisticRegression(), y=y).skb.cross_validate(env)
+    # y is needed by an apply that is not the last one
+    with pytest.raises(
+        ValueError, match=r'DataOp should have a node marked with "mark_as_y\(\)"'
+    ):
+        X.skb.mark_as_X().skb.apply(SelectKBest(k=3), y=y).skb.apply(
+            PCA(n_components=2)
+        ).skb.cross_validate(env)
     # now both are correctly marked:
     X.skb.mark_as_X().skb.apply(
         LogisticRegression(), y=y.skb.mark_as_y()

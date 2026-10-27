@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from sklearn.base import is_classifier
+from sklearn.base import clone, is_classifier
 from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier
@@ -12,6 +12,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 import skrub
+from skrub._data_ops._data_ops import UninitializedVariable
 
 
 def test_xy_skrub_learner():
@@ -32,9 +33,18 @@ def test_xy_skrub_learner():
     assert not hasattr(transformer, "predict")
     assert not is_classifier(transformer)
 
-    # check pickling
+    # y is ignored if the DataOp does not use one
+    assert transformer.fit(X, y).transform(X).shape == (10, 2)
 
-    assert pickle.loads(pickle.dumps(transformer)).fit_transform(X).shape == (10, 2)
+    # cloning
+    cloned_transformer = clone(transformer)
+    assert not cloned_transformer.__sklearn_is_fitted__()
+    assert cloned_transformer.fit_transform(X).shape == (10, 2)
+
+    # pickling
+    unpickled = pickle.loads(pickle.dumps(transformer))
+    assert unpickled.__sklearn_is_fitted__()
+    assert unpickled.fit_transform(X).shape == (10, 2)
 
     # supervised transformer + node id
 
@@ -92,24 +102,97 @@ def test_bad_X_y_names():
     learner.with_sklearn_interface(X="a", y=0)
 
 
-def test_xy_search():
-    # wrapping the output of make_*_search in a xylearner
+def test_set_name():
+    # X can be the name of any node, not just vars
+    node = skrub.var("X").skb.apply_func(lambda x: x * 2).skb.set_name("a")
+    learner = node.skb.make_learner()
+    assert learner.with_sklearn_interface("X").fit_transform(3) == 6
+    # The value gets passed to the "a" node (not X), so after the multiplication
+    assert learner.with_sklearn_interface("a").fit_transform(3) == 3
+
+
+def test_kwargs():
+    # additional variables are passed as kwargs
+    data = skrub.datasets.toy_orders()
+    est = (
+        skrub.var("orders")
+        .merge(skrub.var("products"), on="product")
+        .skb.make_learner()
+        .with_sklearn_interface(X="orders")
+    )
+    out = est.fit_transform(data.X, products=data.products)
+    assert "price" in out.columns
+    assert "price" in est.transform(data.X, products=data.products).columns
+    with pytest.raises(UninitializedVariable, match="products"):
+        est.transform(data.X)
+
+
+def test_shared_state():
+    # the wrapper does not copy the learner: it can wrap an already fitted one
     X, y = make_classification(n_samples=10)
-    predictor = (
+    learner = (
+        skrub.var("X")
+        .skb.apply(LogisticRegression(), y=skrub.var("y"))
+        .skb.make_learner()
+        .fit({"X": X, "y": y})
+    )
+    est = learner.with_sklearn_interface()
+    assert est.learner is learner
+    assert est.__sklearn_is_fitted__()
+    assert (est.predict(X) == learner.predict({"X": X})).all()
+
+
+@pytest.mark.parametrize("scoring, expected_type", [(None, float), ("roc_auc", dict)])
+def test_score(scoring, expected_type):
+    # score() with and without .skb.with_scoring()
+    X, y = make_classification(n_samples=20)
+    data_op = skrub.X().skb.apply(LogisticRegression(), y=skrub.y())
+    if scoring is not None:
+        data_op = data_op.skb.with_scoring(scoring)
+    learner = data_op.skb.make_learner().fit({"X": X, "y": y})
+    score = learner.with_sklearn_interface().score(X, y)
+    assert isinstance(score, expected_type)
+    assert score == learner.score({"X": X, "y": y})
+
+
+@pytest.mark.parametrize(
+    "method, kwargs",
+    [
+        ("make_grid_search", {}),
+        ("make_randomized_search", {"n_iter": 2}),
+        ("make_randomized_search", {"n_iter": 2, "backend": "optuna"}),
+    ],
+)
+def test_xy_search(method, kwargs):
+    # wrapping the output of make_*_search in a xylearner
+    if kwargs.get("backend") == "optuna":
+        pytest.importorskip("optuna")
+    X, y = make_classification(n_samples=10)
+    data_op = (
         skrub.var("a")
         .skb.mark_as_X()
         .skb.apply(PCA(n_components=skrub.choose_from([2, 3], name="n_components")))
         .skb.apply(DummyClassifier(), y=skrub.var("b").skb.mark_as_y())
-        .skb.make_grid_search()
-        .with_sklearn_interface("a", "b")
     )
+    search = getattr(data_op.skb, method)(**kwargs)
+    predictor = search.with_sklearn_interface("a", "b")
+    assert not predictor.__sklearn_is_fitted__()
     predictor.fit(X, y)
+    assert predictor.__sklearn_is_fitted__()
     assert predictor.results_.shape[0] == 2
     assert isinstance(predictor.best_learner_, skrub.XySkrubLearner)
     assert predictor.best_learner_.X == "a"
     assert predictor.best_learner_.y == "b"
     assert predictor.predict(X).shape == y.shape
     assert predictor.best_learner_.predict(X).shape == y.shape
+
+    # the search does its own tuning: nothing to add to an outer param grid
+    assert predictor.get_param_grid() == [{}]
+    assert predictor.get_param_grid("p__", {"p__a": [1]}) == [{"p__a": [1]}]
+    assert predictor.get_param_grid("p__", [{"p__a": [1]}, {"p__b": [2]}]) == [
+        {"p__a": [1]},
+        {"p__b": [2]},
+    ]
 
 
 def test_search_xy_learner():
@@ -164,7 +247,10 @@ def test_get_set_enumerated_param():
     assert transformer.fit_transform(X).shape[1] == 3
     grid = transformer.get_param_grid()
     assert grid == [{"0:n_components": ["0:2", "1:3"]}]
-    transformer.set_params(**{"0:n_components": "0:2"})
+    # the "0:..." key goes to the learner, "y" is a param of the wrapper
+    out = transformer.set_params(**{"0:n_components": "0:2", "y": "z"})
+    assert out is transformer
+    assert transformer.y == "z"
     assert transformer.fit_transform(X).shape[1] == 2
     assert transformer.get_named_params() == {"n_components": 0}
     transformer.set_named_params(n_components=1)
@@ -201,3 +287,13 @@ def test_learner_attribute_error():
     del xylearner.learner
     with pytest.raises(AttributeError):
         xylearner.learner
+
+
+def test_missing_attribute():
+    xylearner = skrub.var("X").skb.make_learner().with_sklearn_interface()
+    with pytest.raises(AttributeError, match="'XySkrubLearner' object has no"):
+        xylearner.does_not_exist
+    # private attributes of the wrapped learner are not forwarded
+    assert hasattr(xylearner.learner, "_score")
+    with pytest.raises(AttributeError, match="'XySkrubLearner' object has no"):
+        xylearner._score
