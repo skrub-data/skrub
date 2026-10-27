@@ -1161,3 +1161,35 @@ def test_find_X_y():
     assert Xy["y"] is y
     assert Xy["cv"] is kfold
     assert Xy["split_kwargs"]["groups"] is groups
+
+
+def test_apply_SkrubLearner():
+    X, y = make_classification(n_samples=10)
+    inner_learner = (
+        skrub.var("X")
+        .skb.apply(LogisticRegression(), y=skrub.var("y"))
+        .skb.make_learner()
+    )
+    outer_learner = (
+        skrub.as_data_op({"X": skrub.var("X", X), "y": skrub.var("y", y)})
+        .skb.apply(inner_learner)
+        .skb.make_learner(fitted=True)
+    )
+    assert outer_learner.predict({"X": X, "y": None}).shape == y.shape
+
+
+def test_apply_XySkrubLearner():
+    X, y = make_classification(n_samples=10)
+    inner_learner = (
+        skrub.var("a")
+        .skb.apply(LogisticRegression(), y=skrub.var("b"))
+        .skb.make_learner()
+        .with_sklearn_interface(X="a", y="b")
+    )
+    outer_learner = (
+        skrub.var("c")
+        .skb.apply(inner_learner, y=skrub.var("d"))
+        .skb.make_learner()
+        .fit({"c": X, "d": y})
+    )
+    assert outer_learner.predict({"c": X}).shape == y.shape
