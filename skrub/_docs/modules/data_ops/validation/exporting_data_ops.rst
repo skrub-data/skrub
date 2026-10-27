@@ -55,10 +55,12 @@ The learner can be pickled and saved to disk, so that it can be reused later
 or in a different environment:
 
 >>> import pickle
->>> with open("learner.pkl", "wb") as f:
-...     pickle.dump(learner, f)
->>> with open("learner.pkl", "rb") as f:
-...     loaded_learner = pickle.load(f)
+>>> import io
+>>> file = io.BytesIO()
+>>> pickle.dump(learner, file)
+>>> file.seek(0)
+0
+>>> loaded_learner = pickle.load(file)
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
