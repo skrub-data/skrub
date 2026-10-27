@@ -5,7 +5,7 @@
 Turn a DataOp into a "standard" scikit-learn estimator
 ======================================================
 
-When our DataOp only needs 2 inputs X, and y, we can get a learner that accepts
+When our DataOp only needs 2 inputs, X and y, we can get a learner that accepts
 the usual scikit-learn inputs rather than a dictionary like SkrubLearners
 normally do, by using :meth:`SkrubLearner.with_sklearn_interface` to obtain the
 learner wrapped in a :class:`XySkrubLearner`.
@@ -24,7 +24,8 @@ dataset = skrub.datasets.fetch_employee_salaries()
 # Creating an example DataOp
 # --------------------------
 #
-# We define a DataOp that does transformations similar to the TableVectorizer
+# We define a DataOp that does transformations similar to the
+# :class:`TableVectorizer`.
 
 # %%
 X = skrub.var("X").skb.apply(skrub.Cleaner())
@@ -53,19 +54,20 @@ feat
 # Creating & using the scikit-learn estimator
 # -------------------------------------------
 #
-# Now we make a learner, asking for the sklearn-like interface. It is used as
+# Now we make a learner and ask for the sklearn-like interface. It is used as
 # ``tv.fit_transform(X)`` (whereas the default ``.skb.make_learner()`` behavior
 # would require ``tv.fit_transform({'X': X})``). On any skrub learner calling
 # :meth:`SkrubLearner.with_sklearn_interface` returns such an estimator that
 # executes the same DataOp but exposes the scikit-learn (X, y) interface
-# instead of the skrub (env dict) one.
+# instead of the skrub one (which accepts a dictionary).
 
 # %%
 tv = feat.skb.make_learner().with_sklearn_interface()
 tv
 
 # %%
-# This means our estimator can be used like any other scikit-learn transformer, e.g. in a Pipeline
+# This means our estimator can be used like any other scikit-learn transformer,
+# for example in a scikit-learn Pipeline.
 
 # %%
 from sklearn.pipeline import Pipeline
@@ -80,9 +82,12 @@ cross_validate(
 )
 
 # %%
-# ... or in a GridSearchCV. :meth:`XySkrubLearner.get_param_grid` prepares for
+# It can also be used in a scikit-learn
+# :class:`~sklearn.model_selection.GridSearchCV` or
+# :class:`~sklearn.model_selection.RandomizedSearchCV`.
+# :meth:`XySkrubLearner.get_param_grid` prepares for
 # us the parameter grid that we can pass to GridSearchCV from the choices in
-# the data op. If we provide our own grid for the other steps, it takes care of
+# the data op. If we provide our own grid for the other steps, skrub takes care of
 # combining the 2 grids for us.
 
 # %%
@@ -103,9 +108,8 @@ pd.DataFrame(grid_search.cv_results_)[
 # Using the estimator in another DataOp
 # -------------------------------------
 #
-# Note: as our table vectorizer is a normal scikit-learn estimator,
-# it can easily be used with ``.skb.apply``.
-
+# As our table vectorizer is a normal scikit-learn estimator,
+# it can easily be used with :meth:`.skb.apply() <DataOp.skb.apply>`.
 
 # %%
 pred = (
