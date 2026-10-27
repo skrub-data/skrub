@@ -19,6 +19,13 @@ It is possible to change configuration options using the |set_config| function:
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
 
+Parameters omitted from ``set_config`` or ``config_context`` keep their current
+values. Both functions use ``UNCHANGED`` as the default for all parameters.
+Passing ``None`` explicitly sets the value to ``None`` where supported. For
+example, ``set_config(cache=None)`` disables caching, and
+``set_config(target_cache_size=None)`` disables cache pruning. Parameters that
+do not accept ``None`` raise an error.
+
 Additionally, a |config_context| is provided to allow temporarily altering the
 configuration:
 

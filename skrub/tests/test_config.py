@@ -6,6 +6,7 @@ import pytest
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
 from skrub._config import (
+    UNCHANGED,
     _get_default_data_dir,
     _load_cache_env_var,
     _parse_env_bool,
@@ -72,6 +73,41 @@ def test_default_config():
         "data_ops_open_graph_dropdown",
     }
     assert set(cfg.keys()) == expected_keys
+
+
+@pytest.mark.parametrize("explicit_unchanged", [False, True])
+def test_unchanged_config(explicit_unchanged):
+    with config_context(float_precision=2, eager_data_ops=False, cache=True):
+        original = get_config()
+        params = (
+            dict.fromkeys(
+                [*original, "max_plot_columns", "max_association_columns"], UNCHANGED
+            )
+            if explicit_unchanged
+            else {}
+        )
+        set_config(**params)
+        assert get_config() == original
+        with config_context(**params):
+            assert get_config() == original
+        assert get_config() == original
+
+
+@pytest.mark.parametrize("param", ["cache", "target_cache_size", "subsampling_seed"])
+def test_none_config(param):
+    original = get_config()
+    with config_context(**{param: None}):
+        assert get_config()[param] is None
+        set_config(float_precision=2)
+        assert get_config()[param] is None
+        with config_context(**{param: original[param]}):
+            assert get_config()[param] == original[param]
+        assert get_config()[param] is None
+        with pytest.raises(RuntimeError, match="test error"):
+            with config_context(**{param: original[param]}):
+                raise RuntimeError("test error")
+        assert get_config()[param] is None
+    assert get_config() == original
 
 
 def test_deprecated_env_var_warning(monkeypatch, tmp_path):
@@ -158,6 +194,15 @@ def test_float_precision(simple_series):
         {"enable_subsampling": "no"},
         {"float_precision": -1},
         {"cardinality_threshold": -1},
+        {"use_table_report_data_ops": None},
+        {"table_report_plots_threshold": None},
+        {"table_report_associations_threshold": None},
+        {"table_report_n_rows": None},
+        {"table_report_verbosity": None},
+        {"enable_subsampling": None},
+        {"float_precision": None},
+        {"cardinality_threshold": None},
+        {"data_dir": None},
     ],
 )
 def test_error(params):
