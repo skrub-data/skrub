@@ -47,11 +47,13 @@ import pandas as pd
 
 from skrub.datasets import fetch_flight_delays
 
-dataset = fetch_flight_delays()
+dataset = fetch_flight_delays(load_data=False)
 seed = 1
-flights = pd.read_csv(dataset.flights_path)
-
-# Sampling for faster computation.
+# Read a subsample directly to avoid loading the full 2.4M-row table in memory.
+flights = pd.read_csv(
+    dataset.flights_path,
+    skiprows=lambda i: i > 0 and i % 100 != 0,
+)
 flights = flights.sample(5_000, random_state=seed, ignore_index=True)
 flights.head()
 
@@ -86,8 +88,11 @@ airports.head()
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
 
-weather = pd.read_csv(dataset.weather_path)
-# Sampling for faster computation.
+# Read a subsample directly to avoid loading the full 11M-row table in memory.
+weather = pd.read_csv(
+    dataset.weather_path,
+    skiprows=lambda i: i > 0 and i % 1000 != 0,
+)
 weather = weather.sample(10_000, random_state=seed, ignore_index=True)
 weather.head()
 
@@ -128,7 +133,7 @@ joiner = Joiner(
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
 
-flights.drop(columns=["TailNum", "FlightNum"])
+flights = flights.drop(columns=["TailNum", "FlightNum"])
 
 ###############################################################################
 # Training data is then passed through a |Pipeline|:

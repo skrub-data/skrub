@@ -557,7 +557,7 @@ def fetch_movielens(data_home=None):
     return load_dataset_files("movielens", data_home)
 
 
-def fetch_flight_delays(data_home=None):
+def fetch_flight_delays(data_home=None, load_data=True):
     """Fetch the flight delays dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
@@ -568,6 +568,12 @@ def fetch_flight_delays(data_home=None):
     ----------
     data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
+
+    load_data : bool, default=True
+        Whether to load the dataframes into memory. When set to ``False``,
+        only the paths to the CSV files are returned. This is useful when the
+        data should be read with custom options (for example to read only a
+        subset of a large table) to avoid loading the full dataset.
 
     Returns
     -------
@@ -602,6 +608,9 @@ def fetch_flight_delays(data_home=None):
         stations_path : str
             The path to the stations CSV file.
 
+        The ``flights``, ``airports``, ``weather`` and ``stations`` dataframes
+        are only present when ``load_data=True``.
+
     Examples
     --------
     >>> from skrub.datasets import fetch_flight_delays
@@ -610,7 +619,7 @@ def fetch_flight_delays(data_home=None):
     dict_keys(['airports', 'airports_path', 'flights', 'flights_path', 'metadata',
       'metadata_path', 'stations', 'stations_path', 'weather', 'weather_path'])
     """
-    return load_dataset_files("flight_delays", data_home)
+    return load_dataset_files("flight_delays", data_home, load_data=load_data)
 
 
 def fetch_country_happiness(data_home=None):

@@ -39,8 +39,12 @@ import pandas as pd
 
 from skrub.datasets import fetch_flight_delays
 
-dataset = fetch_flight_delays()
-weather = pd.read_csv(dataset.weather_path)
+dataset = fetch_flight_delays(load_data=False)
+# Read a subsample directly to avoid loading the full 11M-row table in memory.
+weather = pd.read_csv(
+    dataset.weather_path,
+    skiprows=lambda i: i > 0 and i % 100 != 0,
+)
 weather = weather.sample(100_000, random_state=0, ignore_index=True)
 stations = pd.read_csv(dataset.stations_path)
 weather = stations.merge(weather, on="ID")[
@@ -128,9 +132,12 @@ aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 # ``'Origin'`` which refers to the departure airport’s IATA code. We use only a subset
 # to speed up the example.
 
-flights = pd.read_csv(dataset.flights_path)
+flights = pd.read_csv(
+    dataset.flights_path,
+    usecols=["Year_Month_DayofMonth", "Origin", "ArrDelay"],
+    skiprows=lambda i: i > 0 and i % 100 != 0,
+)
 flights["Year_Month_DayofMonth"] = pd.to_datetime(flights["Year_Month_DayofMonth"])
-flights = flights[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
 airports = pd.read_csv(dataset.airports_path)[
     ["iata", "airport", "state", "lat", "long"]

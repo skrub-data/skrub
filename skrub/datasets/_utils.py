@@ -291,7 +291,7 @@ def download_dataset(dataset_name, data_home):
     return datafiles_dir
 
 
-def load_dataset_files(dataset_name, data_home):
+def load_dataset_files(dataset_name, data_home, load_data=True):
     datafiles_dir = download_dataset(dataset_name, data_home)
     bunch = Bunch()
 
@@ -303,10 +303,13 @@ def load_dataset_files(dataset_name, data_home):
     # Loading all paths and data files
     # Sorting to have a deterministic order for tests
     for file_path in sorted(datafiles_dir.iterdir()):
-        if file_path.suffix == ".csv":
-            bunch[file_path.stem] = pd.read_csv(file_path)
-        elif file_path.suffix == ".json":
-            bunch[file_path.stem] = json.loads(file_path.read_text(encoding="utf-8"))
+        if load_data:
+            if file_path.suffix == ".csv":
+                bunch[file_path.stem] = pd.read_csv(file_path)
+            elif file_path.suffix == ".json":
+                bunch[file_path.stem] = json.loads(
+                    file_path.read_text(encoding="utf-8")
+                )
         bunch[file_path.stem + "_path"] = str(file_path)
     return bunch
 
