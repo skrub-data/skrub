@@ -25,7 +25,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .._utils import set_module, short_repr
-from . import _estimator, _evaluation, _utils
+from . import _estimator, _evaluation, _optuna, _utils
 
 
 def check_sklearn_interface(data_op, X, y):
@@ -163,6 +163,15 @@ class XySkrubLearner(BaseEstimator):
             :meth:`DataOp.skb.make_grid_search()` rather than the scikit-learn
             meta-estimators.
 
+
+        This method is meant to be used when the learner is a plain
+        :class:`SkrubLearner`, i.e. it was created with
+        :meth:`DataOp.skb.make_learner`. When the learner is itself a skrub
+        hyperparameter search (e.g. created with
+        :meth:`DataOp.skb.make_randomized_search`), it does its own internal
+        tuning and from an external point of view it has no hyperparameters to
+        tune, in this case ``outer_grid`` is returned unchanged.
+
         Parameters
         ----------
         key_prefix : str, default = ""
@@ -207,6 +216,16 @@ class XySkrubLearner(BaseEstimator):
         >>> encoder.get_param_grid("encoder__", outer_grid)
         [{'ridge__alpha': [0.1, 1.0, 10.0], 'encoder__0:n_components': ['0:10', '1:20', '2:30']}]
         """  # noqa: E501
+        if not outer_grid:
+            outer_grid = {}
+        if isinstance(outer_grid, Mapping):
+            outer_grid = [outer_grid]
+        if isinstance(
+            self.learner, (_estimator.ParamSearch, _optuna.OptunaParamSearch)
+        ):
+            # the search object has no params to tune in the outer search (it
+            # does its own internal tuning).
+            return list(outer_grid)
         graph = _evaluation.choice_graph(self.learner.data_op)
         learner_grid = []
         for subgrid in _evaluation.param_grid(self.learner.data_op):
@@ -227,10 +246,6 @@ class XySkrubLearner(BaseEstimator):
                     new_value = choice_range
                 learner_subgrid[f"{key_prefix}{new_key}"] = new_value
             learner_grid.append(learner_subgrid)
-        if not outer_grid:
-            outer_grid = {}
-        if isinstance(outer_grid, Mapping):
-            outer_grid = [outer_grid]
         # As the outer grid keys are for other steps there should be no name
         # clash (+ the learner's key formatting is very specific). For simplicity
         # we don't do validation on the outer grid.
