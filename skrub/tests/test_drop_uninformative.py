@@ -103,6 +103,12 @@ def test_error_checking(drop_null_table):
     dn = DropUninformative(drop_null_fraction="wrong")
     with pytest.raises(ValueError, match="Threshold"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
+    dn = DropUninformative(variance_threshold=-1)
+    with pytest.raises(ValueError, match="variance_threshold"):
+        dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
+    dn = DropUninformative(variance_threshold="wrong")
+    with pytest.raises(TypeError, match="variance_threshold"):
+        dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
 
 
 @pytest.fixture
@@ -160,6 +166,54 @@ def drop_if_constant_table(df_module):
 def test_drop_if_constants(df_module, drop_if_constant_table, params, column, result):
     enc = DropUninformative(**params)
     res = enc.fit_transform(drop_if_constant_table[column])
+    if result == []:
+        assert res == result
+    else:
+        df_module.assert_column_equal(res, df_module.make_column(column, result))
+
+
+@pytest.fixture
+def variance_threshold_table(df_module):
+    return df_module.make_dataframe(
+        {
+            "varying": [1.0, 2.0, 3.0],
+            "varying_with_nulls": [1.0, 2.0, np.nan],
+            "constant_float": [2.5, 2.5, 2.5],
+            "constant_str": ["const", "const", "const"],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    "params, column, result",
+    [
+        # population variance of [1, 2, 3] is about 0.67
+        (dict(drop_if_constant=True, variance_threshold=1.0), "varying", []),
+        (
+            dict(drop_if_constant=True, variance_threshold=0.5),
+            "varying",
+            [1.0, 2.0, 3.0],
+        ),
+        # threshold 0 keeps the old behavior
+        (dict(drop_if_constant=True, variance_threshold=0), "varying", [1.0, 2.0, 3.0]),
+        (dict(drop_if_constant=True, variance_threshold=0), "constant_float", []),
+        # columns with nulls are never dropped by the variance check
+        (
+            dict(drop_if_constant=True, variance_threshold=10.0),
+            "varying_with_nulls",
+            [1.0, 2.0, np.nan],
+        ),
+        # constant non-numeric columns are still dropped
+        (dict(drop_if_constant=True, variance_threshold=0.5), "constant_str", []),
+        # variance_threshold is ignored when drop_if_constant is False
+        (dict(variance_threshold=1.0), "varying", [1.0, 2.0, 3.0]),
+    ],
+)
+def test_variance_threshold(
+    df_module, variance_threshold_table, params, column, result
+):
+    enc = DropUninformative(**params)
+    res = enc.fit_transform(variance_threshold_table[column])
     if result == []:
         assert res == result
     else:

@@ -35,6 +35,12 @@ class DropUninformative(SingleColumnTransformer):
         of use in practice. It is therefore deprecated and will be removed in a
         future version.
 
+    variance_threshold : float, default=0
+        Only used when ``drop_if_constant=True``. Numeric columns whose variance
+        is strictly lower than this value are dropped. Columns that contain
+        missing values are never dropped by this check. With the default of 0,
+        only columns with a single unique value are dropped, as before.
+
     Attributes
     ----------
     drop_ : bool
@@ -92,10 +98,12 @@ class DropUninformative(SingleColumnTransformer):
         drop_if_constant=False,
         drop_if_unique=False,
         drop_null_fraction=1.0,
+        variance_threshold=0,
     ):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.drop_null_fraction = drop_null_fraction
+        self.variance_threshold = variance_threshold
 
     def _check_params(self):
         if not isinstance(self.drop_if_constant, bool):
@@ -123,6 +131,16 @@ class DropUninformative(SingleColumnTransformer):
                     f"Threshold {self.drop_null_fraction} is invalid. Threshold"
                     " should be a number in the range [0, 1], or None."
                 )
+        if isinstance(self.variance_threshold, bool) or not isinstance(
+            self.variance_threshold, numbers.Real
+        ):
+            raise TypeError(
+                f"variance_threshold must be a number, found {self.variance_threshold}."
+            )
+        if not self.variance_threshold >= 0:
+            raise ValueError(
+                f"variance_threshold must be non-negative, found {self.variance_threshold}."
+            )
 
     def _drop_if_too_many_nulls(self, column):
         if self.drop_null_fraction == 1.0:
@@ -135,6 +153,13 @@ class DropUninformative(SingleColumnTransformer):
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
             if (sbd.n_unique(column) == 1) and (self._null_count == 0):
+                return True
+            if (
+                self.variance_threshold > 0
+                and sbd.is_numeric(column)
+                and self._null_count == 0
+                and column.var(ddof=0) < self.variance_threshold
+            ):
                 return True
         return False
 
