@@ -139,7 +139,8 @@ class DropUninformative(SingleColumnTransformer):
             )
         if not self.variance_threshold >= 0:
             raise ValueError(
-                f"variance_threshold must be non-negative, found {self.variance_threshold}."
+                "variance_threshold must be non-negative, "
+                f"found {self.variance_threshold}."
             )
 
     def _drop_if_too_many_nulls(self, column):
