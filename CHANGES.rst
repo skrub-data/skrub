@@ -87,6 +87,11 @@ New Features
   accepted if ``accept_numeric="all"``. Previous default behavior is maintained by
   setting ``accept_numeric=None``.
   :pr:`2252` by :user:`Lisa McBride <lisaleemcb>`.
+- :class:`DropUninformative` now has a ``variance_threshold`` parameter. When
+  ``drop_if_constant=True``, numeric columns without missing values whose
+  variance is lower than the threshold are dropped. The default of 0 keeps the
+  previous behavior.
+  :pr:`2383` by :user:`m4nn2609-dot`.
 
 Changes
 -------
