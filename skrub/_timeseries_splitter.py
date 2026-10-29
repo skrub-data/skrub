@@ -56,6 +56,10 @@ class TimeSeriesSplitter:
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> dates = pd.date_range('2020-01-01', '2024-12-31', freq='D')
+    >>> df = pd.DataFrame({'date': dates, 'value': np.random.randn(len(dates))})
     >>> splitter = TimeSeriesSplitter(
     ...     time_col='date',
     ...     min_training_size='90D',
