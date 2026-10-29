@@ -18,7 +18,7 @@ def scaling_factor(X):
     r"""Compute the total standard deviation scaler of X.
 
     This scaling factor is used to normalize the vectors outputs of
-    :class:`StringEncoder`, :class:`TextEncoder` and :class:`GapEncoder`. It is computed
+    :class:`StringEncoder`, :class:`LLMEncoder` and :class:`GapEncoder`. It is computed
     during ``fit`` and applied during ``transform``.
 
     Conceptually, this coefficient corresponds to the square root of the sum of the

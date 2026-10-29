@@ -54,6 +54,7 @@ __all__ = [
     "reset_index",
     "copy_index",
     "index",
+    "drop",
     #
     # Inspecting dtypes and casting
     #
@@ -77,6 +78,7 @@ __all__ = [
     "is_categorical",
     "to_categorical",
     "is_all_null",
+    "is_empty_frame",
     #
     # Inspecting, selecting and modifying values
     #
@@ -508,6 +510,21 @@ def _shape_polars(obj):
 
 
 @dispatch
+def is_empty_frame(obj):
+    raise_dispatch_unregistered_type(obj, kind="object")
+
+
+@is_empty_frame.specialize("pandas", argument_type="DataFrame")
+def _is_empty_frame_pandas(obj):
+    return obj.empty
+
+
+@is_empty_frame.specialize("polars", argument_type="DataFrame")
+def _is_empty_frame_polars(obj):
+    return obj.is_empty()
+
+
+@dispatch
 def to_frame(col):
     """Convert a single Column to a DataFrame."""
     raise_dispatch_unregistered_type(col, kind="Series")
@@ -796,7 +813,13 @@ def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
     if col.dtype == pl.Categorical:
-        return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
+        if (
+            parse_version(pl.__version__).base_version
+            < parse_version("2.0.0").base_version
+        ):
+            # old versions of polars don't have .cat.physical()
+            return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
+        return col.cat.physical().cast(pl.Float32)
     return col.cast(pl.Float32, strict=strict)
 
 
@@ -1393,6 +1416,21 @@ def _select_rows_polars(obj, idx):
         # of columns to list of row indices at some point.
         return obj.head(0)
     return obj[idx]
+
+
+@dispatch
+def drop(df, columns):
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
+
+
+@drop.specialize("pandas", argument_type="DataFrame")
+def _drop_pandas(df, columns):
+    return df.drop(columns=columns)
+
+
+@drop.specialize("polars", argument_type="DataFrame")
+def _drop_polars(df, columns):
+    return df.drop(columns)
 
 
 @dispatch

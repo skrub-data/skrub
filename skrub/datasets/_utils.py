@@ -50,6 +50,13 @@ DATASET_INFO = {
         ],
         "sha256": "0c3885894baf02fc787109801ec2c34cc25cd4a31e0066a16941b74157474887",
     },
+    "electricity_forecasting": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_forecasting.zip",
+            "https://osf.io/download/d8ykq",
+        ],
+        "sha256": "6ad239a828a5280deb4943c0f91be248483105fdd15f4544b878918671ca6113",
+    },
     "employee_salaries": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/employee_salaries.zip",
@@ -106,6 +113,13 @@ DATASET_INFO = {
         ],
         "sha256": "ee187c119925ea4cdb9abd7f0f3758159f042e71b172cafe5b784d79c7590ce3",
     },
+    "toxicity_v1": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity_v1.zip",
+            "https://osf.io/download/hgptz",
+        ],
+        "sha256": "2f82b58f2fc04dfd8ddcfef8fb46eae25ba4beaf70e3ebd26326d5bf17e40329",
+    },
     "traffic_violations": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/traffic_violations.zip",
@@ -143,14 +157,14 @@ def get_data_home(data_home=None):
 
     Parameters
     ----------
-    data_home : pathlib.Path or string, optional
+    data_home : str or path-like, optional
         The path to the skrub data directory. If `None`, the default path
         is obtained from the skrub configuration (SKB_DATA_DIRECTORY environment
         variable or `~/skrub_data`).
 
     Returns
     -------
-    data_home : pathlib.Path
+    data_home : :class:`~pathlib.Path`
         The validated path to the skrub data directory.
     """
     if data_home is not None:
@@ -184,13 +198,20 @@ def get_data_dir(name=None, data_home=None):
     ----------
     name : str, optional
         Subdirectory name. If omitted, the root data directory is returned.
-    data_home : pathlib.Path or str, optional
+    data_home : str or path-like, optional
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
+
+    Returns
+    -------
+    pathlib.Path
+        The path to the requested data directory.
+
     """
     data_dir = get_data_home(data_home)
     if name is not None:
         data_dir = data_dir / name
+    data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
 
@@ -208,19 +229,23 @@ def load_simple_dataset(dataset_name, data_home=None):
                 products.csv
                 metadata.json
 
+    Currently the docstrings for functions that call this function are skipped
+    during doctests because they require downloading the datasets, which produces
+    a print statement that disrupts the doctest output.
+
     Parameters
     ----------
     dataset_name : str
         The name of the dataset to load. The name must be a key of `DATASET_INFO`.
 
-    data_home : path, default=None
+    data_home : path-like, default=None
         The directory where to download and unpack a zip file. If None, the default path
         is obtained from the skrub configuration (SKB_DATA_DIRECTORY environment
         variable or `~/skrub_data`).
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
         - <dataset_name> : pd.DataFrame, the dataframe
@@ -238,7 +263,7 @@ def load_simple_dataset(dataset_name, data_home=None):
     return bunch
 
 
-def load_dataset_files(dataset_name, data_home):
+def download_dataset(dataset_name, data_home):
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name
@@ -263,7 +288,11 @@ def load_dataset_files(dataset_name, data_home):
 
     if not datafiles_dir.exists():
         _extract_archive(dataset_dir, archive_path)
+    return datafiles_dir
 
+
+def load_dataset_files(dataset_name, data_home, load_data=True):
+    datafiles_dir = download_dataset(dataset_name, data_home)
     bunch = Bunch()
 
     # If there is a file named <dataset_name>.csv, we load the path as the main
@@ -274,10 +303,13 @@ def load_dataset_files(dataset_name, data_home):
     # Loading all paths and data files
     # Sorting to have a deterministic order for tests
     for file_path in sorted(datafiles_dir.iterdir()):
-        if file_path.suffix == ".csv":
-            bunch[file_path.stem] = pd.read_csv(file_path)
-        elif file_path.suffix == ".json":
-            bunch[file_path.stem] = json.loads(file_path.read_text(encoding="utf-8"))
+        if load_data:
+            if file_path.suffix == ".csv":
+                bunch[file_path.stem] = pd.read_csv(file_path)
+            elif file_path.suffix == ".json":
+                bunch[file_path.stem] = json.loads(
+                    file_path.read_text(encoding="utf-8")
+                )
         bunch[file_path.stem + "_path"] = str(file_path)
     return bunch
 

@@ -1,4 +1,5 @@
 import enum
+import os
 import re
 import shutil
 import time
@@ -6,12 +7,13 @@ import traceback
 import warnings
 from pathlib import Path
 
-from joblib.externals import cloudpickle
+import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
 X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
+IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
 
 
 class Sentinels(enum.Enum):
@@ -42,11 +44,7 @@ def attribute_error(obj, name, comment=None):
 
 class _CloudPickle:
     def __getstate__(self):
-        try:
-            state = dict(super().__getstate__())
-        except AttributeError:
-            # before python 3.11
-            state = self.__dict__.copy()
+        state = dict(super().__getstate__())
         for k in self._cloudpickle_attributes:
             state[k] = cloudpickle.dumps(state[k])
         return state
@@ -88,3 +86,72 @@ def prune_directory(path: str):
                     f"Could not delete {dir_path}:\n"
                     + "".join(format_exception_only(e))
                 )
+
+
+def unique_renaming():
+    """Factory of unique names
+
+    The returned function is called with a string and returns a string. If the
+    input was seen before, the output will have a number appended so that all
+    outputs are unique. This is best understood with an example (see below).
+
+    Examples
+    --------
+    >>> from skrub._data_ops._utils import unique_renaming
+    >>> rename = unique_renaming()
+    >>> rename('a')
+    'a'
+    >>> rename('b')
+    'b'
+    >>> rename('a')
+    'a_1'
+    >>> rename('a')
+    'a_2'
+    >>> rename('c')
+    'c'
+    """
+    used = set()
+
+    def rename(name):
+        if name not in used:
+            used.add(name)
+            return name
+        i = 1
+        while (numbered := f"{name}_{i}") in used:
+            i += 1
+        used.add(numbered)
+        return numbered
+
+    return rename
+
+
+def has_graphviz():
+    # (possibly temporary)
+    # Give beta-testers / maintainers an easy way to have skrub behave as
+    # if graphviz was not installed by defining an env variable.
+    if os.environ.get("SKB_NO_GRAPHVIZ") is not None:
+        return False
+    try:
+        import pydot
+
+        g = pydot.Dot()
+        g.add_node(pydot.Node("node 0"))
+        g.create_svg()
+        return True
+    except Exception:
+        return False
+
+
+def check_graphviz():
+    if has_graphviz():
+        return
+    raise RuntimeError(
+        """To render the DataOp graph, please install Graphviz and make sure
+the 'dot' command is in your $PATH.
+Graphviz must be installed using your system's package manager rather than pip,
+for example 'brew install graphviz', 'apt install graphviz' or
+'conda install graphviz'.
+On macOS you may also need to run 'dot -c' to rebuild the plugin cache of Graphviz.
+https://graphviz.org/download/
+"""
+    )

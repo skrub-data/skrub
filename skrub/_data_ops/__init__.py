@@ -1,3 +1,15 @@
+"""
+Skrub DataOps for model definition, validation and hyper-parameter search.
+==========================================================================
+
+``DataOps`` are skrub's framework for building machine-learning pipelines. A
+pipeline is first defined implicitly by performing operations on DataOp objects,
+then encapsulated into a SkrubLearner which is a fittable estimator with a
+scikit-learn-like interface (fit, predict, get_params etc.). The ``choose_*``
+functions create special placeholders representing tunable hyperparameters that
+can be inserted anywhere in the pipeline.
+"""
+
 from ._choosing import (
     choose_bool,
     choose_float,

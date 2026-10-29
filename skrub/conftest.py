@@ -34,8 +34,13 @@ def _example_data_dict():
     }
 
 
-_DATAFAME_MODULES_INFO = {}
-_DATAFAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
+# this is needed to ignore the skrub/_docs folder when running pytest
+# otherwise, the examples in the folder are executed any time test discovery is run
+collect_ignore_glob = ["_docs/**/*.py"]
+
+
+_DATAFRAME_MODULES_INFO = {}
+_DATAFRAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
     **{
         "name": "pandas",
         "description": "pandas-numpy-dtypes",
@@ -62,7 +67,7 @@ _DATAFAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
     }
 )
 
-_DATAFAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
+_DATAFRAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
     **{
         "name": "pandas",
         "description": "pandas-nullable-dtypes",
@@ -125,7 +130,7 @@ def _pl_from_dict(data):
 
 
 if _POLARS_INSTALLED:
-    _DATAFAME_MODULES_INFO["polars"] = SimpleNamespace(
+    _DATAFRAME_MODULES_INFO["polars"] = SimpleNamespace(
         **{
             "name": "polars",
             "description": "polars",
@@ -161,7 +166,7 @@ pd.set_option("display.show_dimensions", False)
 
 @pytest.fixture
 def all_dataframe_modules():
-    return _DATAFAME_MODULES_INFO
+    return _DATAFRAME_MODULES_INFO
 
 
 @pytest.fixture
@@ -177,7 +182,7 @@ def pl_module(all_dataframe_modules):
         pytest.skip("polars not installed")
 
 
-@pytest.fixture(params=list(_DATAFAME_MODULES_INFO.keys()))
+@pytest.fixture(params=list(_DATAFRAME_MODULES_INFO.keys()))
 def df_module(request):
     """Return information about a dataframe module (either polars or pandas).
 
@@ -223,7 +228,7 @@ def df_module(request):
         A mapping from dtype names to types, keys are:
         ['float32', 'float64', 'int32', 'int64'].
     """
-    return _DATAFAME_MODULES_INFO[request.param]
+    return _DATAFRAME_MODULES_INFO[request.param]
 
 
 @pytest.fixture
@@ -251,12 +256,13 @@ BASE_CONFIG = get_config()
 
 
 @pytest.fixture(autouse=True)
-def reset_config_to_base():
+def reset_config_to_base(monkeypatch):
     """Autouse fixture that resets config to base_config before each test.
 
     This ensures that tests run in isolation, don't affect each other's
     configuration state, and clean up after themselves.
     """
+    monkeypatch.delenv("SKB_NO_GRAPHVIZ", raising=False)
     set_config(**BASE_CONFIG)
     yield
     # Also reset after the test to ensure clean state for next test
