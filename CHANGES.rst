@@ -33,6 +33,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`SquashingScaler` no longer maps large finite outliers to zero: an
+  intermediate overflow in the computation of the soft clipping is avoided, so
+  that large finite values are soft-clipped toward ``max_absolute_value`` as
+  intended.
+  :pr:`2370` by :user:`Jay Singh <JaySingh79>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
