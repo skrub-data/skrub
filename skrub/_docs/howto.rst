@@ -42,3 +42,4 @@ Utilities
    guides/utilities/customizing_configuration.rst
    guides/utilities/deduplicate_categorical_data.rst
    guides/utilities/fetching_datasets.rst
+   guides/utilities/selectors_with_pandas.rst
