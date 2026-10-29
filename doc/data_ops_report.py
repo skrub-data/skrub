@@ -54,7 +54,7 @@ def create_credit_fraud_report():
     )
     predictions = baskets.skb.apply(hgb, y=fraud_flags)
 
-    predictions.skb.full_report(
+    predictions.skb.report(
         output_dir=output_dir,
         overwrite=True,
         open=False,
@@ -74,18 +74,16 @@ def create_employee_salaries_report():
     if (output_dir / "index.html").exists():
         return output_dir
 
-    dataset = skrub.datasets.fetch_employee_salaries(split="train").employee_salaries
-    data_var = skrub.var("data", dataset)
-    X = data_var.drop("current_annual_salary", axis=1).skb.mark_as_X()
-    y = data_var["current_annual_salary"].skb.mark_as_y()
+    pred = (
+        skrub.var("employee_data")
+        .skb.apply(TableVectorizer())
+        .skb.apply(HistGradientBoostingRegressor(), y=skrub.var("salary"))
+    )
 
-    vectorizer = TableVectorizer()
-    X_vec = X.skb.apply(vectorizer)
+    dataset = skrub.datasets.fetch_employee_salaries(split="train")
 
-    hgb = HistGradientBoostingRegressor()
-    predictor = X_vec.skb.apply(hgb, y=y)
-
-    predictor.skb.full_report(
+    pred.skb.report(
+        {"employee_data": dataset.X, "salary": dataset.y},
         output_dir=output_dir,
         overwrite=True,
         open=False,

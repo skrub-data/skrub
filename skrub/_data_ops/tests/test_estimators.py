@@ -2,11 +2,14 @@ import copy
 import io
 import pickle
 import warnings
+from collections import defaultdict
+from functools import partial
 from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import KMeans
@@ -16,11 +19,18 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    get_scorer,
+    make_scorer,
+    roc_auc_score,
+)
 from sklearn.model_selection import (
     GridSearchCV,
     KFold,
     LeaveOneGroupOut,
+    TimeSeriesSplit,
     cross_validate,
     train_test_split,
 )
@@ -29,7 +39,6 @@ from sklearn.utils.validation import check_is_fitted
 
 import skrub
 from skrub._data_ops._estimator import _SharedDict
-from skrub._data_ops._inspection import _has_graphviz
 
 #
 # testing utils
@@ -173,6 +182,329 @@ def test_cross_validate(data_op, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_with_scoring():
+    X_a, y_a = make_classification(random_state=0)
+    X = skrub.X(X_a)
+
+    def get_sample_weight(X):
+        return np.abs(X[:, 0])
+
+    sw_a = get_sample_weight(X_a)
+    sw = X.skb.apply_func(get_sample_weight)
+
+    # Single metric without kwargs
+
+    data_op = X.skb.apply(DummyClassifier(), y=skrub.y(y_a))
+    skrub_scores = data_op.skb.with_scoring("accuracy").skb.cross_validate()
+    sklearn_scores = cross_validate(DummyClassifier(), X_a, y_a, scoring="accuracy")
+    assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
+
+    # Different types of scoring such as strings, callables and multimetric
+
+    acc_scorer = make_scorer(accuracy_score)
+    roc_scorer = make_scorer(roc_auc_score)
+
+    def custom_brier_score(estimator, X, y):
+        return get_scorer("neg_brier_score")(estimator, X, y)
+
+    def custom_roc_auc(estimator, X, y):
+        return get_scorer("roc_auc")(estimator, X, y)
+
+    # unlikely case of a scorer with metadata routing but not _kwargs nor
+    # _scorers, mostly here to get full test coverage
+    custom_roc_auc.get_metadata_routing = None
+
+    skrub_scores = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring("roc_auc", name="ROC")
+        .skb.with_scoring(
+            {
+                "accuracy": acc_scorer,
+                "roc": roc_scorer,
+                "custom_brier": custom_brier_score,
+                "custom_roc_auc": custom_roc_auc,
+            },
+            name="in_dict",
+        )
+        .skb.cross_validate()
+    )
+    sklearn_scores = cross_validate(
+        DummyClassifier(),
+        X_a,
+        y_a,
+        scoring={
+            "accuracy": acc_scorer,
+            "ROC": roc_scorer,
+            "in_dict_accuracy": acc_scorer,
+            "in_dict_roc": roc_scorer,
+            "in_dict_custom_brier": custom_brier_score,
+            "in_dict_custom_roc_auc": custom_roc_auc,
+        },
+    )
+    for name in [
+        "accuracy",
+        "ROC",
+        "in_dict_accuracy",
+        "in_dict_roc",
+        "in_dict_custom_brier",
+        "in_dict_custom_roc_auc",
+    ]:
+        assert np.allclose(skrub_scores[f"test_{name}"], sklearn_scores[f"test_{name}"])
+
+    # Using dynamically-computed kwargs or a dynamically-computed-scorer
+
+    data_op = X.skb.apply(
+        DummyClassifier(), y=skrub.y(y_a), fit_kwargs={"sample_weight": sw}
+    )
+    kwargs_skrub_scores = data_op.skb.with_scoring(
+        "accuracy", kwargs={"sample_weight": sw}
+    ).skb.cross_validate()
+
+    deferred_skrub_scores = data_op.skb.with_scoring(
+        skrub.deferred(make_scorer)(accuracy_score, sample_weight=sw), name="accuracy"
+    ).skb.cross_validate()
+
+    scorer = make_scorer(accuracy_score)
+    with sklearn.config_context(enable_metadata_routing=True):
+        scorer.set_score_request(sample_weight=True)
+        sklearn_scores = cross_validate(
+            DummyClassifier().set_fit_request(sample_weight=True),
+            X_a,
+            y_a,
+            scoring=scorer,
+            params=dict(sample_weight=sw_a),
+        )
+    for skrub_scores in [kwargs_skrub_scores, deferred_skrub_scores]:
+        assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
+
+
+def test_score_no_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])
+    pred = learner.predict(split["test"])
+    sklearn_score = accuracy_score(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
+def test_score_with_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    data_op = data_op.skb.with_scoring("neg_brier_score")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])["neg_brier_score"]
+    pred = learner.predict_proba(split["test"])[:, 1]
+    sklearn_score = -brier_score_loss(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
+def test_with_scoring_names():
+    data_op, data = get_data_op_and_data("simple")
+    acc_scorer = make_scorer(accuracy_score)
+
+    def acc_scorer_func(e, X, y):
+        return acc_scorer(e, X, y)
+
+    acc_scorer_func_no_name = partial(acc_scorer_func)
+
+    data_op = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring(acc_scorer)
+        .skb.with_scoring(acc_scorer, name="accuracy_with_name")
+        .skb.with_scoring(acc_scorer_func_no_name)
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring({"a1": acc_scorer, "a2": acc_scorer_func}, name="dict_name")
+    )
+    scores = data_op.skb.make_learner().fit(data).score(data)
+    assert list(scores.keys()) == [
+        "accuracy",
+        "accuracy_score",
+        "accuracy_with_name",
+        "score",
+        "accuracy_1",
+        "dict_name_a1",
+        "dict_name_a2",
+    ]
+
+
+def test_score_caching():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+
+    class CountingDummy(DummyClassifier):
+        counts = defaultdict(int)
+
+        def predict(self, X):
+            self.counts["predict"] += 1
+            return super().predict(X)
+
+        def predict_proba(self, X):
+            self.counts["predict_proba"] += 1
+            return super().predict_proba(X)
+
+    def my_accuracy(e, X, y):
+        return accuracy_score(y, e.predict(X))
+
+    def my_accuracy_on_subset(e, X, y):
+        return accuracy_score(y[:20], e.predict(X[:20]))
+
+    def builtin_score(e, X, y):
+        return e.score(X, y)
+
+    learner = (
+        skrub.X()
+        .skb.apply(CountingDummy(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring("f1")
+        .skb.with_scoring("roc_auc")
+        .skb.with_scoring("neg_brier_score")
+        .skb.with_scoring("neg_log_loss")
+        .skb.with_scoring(my_accuracy)
+        .skb.with_scoring(my_accuracy_on_subset)
+        .skb.with_scoring(builtin_score)
+        .skb.make_learner()
+        .fit({"X": X_train, "y": y_train})
+    )
+
+    scores = learner.score({"X": X_test, "y": y_test})
+    assert scores["accuracy"] == 0.44
+    assert scores["my_accuracy_on_subset"] == 0.35
+    assert scores["builtin_score"] == scores["accuracy"]
+    # predict:
+    #  . 1 in accuracy()
+    #  . 1 in my_accuracy_on_subset() because it is called on a different X
+    #  . 1 in builtin_score because it is called directly by
+    #    DummyClassifier.score which does not use the cache
+    #   (cached in f1, my_accuracy)
+    # predict_proba:
+    #  . 1 in roc_auc
+    #    (cached in neg_brier_score and neg_log_loss)
+    assert CountingDummy.counts == {"predict": 3, "predict_proba": 1}
+
+    prediction = learner.predict({"X": X_test, "y": y_test})
+    CountingDummy.counts.clear()
+    # called only for my_accuracy_on_subset and builtin_score
+    new_scores = learner.score(
+        {"X": X_test, "y": y_test, "_skrub_predictions": {"predict": prediction}}
+    )
+    assert new_scores == scores
+    # predict called only for my_accuracy_on_subset and builtin_score
+    assert CountingDummy.counts == {"predict": 2, "predict_proba": 1}
+
+
+def test_score_caching_non_predict_methods():
+    # trigger corner case for codecov
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring(lambda e, X, y: e.fit(X, y) and 3.0, name="s")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    assert learner.score(test_env)["s"] == 3.0
+
+
+def test_score_return_predictions():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring("roc_auc")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    test_env = {"X": X_test, "y": y_test}
+    scores, predictions = learner.score(test_env, return_predictions=True)
+    assert scores["accuracy"] == 0.44
+    assert list(predictions.keys()) == ["predict", "predict_proba"]
+    assert (predictions["predict"] == learner.predict(test_env)).all()
+    assert (predictions["predict_proba"] == learner.predict_proba(test_env)).all()
+
+    # When only the applied estimator's score() is called, we have no
+    # predictions to cache
+    learner_no_scoring = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    acc, new_pred = learner_no_scoring.score(test_env, return_predictions=True)
+    assert acc == 0.44
+    assert new_pred == {}
+
+
+def test_score_provide_predictions():
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    prediction = learner.predict(test_env)
+    assert learner.score(test_env) == learner.score(
+        test_env | {"_skrub_predictions": {"predict": prediction}}
+    )
+
+    # check that the prediction in the env is actually being used
+    assert learner.score(test_env | {"_skrub_predictions": {"predict": y_test}}) == {
+        "accuracy": 1.0
+    }
+
+    # when using the builtin score '_skrub_predictions' is not used
+    learner_no_scoring = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    assert (
+        learner_no_scoring.score(test_env | {"_skrub_predictions": {"predict": y_test}})
+        == 0.44
+    )
+
+
+def test_scorer_calls_score():
+    # Test case where the scorer passed to with_scoring calls score(): it uses
+    # the applied estimator's score instead of the skrublearner's score which
+    # would fall into infinite recursion.
+    #
+    # As in scikit-learn cross_validate, the scorer None also gives that result
+    # (with the key 'score')
+
+    X, y = make_classification(random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False)
+    train_env = {"X": X_train, "y": y_train}
+    test_env = {"X": X_test, "y": y_test}
+
+    def estimator_score(e, X, y):
+        return e.score(X, y)
+
+    learner = (
+        skrub.X()
+        .skb.apply(DummyClassifier(), y=skrub.y())
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring(estimator_score)
+        .skb.with_scoring(None)
+        .skb.make_learner()
+        .fit(train_env)
+    )
+    scores = learner.score(test_env)
+    assert scores["estimator_score"] == scores["accuracy"] == scores["score"]
+
+
 def test_cross_validate_return_indices():
     """
     Non-regression for #1487.
@@ -227,6 +559,36 @@ def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94, abs=0.05)
+
+
+def test_randomized_search_with_scoring(randomized_search_backend):
+    data_op, data = get_data_op_and_data("simple")
+
+    # single score
+
+    split = data_op.skb.train_test_split(data)
+
+    search = data_op.skb.with_scoring("neg_brier_score").skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_score"] <= 0).all()
+    assert search.score(split["test"])["neg_brier_score"] < 0
+
+    # multiple scores
+
+    search = data_op.skb.with_scoring(
+        ["neg_brier_score", "roc_auc"]
+    ).skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend, refit="roc_auc"
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_neg_brier_score"] <= 0).all()
+    assert list(search.score(split["test"]).keys()) == ["neg_brier_score", "roc_auc"]
+    # Test return_predictions is forwarded to best_learner_.score
+    scores, predictions = search.score(split["test"], return_predictions=True)
+    assert list(scores.keys()) == ["neg_brier_score", "roc_auc"]
+    assert predictions["predict_proba"].shape == (split["y_test"].shape[0], 2)
 
 
 def test_grid_search(data_op, data, n_jobs):
@@ -307,7 +669,7 @@ def test_unsupervised():
     k_means.fit(X)
     assert (k_means.predict(X) == data_op_k_means.predict({"X": X})).all()
     assert_allclose(k_means.score(X, y), data_op_k_means.score({"X": X, "y": y}))
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         data_op_k_means.score({"X": X})
 
 
@@ -546,8 +908,16 @@ def test_train_test_split(with_y):
                 "n": 8,
                 "_skrub_X": [0, 1, 2, 3, 4, 5],
                 "_skrub_y": [8, 9, 10, 11, 12, 13],
+                "_skrub_is_preview_data_env": True,
             },
-            "test": {"n": 8, "_skrub_X": [6, 7], "_skrub_y": [14, 15]},
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_y": [14, 15],
+                "_skrub_is_preview_data_env": True,
+            },
+            "X": list(range(8)),
+            "y": list(range(8, 16)),
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
             "y_train": [8, 9, 10, 11, 12, 13],
@@ -555,8 +925,17 @@ def test_train_test_split(with_y):
         }
     else:
         assert split == {
-            "train": {"n": 8, "_skrub_X": [0, 1, 2, 3, 4, 5]},
-            "test": {"n": 8, "_skrub_X": [6, 7]},
+            "train": {
+                "n": 8,
+                "_skrub_X": [0, 1, 2, 3, 4, 5],
+                "_skrub_is_preview_data_env": True,
+            },
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_is_preview_data_env": True,
+            },
+            "X": list(range(8)),
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
         }
@@ -565,6 +944,8 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {"n": 4, "_skrub_X": [0, 1, 2], "_skrub_y": [4, 5, 6]},
             "test": {"n": 4, "_skrub_X": [3], "_skrub_y": [7]},
+            "X": list(range(4)),
+            "y": list(range(4, 8)),
             "X_train": [0, 1, 2],
             "X_test": [3],
             "y_train": [4, 5, 6],
@@ -577,6 +958,7 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {"n": 4, "_skrub_X": [0, 1, 2]},
             "test": {"n": 4, "_skrub_X": [3]},
+            "X": list(range(4)),
             "X_train": [0, 1, 2],
             "X_test": [3],
         }
@@ -600,15 +982,102 @@ def test_train_test_split_X_y_aligned():
     assert (split["X_train"]["a"].to_numpy() == split["y_train"].to_numpy()).all()
 
 
+@pytest.mark.parametrize("with_y", [False, True])
+def test_train_test_split_split_index(with_y):
+    """
+    train_test_split using the mark_as_X() splitter allows selecting the split
+    index.
+    """
+    X = np.arange(20)[:, None] * 10
+    y = X[:, 0]
+
+    data_op = skrub.var("X", X).skb.mark_as_X(cv=TimeSeriesSplit())
+    if with_y:
+        data_op = data_op.skb.apply(
+            DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y()
+        )
+
+    # by default we get the last split
+    assert list(data_op.skb.train_test_split()["X_test"].ravel()) == [170, 180, 190]
+    # we also get the row indices
+    assert list(data_op.skb.train_test_split()["row_indices_test"]) == [17, 18, 19]
+
+    # we can ask for a specific split.
+    assert list(
+        data_op.skb.train_test_split(split_index=0)["X_test"].ravel(),
+    ) == [50, 60, 70]
+    assert list(
+        data_op.skb.train_test_split(split_index=1)["X_test"].ravel(),
+    ) == [80, 90, 100]
+
+    # we can still override the split function and pass the kwargs our
+    # function expects.
+    assert list(
+        data_op.skb.train_test_split(
+            split_func=train_test_split,
+            test_size=5,
+            shuffle=True,
+            random_state=0,
+        )["X_test"].ravel()
+    ) == [180, 10, 190, 80, 100]
+
+
+def test_train_test_split_bad_kwarg():
+    """
+    Check error message when an unrecognized kwarg is passed to
+    skb.train_test_split() when using the mark_as_X splitter.
+    """
+    X = np.arange(20)[:, None]
+    y = X[:, 0]
+
+    pred = (
+        skrub.var("X", X)
+        .skb.mark_as_X(cv=TimeSeriesSplit())
+        .skb.apply(DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y())
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(?s).*using the splitter passed to \.skb.mark_as_X\(\)"
+        r".*Got extra kwargs: \['random_state'\]",
+    ):
+        pred.skb.train_test_split(random_state=0)
+
+
+def test_train_test_split_bad_split_index():
+    """
+    Check error message when a bad split_index is passed to
+    skb.train_test_split() when using the mark_as_X splitter.
+    """
+    X = np.arange(20)[:, None]
+    y = X[:, 0]
+
+    pred = (
+        skrub.var("X", X)
+        .skb.mark_as_X(cv=TimeSeriesSplit())
+        .skb.apply(DummyRegressor(), y=skrub.var("y", y).skb.mark_as_y())
+    )
+    with pytest.raises(TypeError, match="split_index should be an int"):
+        pred.skb.train_test_split(split_index=None)
+    with pytest.raises(
+        IndexError,
+        match="split_index 100 out of range.*TimeSeriesSplit.* with 5 splits",
+    ):
+        pred.skb.train_test_split(split_index=100)
+
+
 def test_iter_cv_splits():
     X = skrub.X(np.arange(5) * 10)
     splits = X.skb.iter_cv_splits()
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["row_indices_train"]) == [0, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [1]
 
     X = skrub.X(np.arange(4) * 10)
     y = skrub.y(np.arange(4) * -10)
@@ -618,11 +1087,15 @@ def test_iter_cv_splits():
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+    assert list(s["row_indices_train"]) == [0, 2, 3]
+    assert list(s["row_indices_test"]) == [1]
 
 
 def test_train_test_split_splitter_renaming():
@@ -697,8 +1170,8 @@ def test_mark_as_X_splitter():
     assert pred_with_groups.skb.make_grid_search(fitted=True).n_splits_ == 2
 
     split = pred_with_groups.skb.train_test_split()
-    assert list(split["X_train"]["x"]) == train[0]
-    assert list(split["X_test"]["x"]) == test[0]
+    assert list(split["X_train"]["x"]) == train[-1]
+    assert list(split["X_test"]["x"]) == test[-1]
 
     # Override with another splitter
     cv_results = pred_with_groups.skb.cross_validate(return_indices=True, cv=7)
@@ -969,7 +1442,6 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
@@ -995,6 +1467,29 @@ def test_report(tmp_path):
     assert score_report["result"] == pytest.approx(0.94, abs=0.1)
     assert score_report["error"] is None
     assert score_report["report_path"].is_relative_to(tmp_path)
+
+    # get a fresh unfitted learner
+    pipe = data_op.skb.make_learner()
+
+    no_eval_report = pipe.report(
+        eval=False, open=False, output_dir=tmp_path / "report", overwrite=True
+    )
+    assert not pipe.__sklearn_is_fitted__()
+    assert no_eval_report["result"] is None
+    assert no_eval_report["error"] is None
+    assert no_eval_report["report_path"].is_relative_to(tmp_path)
+
+
+def test_report_eval_argument_errors():
+    learner = get_data_op_and_data("simple")[0].skb.make_learner()
+    with pytest.raises(TypeError, match="environment must be None"):
+        learner.report(environment={}, eval=False, open=False)
+    with pytest.raises(TypeError, match="mode must be None"):
+        learner.report(mode="fit", eval=False, open=False)
+    with pytest.raises(TypeError, match="environment cannot be None"):
+        learner.report(open=False)
+    with pytest.raises(TypeError, match="mode cannot be None"):
+        learner.report(environment={}, open=False)
 
 
 #
@@ -1038,40 +1533,84 @@ def test_set_data_op_in_params():
     assert learner.fit_transform(data) == -10
 
 
+def test_get_set_named_params():
+    a = skrub.as_data_op("")
+    b = skrub.choose_from(["A", "B", "C"], name="b")
+    c = skrub.choose_from(["U", "V", "W"])
+    d = a + b + "_" + c
+    learner = d.skb.make_learner()
+    assert learner.fit_transform({}) == "A_U"
+    assert learner.get_named_params() == {"b": None}
+    learner.set_named_params(b=1)
+    assert learner.fit_transform({}) == "B_U"
+    assert learner.get_named_params() == {"b": 1}
+
+
+def test_set_named_params_value_or_index():
+    a = skrub.as_data_op(
+        [
+            skrub.choose_from(["A", "B", "C"], name="b"),
+            skrub.choose_bool(name="c"),
+            skrub.choose_int(100, 110, name="d"),
+        ]
+    )
+    learner = a.skb.make_learner()
+    assert learner.get_named_params() == {"b": None, "c": None, "d": None}
+    assert learner.describe_params() == {"b": "A", "c": True, "d": 105}
+    learner.set_named_params(b=1, c=1, d=107)
+    assert learner.get_named_params() == {"b": 1, "c": 1, "d": 107}
+    assert learner.describe_params() == {"b": "B", "c": False, "d": 107}
+    with pytest.raises(TypeError, match="must be a positional index.*'C'.*name='b'"):
+        learner.set_named_params(b="C")
+    with pytest.raises(TypeError, match="must be a positional index.*True.*name='c'"):
+        learner.set_named_params(c=True)
+    with pytest.raises(
+        IndexError, match="must be a positional index.*out of range.*3 outcomes"
+    ):
+        learner.set_named_params(b=7)
+
+
 def test_find_fitted_estimator():
-    learner = (
+    scaler = (
         (skrub.X() * 1.0)
         .skb.set_name("mul")
         .skb.apply(StandardScaler())
         .skb.set_name("scaler")
-        .skb.apply(LogisticRegression(), y=skrub.y())
+    )
+
+    learner = (
+        scaler.skb.apply(LogisticRegression(), y=skrub.y())
         .skb.set_name("predictor")
         .skb.make_learner()
     )
-    with pytest.raises(KeyError, match="'xyz'"):
+    with pytest.raises(ValueError, match="'xyz'"):
         learner.find_fitted_estimator("xyz")
-    with pytest.raises(TypeError, match="Node 'X' does not represent"):
+    with pytest.raises(TypeError, match="Node <Var 'X'> does not represent"):
         learner.find_fitted_estimator("X")
-    with pytest.raises(ValueError, match="Node 'scaler' has not been fitted"):
+    with pytest.raises(
+        ValueError, match="Node <scaler | Apply StandardScaler> has not been fitted"
+    ):
         learner.find_fitted_estimator("scaler")
     data = _simple_data()
     learner.fit(data)
     assert isinstance(learner.find_fitted_estimator("scaler"), StandardScaler)
+    assert isinstance(learner.find_fitted_estimator(scaler.skb.id), StandardScaler)
     assert isinstance(learner.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_truncated_after():
-    learner = (
-        skrub.X()
-        .skb.apply(MinMaxScaler())
-        .skb.set_name("scaling")
-        .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.make_learner()
-    )
+@pytest.mark.parametrize("wrap_in_choice", [False, True])
+def test_truncated_after(wrap_in_choice):
+    scaled = skrub.X().skb.apply(MinMaxScaler())
+    if wrap_in_choice:
+        scaled = skrub.as_data_op(skrub.choose_from([scaled], name="scaling"))
+    else:
+        scaled = scaled.skb.set_name("scaling")
+    learner = scaled.skb.apply(LogisticRegression(), y=skrub.y()).skb.make_learner()
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
     learner.fit({"X": X, "y": y})
     sub_learner = learner.truncated_after("scaling")
+    assert isinstance(sub_learner.data_op, skrub.DataOp)
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
@@ -1079,7 +1618,7 @@ def test_truncated_after():
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
-    with pytest.raises(KeyError, match="'xyz'"):
+    with pytest.raises(ValueError, match="'xyz'"):
         learner.truncated_after("xyz")
 
 
@@ -1234,3 +1773,13 @@ def test_random_search_no_vars():
     pred = X.skb.apply(DummyClassifier(), y=y)
     search = pred.skb.make_grid_search(scoring="roc_auc").fit({})
     assert search.results_.shape[0] == 1
+
+
+def test_learner_docstring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    link = learner._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.SkrubLearner.html"
+    )

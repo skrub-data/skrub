@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from sklearn.utils import Bunch
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, config_context
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._reporting._sample_table import make_table
@@ -41,7 +41,6 @@ def test_report(air_quality):
         "First 2": sbd.column_names(air_quality)[:2],
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
-    assert report.max_association_columns == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -87,7 +86,7 @@ def test_few_columns(df_module, check_polars_numpy2):
 
 
 @skip_polars_installed_without_pyarrow
-def test_few_rows(df_module, check_polars_numpy2):
+def test_few_rows(df_module):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
 
@@ -171,11 +170,11 @@ def test_duration(df_module):
     "filename_type",
     ["str", "Path", "text_file_object", "binary_file_object"],
 )
-def test_write_html(tmp_path, pd_module, filename_type):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file(tmp_path, pd_module, filename_type, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df)
-
-    tmp_file_path = tmp_path / Path("report.html")
+    report = TableReport(df, title="the title")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     # making sure we are closing the open files, and dealing with the first
     # condition which doesn't require opening any file
@@ -189,33 +188,51 @@ def test_write_html(tmp_path, pd_module, filename_type):
         else:
             filename = tmp_file_path
 
-        report.write_html(filename)
+        getattr(report, f"write_{output_format}")(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, encoding="utf-8") as file:
-        saved_content = file.read()
-    assert "</html>" in saved_content
+    saved_content = tmp_file_path.read_text(encoding="utf-8")
+    if output_format == "html":
+        assert "</html>" in saved_content
+    else:  # output_format == "json"
+        assert saved_content == report.json()
+        assert json.loads(saved_content)["title"] == "the title"
 
 
-def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file_with_not_utf8_encoding(tmp_path, pd_module, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
-    tmp_file_path = tmp_path / Path("report.html")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     with open(tmp_file_path, "w", encoding="latin-1") as file:
-        encoding = getattr(file, "encoding", None)
         with pytest.raises(
             ValueError,
             match=(
                 "If `file` is a text file it should use utf-8 encoding; got:"
-                f" {encoding!r}"
+                f" {file.encoding!r}"
             ),
         ):
-            report.write_html(file)
+            getattr(report, f"write_{output_format}")(file)
 
-    with open(tmp_file_path, encoding="latin-1") as file:
-        saved_content = file.read()
-    assert "</html>" not in saved_content
+    assert tmp_file_path.read_text(encoding="latin-1") == ""
+
+
+@pytest.mark.parametrize("indent", [None, 2, "\t"])
+def test_json_indent(tmp_path, pd_module, indent):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    json_str = report.json(indent=indent)
+    assert json.loads(json_str) == report.dict()
+    if indent is None:
+        assert "\n" not in json_str
+    else:
+        assert f'\n{indent if isinstance(indent, str) else " " * indent}"' in json_str
+
+    tmp_file_path = tmp_path / Path("report.json")
+    report.write_json(tmp_file_path, indent=indent)
+    assert tmp_file_path.read_text(encoding="utf-8") == json_str
 
 
 @skip_polars_installed_without_pyarrow
@@ -263,7 +280,7 @@ def test_write_to_stderr(df_module, capsys):
 
 
 @skip_polars_installed_without_pyarrow
-def test_max_plot_columns_parameter(df_module):
+def test_thresholds_parameter(df_module):
     df = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
@@ -285,23 +302,101 @@ def test_max_plot_columns_parameter(df_module):
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df4, max_plot_columns=10)._summary
+    with config_context(table_report_plots_threshold=10):
+        summary = TableReport(df4)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df5, max_plot_columns=15)._summary
+    with config_context(table_report_plots_threshold=15):
+        summary = TableReport(df5)._summary
     assert not summary["plots_skipped"]
 
     df6 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df6, max_plot_columns=None)._summary
+    summary = TableReport(df6)._summary
     assert not summary["plots_skipped"]
 
-    summary = TableReport(df6, max_plot_columns="all")._summary
+
+@skip_polars_installed_without_pyarrow
+def test_plot_distributions_parameter(df_module):
+    # True: always plot regardless of threshold
+    df7 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df7, plot_distributions=True)._summary
+    assert not summary["plots_skipped"]  # True ignores threshold
+
+    # False: never plot
+    df8 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df8, plot_distributions=False)._summary
+    assert summary["plots_skipped"]
+
+    # None and "auto": use threshold
+    d9 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(d9, plot_distributions=None)._summary
     assert not summary["plots_skipped"]
+
+    df10 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df10, plot_distributions="auto")._summary
+    assert summary["plots_skipped"]  # "auto" respects threshold
+
+
+@skip_polars_installed_without_pyarrow
+def test_compute_associations_parameter(df_module):
+    # True: always compute regardless of threshold
+    df11 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df11, compute_associations=True)._summary
+    assert not summary["associations_skipped"]  # True ignores threshold
+
+    # False: never compute
+    df12 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df12, compute_associations=False)._summary
+    assert summary["associations_skipped"]
+
+    # None and "auto": use threshold
+    df13 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(df13, compute_associations=None)._summary
+    assert not summary["associations_skipped"]
+
+    df14 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df14, compute_associations="auto")._summary
+    assert summary["associations_skipped"]  # "auto" respects threshold
+
+
+@skip_polars_installed_without_pyarrow
+def test_combined_parameters(df_module):
+    df15 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    with config_context(
+        table_report_plots_threshold=3, table_report_associations_threshold=3
+    ):
+        summary = TableReport(df15)._summary
+    assert summary["associations_skipped"] and summary["plots_skipped"]
+
+    df16 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    with config_context(table_report_associations_threshold=7):
+        summary = TableReport(df16, plot_distributions=False)._summary
+    assert not summary["associations_skipped"] and summary["plots_skipped"]
 
 
 def test_minimal_mode(pd_module):
@@ -330,6 +425,10 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+    assert (
+        "No associations were computed because the dataframe has only one "
+        "column." in html
+    )
 
 
 def test_error_make_table():
@@ -338,7 +437,13 @@ def test_error_make_table():
         make_table(np.array([1]))
 
 
-@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+@pytest.mark.parametrize(
+    "arg",
+    [
+        "plot_distributions",
+        "compute_associations",
+    ],
+)
 def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
     with pytest.raises(ValueError):
@@ -363,26 +468,14 @@ def test_array_dim_check():
 
 
 numpy_test_cases = [
-    (
-        np.array(
-            [
-                [1, 2, 3],
-                [
-                    4,
-                    5,
-                    6,
-                ],
-            ]
-        ),
-        3,
-    ),
+    (np.array([[1, 2, 3], [4, 5, 6]]), 3),
     (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
 ]
 
 
 @pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
 def test_numpy_array_columns(input_array, expected_columns):
-    report = TableReport(input_array, max_association_columns=0)
+    report = TableReport(input_array, compute_associations=False)
 
     assert report._summary["n_columns"] == expected_columns
 
@@ -427,8 +520,17 @@ def test_polars_df_no_pyarrow():
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_parameter(df_module):
-    """Test the open_tab parameter functionality"""
+@pytest.mark.parametrize(
+    "open_tab, html_snippet",
+    [
+        (None, "dataframe-sample"),
+        ("table", "dataframe-sample"),
+        ("stats", "summary_statistics"),
+        ("distributions", "column-summaries"),
+        ("associations", "column_associations"),
+    ],
+)
+def test_open_tab_parameter(df_module, open_tab, html_snippet):
     df = df_module.make_dataframe(
         {
             "A": [1, 2, 3, 4, 5],
@@ -436,26 +538,13 @@ def test_open_tab_parameter(df_module):
         }
     )
 
-    # Test open behavior (should be 'table')
-    report1 = TableReport(df)
-    assert report1.open_tab == "table"
-
-    # Test explicitly set to 'stats'
-    report2 = TableReport(df, open_tab="stats")
-    assert report2.open_tab == "stats"
-
-    # Test set to 'distributions'
-    report3 = TableReport(df, open_tab="distributions")
-    assert report3.open_tab == "distributions"
-
-    # Test set to 'associations'
-    report4 = TableReport(df, open_tab="associations")
-    assert report4.open_tab == "associations"
-
-    # Test HTML generation includes correct attributes
-    html_snippet = report2.html_snippet()
-    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
-    assert "data-is-selected" in html_snippet
+    if open_tab is None:
+        report = TableReport(df)
+        assert report.open_tab == "table"
+    else:
+        report = TableReport(df, open_tab=open_tab)
+        # additional tests covered by _reporting/js_tests/cypress/e2e/open-tab.cy.js
+        assert report.open_tab == open_tab
 
 
 @skip_polars_installed_without_pyarrow
@@ -476,7 +565,8 @@ def test_open_tab_wrong_names(df_module):
 
 
 @skip_polars_installed_without_pyarrow
-def test_open_tab_minimal_mode(df_module):
+@pytest.mark.parametrize("open_tab", ["distributions", "associations"])
+def test_open_tab_minimal_mode(df_module, open_tab):
     """Test that default_tab falls back to 'table' in minimal mode when needed"""
     df = df_module.make_dataframe(
         {
@@ -486,14 +576,9 @@ def test_open_tab_minimal_mode(df_module):
     )
 
     # Test minimal mode with open_tab set to 'distributions'
-    report1 = TableReport(df, open_tab="distributions")
-    report1._set_minimal_mode()
-    assert report1.open_tab == "table"
-
-    # Test minimal mode with open_tab set to 'associations'
-    report2 = TableReport(df, open_tab="associations")
-    report2._set_minimal_mode()
-    assert report2.open_tab == "table"
+    report = TableReport(df, open_tab=open_tab)
+    report._set_minimal_mode()
+    assert report.open_tab == "table"
 
 
 @pytest.mark.parametrize(
@@ -561,3 +646,29 @@ def test_column_filters_fail(df_module, filter, expected, match):
     )
     with pytest.raises(expected, match=match):
         TableReport(df, column_filters=filter)
+
+
+def test_n_rows_parameter(df_module):
+    def n_shown_rows(report):
+        return sum(
+            len(p.get("rows", ()))
+            for p in report._summary["sample_table"]["parts"]
+            if p["name"] in ("top_slice", "bottom_slice")
+        )
+
+    df = df_module.make_dataframe({"a": list(range(20)), "b": list(range(20))})
+
+    report = TableReport(df, verbose=0)
+    assert n_shown_rows(report) == 10
+
+    report = TableReport(df, n_rows=6, verbose=0)
+    assert n_shown_rows(report) == 6
+
+    with config_context(table_report_n_rows=7):
+        report = TableReport(df, verbose=0)
+        assert n_shown_rows(report) == 7
+
+
+def test_table_report_dict(air_quality):
+    report = TableReport(air_quality)
+    assert report.dict() == json.loads(report.json())

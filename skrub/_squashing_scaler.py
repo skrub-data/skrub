@@ -1,11 +1,13 @@
 import numbers
 
 import numpy as np
-from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
+from sklearn.base import OneToOneFeatureMixin, TransformerMixin
 from sklearn.preprocessing import RobustScaler
 from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
 
 from skrub._sklearn_compat import validate_data
+
+from ._base import SkrubBaseEstimator
 
 
 def _mask_inf(X):
@@ -51,7 +53,7 @@ def _soft_clip(X, max_absolute_value, mask_inf):
     return X
 
 
-class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
+class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseEstimator):
     """A variation of scikit-learn MinMaxScaler.
 
     A simple min-max scaler that centers the median to zero and scales
@@ -82,7 +84,7 @@ class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         return self.scale_ * (X - self.median_)
 
 
-class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
+class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, SkrubBaseEstimator):
     r"""Perform robust centering and scaling followed by soft clipping.
 
     When features have large outliers, smooth clipping prevents the outliers from

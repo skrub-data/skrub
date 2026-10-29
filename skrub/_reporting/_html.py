@@ -183,3 +183,35 @@ def _b64_encode(obj):
     return base64.b64encode(json.dumps(obj, ensure_ascii=True).encode("utf-8")).decode(
         "utf-8"
     )
+
+
+def _get_jinja_env_markdown():
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(
+            pathlib.Path(__file__).resolve().parent / "_data" / "templates",
+            encoding="UTF-8",
+        ),
+        autoescape=False,
+    )
+    return env
+
+
+def to_markdown(summary):
+    """Given a dataframe summary, generate a Markdown string.
+
+    Parameters
+    ----------
+    summary : dict
+        A dict containing the information about the dataframe, created by
+        ``_summarize.summarize_dataframe``.
+
+    Returns
+    -------
+    str
+        The report as a Markdown string.
+    """
+    if summary["dataframe_is_empty"]:
+        return "The dataframe is empty.\n"
+    jinja_env = _get_jinja_env_markdown()
+    template = jinja_env.get_template("report.md")
+    return template.render({"summary": summary})

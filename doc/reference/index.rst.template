@@ -17,6 +17,7 @@ classes and functions may not be enough to give full guidelines on their use.
 {% for module, _ in API_REFERENCE %}
   {{ module }} <{{ module }}>
 {%- endfor %}
+  TableReport JSON schema <table_report_json_schema>
 {%- if DEPRECATED_API_REFERENCE %}
   deprecated
 {%- endif %}
