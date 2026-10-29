@@ -12,19 +12,15 @@ from skrub._reporting._summarize import summarize_dataframe
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
-@pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 @pytest.mark.parametrize("with_associations", [False, True])
 @skip_polars_installed_without_pyarrow
-def test_summarize(
-    monkeypatch, df_module, air_quality, order_by, with_plots, with_associations
-):
+def test_summarize(monkeypatch, df_module, air_quality, with_plots, with_associations):
     monkeypatch.setattr(_column_associations, "_CATEGORICAL_THRESHOLD", 10)
     summary = summarize_dataframe(
         air_quality,
         with_plots=with_plots,
         with_associations=with_associations,
-        order_by=order_by,
         title="the title",
     )
     assert summary["title"] == "the title"
@@ -91,7 +87,7 @@ def test_summarize(
 
     # checking top associations
     if with_associations:
-        assert len(summary["top_associations"]) == 20
+        assert len(summary["top_associations"]) == 55
         asso = [
             d | {"cramer_v": round(d["cramer_v"], 1)}
             for d in summary["top_associations"]
@@ -287,7 +283,7 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
     associations."""
     monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 10)
 
-    with config_context(max_association_columns=2):
+    with config_context(table_report_associations_threshold=2):
         associations_1 = summarize_dataframe(air_quality)["top_associations"]
         associations_2 = summarize_dataframe(air_quality)["top_associations"]
         with config_context(subsampling_seed=42):
@@ -309,3 +305,17 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
             "Computing summary with different seeds should produce different "
             "associations."
         )
+
+
+def test_dollar_sign(df_module):
+    """
+    non-regression test for
+
+    https://github.com/skrub-data/skrub/issues/2097
+
+    without the right rcparams matplotlib interprets the $ as latex and crashes.
+    """
+    df = df_module.make_dataframe(
+        {"c": ["something with $$", "something else so column is not constant"]}
+    )
+    summarize_dataframe(df, with_plots=True, verbose=0)

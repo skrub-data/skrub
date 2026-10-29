@@ -1,7 +1,12 @@
+import html
 import inspect
 
 import numpy as np
 import pytest
+import sklearn
+from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
+from sklearn.utils.fixes import parse_version
 
 import skrub
 
@@ -68,7 +73,7 @@ def test_key_completions():
 def test_repr_html():
     a = skrub.var("thename", "thevalue")
     r = a._repr_html_()
-    if "Please install" in r:
+    if "Graphviz.load" in r:
         pytest.skip("graphviz not installed")
     assert "thename" in r and "thevalue" in r
     a = skrub.var("thename", skrub.datasets.toy_orders().orders)
@@ -85,6 +90,20 @@ def test_repr_html():
     assert "on a subsample" not in a._repr_html_()
     a = skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
     assert "on a subsample" in a._repr_html_()
+    assert "details open" not in a._repr_html_()
+    with skrub.config_context(data_ops_open_graph_dropdown=True):
+        assert "details open" in a._repr_html_()
+
+
+def test_with_scoring_repr_html():
+    X, y = make_classification(n_samples=10)
+    r = (
+        skrub.X(X)
+        .skb.apply(DummyClassifier(), y=skrub.y(y))
+        .skb.with_scoring("accuracy")
+        ._repr_html_()
+    )
+    assert "accuracy" in r
 
 
 def test_repr():
@@ -104,6 +123,11 @@ def test_repr():
     Result:
     ―――――――
     'one two'
+    >>> skrub.var('a', 1, becomes_default=True)
+    <Var 'a' int>
+    Result (also the default value):
+    ――――――――――――――――――――――――――――――――
+    1
     >>> skrub.as_data_op({'a': 0})
     <Value dict>
     Result:
@@ -114,6 +138,13 @@ def test_repr():
     Result:
     ―――――――
     10
+    >>> from sklearn.model_selection import KFold
+    >>> skrub.var('df').skb.mark_as_X(cv=KFold(10), split_kwargs={})
+    <X>
+    X and y will be split with: KFold(n_splits=10, random_state=None, shuffle=False)
+    >>> skrub.var('df').skb.mark_as_X(cv=KFold(10), split_kwargs={}).skb.set_name('design matrix')
+    <design matrix | X>
+    X and y will be split with: KFold(n_splits=10, random_state=None, shuffle=False)
     >>> from sklearn.preprocessing import StandardScaler, RobustScaler
     >>> skrub.X().skb.apply(StandardScaler())
     <Apply StandardScaler>
@@ -200,16 +231,16 @@ def test_repr():
 
     >>> X = skrub.X()
     >>> X.skb.concat([X, X],axis=1)
-    <Concat: 3 dataframes>
+    <Concat: 3 tables>
     >>> X.skb.concat([X, X],axis=0)
-    <Concat: 3 dataframes>
+    <Concat: 3 tables>
 
     When we do not know the length of the list of dataframes to concatenate
 
     >>> X.skb.concat(skrub.as_data_op([X, X]),axis=0)
     <Concat>
 
-    if we end up applying an ApplyToEachCol, seeing the inner transformer is more
+    if we end up applying an ApplyToCols, seeing the inner transformer is more
     informative.
 
     >>> from skrub._wrap_transformer import wrap_transformer
@@ -271,6 +302,32 @@ def test_repr():
     >>> print(e.skb.describe_param_grid())
     - choose_float(10, 100): choose_float(10, 100)
       choose_float(1, 100, log=True, n_...): choose_float(1, 100, log=True, n_steps=100, default=10)
+    >>> from sklearn.dummy import DummyClassifier
+    >>> from sklearn.metrics import get_scorer
+
+    >>> data = skrub.var("df")
+    >>> X = data[["description", "price"]].skb.mark_as_X(cv=2)
+    >>> y = data["category"].skb.mark_as_y()
+    >>> pred = X.skb.apply(DummyClassifier(), y=y)
+
+    >>> sample_weight = X["price"]
+    >>> pred.skb.with_scoring("accuracy", kwargs={"sample_weight": sample_weight})
+    <Scoring <Apply DummyClassifier> (1 scorers)>
+        This DataOp will be scored with:
+          - 'accuracy'
+        Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.
+
+    >>> pred.skb.with_scoring(["accuracy", get_scorer("roc_auc")]).skb.with_scoring(
+    ...     "accuracy",
+    ...     kwargs={"sample_weight": sample_weight},
+    ...     name="weighted_accuracy",
+    ... )
+    <Scoring <Apply DummyClassifier> (3 scorers)>
+        This DataOp will be scored with:
+          - 'accuracy'
+          - make_scorer(roc_auc_score, response_method=('decision_function', 'predict_proba'))
+          - weighted_accuracy: 'accuracy'
+        Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.
     """  # noqa: E501
 
 
@@ -278,3 +335,60 @@ def test_format():
     assert f"{skrub.X()}" == "<Var 'X'>"
     with pytest.raises(ValueError, match="Invalid format specifier"):
         f"{skrub.X(0.2):.2f}"
+
+
+def test_estimator_repr_html():
+    # diagrams generated for scikit-learn estimators should contain the graph
+    # drawing (an svg, or the script that draws it in the browser if graphviz is
+    # not installed).
+
+    old_sklearn = parse_version(sklearn.__version__) < parse_version("1.7")
+
+    data_op = (
+        skrub.X()
+        .skb.apply(skrub.SquashingScaler())
+        .skb.apply(DummyClassifier(), y=skrub.y())
+    )
+    svg = data_op._repr_html_()
+    data_op_repr = html.escape(repr(data_op))
+
+    learner = data_op.skb.make_learner()
+    learner_repr = learner._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in learner_repr
+    else:
+        assert svg in learner_repr or "Graphviz.load" in learner_repr
+
+    X, y = make_classification()
+    learner.fit({"X": X, "y": y})
+    learner_repr = learner._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in learner_repr
+    else:
+        assert svg in learner_repr or "Graphviz.load" in learner_repr
+
+    rand_search_repr = data_op.skb.make_randomized_search()._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in rand_search_repr
+    else:
+        assert svg in rand_search_repr or "Graphviz.load" in rand_search_repr
+        assert "n_iter" in rand_search_repr
+        assert "randomized search" in rand_search_repr
+
+    grid_search_repr = data_op.skb.make_grid_search()._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in grid_search_repr
+    else:
+        assert svg in grid_search_repr or "Graphviz.load" in grid_search_repr
+        assert "n_jobs" in grid_search_repr
+        assert "grid search" in grid_search_repr
+
+    pytest.importorskip("optuna")
+    optuna_search_repr = data_op.skb.make_randomized_search(
+        backend="optuna"
+    )._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in optuna_search_repr
+    else:
+        assert svg in optuna_search_repr or "Graphviz.load" in optuna_search_repr
+        assert "n_iter" in optuna_search_repr

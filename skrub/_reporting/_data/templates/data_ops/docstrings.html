@@ -1,0 +1,20 @@
+{% macro render(doc) %}
+{% if doc %}
+{% if doc.strip().split("\n", 1).__len__() == 1 %}
+<p>
+    <strong>docstring:</strong>
+    <code>{{ doc.strip() }}</code>
+</p>
+{% else %}
+<details class="docstring-details">
+    <summary>
+        <strong>docstring:</strong>
+        <code>{{ doc.split("\n", 1)[0] }}</code>
+    </summary>
+    <pre><code>
+{{- doc -}}
+    </code></pre>
+</details>
+{% endif %}
+{% endif %}
+{% endmacro %}

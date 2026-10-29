@@ -4,10 +4,11 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from skrub import ApplyToEachCol, DatetimeEncoder
+from skrub import ApplyToCols, DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._datetime_encoder import (
+    _TIME_LEVELS,
     _CircularEncoder,
     _get_dt_feature,
     _is_date,
@@ -20,11 +21,7 @@ def date(df_module):
     return sbd.to_datetime(
         df_module.make_column(
             "when",
-            [
-                "2020-01-01",
-                None,
-                "2022-01-01",
-            ],
+            ["2020-01-01", None, "2022-01-01", "2018-11-04"],
         ),
         "%Y-%m-%d",
     )
@@ -34,11 +31,7 @@ def datetime(df_module):
     return sbd.to_datetime(
         df_module.make_column(
             "when",
-            [
-                "2020-01-01 10:12:01",
-                None,
-                "2022-01-01 23:23:43",
-            ],
+            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43", "2018-11-04 12:00:00"],
         ),
         "%Y-%m-%d %H:%M:%S",
     )
@@ -49,19 +42,15 @@ def tz_datetime(df_module):
     col = sbd.to_datetime(
         df_module.make_column(
             "when",
-            [
-                "2020-01-01 10:12:01",
-                None,
-                "2022-01-01 23:23:43",
-            ],
+            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43", "2018-11-04 12:00:00"],
         ),
         "%Y-%m-%d %H:%M:%S",
     )
     if df_module.name == "pandas":
-        return col.dt.tz_localize("Asia/Kolkata")
+        return col.dt.tz_localize("America/Sao_Paulo")
     else:
         assert df_module.name == "polars"
-        return col.dt.replace_time_zone("Asia/Kolkata")
+        return col.dt.replace_time_zone("America/Sao_Paulo")
 
 
 def nanoseconds(df_module):
@@ -72,6 +61,7 @@ def nanoseconds(df_module):
                 "2020-01-01 10:12:01.123456789",
                 None,
                 "2022-01-01 23:23:43.123987654",
+                "2018-11-04 12:00:00.123456789",
             ],
         ),
         (
@@ -102,20 +92,20 @@ def a_datetime_col(request, df_module):
 @pytest.fixture
 def expected_features(df_module):
     values = {
-        "when_year": [2020.0, None, 2022.0],
-        "when_month": [1.0, None, 1.0],
-        "when_day": [1.0, None, 1.0],
-        "when_hour": [10.0, None, 23.0],
-        "when_minute": [12.0, None, 23.0],
-        "when_second": [1.0, None, 43.0],
-        "when_microsecond": [123456.0, None, 123987.0],
-        "when_nanosecond": [789.0, None, 654.0],
-        "when_total_seconds": [1577873536.0, None, 1641079424.0],
-        "when_weekday": [3.0, None, 6.0],
+        "when_year": [2020.0, None, 2022.0, 2018.0],
+        "when_month": [1.0, None, 1.0, 11.0],
+        "when_day": [1.0, None, 1.0, 4.0],
+        "when_hour": [10.0, None, 23.0, 12.0],
+        "when_minute": [12.0, None, 23.0, 0],
+        "when_second": [1.0, None, 43.0, 0],
+        "when_microsecond": [123456.0, None, 123987.0, 123456.0],
+        "when_nanosecond": [789.0, None, 654.0, 789.0],
+        "when_total_seconds": [1577873536.0, None, 1641079424.0, 1541340032.0],
+        "when_weekday": [3.0, None, 6.0, 3.0],
     }
 
     res = df_module.make_dataframe(values)
-    return ApplyToEachCol(ToFloat()).fit_transform(res)
+    return ApplyToCols(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
@@ -293,6 +283,22 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
                 "weekday_circular_1",
             ],
         ),
+        (
+            dict(
+                resolution=None,
+                periodic_encoding="circular",
+            ),
+            ["total_seconds"],
+        ),
+        (
+            dict(
+                resolution=None,
+                add_weekday=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+            ),
+            ["weekday_circular_0", "weekday_circular_1"],
+        ),
     ],
 )
 def test_all_outputs_choice(datetime_cols, params, all_outputs):
@@ -301,6 +307,27 @@ def test_all_outputs_choice(datetime_cols, params, all_outputs):
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
     assert enc.get_feature_names_out() == [f"when_{f}" for f in all_outputs]
     assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
+
+
+@pytest.mark.parametrize("periodic_encoding", ["circular", "spline"])
+@pytest.mark.parametrize("resolution", [*_TIME_LEVELS, None])
+def test_periodic_encoders_match_extracted_features(
+    datetime_cols, resolution, periodic_encoding
+):
+    # A periodic encoder is only ever applied to a feature that was extracted, so we
+    # check that no unnecessary features are encoded. The levels to encode are
+    # therefore taken from ``extracted_features_``. When ``resolution`` is ``None``,
+    # the only periodic feature that should be encoded is ``weekday`` if the flag is
+    # set.
+    for column in (datetime_cols.datetime, datetime_cols.date):
+        for add_weekday in (False, True):
+            enc = DatetimeEncoder(
+                resolution=resolution,
+                periodic_encoding=periodic_encoding,
+                add_weekday=add_weekday,
+            )
+            enc.fit(column)
+            assert set(enc._periodic_encoders) <= set(enc.extracted_features_)
 
 
 def test_time_not_extracted_from_date_col(datetime_cols):

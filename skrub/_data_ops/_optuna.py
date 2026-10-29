@@ -6,11 +6,10 @@ import uuid
 
 import joblib
 import numpy as np
-import sklearn
 from sklearn.metrics import check_scoring
 from sklearn.utils import check_random_state
-from sklearn.utils.fixes import parse_version
 
+from .._utils import set_module
 from ._estimator import (
     _SEARCH_FITTED_ATTRIBUTES,
     _BaseParamSearch,
@@ -116,17 +115,6 @@ def _check_storage(url):
 
 def _get_scorer(estimator, scoring):
     """Create the scorer_ attribute."""
-    if parse_version(sklearn.__version__) < parse_version("1.5"):
-        if isinstance(scoring, (list, tuple, set)):
-            scorer = {
-                metric_name: check_scoring(estimator, metric_name)
-                for metric_name in scoring
-            }
-        elif isinstance(scoring, dict):
-            scorer = {k: check_scoring(estimator, v) for k, v in scoring.items()}
-        else:
-            scorer = check_scoring(estimator, scoring)
-        return scorer
     scorer = check_scoring(estimator, scoring)
     try:
         # if multimetric, get the {name: scorer} dict
@@ -136,6 +124,7 @@ def _get_scorer(estimator, scoring):
     return scorer
 
 
+@set_module("skrub")
 class OptunaParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
@@ -308,7 +297,9 @@ class OptunaParamSearch(_BaseParamSearch):
                 # exists)
                 create_study()
 
-                def optimize():
+                def optimize():  # pragma: no cover
+                    # Runs in joblib/loky worker subprocesses, which pytest-cov
+                    # does not measure.
                     study = create_study()
                     # reseed otherwise all processes will start with the same
                     # params, optuna also does this for each worker when

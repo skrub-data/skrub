@@ -34,10 +34,13 @@ import itertools
 import operator
 import pathlib
 import re
+import sys
 import textwrap
 import traceback
 import types
+import uuid
 import warnings
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -45,11 +48,10 @@ from sklearn.base import BaseEstimator
 from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
+from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
-from .._reporting._utils import strip_xml_declaration
-from .._utils import PassThrough, short_repr
-from .._wrap_transformer import wrap_transformer
-from . import _utils
+from .._utils import PassThrough, set_module, short_repr
+from . import _caching, _utils
 from ._choosing import get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
@@ -126,14 +128,11 @@ _BIN_OPS = [
     "__sub__",
     "__truediv__",
     "__xor__",
-    "__and__",
     "__or__",
 ]
 
 _UNARY_OPS = [
     "__abs__",
-    "__all__",
-    "__concat__",
     "__inv__",
     "__invert__",
     "__not__",
@@ -142,10 +141,21 @@ _UNARY_OPS = [
 ]
 
 
+_MEMORY = _caching.Memory()
+
+
 class UninitializedVariable(KeyError):
     """
     Evaluating a DataOp and a value has not been provided for one of the variables.
     """
+
+    def __init__(self, name):
+        self.name = name
+        self.message = f"No value has been provided for {name!r}"
+        super().__init__(name)
+
+    def __str__(self):
+        return self.message
 
 
 def _remove_shell_frames(stack):
@@ -160,17 +170,19 @@ def _remove_shell_frames(stack):
         (pathlib.Path("sphinx", "config.py"), "eval_config_file"),
         (pathlib.Path("_pytest", "python.py"), "pytest_pyfunc_call"),
         ("code.py", "runcode"),
+        (pathlib.Path("_pyrepl", "*"), None),
     ]
+    cut = -1
     for i, f in enumerate(stack):
         for file_path, func_name in shells:
-            # in python 3.9 Path.match(Path(...)) raises an exception, argument
-            # must be a string
-            if pathlib.Path(f.filename).match(str(file_path)) and f.name == func_name:
-                return stack[i + 1 :]
-    return stack
+            if pathlib.Path(f.filename).match(str(file_path)) and (
+                func_name is None or f.name == func_name
+            ):
+                cut = i
+    return stack[cut + 1 :]
 
 
-def _format_data_op_creation_stack():
+def _data_op_creation_stack():
     "Call stack information used to tell users where a DataOp was defined."
 
     # TODO use inspect.stack() instead of traceback.extract_stack() for more
@@ -183,7 +195,35 @@ def _format_data_op_creation_stack():
     stack = itertools.takewhile(
         lambda f: not pathlib.Path(f.filename).is_relative_to(fpath), stack
     )
-    return traceback.format_list(stack)
+
+    # We store plain (filename, lineno, name, line) tuples rather than the
+    # FrameSummary objects, which can hold a reference to the frame's code
+    # object. These tuples are the documented "old-style" format accepted by
+    # traceback.format_list and traceback.StackSummary.from_list
+    return [tuple(frame) for frame in stack]
+
+
+def _unpack_arity():
+    """Number of targets in the unpacking assignment being executed, if any.
+
+    Read from the caller's ``UNPACK_SEQUENCE`` instruction, or None if not found.
+    """
+    try:
+        # skip the frames of this function and of DataOp.__iter__
+        frame = sys._getframe(2)
+        for instruction in dis.get_instructions(frame.f_code):
+            if instruction.offset == frame.f_lasti:
+                # starred targets (`a, *rest = obj`, ie UNPACK_EX) are not
+                # handled because `rest` takes however many values are left.
+                if instruction.opname == "UNPACK_SEQUENCE":
+                    return instruction.arg
+                return None
+    except Exception:
+        # best-effort introspection: anything unexpected (a Python
+        # implementation without sys._getframe, bytecode we cannot read, ...)
+        # must fall back on refusing to iterate, not raise something else.
+        pass
+    return None
 
 
 class DataOpImpl:
@@ -244,13 +284,21 @@ class DataOpImpl:
             self.errors = {}
             self.metadata = {}
             try:
-                self._creation_stack_lines = _format_data_op_creation_stack()
+                self._creation_stack = _data_op_creation_stack()
             except Exception:
-                self._creation_stack_lines = None
+                self._creation_stack = None
             self.is_X = False
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
+            # The uuid is like an auto-generated name. It behaves like the name
+            # (must be unique within a dataop, is preserved by clone, ...) and
+            # is used for the same things (find a node, inject a value for its
+            # output in the environment). It is less explicit / reliable but
+            # always available.
+            # It is not used internally for example to discover the graph
+            # topology: we rely on actual Python object ids for this.
+            self.uuid = uuid.uuid4().int
             self.description = None
             self.checked = False
 
@@ -259,10 +307,11 @@ class DataOpImpl:
     def __replace__(self, **fields):
         kwargs = {k: getattr(self, k) for k in self._fields} | fields
         new = self.__class__(**kwargs)
-        new._creation_stack_lines = self._creation_stack_lines
+        new._creation_stack = self._creation_stack
         new.is_X = self.is_X
         new.is_y = self.is_y
         new.name = self.name
+        new.uuid = self.uuid
         new.description = self.description
         new.checked = False
         return new
@@ -281,21 +330,31 @@ class DataOpImpl:
         raise NotImplementedError()
 
     def creation_stack_description(self):
-        if self._creation_stack_lines is None:
+        if self._creation_stack is None:
             return ""
-        return "".join(self._creation_stack_lines)
+        return "".join(traceback.format_list(self._creation_stack))
 
     def creation_stack_last_line(self):
-        if not self._creation_stack_lines:
+        if not self._creation_stack:
             return ""
-        line = self._creation_stack_lines[-1]
+        line = traceback.format_list(self._creation_stack[-1:])[0]
         return textwrap.indent(line, "    ").rstrip("\n")
+
+    def creation_stack(self):
+        return self._creation_stack
 
     def preview_if_available(self):
         return self.results.get("preview", NULL)
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        """
+        Title displayed above the preview value in the DataOp's repr and html repr.
+        """
+        return "Result"
 
 
 def _find_dataframe(data_op, func_name):
@@ -387,12 +446,12 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         if allow_skipping and not _config.get_config().get("eager_data_ops", True):
             return data_op
 
-        if not data_op._skrub_impl.checked:
-            try:
-                func_name = data_op._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
+        try:
+            func_name = data_op._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
 
+        if not data_op._skrub_impl.checked:
             conflicts = find_conflicts(data_op)
             if conflicts is not None:
                 raise ValueError(conflicts["message"])
@@ -435,7 +494,7 @@ def _get_preview(obj):
     return obj
 
 
-def _checked_deferred_call_constructor(f):
+def checked_deferred_call_constructor(f):
     """Warn about function calls returning None
 
     We use this check because it is quite likely that the function was called
@@ -503,13 +562,17 @@ class _Skb:
 _DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
-Please refer to the example gallery for an introduction to skrub
-DataOps.
+A complete machine learning pipeline -- from data loading and wrangling to the final
+prediction -- in a single object that can be fitted, tuned, cross-validated, and
+saved like any scikit-learn estimator.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing DataOp.
+
+Refer to the :ref:`user_guide_data_ops_index` page for more information.
+
 """
 
 _DATA_OP_INSTANCE_DOC = """Skrub DataOp.
@@ -546,6 +609,7 @@ class _DataOpDoc:
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
+@set_module("skrub")
 class DataOp:
     """A skrub DataOp."""
 
@@ -597,14 +661,23 @@ class DataOp:
     def __getitem__(self, key):
         return DataOp(GetItem(self, key))
 
-    @_checked_deferred_call_constructor
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
             return DataOp(CallMethod(impl.source_object, impl.attr_name, args, kwargs))
         return DataOp(
-            Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
+            Call(
+                self,
+                args,
+                kwargs,
+                globals={},
+                closure=(),
+                defaults=(),
+                kwdefaults={},
+                no_cache=True,
+            )
         )
 
     @checked_data_op_constructor
@@ -672,6 +745,13 @@ class DataOp:
         )
 
     def __iter__(self):
+        # Unpacking (`a, b = data_op`) is supported: we know how many values are
+        # expected, so we can create a node for each of them. Any other kind of
+        # iteration would need the length of the result, which is unknown until
+        # the DataOp is evaluated.
+        if (arity := _unpack_arity()) is not None:
+            values = unpack(self, arity)
+            return (values[i] for i in range(arity))
         raise TypeError(
             "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
@@ -698,7 +778,7 @@ class DataOp:
         if preview is NULL:
             return result
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
-        header = f"Result{subsample_msg}:"
+        header = f"{self._skrub_impl.__skrub_preview_heading__()}{subsample_msg}:"
         underline = "―" * len(header)
         return f"{result}\n{header}\n{underline}\n{preview!r}"
 
@@ -719,13 +799,7 @@ class DataOp:
         from ._inspection import node_report
         from ._subsampling import uses_subsampling
 
-        try:
-            graph = self.skb.draw_graph().svg.decode("utf-8")
-            graph = strip_xml_declaration(graph)
-        except Exception:
-            graph = (
-                "Please install Pydot and GraphViz to display the computation graph."
-            )
+        graph = self.skb.draw_graph().html_fragment()
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
@@ -736,14 +810,27 @@ class DataOp:
             )
         else:
             name_line = ""
-        title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
-        summary = "<samp>Show graph</samp>"
+        repr_start, _, repr_rest = short_repr(self).partition("\n")
+        if repr_rest:
+            repr_rest = f"\n<pre>\n{html.escape(repr_rest)}\n</pre>"
+        title = (
+            f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
+            f"<br />{repr_rest}\n"
+        )
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        details_open_or_not = (
+            "open"
+            if _config.get_config().get("data_ops_open_graph_dropdown", False)
+            else ""
+        )
         prefix = (
             f"{title}{name_line}"
-            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"<details {details_open_or_not}>\n"
+            f"<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
+            f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
+            "</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
@@ -792,12 +879,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
-    elif how not in ["auto", "no_wrap"]:
-        msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
+    if exclude_cols is not None:
+        msg = f"`exclude_cols` must be None (the default) when {reason}"
     elif allow_reject:
         msg = f"`allow_reject` must be False (the default) when {reason}"
     if msg is not None:
@@ -828,33 +915,15 @@ def _check_estimator_type(estimator):
     )
 
 
-def _check_apply_how(how):
-    valid = ["auto", "cols", "frame", "no_wrap"]
-    if how in valid:
-        return how
-
-    # TODO remove when the old names are completely dropped in 0.7.0
-    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
-    if how in translate:
-        new = translate[how]
-        warnings.warn(
-            (
-                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
-                " instead."
-            ),
-            FutureWarning,
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, allow_reject, X):
+    """
+    Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
+    """
+    if not isinstance(no_wrap, bool):
+        raise TypeError(
+            "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
+            f"got: {no_wrap!r}."
         )
-        return new
-
-    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-
-
-def _wrap_estimator(estimator, cols, how, allow_reject, X):
-    """
-    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
-    needed.
-    """
-    how = _check_apply_how(how)
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -862,10 +931,10 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, allow_reject, reason)
 
-    if how == "no_wrap":
-        _check("`how` is 'no_wrap'")
+    if no_wrap:
+        _check("`no_wrap` is True")
         return estimator
     if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
@@ -873,9 +942,8 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
-    return wrap_transformer(
-        estimator, cols, allow_reject=allow_reject, columnwise=columnwise
+    return ApplyToCols(
+        estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
     )
 
 
@@ -912,30 +980,36 @@ def _check_var_value(value):
 class Var(DataOpImpl):
     "A `skrub.var()` DataOp."
 
-    _fields = ["name", "value"]
+    _fields = ["name", "value", "becomes_default"]
 
     def compute(self, e, mode, environment):
         if mode == "preview":
             assert not environment
             if e.value is NULL:
-                raise UninitializedVariable(
-                    f"No value has been provided for {e.name!r}"
-                )
+                raise UninitializedVariable(e.name)
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if environment.get("_skrub_use_var_values", False) and e.value is not NULL:
+        if (
+            e.becomes_default or environment.get("_skrub_use_var_values", False)
+        ) and e.value is not NULL:
             return e.value
-        raise UninitializedVariable(f"No value has been provided for {e.name!r}")
+        raise UninitializedVariable(e.name)
 
     def preview_if_available(self):
         return self.value
 
     def __repr__(self):
-        return f"<Var {self.name!r}>"
+        default_type = (
+            "" if not self.becomes_default else f" {self.value.__class__.__name__}"
+        )
+        return f"<{self.__class__.__name__} {self.name!r}{default_type}>"
+
+    def __skrub_preview_heading__(self):
+        return "Result (also the default value)" if self.becomes_default else "Result"
 
 
-def var(name, value=NULL):
+def var(name, value=NULL, *, becomes_default=False):
     """Create a skrub variable.
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
@@ -956,6 +1030,11 @@ def var(name, value=NULL):
         available, it is used to provide a preview of the learner's results,
         to detect errors in the learner early, and to provide better help and
         tab-completion in interactive Python shells.
+    becomes_default : bool, default = False
+        If True, the provided ``value`` is not only used for previews but also
+        becomes the default value for this variable when creating a learner
+        (for example with :meth:`DataOp.skb.make_learner`). Thus passing this
+        variable in the environment is always optional.
 
     Returns
     -------
@@ -1019,7 +1098,7 @@ def var(name, value=NULL):
     ―――――――
     5
 
-    The values are also used as defaults for ``eval()``:
+    The values are also used for ``eval()`` when no environment is provided:
 
     >>> c.skb.eval()
     5
@@ -1030,12 +1109,38 @@ def var(name, value=NULL):
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
 
+    When passing ``becomes_default=True``, the preview value is treated as a
+    default value for that variable. It is kept when cloning the DataOp or
+    creating a Learner, and is always optional (does not need to be present) in
+    the provided environment.
+
+    >>> c = skrub.var('a', 0, becomes_default=True) + skrub.var('b', 1)
+    >>> c.skb.get_data()
+    {'a': 0, 'b': 1}
+    >>> c.skb.clone().skb.get_data()
+    {'a': 0}
+
+    For the learner 'b' is mandatory but 'a' is optional and has default value
+    0.
+
+    >>> c.skb.make_learner().fit_transform({'b': 10})
+    10
+    >>> c.skb.make_learner().fit_transform({'b': 10, 'a': 100})
+    110
+
     Much more information about skrub variables is provided in the examples
     gallery.
     """
     check_name(name, is_var=True)
     _check_var_value(value)
-    return DataOp(Var(name, value=value))
+    if not isinstance(becomes_default, bool):
+        raise TypeError(
+            "becomes_default should be a Boolean, "
+            f"got object of type {type(becomes_default)}: {becomes_default!r}"
+        )
+    if becomes_default and value is NULL:
+        raise TypeError("value must be provided when becomes_default is True.")
+    return DataOp(Var(name, value=value, becomes_default=becomes_default))
 
 
 def X(value=NULL):
@@ -1052,9 +1157,9 @@ def X(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1096,7 +1201,7 @@ def X(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("X", value=value)).skb.mark_as_X()
+    return DataOp(Var("X", value=value, becomes_default=False)).skb.mark_as_X()
 
 
 def y(value=NULL):
@@ -1114,9 +1219,9 @@ def y(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1158,7 +1263,7 @@ def y(value=NULL):
     True
     """
     _check_var_value(value)
-    return DataOp(Var("y", value=value)).skb.mark_as_y()
+    return DataOp(Var("y", value=value, becomes_default=False)).skb.mark_as_y()
 
 
 class Value(DataOpImpl):
@@ -1171,9 +1276,6 @@ class Value(DataOpImpl):
 
     def compute(self, e, mode, environment):
         return e.value
-
-    def preview_if_available(self):
-        return self.value
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
@@ -1283,7 +1385,7 @@ class FreezeAfterFit(DataOpImpl):
 
 
 def _check_column_names(X):
-    # NOTE: could allow int column names when how='no_wrap', prob. not worth
+    # NOTE: could allow int column names when no_wrap=True, prob. not worth
     # the added complexity.
     #
     # TODO: maybe also forbid duplicates? use a reduced version of
@@ -1332,10 +1434,12 @@ class Apply(DataOpImpl):
         "estimator",
         "y",
         "cols",
-        "how",
+        "exclude_cols",
+        "no_wrap",
         "allow_reject",
         "unsupervised",
         "kwargs",
+        "no_cache",
     ]
 
     # We define `eval()` rather than `compute` because some children may not
@@ -1369,45 +1473,93 @@ class Apply(DataOpImpl):
 
         if "fit" in method_name:
             cols = yield self.cols
-            how = yield self.how
+            exclude_cols = yield self.exclude_cols
+            no_wrap = yield self.no_wrap
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
-                how=how,
+                exclude_cols=exclude_cols,
+                no_wrap=no_wrap,
                 allow_reject=allow_reject,
                 X=X,
+            )
+            # Record if wrapping in ApplyToCols was done here for inspection.
+            self.estimator_was_wrapped_ = (
+                self.estimator_ is not estimator
+                and isinstance(self.estimator_, ApplyToCols)
             )
             self._store_y_format(y)
 
         # 2. Call the appropriate estimator method
 
+        no_cache = yield self.no_cache
+
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()`. This is done even if the transformer is the
+            # last estimator, as it can make things easier for downstream nodes
+            # if we are building a transformer rather than a predictor.
+            method_name = "fit_transform"
+
+        if "transform" not in method_name:
+            # We are evaluating in another mode than transform or fit_transform
+            # and the current estimator has the corresponding method. We check
+            # if we are the last estimator: if we are not, we want to transform
+            # instead so that subsequent steps get the transformed data rather
+            # than, for example, a fitted estimator or a score.
+            #
+            # An example situation where this arises is are in score mode and
+            # we have an internal transformer such as PCA that has a score()
+            # method.
+            from ._evaluation import HasRunningApplyAncestor
+
+            has_running_apply_ancestor = yield HasRunningApplyAncestor()
+            if has_running_apply_ancestor:
+                method_name = "fit_transform" if "fit" in method_name else "transform"
+
         if "transform" in method_name and not hasattr(self.estimator_, method_name):
-            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
-            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
-            # with `.predict()`
+            # We are a predictor and need to do 'transform' or 'fit_transform'
+            # (as in `.skb.preview()` or `.skb.eval()`). We replace
+            # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
-                self.estimator_.fit(X, y, **fit_kwargs)
+                self.estimator_, _, self.estimator_id_ = _MEMORY.call_fitting_method(
+                    self.estimator_, "fit", (X, y), fit_kwargs, no_cache=no_cache
+                )
             predict_kwargs = yield from self._eval_kwargs("predict")
-            pred = self.estimator_.predict(X, **predict_kwargs)
+            pred = _MEMORY.call_non_fitting_method(
+                self.estimator_,
+                "predict",
+                (X,),
+                predict_kwargs,
+                self.estimator_id_,
+                no_cache=no_cache,
+            )
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
 
-        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
-            # We are a transformer in 'fit' mode. Rather than `fit()` we call
-            # `fit_transform()` so that subsequent steps can be fitted as well.
-            method_name = "fit_transform"
-
         if "fit" in method_name:
-            y_arg = () if self.unsupervised else (y,)
+            args = (X,) if self.unsupervised else (X, y)
         elif method_name == "score":
-            y_arg = (y,)
+            args = (X, y)
         else:
-            y_arg = ()
-        method_kwargs = yield from self._eval_kwargs(method_name)
-        return getattr(self.estimator_, method_name)(X, *y_arg, **method_kwargs)
+            args = (X,)
+        kwargs = yield from self._eval_kwargs(method_name)
+        if "fit" in method_name:
+            self.estimator_, result, self.estimator_id_ = _MEMORY.call_fitting_method(
+                self.estimator_, method_name, args, kwargs, no_cache=no_cache
+            )
+            return result
+        return _MEMORY.call_non_fitting_method(
+            self.estimator_,
+            method_name,
+            args,
+            kwargs,
+            self.estimator_id_,
+            no_cache=no_cache,
+        )
 
     def _store_y_format(self, y):
         if sbd.is_dataframe(y):
@@ -1488,7 +1640,11 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
+        if estimator.__class__.__name__ in [
+            "ApplyToEachCol",
+            "ApplyToSubFrame",
+            "ApplyToCols",
+        ]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
@@ -1546,6 +1702,33 @@ class GetItem(DataOpImpl):
         return f"[{_get_preview(self.key)!r}]"
 
 
+class AsTuple(DataOpImpl):
+    """Node created by unpacking a DataOp, e.g. ``a, b = data_op``."""
+
+    _fields = ["iterable", "expected_length"]
+
+    def compute(self, e, mode, environment):
+        # converting to a tuple (rather than indexing into the result directly)
+        # allows unpacking any iterable, and makes sure an iterator is consumed
+        # only once even though each target indexes into this node.
+        result = tuple(e.iterable)
+        expected, got = e.expected_length, len(result)
+        if got != expected:
+            problem = "not enough" if got < expected else "too many"
+            raise ValueError(
+                f"{problem} values to unpack (expected {expected}, got {got})"
+            )
+        return result
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.expected_length} items>"
+
+
+@checked_data_op_constructor
+def unpack(iterable, expected_length):
+    return DataOp(AsTuple(iterable, expected_length))
+
+
 class Call(DataOpImpl):
     _fields = [
         "func",
@@ -1555,10 +1738,20 @@ class Call(DataOpImpl):
         "closure",
         "defaults",
         "kwdefaults",
+        "no_cache",
     ]
 
     def compute(self, e, mode, environment):
-        func = e.func
+        if getattr(e.func, "_skrub_is_deferred", False):
+            raise ValueError(
+                "A deferred function was wrapped in a DataOp, "
+                "probably by passing it (indirectly) to .skb.apply_func():\n"
+                f"{e.func!r}.\n"
+                "This results in deferring the function twice.\n"
+                "Please pass the original, undecorated function instead.\n"
+                "(Note: it can be accessed from the deferred function as f.func)."
+            )
+        kwargs = (e.kwdefaults or {}) | e.kwargs
         if e.globals or e.closure or e.defaults:
             # The deferred function has skrub DataOps (that need to be
             # evaluated) in its global variables, free variables or default
@@ -1566,15 +1759,17 @@ class Call(DataOpImpl):
             # new function in which the DataOps have been replaced by their
             # computed value. More details in the docstring of
             # `skrub.deferred`.
+            #
+            # In this case we never use caching because joblib would not detect
+            # changes to the globals and closure.
             func = types.FunctionType(
-                func.__code__,
-                globals={**func.__globals__, **e.globals},
+                e.func.__code__,
+                globals={**e.func.__globals__, **e.globals},
                 argdefs=e.defaults,
                 closure=tuple(types.CellType(c) for c in e.closure),
             )
-
-        kwargs = (e.kwdefaults or {}) | e.kwargs
-        return func(*e.args, **kwargs)
+            return func(*e.args, **kwargs)
+        return _MEMORY.call_func(e.func, e.args, kwargs, no_cache=e.no_cache)
 
     def get_func_name(self):
         if not hasattr(self.func, "_skrub_impl"):
@@ -1636,7 +1831,67 @@ class CallMethod(DataOpImpl):
         return f".{_get_preview(self.method_name)}()"
 
 
-def deferred(func):
+def prepare_call_fields(func, no_cache):
+    """
+    Prepare most fields for a Call node.
+
+    This inspects the provided func to prepare the arguments needed to build a
+    Call dataop. Only the args and kwargs for the Call need to be completed in
+    order to build the node.
+    """
+    from ._evaluation import needs_eval
+
+    fields = {
+        "func": func,
+        "globals": {},
+        "closure": (),
+        "defaults": (),
+        "kwdefaults": {},
+        "no_cache": no_cache,
+    }
+
+    if not hasattr(func, "__code__"):
+        return fields
+
+    globals_names = [
+        i.argval
+        for i in dis.get_instructions(func.__code__)
+        if i.opname == "LOAD_GLOBAL"
+    ]
+    # find any globals that need evaluation (contain a dataop or choice).
+    f_globals = {
+        name: func.__globals__[name]
+        for name in globals_names
+        if name in func.__globals__
+        and not isinstance(
+            func.__globals__[name],
+            (
+                # We know that those types do not contain dataops so we skip
+                # the needs_eval() call for speed.
+                types.FunctionType,
+                types.BuiltinFunctionType,
+                type,
+                types.ModuleType,
+            ),
+        )
+        and needs_eval(func.__globals__[name])
+    }
+    closure = tuple(c.cell_contents for c in func.__closure__ or ())
+    if not f_globals and not needs_eval(
+        (closure, func.__defaults__, func.__kwdefaults__)
+    ):
+        return fields
+
+    fields.update(
+        globals=f_globals,
+        closure=closure,
+        defaults=func.__defaults__,
+        kwdefaults=func.__kwdefaults__,
+    )
+    return fields
+
+
+def deferred(func=None, *, no_cache=False):
     """Wrap function calls in a DataOp :class:`DataOp`.
 
     When this decorator is applied, the resulting function returns DataOps.
@@ -1651,6 +1906,13 @@ def deferred(func):
     ----------
     func : function
         The function to wrap
+
+    no_cache : bool, default = False
+        If True, caching is forbidden for this function: calls will not be
+        cached even if the configuration enables caching with
+        skrub.set_config(cache='/path/to/cache_dir').
+
+        See :ref:`user_guide_data_ops_caching` for more information about caching.
 
     Returns
     -------
@@ -1708,6 +1970,26 @@ def deferred(func):
     >>> e.skb.eval({'x': 3})
     INFO x = 3
     3
+
+    It is possible to pass ``no_cache`` with the decorator syntax as well:
+
+    >>> @skrub.deferred(no_cache=True)
+    ... def f(x): return x * 2
+
+    is equivalent to:
+
+    >>> def f(x): return x * 2
+    >>> f = skrub.deferred(f, no_cache=True)
+
+    The original function is available as the ``func`` attribute:
+
+    >>> f(2)  # Call the deferred function, returns a DataOp.
+    <Call 'f'>
+    Result:
+    ―――――――
+    4
+    >>> f.func(2)  # Call the original function.
+    4
 
     **Advanced examples**
 
@@ -1774,75 +2056,30 @@ def deferred(func):
            [-0.87,  0.5 ],
            [-0.  ,  1.  ]])
     """  # noqa : E501
-    from ._evaluation import needs_eval
+    if func is None:
+        return functools.partial(deferred, no_cache=no_cache)
 
-    if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):
-        return func
+    if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+        warnings.warn(
+            "skrub.deferred was applied twice to the function:\n"
+            f"{func!r}\n"
+            "deferred should only be applied once.",
+            stacklevel=2,
+        )
+        no_cache = no_cache or func._skrub_no_cache
+        func = func.func
 
-    @_checked_deferred_call_constructor
+    prepared_call_fields = prepare_call_fields(func, no_cache=no_cache)
+
+    @checked_deferred_call_constructor
     @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals={},
-                closure=(),
-                defaults=(),
-                kwdefaults={},
-            )
-        )
+        return DataOp(Call(**prepared_call_fields, args=args, kwargs=kwargs))
 
     deferred_func._skrub_is_deferred = True
-
-    if not hasattr(func, "__code__"):
-        return deferred_func
-
-    globals_names = [
-        i.argval
-        for i in dis.get_instructions(func.__code__)
-        if i.opname == "LOAD_GLOBAL"
-    ]
-    f_globals = {
-        name: func.__globals__[name]
-        for name in globals_names
-        if name in func.__globals__
-        and not isinstance(
-            func.__globals__[name],
-            (
-                types.FunctionType,
-                types.BuiltinFunctionType,
-                type,
-                types.ModuleType,
-            ),
-        )
-        and needs_eval(func.__globals__[name])
-    }
-    closure = tuple(c.cell_contents for c in func.__closure__ or ())
-    if not f_globals and not needs_eval(
-        (closure, func.__defaults__, func.__kwdefaults__)
-    ):
-        return deferred_func
-
-    @_checked_deferred_call_constructor
-    @checked_data_op_constructor
-    @functools.wraps(func)
-    def deferred_func(*args, **kwargs):
-        return DataOp(
-            Call(
-                func,
-                args,
-                kwargs,
-                globals=f_globals,
-                closure=closure,
-                defaults=func.__defaults__,
-                kwdefaults=func.__kwdefaults__,
-            )
-        )
-
-    deferred_func._skrub_is_deferred = True
+    deferred_func._skrub_no_cache = no_cache
+    deferred_func.func = func
 
     return deferred_func
 
@@ -1853,35 +2090,45 @@ class Concat(DataOpImpl):
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
-        if not sbd.is_dataframe(e.first):
-            raise TypeError(
-                "`concat` can only be used with dataframes. "
-                "`.skb.concat` was accessed on an object of type "
-                f"{e.first.__class__.__name__!r}"
-            )
-        if sbd.is_dataframe(e.others):
-            raise TypeError(
-                "`concat` should be passed a list of dataframes. "
-                "If you have a single dataframe, wrap it in a list: "
-                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
-            )
-        idx, non_df = next(
-            ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
-            (None, None),
-        )
-        if non_df is not None:
-            raise TypeError(
-                "`concat` should be passed a list of dataframes: "
-                "`table_0.skb.concat([table_1, ...], axis=...)`. "
-                f"An object of type {non_df.__class__.__name__!r} "
-                f"was found at index {idx}."
-            )
-
         if e.axis not in (0, 1):
             raise ValueError(
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
-
+        if isinstance(e.others, np.ndarray) or sbd.is_dataframe(e.others):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes. "
+                "If you have a single array or dataframe, wrap it in a list: "
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
+            )
+        if not isinstance(e.others, Iterable):
+            raise TypeError(
+                "`concat` should be passed a list of numpy arrays or dataframes."
+                f"Got object of type {e.others.__class__.__name__!r}"
+            )
+        if not (isinstance(e.first, np.ndarray) or sbd.is_dataframe(e.first)):
+            raise TypeError(
+                "`concat` can only be used on a numpy array or a dataframe. "
+                "`.skb.concat` was accessed on an object of type "
+                f"{e.first.__class__.__name__!r}"
+            )
+        if isinstance(e.first, np.ndarray):
+            for idx, obj in enumerate(e.others):
+                if not isinstance(obj, np.ndarray):
+                    raise TypeError(
+                        "When accessed on a numpy array, `concat` should be passed a "
+                        "list of arrays: `array_0.skb.concat([array_1, ...], "
+                        f"axis=...)`. An object of type {obj.__class__.__name__!r} "
+                        f"was found at index {idx}."
+                    )
+            return np.concatenate([e.first, *e.others], axis=e.axis)
+        for idx, obj in enumerate(e.others):
+            if not sbd.is_dataframe(obj):
+                raise TypeError(
+                    "When accessed on a dataframe, `concat` should be passed a list "
+                    "of dataframes: `table_0.skb.concat([table_1, ...], axis=...)`. "
+                    f"An object of type {obj.__class__.__name__!r} "
+                    f"was found at index {idx}."
+                )
         if e.axis == 1:
             first = _check_column_names(e.first)
             others = list(map(_check_column_names, e.others))
@@ -1901,7 +2148,7 @@ class Concat(DataOpImpl):
 
     def __repr__(self):
         try:
-            detail = f": {len(self.others) + 1} dataframes"
+            detail = f": {len(self.others) + 1} tables"
         except Exception:
             detail = ""
         return f"<{self.__class__.__name__}{detail}>"
@@ -1943,7 +2190,7 @@ def eval_mode():
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      DataOp is defined or when we call ``.skb.eval()`` without
+      DataOp is defined or when we call :func:`DataOp.skb.eval()` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.
@@ -1974,3 +2221,50 @@ def eval_mode():
     2
     """
     return DataOp(EvalMode())
+
+
+class SplitX(DataOpImpl):
+    _fields = ["X", "cv", "split_kwargs"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.X)
+
+    def __repr__(self):
+        return f"<X>\nX and y will be split with: {_utils.simple_repr(self.cv)}"
+
+
+def _scorer_repr(scorer_info):
+    scorer = scorer_info["scoring"]
+    if name := scorer_info.get("name"):
+        prefix = f"{name}: "
+    else:
+        prefix = ""
+    if isinstance(scorer, (list, tuple, set, dict)):
+        return [f"{prefix}{s!r}" for s in scorer]
+    return [f"{prefix}{scorer!r}"]
+
+
+class Scoring(DataOpImpl):
+    _fields = ["pred", "scorers"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.pred)
+
+    def __repr__(self):
+        details = ["    This DataOp will be scored with:\n"]
+        all_scorer_reprs = []
+        for scorer_info in self.scorers:
+            all_scorer_reprs.extend(_scorer_repr(scorer_info))
+        details.extend(f"      - {s_repr}\n" for s_repr in all_scorer_reprs)
+        details.append(
+            "    Use .skb.cross_validate(…) or "
+            ".skb.make_learner(…).score(…) to compute scores."
+        )
+        return (
+            f"<Scoring {short_repr(self.pred)} ({len(all_scorer_reprs)} scorers)>\n"
+            f"{''.join(details)}"
+        )
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        return "Result (preview of the learner's output, not the scores)"

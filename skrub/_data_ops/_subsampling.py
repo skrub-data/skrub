@@ -87,7 +87,7 @@ class SubsamplePreviews(_data_ops.DataOpImpl):
 
     def compute(self, e, mode, environment):
         if e.how not in ["head", "random"]:
-            raise ValueError("`how` should be 'head' or 'random', got: {e.how!r}")
+            raise ValueError(f"`how` should be 'head' or 'random', got: {e.how!r}")
         is_numpy = isinstance(e.target, np.ndarray)
         if not (is_numpy or sbd.is_dataframe(e.target) or sbd.is_column(e.target)):
             raise TypeError(

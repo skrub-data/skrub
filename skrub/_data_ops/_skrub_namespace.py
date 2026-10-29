@@ -7,22 +7,27 @@ import warnings
 
 import numpy as np
 from sklearn import model_selection
+from sklearn.utils import deprecated
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
 from ._data_ops import (
     AppliedEstimator,
     Apply,
+    Call,
     Concat,
     DataOp,
     FreezeAfterFit,
     IfElse,
     Match,
+    Scoring,
+    SplitX,
     Var,
     check_data_op,
     check_name,
     checked_data_op_constructor,
-    deferred,
+    checked_deferred_call_constructor,
+    prepare_call_fields,
 )
 from ._estimator import (
     ParamSearch,
@@ -36,16 +41,21 @@ from ._evaluation import (
     clone,
     describe_steps,
     evaluate,
+    find_node,
+    find_node_by_name,
+    find_node_by_uuid,
+    find_X_y_and_cv,
+    named_nodes,
     nodes,
 )
 from ._inspection import (
     describe_param_grid,
     draw_data_op_graph,
-    full_report,
+    report,
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import KFOLD_5, NULL, attribute_error
+from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, attribute_error
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -137,15 +147,22 @@ class SkrubNamespace:
     def __init__(self, data_op):
         self._data_op = data_op
 
+    def _get_env(self, environment=None):
+        if environment is not None:
+            return environment
+        return self.get_data() | {IS_PREVIEW_DATA_ENV_NAME: True}
+
     def _apply(
         self,
         estimator,
         y=None,
         cols=_SELECT_ALL_COLUMNS,
-        how="auto",
+        exclude_cols=None,
+        no_wrap=False,
         allow_reject=False,
         unsupervised=False,
         kwargs=None,
+        no_cache=False,
     ):
         if kwargs is None:
             kwargs = {}
@@ -153,12 +170,14 @@ class SkrubNamespace:
             Apply(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
                 X=self._data_op,
                 y=y,
-                how=how,
+                no_wrap=no_wrap,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
                 kwargs=kwargs,
+                no_cache=no_cache,
             )
         )
         return data_op
@@ -171,7 +190,7 @@ class SkrubNamespace:
         y=None,
         cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
-        how="auto",
+        no_wrap=False,
         allow_reject=False,
         unsupervised=False,
         fit_kwargs=None,
@@ -181,9 +200,10 @@ class SkrubNamespace:
         predict_proba_kwargs=None,
         decision_function_kwargs=None,
         score_kwargs=None,
+        no_cache=False,
     ):
         """
-        Apply a scikit-learn estimator to a dataframe or numpy array.
+        Apply an estimator that follows the scikit-learn API to a dataframe or numpy array.
 
         Parameters
         ----------
@@ -201,35 +221,27 @@ class SkrubNamespace:
             _not_ be applied. The columns that are matched by ``cols`` AND not
             matched by ``exclude_cols`` are transformed.
 
-        how : "auto", "cols", "frame" or "no_wrap", optional
-            How the estimator is applied. In most cases the default "auto"
-            is appropriate.
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
-              transformer, which fits a separate clone of `estimator` each
-              column in `cols`. `estimator` must be a transformer (have a
-              ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
-              transformer, which fits a single clone of `estimator` to the
-              selected part of the input dataframe. `estimator` must be a
-              transformer.
-            - "no_wrap" means no wrapping, `estimator` is applied directly to
-              the unmodified input.
-            - "auto" chooses the wrapping depending on the input and estimator.
-              If the input is not a dataframe or the estimator is not a
-              transformer, the "no_wrap" strategy is chosen. Otherwise if the
-              estimator has a ``__single_column_transformer__`` attribute,
-              "cols" is chosen. Otherwise "frame" is chosen.
+        no_wrap : bool, default = False
+            Disable wrapping of transformers in :class:`ApplyToCols`.
+
+            By default, when ``estimator`` is a transformer and the input is a
+            DataFrame, the transformer is wrapped in an instance of
+            :class:`ApplyToCols`, which allows applying it to part of the
+            dataframe only through the ``cols`` and ``allow_reject``
+            parameters. Passing ``no_wrap=True`` disables this wrapping in all
+            cases. When ``no_wrap`` is True, ``cols`` and ``allow_reject``
+            cannot be used.
 
         allow_reject : bool, optional
             Whether the transformer can refuse to transform columns for which
             it does not apply, in which case they are passed through unchanged.
             This can be useful to avoid specifying exactly which columns should
-            be transformed. For example if we apply ``skrub.ToDatetime()`` to
-            all columns with ``allow_reject=True``, string columns that can be
+            be transformed. For example if we apply :class:`~skrub.ToDatetime()`
+            to all columns with ``allow_reject=True``, string columns that can be
             parsed as dates will be converted and all other columns will be
             passed through. If we use ``allow_reject=False`` (the default), an
             error would be raised if the dataframe contains columns for which
-            ``ToDatetime`` does not apply (eg a column of numbers).
+            :class:`~skrub.ToDatetime()` does not apply (eg a column of numbers).
 
         unsupervised : bool, optional
             Use this to indicate that ``y`` is required for scoring but not
@@ -262,6 +274,12 @@ class SkrubNamespace:
         score_kwargs : dict, optional, default=None
             Extra named arguments for ``score``. See the description of the
             ``fit_kwargs`` parameter.
+        no_cache : bool, default = False
+            If True, caching is forbidden for this estimator: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -274,11 +292,8 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
-        skrub.ApplyToEachCol :
-            Transformer that applies a given transformer separately to each
-            selected column.
-        skrub.ApplyToSubFrame:
-            Transformer that applies a given transformer to part of a
+        skrub.ApplyToCols :
+            Transformer that applies a given estimator to selected columns of a
             dataframe.
 
         Examples
@@ -428,15 +443,15 @@ class SkrubNamespace:
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
-        if exclude_cols is not None:
-            cols = s.make_selector(cols) - exclude_cols
+
         # unsupervised should be an actual bool
         unsupervised = bool(unsupervised)
         return self._apply(
             estimator=estimator,
             y=y,
             cols=cols,
-            how=how,
+            exclude_cols=exclude_cols,
+            no_wrap=no_wrap,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
             kwargs={
@@ -448,9 +463,12 @@ class SkrubNamespace:
                 "decision_function": decision_function_kwargs,
                 "score": score_kwargs,
             },
+            no_cache=no_cache,
         )
 
-    def apply_func(self, func, *args, **kwargs):
+    @checked_deferred_call_constructor
+    @checked_data_op_constructor
+    def apply_func(self, func, *args, no_cache=False, **kwargs):
         r"""Apply the given function.
 
         This is a convenience function; ``X.skb.apply_func(func)`` is
@@ -466,6 +484,17 @@ class SkrubNamespace:
 
         kwargs
             named arguments passed to ``func``.
+
+        no_cache : bool, default = False
+            If True, caching is forbidden for this call: it will not be
+            cached even if the configuration enables caching with
+            skrub.set_config(cache='/path/to/cache_dir').
+
+            Note: if your function has a keyword-only parameter named
+            ``no_cache`` and you need to pass a value for it, use
+            :func:`skrub.deferred` instead of ``apply_func``.
+
+            See :ref:`user_guide_data_ops_caching` for more information about caching.
 
         Returns
         -------
@@ -512,7 +541,25 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        return deferred(func)(self._data_op, *args, **kwargs)
+        if not isinstance(func, DataOp) and getattr(func, "_skrub_is_deferred", False):
+            # stacklevel: 2 + the 2 decorators @checked_deferred_call_constructor
+            #                                  @checked_data_op_constructor
+            #             = 4
+            warnings.warn(
+                "A deferred function was passed to .skb.apply_func():\n"
+                f"{func!r}\nPlease pass the original, undecorated function instead. "
+                "(Note: it can be accessed from the deferred function as f.func).",
+                stacklevel=4,
+            )
+            no_cache = no_cache or func._skrub_no_cache
+            func = func.func
+        return DataOp(
+            Call(
+                **prepare_call_fields(func, no_cache=no_cache),
+                args=(self._data_op, *args),
+                kwargs=kwargs,
+            )
+        )
 
     @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
@@ -644,10 +691,10 @@ class SkrubNamespace:
     def select(self, cols):
         """Select a subset of columns.
 
-        ``cols`` can be a column name or a list of column names, but also a
-        skrub selector. Importantly, the exact list of columns that match the
-        selector is stored during ``fit`` and then this same list of columns is
-        selected during ``transform``.
+        ``cols`` can be a column name, a list of column names, or a
+        :ref:`skrub selector <selectors_ref>`. Importantly, the exact list of
+        columns that match ``.skb.select`` is stored during ``fit`` and then this
+        same list of columns is selected during ``transform``.
 
         Parameters
         ----------
@@ -691,16 +738,16 @@ class SkrubNamespace:
         2     cup  2020-04-04
         3   spoon  2020-04-05
         """
-        return self._apply(SelectCols(cols), how="no_wrap")
+        return self._apply(SelectCols(cols), no_wrap=True)
 
     @checked_data_op_constructor
     def drop(self, cols):
         """Drop some columns.
 
-        ``cols`` can be a column name or a list of column names, but also a
-        skrub selector. Importantly, the exact list of columns that match the
-        selector is stored during ``fit`` and then this same list of columns is
-        dropped during ``transform``.
+        ``cols`` can be a column name, a list of column names, or a
+        :ref:`skrub selector <selectors_ref>`. Importantly, the exact list of
+        columns that match ``.skb.drop`` is stored during ``fit`` and then this
+        same list of columns is dropped during ``transform``.
 
         Parameters
         ----------
@@ -744,16 +791,17 @@ class SkrubNamespace:
         2   3         5
         3   4         1
         """
-        return self._apply(DropCols(cols), how="no_wrap")
+        return self._apply(DropCols(cols), no_wrap=True)
 
     @checked_data_op_constructor
     def concat(self, others, axis=0):
-        """Concatenate dataframes vertically or horizontally.
+        """Concatenate arrays or dataframes vertically or horizontally.
 
         Parameters
         ----------
-        others : list of dataframes
-            The dataframes to stack horizontally with ``self``
+        others : list of arrays or dataframes
+            The arrays or dataframes to stack with ``self``. Must be of the
+            same type as ``self``: do not mix arrays with dataframes.
         axis : {0, 1}, default 0
             The axis to concatenate along.
             0: stack vertically (rows)
@@ -761,8 +809,8 @@ class SkrubNamespace:
 
         Returns
         -------
-        dataframe
-            The combined dataframes.
+        array or dataframe
+            The combined arrays or dataframes.
 
         Examples
         --------
@@ -772,6 +820,7 @@ class SkrubNamespace:
         >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
         >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
         >>> d = skrub.var('d', pd.DataFrame({'c1': [6], 'c2': [7]}))
+        >>> e = skrub.var('e', pd.DataFrame({'c1': [8], 'c2': [9]}))
         >>> a
         <Var 'a'>
         Result:
@@ -779,26 +828,26 @@ class SkrubNamespace:
            a1  a2
         0   0   1
         >>> a.skb.concat([b, c], axis=1)
-        <Concat: 3 dataframes>
+        <Concat: 3 tables>
         Result:
         ―――――――
            a1  a2  b1  b2  c1  c2
         0   0   1   2   3   4   5
 
-        >>> c.skb.concat([d], axis=0)
-        <Concat: 2 dataframes>
+        >>> c.skb.concat([d, e], axis=0)
+        <Concat: 3 tables>
         Result:
         ―――――――
            c1  c2
         0   4   5
         1   6   7
-
+        2   8   9
 
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:
 
         >>> a.skb.concat([b], axis=1)
-        <Concat: 2 dataframes>
+        <Concat: 2 tables>
         Result:
         ―――――――
            a1  a2  b1  b2
@@ -977,7 +1026,7 @@ class SkrubNamespace:
         Parameters
         ----------
         drop_values : bool, default=True
-            Whether to drop the initial values passed to ``skrub.var()``.
+            Whether to drop the initial values passed to :func:`skrub.var()`.
             This is convenient for example to serialize DataOps without
             creating large files.
 
@@ -987,6 +1036,11 @@ class SkrubNamespace:
             A new DataOp which does not share its state (such as fitted
             estimators) or cache with the original, and possibly without the
             variables' values.
+
+        See Also
+        --------
+        DataOp.skb.set_data
+            Set the initial (preview) values for variables contained in the DataOp.
 
         Examples
         --------
@@ -1067,6 +1121,8 @@ class SkrubNamespace:
 
         Examples
         --------
+        We can define variables with initial values that can be used for evaluation:
+
         >>> import skrub
         >>> a = skrub.var('a', 10)
         >>> b = skrub.var('b', 5)
@@ -1087,7 +1143,7 @@ class SkrubNamespace:
                 f"got: '{type(environment)}'"
             )
         if environment is None:
-            environment = self.get_data()
+            environment = self._get_env()
         else:
             environment = {
                 **environment,
@@ -1215,6 +1271,14 @@ class SkrubNamespace:
         dict mapping variable names to their values
             Variables for which no value was given do not appear in the result.
 
+        See Also
+        --------
+        DataOp.skb.get_vars
+            Obtain the variables (the ``skrub.var()`` objects) themselves.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
+
         Examples
         --------
         >>> import skrub
@@ -1234,6 +1298,124 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
+    @checked_data_op_constructor
+    def set_data(self, data):
+        """
+        Get a new DataOp with the provided preview values set on the variables.
+
+        Returns
+        -------
+        DataOp
+            A clone of the original DataOp, with the values in ``data`` used
+            as the preview values for the corresponding variables.
+
+        See Also
+        --------
+        DataOp.skb.get_data
+            Obtain the preview values currently set on the variables.
+
+        DataOp.skb.get_vars
+            Obtain the variables (the ``skrub.var()`` objects) themselves.
+
+        DataOp.skb.clone
+            Obtain an independent clone of the DataOp, which does not contain
+            any computed preview results. The parameter ``drop_values``
+            controls whether the values set on variables (if any) should be
+            kept.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a')
+        >>> b = skrub.var('b')
+        >>> c = a + b
+
+        We have initialized our variables without any value, there is no preview
+        result available for our DataOp ``c``:
+
+        >>> c
+        <BinOp: add>
+        >>> c * 2
+        <BinOp: mul>
+
+        As usual, we can evaluate ``c``, passing values for the variables it
+        contains:
+
+        >>> c.skb.eval({'a': 1, 'b': 2})
+        3
+
+        But suppose we want to start working in a more interactive fashion and would
+        benefit from preview computations that run whenever we use our DataOp, without
+        needing to explicitly call ``eval``. We can inject values into the existing
+        DataOp.
+
+        >>> d = c.skb.set_data({'a': 1, 'b': 2})
+        >>> d
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+        >>> d * 2
+        <BinOp: mul>
+        Result:
+        ―――――――
+        6
+
+        (Note that ``set_data`` returns a new DataOp (``d``) and leaves the
+        original one (``c``) unchanged.)
+
+        DataOps that use ``d`` can compute previews of the results because unlike ``c``,
+        ``d`` has values for its variables:
+
+        >>> c.skb.get_data()
+        {}
+        >>> d.skb.get_data()
+        {'a': 1, 'b': 2}
+
+        If the DataOp already contained preview values, they are replaced by
+        the provided ones. If we pass values for only some of the variables,
+        any already-existing values for the other variables are kept:
+
+        >>> e = d.skb.set_data({'a': 10})
+        >>> e.skb.get_data()
+        {'a': 10, 'b': 2}
+        >>> e
+        <BinOp: add>
+        Result:
+        ―――――――
+        12
+
+        If we want to drop the values attached to variables we can use
+        :meth:`DataOp.skb.clone`. By default it drops values (we can pass
+        ``drop_values=False`` to prevent that).
+
+        >>> f = e.skb.clone()
+        >>> f
+        <BinOp: add>
+        >>> f.skb.get_data()
+        {}
+
+        When we call ``set_data``, passing keys in ``data`` that do not have a
+        corresponding variable in the DataOp is an error.
+
+        >>> f.skb.set_data({'x': 0})
+        Traceback (most recent call last):
+            ...
+        ValueError: The following keys were passed to set_data but have no corresponding variable in the DataOp: ['x']
+        """  # noqa: E501
+        new = self.clone(drop_values=False)
+        new_vars = new.skb.get_vars()
+        bad_keys = [k for k in data if k not in new_vars]
+        if bad_keys:
+            raise ValueError(
+                "The following keys were passed to set_data "
+                f"but have no corresponding variable in the DataOp: {bad_keys}"
+            )
+        for name, var in new_vars.items():
+            if name in data:
+                var._skrub_impl.value = data[name]
+        return new
+
     @_check_before
     def get_vars(self, all_named_ops=False):
         """
@@ -1242,9 +1424,9 @@ class SkrubNamespace:
         Parameters
         ----------
         all_named_ops : bool, default = False
-            If False, return only actual variables (DataOps created with
-            :func:`var()`, :func:`X()` or :func:`y()`). If False, return all
-            nodes that have a name (ie for which a value can be passed in the
+            If ``False``, return only actual variables (DataOps created with
+            :func:`var()`, :func:`X()` or :func:`y()`). If ``True``, return all
+            nodes that have a name (i.e., for which a value can be passed in the
             environment).
 
         Returns
@@ -1252,33 +1434,52 @@ class SkrubNamespace:
         dict :
             Keys are names, and values the corresponding DataOp.
 
+        See Also
+        --------
+        DataOp.skb.get_data :
+            Get the values of the variables contained in the DataOp.
+
+        DataOp.skb.set_data
+            Set new values for the variables.
+
+        DataOp.skb.set_name :
+            Assign a name to a DataOp.
+
+        DataOp.skb.get_choices :
+            Similar function for getting the choices contained in the DataOp.
+
         Examples
         --------
         >>> import skrub
 
         >>> a = skrub.var("a")
         >>> b = skrub.var("b")
+
+        We assign a name to a DataOp that is not a variable with
+        :func:`~DataOp.skb.set_name`:
+
         >>> c = (a + b).skb.set_name("c")
+
         >>> d = c + c
         >>> d
         <BinOp: add>
 
-        Our DataOp, `d`, contains 2 variables: "a" and "b":
+        Our DataOp, ``d``, contains 2 variables: "a" and "b":
 
         >>> d.skb.get_vars()
         {'a': <Var 'a'>, 'b': <Var 'b'>}
 
         Those are the keys for which we need to provide values in the
-        environment when evaluating `d`:
+        environment when evaluating ``d``:
 
         >>> d.skb.eval({"a": 10, "b": 3}) # (10 + 3) + (10 + 3) = 26
         26
 
-        In addition, we set a name on the internal node `c`. It is not a
-        variable, and normally it is computed as `(a + b)`. But as it has a
-        name, we can override its output by passing a value for "c" in the
-        environment. When we do, the computation of `c` never happens (nor of
-        `a` or `b`, here, because they are only used to compute `c`) -- it is
+        In addition, we set a name on the internal node ``c``. It is not a
+        variable, and normally it is computed as ``(a + b)``. But as it has a
+        name, we can override its output by passing a value for ``c`` in the
+        environment. When we do, the computation of ``c`` never happens (nor of
+        ``a`` or ``b``, here, because they are only used to compute ``c``) -- it is
         bypassed and the provided value is used instead.
 
         >>> d.skb.eval({"c": 7}) # 7 + 7 = 14
@@ -1304,26 +1505,112 @@ class SkrubNamespace:
 
         >>> learner.fit({'a': 2, 'b': 3})
         SkrubLearner(data_op=<BinOp: add>)
-        """
-        from ._data_ops import Var
-        from ._evaluation import nodes
 
-        named_nodes = {
-            name: op
-            for op in nodes(self._data_op)
-            if (name := op._skrub_impl.name) is not None
-        }
+        Similarly, choices can be obtained with ``get_choices``
+
+        >>> f = d + skrub.choose_from([1, 2], name='e')
+        >>> f.skb.get_choices()
+        {'e': choose_from([1, 2], name='e')}
+
+        So all the names that can be passed in an env, merging named DataOps
+        and choices, are obtained with:
+
+        >>> list(f.skb.get_vars(all_named_ops=True) | f.skb.get_choices(named_only=True))
+        ['a', 'b', 'c', 'e']
+        """  # noqa: E501
+        from ._data_ops import Var
+
+        found_nodes = named_nodes(self._data_op)
         if all_named_ops:
-            return named_nodes
+            return found_nodes
         return {
             name: op
-            for name, op in named_nodes.items()
+            for name, op in found_nodes.items()
             if isinstance(op._skrub_impl, Var)
         }
 
     @_check_before
-    def draw_graph(self):
-        """Get an SVG string representing the computation graph.
+    def get_choices(self, named_only=False):
+        """
+        Get all the choices used in the DataOp.
+
+        Parameters
+        ----------
+        named_only : bool, default = False
+            If True, only choices that have their ``name`` attribute set are
+            returned. Those are the only names for which a value can be passed
+            in the environment passed to ``eval()``.
+
+            If False, all choices are returned. For choices that have a
+            ``name``, that ``name`` is their key in the returned dictionary.
+            For other choices, the key is arbitrary but stable for a same
+            DataOp and its clones, and is the same string that is used in the
+            parallel coordinate plots produced by
+            :meth:`ParamSearch.plot_results`.
+
+        Returns
+        -------
+        dict :
+            Keys are names, and values the corresponding choice object.
+
+        See Also
+        --------
+        DataOp.skb.get_vars :
+            Similar function for getting variables created with :func:`var` and
+            DataOps whose name was set with :meth:`.skb.set_name
+            <DataOp.skb.set_name>`.
+
+        DataOp.skb.describe_defaults :
+            Get a dictionary showing the default values for choices. Only
+            choices that actually get used in the default configuration are
+            shown.
+
+        SkrubLearner.get_named_params :
+            Get a dictionary mapping choice name to value in a SkrubLearner.
+
+        SkrubLearner.set_named_params :
+            Set choice values by name on a SkrubLearner.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> dop = (
+        ...     skrub.var("a")
+        ...     + skrub.choose_int(0, 10, name="b")
+        ...     + skrub.choose_float(0.0, 1.0)
+        ... )
+        >>> dop.skb.get_choices()
+        {'b': choose_int(0, 10, name='b'), 'choose_float(0.0, 1.0)': choose_float(0.0, 1.0)}
+
+        With ``named_only`` we can restrict to choices that have an actual name
+        (only choices with a name can be passed in an environment, and to
+        :meth:`SkrubLearner.set_named_params`):
+
+        >>> dop.skb.get_choices(named_only=True)
+        {'b': choose_int(0, 10, name='b')}
+
+        Similarly, vars can be obtained:
+
+        >>> dop.skb.get_vars()
+        {'a': <Var 'a'>}
+
+        All the names that can be passed in the environment are thus obtained with:
+
+        >>> list(dop.skb.get_vars(all_named_ops=True) | dop.skb.get_choices(named_only=True))
+        ['a', 'b']
+        """  # noqa: E501
+        from ._evaluation import choice_graph
+
+        g = choice_graph(self._data_op, check_Xy=False)
+        if named_only:
+            return {c.name: c for c in g["choices"].values() if c.name is not None}
+        return {
+            name: g["choices"][c_id] for c_id, name in g["choice_display_names"].items()
+        }
+
+    @_check_before
+    def draw_graph(self, *, show_ids=False):
+        """Get a drawing of the computation graph.
 
         In addition to the usual ``str`` methods, the result has an ``open()``
         method which displays it in a web browser window.
@@ -1335,16 +1622,26 @@ class SkrubNamespace:
            ``svg`` and ``png``, containing representations of the graph in
            those formats (as ``bytes`` objects), and a method ``.open()`` to
            display it in a browser window.
+
+        Notes
+        -----
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_,
+        which must be installed on the system with its package manager (not
+        with pip). If it is not installed, the ``svg`` and ``png`` attributes
+        raise an error, but the graph is still displayed by ``open()`` and in
+        notebooks: it is then drawn by the web browser, so JavaScript must be
+        enabled. In a notebook, the browser needs an internet connection to
+        download the library that draws the graph.
         """
 
-        return draw_data_op_graph(self._data_op)
+        return draw_data_op_graph(self._data_op, show_ids=show_ids)
 
     @_check_before
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
         Usually the graphical representation provided by :meth:`DataOp.skb.draw_graph`
-        or :meth:`DataOp.skb.full_report` is more useful. This is a fallback for
+        or :meth:`DataOp.skb.report` is more useful. This is a fallback for
         inspecting the computation graph when only text output is available.
 
         Returns
@@ -1371,19 +1668,20 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add -> _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',
         compute the addition leaving the result of (a + b) on the stack, then
-        repeat this operation (but the second time no computation actually runs
-        because the result of evaluating ``c`` has been cached in-memory), and
-        finally evaluate the multiplication.
+        load the previous result again (the result of evaluating ``c`` has been
+        cached in-memory), and finally evaluate the multiplication.
+
+        As we can see results that are used several times are kept and not
+        re-computed; this is indicated in the printed list above by ``-> _2``
+        (storing, where 2 is an arbitrary id / memory location) and ``Load _2``
+        when reusing that result later.
         """
 
         return describe_steps(self._data_op)
@@ -1507,14 +1805,23 @@ class SkrubNamespace:
 
         return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
+    @deprecated(
+        "DataOp.skb.full_report has been renamed to DataOp.skb.report and will "
+        "be removed in a future version of skrub."
+    )
+    def full_report(self, *args, **kwargs):
+        """Deprecated alias for :meth:`DataOp.skb.report`."""
+        return self.report(*args, **kwargs)
+
     @_check_before
-    def full_report(
+    def report(
         self,
         environment=None,
         open=True,
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1523,6 +1830,10 @@ class SkrubNamespace:
         was defined, the time it took to run, and more) and a display of the
         intermediate result (or error). By default, the report is stored in
         a timestamped subdirectory of the skrub data folder.
+
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_ if it is
+        installed. Otherwise it is drawn by the web browser, so JavaScript must be
+        enabled; the report does not need an internet connection.
 
         .. note::
             When this function is invoked reports starting with ``full_data_op_report_``
@@ -1555,6 +1866,16 @@ class SkrubNamespace:
         title: str (default=None)
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
+
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
 
         Returns
         -------
@@ -1589,43 +1910,52 @@ class SkrubNamespace:
 
         Examples
         --------
-        >>> # ignore this line:
-        >>> import pytest; pytest.skip('graphviz may not be installed')
-
         >>> import skrub
         >>> c = skrub.var('a', 1) / skrub.var('b', 2)
-        >>> report = c.skb.full_report(open=False)
+        >>> report = c.skb.report(open=False)
         >>> report['result']
         0.5
         >>> report['error']
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
 
         We pass data:
 
-        >>> report = c.skb.full_report({'a': 33, 'b': 11 }, open=False)
+        >>> report = c.skb.report({'a': 33, 'b': 11 }, open=False)
         >>> report['result']
         3.0
 
         And if there was an error:
 
-        >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
+        >>> report = c.skb.report({'a': 1, 'b': 0}, open=False)
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
             mode = "fit_transform"
             clear = True
 
-        return full_report(
-            self._data_op,
+        return report(
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1633,6 +1963,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before
@@ -1805,7 +2136,7 @@ class SkrubNamespace:
         if not fitted:
             return learner
         return learner.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -1814,7 +2145,7 @@ class SkrubNamespace:
         environment=None,
         *,
         keep_subsampling=False,
-        split_func=model_selection.train_test_split,
+        split_func=None,
         **split_func_kwargs,
     ):
         """Split an environment into training and testing environments.
@@ -1831,12 +2162,32 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        split_func : function, optional
-            The function used to split X and y once they have been computed. By
-            default, :func:`~sklearn.model_selection.train_test_split` is used.
+        split_func : function, optional, default=None
+            The function used to split X and y once they have been computed. If
+            ``split_func`` is not provided,
+
+            - If a cross-validation splitter has been set with
+              :meth:`~DataOp.skb.mark_as_X`, that splitter is used.
+              In this case the only accepted kwarg in ``split_func_kwargs`` is
+              ``'split_index'``, which indicates which split to use. By default
+              ``'split_index'`` is -1, i.e. the last split is used.
+
+              Note: the default split is the last one because when using a
+              time series splitter it typically is the one that uses the most data;
+              this is particularly important if the train part will be further
+              subdivided e.g. for hyperparameter search. (For other splitters
+              split ordering is usually arbitrary.)
+
+            - Otherwise :func:`sklearn.model_selection.train_test_split` is
+              used (and ``split_func_kwargs`` are forwarded to it).
 
         split_func_kwargs
-            Additional named arguments to pass to the splitting function.
+            Additional named arguments to pass to the splitting function. When
+            relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
+            the only accepted kwarg is ``'split_index'`` which indicates which
+            split to use.
+            Kwargs for the ``split()`` method itself should be passed to
+            ``mark_as_X``.
 
         Returns
         -------
@@ -1846,41 +2197,109 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
-              the train environment
-            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
-              the test environment
-            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+            - X: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_X()` in ``environment``, before splitting.
+            - y: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_y()` in ``environment``, before
+              splitting, if there is one (may not be the case for unsupervised
+              learning).
+            - X_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the train environment
+            - X_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the test environment
+            - y_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the train environment, if there is one (may not be the case for
               unsupervised learning).
-            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+            - y_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+
+            If relying on the splitter passed to :meth:`~DataOp.skb.mark_as_X`,
+            the following keys are added:
+
+            - row_indices_train: the row indices (in X and y) of the training samples.
+            - row_indices_test: the row indices (in X and y) of the testing samples.
+
+            Those are not available otherwise, as
+            :func:`sklearn.model_selection.train_test_split` only returns
+            X_train, X_test, etc. data, not the indices.
+
+
+        See Also
+        --------
+        :func:`~skrub.DataOp.skb.mark_as_X` :
+            Mark a variable as the input features (X) for training and testing.
+            This function can also take a custom splitter.
+        :meth:`~DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`~DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`~DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Examples
         --------
         >>> import skrub
         >>> from sklearn.dummy import DummyClassifier
-        >>> from sklearn.metrics import accuracy_score
-
         >>> orders = skrub.var("orders", skrub.datasets.toy_orders().orders)
+
+        We want to predict whether orders are "delayed":
+
         >>> X = orders.skb.drop("delayed").skb.mark_as_X()
         >>> y = orders["delayed"].skb.mark_as_y()
         >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
         ...     DummyClassifier(), y=y
         ... )
 
-        >>> split = delayed.skb.train_test_split(random_state=0)
+        We can split the data into a training and test set with
+        ``.skb.train_test_split()``. It it also possible to specify parameters
+        for the splitting function, such as the random state, or the size of the
+        test set. These parameters are passed as keyword arguments to
+        ``train_test_split``, which then passes them to the splitting function.
+
+        >>> split = delayed.skb.train_test_split(random_state=0, test_size=0.2)
         >>> split.keys()
-        dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
+        dict_keys(['X_train', 'X_test', 'y_train', 'y_test', 'train', 'test', 'X', 'y'])
         >>> learner = delayed.skb.make_learner()
         >>> learner.fit(split["train"])
         SkrubLearner(data_op=<Apply DummyClassifier>)
         >>> learner.score(split["test"])
         0.0
+
+        The test split can then be used to evaluate the learner with any metric,
+        for example accuracy:
+
+        >>> from sklearn.metrics import accuracy_score
         >>> predictions = learner.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
+
+        If :func:`~skrub.DataOp.skb.mark_as_X` was defined to use a specific
+        cross-validation splitter, that splitter will be used by ``train_test_split``,
+        which will return a split produced by the splitter. By default it is
+        the last; that can be controlled by passing ``split_index``.
+
+        >>> from sklearn.model_selection import LeaveOneOut
+        >>> X = orders.skb.drop("delayed").skb.mark_as_X(cv=LeaveOneOut())
+        >>> y = orders["delayed"].skb.mark_as_y()
+        >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+        ...     DummyClassifier(), y=y
+        ... )
+        >>> split = delayed.skb.train_test_split()
+        >>> split["y_test"]
+        3    False
+        Name: delayed, dtype: bool
+
+        >>> split = delayed.skb.train_test_split(split_index=2)
+        >>> split["y_test"]
+        2    True
+        Name: delayed, dtype: bool
+
+        Note that if a ``split_func`` is passed to ``train_test_split``, it
+        overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
+        ignored, and the function passed to ``train_test_split`` is used instead.
         """
         if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
             warnings.warn(
@@ -1892,8 +2311,7 @@ class SkrubNamespace:
                 category=FutureWarning,
             )
             split_func = splitter
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
             environment,
@@ -1903,7 +2321,7 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=None):
         """Yield splits of an environment into training and testing environments.
 
         Parameters
@@ -1918,7 +2336,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        cv : int, cross-validation generator or iterable, default=KFold(5)
+        cv : int, cross-validation generator or iterable, default=None
             The default is 5-fold without shuffling. Can be a cross-validation
             splitter, an iterable yielding pairs of (train, test) indices, or an
             int to specify the number of folds for KFold splitting.
@@ -1930,16 +2348,26 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
-              the train environment
-            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
-              the test environment
-            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+            - X: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_X()` in ``environment``, before splitting.
+            - y: the value of the variable marked with
+              :meth:`~DataOp.skb.mark_as_y()` in ``environment``, before
+              splitting, if there is one (may not be the case for unsupervised
+              learning).
+            - X_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the train environment
+            - X_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the test environment
+            - y_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the train environment, if there is one (may not be the case for
               unsupervised learning).
-            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+            - y_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+            - row_indices_train: the row indices (in X and y) of the training samples.
+            - row_indices_test: the row indices (in X and y) of the testing samples.
 
         Examples
         --------
@@ -1962,8 +2390,7 @@ class SkrubNamespace:
         >>> accuracies
         [1.0, 0.0, 1.0]
         """
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
         yield from iter_cv_splits(
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
@@ -1997,7 +2424,7 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.GridSearchCV``.
+            ``sklearn.model_selection.GridSearchCV``.
 
         Returns
         -------
@@ -2077,7 +2504,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2364,7 +2791,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._data_op, self._get_env(), keep_subsampling)
         )
 
     @_check_before
@@ -2532,7 +2959,7 @@ class SkrubNamespace:
         ----------
         environment : dict or None
             Bindings for variables contained in the DataOp plan. If not
-            provided, the ``value``s passed when initializing ``var()`` are
+            provided, the values passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
@@ -2550,6 +2977,15 @@ class SkrubNamespace:
         -------
         dict
             Cross-validation results.
+
+        See Also
+        --------
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Examples
         --------
@@ -2576,8 +3012,7 @@ class SkrubNamespace:
         4    0.90
         Name: test_score, dtype: float64
         """
-        if environment is None:
-            environment = self.get_data()
+        environment = self._get_env(environment)
 
         return cross_validate(
             self.make_learner(),
@@ -2587,30 +3022,71 @@ class SkrubNamespace:
         )
 
     @checked_data_op_constructor
-    def mark_as_X(self):
-        """Mark this DataOp as being the ``X`` table.
+    def mark_as_X(self, *, cv=None, split_kwargs=None):
+        """
+        Mark this DataOp as being the ``X`` table.
 
-        This is used for cross-validation and hyperparameter selection: operations
-        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
-        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original DataOp is left unchanged.
+
+        This is used for train/test splits and cross-validation.
+        To create a split,
+
+        - The nodes that are marked as ``X`` and ``y`` are materialized: all
+          the operations that come before are executed, to compute the value of
+          ``X`` and ``y``.
+        - Then the resulting tables are divided into train and test parts
+          according to the splitting strategy.
+        - For each split, the rest of the DataOp is fitted on the train set and
+          tested on the test set.
+
+        In addition, ``mark_as_X`` can be passed a splitter (``cv``) and named
+        arguments for the splitter. Those will be evaluated at the same time as
+        ``X`` and ``y`` and used to create the train/test splits.
+
+        Parameters
+        ----------
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        split_kwargs : dict or None, default=None
+            Named arguments for the ``split()`` function (such as groups for a
+            :class:`~sklearn.model_selection.GroupKFold`). Note that
+            ``split_kwargs`` (and ``cv``) can themselves be DataOps.
 
         Returns
         -------
-        The input DataOp, which has been marked as being ``X``
+        A new DataOp, which has been marked as being the ``X`` table (which
+        must be split for cross-validation).
 
         See also
         --------
+        :meth:`DataOp.skb.mark_as_y`
+            The equivalent of this function for the targets: mark a node as
+            being the ``y`` table.
         :func:`skrub.X`
             ``skrub.X(value)`` can be used as a shorthand for
             ``skrub.var('X', value).skb.mark_as_X()``.
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
-        until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the DataOp are
-        fitted on the train data, and applied to test data, within each split.
+        until X and y (and the splitter and its additional arguments, if any)
+        have been materialized. Then, X and y are split into training and
+        testing sets. The following steps in the DataOp are fitted on the train
+        data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
@@ -2620,8 +3096,6 @@ class SkrubNamespace:
 
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
-
-        Note: this marks the DataOp in-place and also returns it.
 
         Examples
         --------
@@ -2657,9 +3131,60 @@ class SkrubNamespace:
         rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
-        Please see the examples gallery for more information.
+        We can pass additional data to the cross-validation splitter by using
+        the ``cv`` and ``split_kwargs`` parameters:
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0       screen    100   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        Suppose we want to assess generalization to new sellers. While splitting for
+        cross-validation we must group products by seller. We do it with
+        :class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> data = skrub.var("df", df)
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> split = pred.skb.train_test_split()
+
+        The train set only contains data from the "bestproducts.com" seller.
+
+        >>> split["X_train"]
+          description  price
+        1      hammer     15
+        3     usb key      9
+        4     charger     13
+
+        The test set only contains data from the "supermarket.com" seller.
+
+        >>> split["X_test"]
+           description  price
+        0       screen    100
+        2     keyboard     20
+        5  screwdriver     12
         """
-        new = self._data_op._skrub_impl.__copy__()
+        if cv is None:
+            if split_kwargs is not None:
+                raise TypeError(
+                    "To pass split_kwargs you must also provide a splitter. "
+                    f"Got cv=None and split_kwargs={split_kwargs}."
+                )
+            new = self._data_op._skrub_impl.__copy__()
+        else:
+            new = SplitX(self._data_op, cv, split_kwargs)
         new.is_X = True
         return DataOp(new)
 
@@ -2693,8 +3218,6 @@ class SkrubNamespace:
         full dataset and cannot benefit from hyperparameter tuning. So we
         should be careful to start our learner by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
-
-        Note: this marks the DataOp in-place and also returns it.
 
         See also
         --------
@@ -2745,6 +3268,141 @@ class SkrubNamespace:
         return self._data_op._skrub_impl.is_y
 
     @checked_data_op_constructor
+    def with_scoring(self, scoring, kwargs=None, name=None):
+        """Attach a scoring method to this DataOp.
+
+        This records a scikit-learn
+        `scorer <https://scikit-learn.org/stable/modules/model_evaluation.html#the-scoring-parameter-defining-model-evaluation-rules>`_
+        to be used when measuring the quality of predictions.
+
+        It allows configuring the default scoring metrics, and most importantly
+        to compute any additional arguments needed for scoring (such as sample
+        weights) as part of the DataOp evaluation.
+
+        Calls to this method can be chained to add multiple scorers that
+        use different kwargs. Several scoring strategies can be passed to a
+        single calls if they do not need different kwargs (see the description
+        of the ``scoring`` parameter).
+
+        Parameters
+        ----------
+        scoring : str, callable, list, tuple, or dict, default=None
+            Strategy to evaluate the performance of the learner. This accepts
+            exactly the same inputs as
+            :func:`sklearn.model_selection.cross_validate`:
+
+            If ``scoring`` represents a single score, one can use:
+
+            - a single string;
+            - a callable that returns a single value.
+            - ``None``, the estimator's default evaluation criterion is used.
+
+            If ``scoring`` represents multiple scores, one can use:
+
+            - a list or tuple of unique strings;
+            - a callable returning a dictionary where the keys are the metric
+              names and the values are the metric scores;
+            - a dictionary with metric names as keys and callables a values.
+
+            See the scikit-learn
+            `documentation <https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-api-overview>`_
+            on scoring for details.
+
+            ``scoring`` can be a DataOp, so it is possible to pass something like
+            ``skrub.deferred(sklearn.metrics.make_scorer)(...)``, although it
+            is usually simpler to pass an actual value for ``scoring`` and rely
+            on ``kwargs`` for any inputs that need to be computed dynamically.
+
+        kwargs : dict or None, optional, default=None
+            Additional named arguments to be passed to the scorer. A typical
+            example is ``sample_weight``, used by many scikit-learn metrics.
+            Note that ``kwargs`` can be a DataOp that will be evaluated
+            when scoring the learner, so scorer inputs such as sample weights
+            can be dynamic. None is the same as an empty dict
+
+        name : str or None, optional, default=None
+            A name used when displaying scoring results. If ``scoring``
+            represents multiple metrics, ``name`` will be prepended to each of
+            the metrics' name.
+
+        Returns
+        -------
+        DataOp
+            A DataOp that performs the same transformations and prediction, but
+            with scoring information attached to it, which will be used for
+            example in cross-validation.
+
+        Notes
+        -----
+        If this method is used several times, all calls to it must be grouped
+        -- there can be no other nodes in-between. For example
+        ``pred.skb.with_scoring('accuracy').skb.with_scoring('roc_auc')`` is allowed,
+        whereas
+        ``pred.skb.with_scoring('accuracy').skb.apply_func(a_function).skb.with_scoring('roc_auc')`` is not.
+        Typically all the ``with_scoring`` calls happen at the very end of the
+        DataOp construction.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> df = skrub.datasets.toy_products()
+        >>> data = skrub.var("df", df)
+        >>> X = data[["description", "price"]].skb.mark_as_X(cv=2)
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+
+        We can get the accuracy (the default metric) with 2-fold cross-validation:
+
+        >>> pred.skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_score
+        0  0.003982    0.002405    0.666667
+        1  0.002582    0.002169    0.666667
+
+        But suppose we want to give more importance to the pricier products. We can
+        weight the accuracy by the item price:
+
+        >>> sample_weight = X["price"]
+        >>> pred.skb.with_scoring(
+        ...     "accuracy", kwargs={"sample_weight": sample_weight}
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy
+        0  0.003045    0.003275       0.888889
+        1  0.002659    0.003026       0.647059
+
+        We can also have both by calling ``with_scoring`` twice:
+
+        >>> pred.skb.with_scoring("accuracy").skb.with_scoring(
+        ...     "accuracy",
+        ...     kwargs={"sample_weight": sample_weight},
+        ...     name="weighted_accuracy",
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy  test_weighted_accuracy
+        0  0.002738    0.005733       0.666667                0.888889
+        1  0.002845    0.005705       0.666667                0.647059
+
+        When we have several scorers that use the same kwargs, we can pass a list
+        or dict of metrics, as for :func:`sklearn.model_selection.cross_validate`:
+
+        >>> sample_weight = X["price"]
+        >>> pred.skb.with_scoring(
+        ...     ["accuracy", "neg_log_loss"], kwargs={"sample_weight": sample_weight}
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy  test_neg_log_loss
+        0  0.002694    0.007017       0.888889          -0.482481
+        1  0.002833    0.006627       0.647059          -0.650105
+        """  # noqa: E501
+        scorer_info = {"scoring": scoring, "kwargs": kwargs, "name": name}
+        impl = self._data_op._skrub_impl
+        if isinstance(impl, Scoring):
+            new = impl.__copy__()
+            new.scorers = [*new.scorers, scorer_info]
+        else:
+            new = Scoring(self._data_op, [scorer_info])
+        return DataOp(new)
+
+    @checked_data_op_constructor
     def set_name(self, name):
         """Give a name to this DataOp.
 
@@ -2754,8 +3412,9 @@ class SkrubNamespace:
         mark relevant parts of the learner.
 
         Moreover, the evaluation of this step can be bypassed and the result
-        provided directly by providing a value for this name to ``eval()``,
-        ``transform()``, ``predict()`` etc. (see examples)
+        provided directly by providing a value for this name to
+        :func:`~DataOp.skb.eval()`, ``.transform()``,
+        ``.predict()`` etc. (see examples)
 
         Parameters
         ----------
@@ -2827,7 +3486,7 @@ class SkrubNamespace:
         Returns a modified copy.
 
         The description can help document our learner. It is displayed in the
-        execution report and can be retrieved from the ``.skb.description``
+        execution report and can be retrieved from the :attr:`DataOp.skb.description`
         attribute.
 
         Parameters
@@ -2861,10 +3520,92 @@ class SkrubNamespace:
     def description(self):
         """A user-defined description or comment about the DataOp.
 
-        This can be set with ``.skb.set_description()`` and is displayed in the
-        execution report.
+        This can be set with :func:`DataOp.skb.set_description` and is displayed
+        in the execution report generated with :meth:`DataOp.skb.report`
+        or :func:`~skrub.SkrubLearner.report()`.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = (a + b).skb.set_description('the addition of a and b')
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+        >>> c.skb.description
+        'the addition of a and b'
         """
         return self._data_op._skrub_impl.description
+
+    @property
+    def id(self):
+        """
+        A unique ID for this DataOp.
+
+        The ID is generated when the DataOp is defined and preserved when
+        serializing, copying or cloning the DataOp. It can be used to look up a
+        specific node with :meth:`DataOp.skb.find` or override its computation
+        by using the ID as a key in the environment passed, for example, to
+        :meth:`DataOp.skb.eval` or :meth:`SkrubLearner.predict`.
+
+        Usually, giving a node an explicit name with
+        :meth:`DataOp.skb.set_name` if preferred than relying on the ID, but
+        the ID can be useful if you do not control the definition of the DataOp
+        or if you have an already-fitted SkrubLearner and want to override a
+        node which was not given a name.
+
+        See Also
+        --------
+        DataOp.skb.set_name
+            Set a name for the DataOp. In most cases using a name is preferred
+            to relying on the ID.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var("a")
+        >>> b = skrub.var("b")
+        >>> c = skrub.var("c")
+        >>> d = a + b
+        >>> d
+        <BinOp: add>
+        >>> d.skb.id #  doctest: +SKIP
+        244252108859391526605448044030022310698
+        >>> e = d * c
+        >>> e.skb.find(d.skb.id)
+        <BinOp: add>
+        >>> env = {"a": 1, "b": 2, "c": 5}
+        >>> e.skb.eval(env)  # (1 + 2) * 5
+        15
+
+        Override the computation of d, injecting 100 as its value:
+
+        >>> e.skb.eval(env | {d.skb.id: 100})  # 100 * 5
+        500
+
+        Note: the preferred way to refer to a node is to rely on an
+        explicit name rather than the ID:
+
+        >>> d = (a + b).skb.set_name("d")
+        >>> d.skb.name
+        'd'
+        >>> e = d * c
+        >>> e.skb.find("d")
+        <d | BinOp: add>
+        >>> e.skb.eval(env | {"d": 100})  # 100 * 5
+        500
+        """
+        return self._data_op._skrub_impl.uuid
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -2889,15 +3630,13 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToSubFrame(transformer=TableVectorizer())
+        ApplyToCols(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToSubFrame`` or
-        ``ApplyToEachCol`` depending if the transformer is applied to each column
-        separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToSubFrame`` or ``transformers_``
-        attribute of ``ApplyToEachCol`` (a dictionary mapping column names to the
-        corresponding transformer).
+        they will be wrapped in a meta-estimator :class:`ApplyToCols`. The
+        actual transformer can be retrieved through the ``transformer_`` (or
+        ``transformers_``, in the case of single-column transformers); see the
+        documentation of :class:`ApplyToCols` for details.
 
         >>> fitted_vectorizer.transformer_
         <GetAttr 'transformer_'>
@@ -2923,8 +3662,8 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToEachCol(cols=(string() - cols('date')),
-                     transformer=StringEncoder(n_components=2))
+        ApplyToCols(cols=(string() - cols('date')),
+                    transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>
         Result:
@@ -2941,3 +3680,250 @@ class SkrubNamespace:
                 ),
             )
         return DataOp(AppliedEstimator(self._data_op))
+
+    def find(self, what):
+        """
+        Find a node (DataOp or choice) in the computational graph.
+
+        Parameters
+        ----------
+        what : str, int or callable
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the node to search for.
+            - If an int, it is the id (:attr:`DataOp.skb.id`) of the node to
+              search for.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is returned.
+
+        Returns
+        -------
+        DataOp or None
+            The node named ``what``, when ``what`` is a string, or the first
+            node for which ``what`` returned True, if ``what`` is a callable.
+            If nothing was found, ``None`` is returned.
+
+        See Also
+        --------
+        DataOp.skb.find_X_y
+            Find the nodes that have been marked with
+            :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
+
+        SkrubLearner.truncated_after
+            Truncate the (possibly fitted) SkrubLearner after the specified node.
+
+        Notes
+        -----
+        The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
+        passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> data = skrub.datasets.toy_orders()
+        >>> x = skrub.X(data.X)
+        >>> x
+        <Var 'X'>
+        Result:
+        ―――――――
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+        >>> vectorized = x.skb.apply(skrub.TableVectorizer()).skb.set_name("vectorized")
+        >>> vectorized  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> y = skrub.y(data.y)
+        >>> y
+        <Var 'y'>
+        Result:
+        ―――――――
+        0    False
+        1    False
+        2     True
+        3    False
+        Name: delayed, dtype: bool
+        >>> strategy = skrub.choose_from(["most_frequent", "prior"], name="strategy")
+        >>> pred = vectorized.skb.apply(DummyClassifier(strategy=strategy), y=y)
+
+        Find a node by its name:
+
+        >>> found = pred.skb.find("vectorized")
+        >>> found  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> found is vectorized
+        True
+
+        Note that choices are also considered:
+
+        >>> found = pred.skb.find("strategy")
+        >>> found
+        choose_from(['most_frequent', 'prior'], name='strategy')
+        >>> found is strategy
+        True
+
+        Find by a predicate function:
+
+        >>> def has_9_columns(data_op):
+        ...     value = data_op.skb.preview()
+        ...     if (shape := getattr(value, "shape")) is None:
+        ...         return False
+        ...     if len(shape) == 1:
+        ...         return False
+        ...     return shape[1] == 9
+
+
+        >>> found = pred.skb.find(has_9_columns)
+        >>> found  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> found is vectorized
+        True
+
+        When no matching node is found, ``None`` is returned:
+
+        >>> print(pred.skb.find('does not exist'))
+        None
+        """
+        if not isinstance(what, DataOp) and callable(what):
+            return find_node(self._data_op, what)
+        if isinstance(what, str):
+            return find_node_by_name(self._data_op, what)
+        if isinstance(what, int):
+            return find_node_by_uuid(self._data_op, what)
+        raise TypeError(
+            "what should either be a string, an int or a callable accepting a "
+            f"DataOp and returning a Boolean, got object of type: {type(what)}."
+        )
+
+    def find_X_y(self):
+        """
+        Find the nodes that have been marked with ``mark_as_X()`` and ``mark_as_y()``.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the following keys (all are optional):
+
+            - "X", if a node has been marked with :meth:`DataOp.skb.mark_as_X`.
+            - "y", if a node has been marked with :meth:`DataOp.skb.mark_as_y`.
+            - Additionally, if a ``cv`` has been passed to
+              :meth:`DataOp.skb.mark_as_X`, the parameters that were passed to
+              ``mark_as_X``:
+
+              - "cv"
+              - "split_kwargs"
+
+        See Also
+        --------
+        DataOp.skb.find
+            Find a node by name or by an arbitrary predicate.
+        SkrubLearner.truncated_after
+            Truncate the (possibly fitted) SkrubLearner after the specified node.
+
+        Notes
+        -----
+        To evaluate the DataOps in the returned dictionary, it is recommended
+        to evaluate the whole dict as a single DataOp::
+
+            Xy = my_data_op.skb.find_X_y()
+            Xy_values = skrub.as_data_op(Xy).skb.eval({...})
+            X_value = Xy_values['X']
+            y_value = Xy_values['y']
+
+        rather than::
+
+            Xy = my_data_op.skb.find_X_y()
+            X_value = Xy['X'].skb.eval({...})
+            y_value = Xy['y'].skb.eval({...})
+
+        Indeed, evaluating each value in the dict separately can result in
+        running some computation twice, and worse, obtaining X and y that are
+        not aligned if the data loading and processing that produces X and y
+        produces row in an undeterministic order (e.g. due to aggregations,
+        joins, database queries etc.).
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0       screen    100   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        >>> data = skrub.var("df")
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X()
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> X_y = pred.skb.find_X_y()
+        >>> X_y
+        {'X': <GetItem ['description', 'price']>, 'y': <GetItem 'category'>}
+        >>> X_y['X'] is X
+        True
+
+        To compute the values, evaluate the whole dictionary as a single DataOp:
+
+        >>> X_y_values = skrub.as_data_op(X_y).skb.eval({'df': df})
+        >>> X_y_values  # doctest: +SKIP
+        {'X':    description  price
+        0       screen    100
+        1       hammer     15
+        2     keyboard     20
+        3      usb key      9
+        4      charger     13
+        5  screwdriver     12, 'y': 0    electronics
+        1          tools
+        2    electronics
+        3    electronics
+        4    electronics
+        5          tools
+        Name: category, dtype: str}
+
+        When a ``cv`` object was passed to :meth:`DataOp.skb.mark_as_X()`, the result
+        will also contain the keys ``"cv"`` and ``"split_kwargs"``:
+
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> pred.skb.find_X_y()
+        {'X': <X>..., 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        """  # noqa: E501
+        return find_X_y_and_cv(self._data_op)

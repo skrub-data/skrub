@@ -77,6 +77,8 @@ def test_ellide_non_string():
         (np.float32(10_045), "1.00e+04"),
         (1.0222222222222, "1.02"),
         (0.10222222222222, "0.102"),
+        (True, "True"),
+        (False, "False"),
     ],
 )
 def test_format_number(n_in, n_out):
@@ -102,7 +104,7 @@ def test_json_encoder():
     d = {"a": x[0], "b": y[0]}
     assert json.dumps(d, cls=_utils.JSONEncoder) == '{"a": 1, "b": 1.0}'
     with pytest.raises(TypeError, match=".*JSON serializable"):
-        json.dumps({"a": x}, cls=_utils.JSONEncoder)
+        json.dumps({"a": np}, cls=_utils.JSONEncoder)
 
 
 def test_svg_to_img_src():

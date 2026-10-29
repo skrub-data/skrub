@@ -11,25 +11,32 @@ def _stashed_name(method_name):
     return f"_skrub_{method_name}"
 
 
-def _patch(cls, method_name, verbose, max_plot_columns, max_association_columns):
+def _patch(
+    cls,
+    method_name,
+    verbose,
+    plot_distributions,
+    compute_associations,
+):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
     stashed_name = _stashed_name(method_name)
     if not hasattr(cls, stashed_name):
         setattr(cls, stashed_name, original_method)
-    setattr(
-        cls,
-        method_name,
-        lambda df: getattr(
-            TableReport(
-                df,
-                verbose=verbose,
-                max_plot_columns=max_plot_columns,
-                max_association_columns=max_association_columns,
-            ),
-            method_name,
-        )(),
-    )
+
+    def patched(df):
+        report = TableReport(
+            df,
+            verbose=verbose,
+            plot_distributions=plot_distributions,
+            compute_associations=compute_associations,
+        )
+        if not (plot_distributions or compute_associations):
+            report._set_minimal_mode()
+
+        return getattr(report, method_name)()
+
+    setattr(cls, method_name, patched)
 
 
 def _unpatch(cls, method_name):
@@ -61,15 +68,19 @@ def _get_to_patch(pandas, polars):
 
 
 def patch_display(
-    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+    pandas=True,
+    polars=True,
+    verbose=1,
+    plot_distributions=False,
+    compute_associations=False,
 ):
-    """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
+    """Replace the default DataFrame HTML displays with :class:`skrub.TableReport`.
 
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
-    with a TableReport.
+    with a :class:`~skrub.TableReport`.
 
-    It can be undone with ``skrub.unpatch_display()``.
+    It can be undone with :func:`~skrub.unpatch_display`.
 
     Parameters
     ----------
@@ -82,15 +93,22 @@ def patch_display(
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    max_plot_columns : int, default=30
-        Maximum number of columns for which plots should be generated.
-        If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
-    max_association_columns : int, default=30
-        Maximum number of columns for which associations should be computed.
-        If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If None, the associations
-        for all columns will be computed.
+    plot_distributions : bool or "auto", default=False
+        Whether to plot distributions in :class:`~skrub.TableReport`.
+
+        - ``True``: always generate plots, regardless of column count.
+        - ``False``: never generate plots.
+        - ``"auto"``: generate plots only when the number of columns
+          does not exceed the configured ``table_report_plots_threshold``
+          (see :func:`set_config`).
+    compute_associations : bool or "auto", default=False
+        Whether to compute associations in :class:`~skrub.TableReport`.
+
+        - ``True``: always compute associations, regardless of column count.
+        - ``False``: never compute associations.
+        - ``"auto"``: compute associations only when the number of
+          columns does not exceed the configured ``table_report_associations_threshold``
+          (see :func:`set_config`).
 
     See Also
     --------
@@ -104,20 +122,24 @@ def patch_display(
         _patch,
         _get_to_patch(pandas=pandas, polars=polars),
         verbose=verbose,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
+        plot_distributions=plot_distributions,
+        compute_associations=compute_associations,
     )
 
 
 def _patch_display(
-    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+    pandas=True,
+    polars=True,
+    verbose=1,
+    plot_distributions=False,
+    compute_associations=False,
 ):
     _change_display(
         _patch,
         _get_to_patch(pandas=pandas, polars=polars),
         verbose=verbose,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
+        plot_distributions=plot_distributions,
+        compute_associations=compute_associations,
     )
 
 

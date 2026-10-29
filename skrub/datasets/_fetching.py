@@ -4,19 +4,19 @@ Fetching functions to retrieve example datasets from GitHub and OSF.
 
 from pathlib import Path
 
-from ._utils import load_dataset_files, load_simple_dataset
+from ._utils import download_dataset, load_dataset_files, load_simple_dataset
 
 
 def fetch_employee_salaries(data_home=None, split="all"):
-    """Fetches the employee salaries dataset (regression), available at \
+    """
+    Fetches the employee salaries dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Annual salary information including gross pay and overtime pay for all
-        active, permanent employees of Montgomery County, MD paid in calendar
-        year 2016. This dataset is a copy of https://www.openml.org/d/42125
-        where some features are dropped to avoid data leaking.
-        Size on disk: 1.3MB.
+    Annual salary information including gross pay and overtime pay for all
+    active, permanent employees of Montgomery County, MD paid in calendar
+    year 2016. This dataset is a copy of https://www.openml.org/d/42125
+    where some features are dropped to avoid data leaking.
+    Size on disk: 1.3MB.
 
     .. note::
 
@@ -24,14 +24,14 @@ def fetch_employee_salaries(data_home=None, split="all"):
         connecting to a remote server, but OpenML provides CORS headers. To
         download this dataset using OpenML instead of Github or Figshare, run:
 
-    .. code:: python
+        .. code:: python
 
-        from sklearn.datasets import fetch_openml
-        df = fetch_openml(data_id=42125)
+            from sklearn.datasets import fetch_openml
+            df = fetch_openml(data_id=42125)
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     split : str, default="all"
@@ -39,16 +39,26 @@ def fetch_employee_salaries(data_home=None, split="all"):
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``employee_salaries`` : pd.DataFrame, the dataframe. Shape: (9228, 9)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (9228, 8)
-        - ``y`` : pd.DataFrame, target labels. Shape: (9228, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the employee salaries CSV file
+        employee_salaries : DataFrame of shape (9228, 8)
+            The dataframe.
+        X : DataFrame of shape (9228, 7)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (9228, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the employee salaries CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_employee_salaries
+    >>> data = fetch_employee_salaries()  # doctest: +SKIP
+    >>> data.X.shape  # doctest: +SKIP
+    (9228, 8)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -64,7 +74,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(train_path)
         dataset["path"] = str(train_path)
-        dataset["employee_salaries"][:id_split].to_csv(str(train_path), index=False)
+        dataset["employee_salaries"].to_csv(str(train_path), index=False)
         dataset["X"] = dataset["X"][:id_split]
         dataset["y"] = dataset["y"][:id_split]
     elif split == "test":
@@ -74,168 +84,220 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(test_path)
         dataset["path"] = str(test_path)
-        dataset["employee_salaries"][id_split:].to_csv(str(test_path), index=False)
+        dataset["employee_salaries"].to_csv(str(test_path), index=False)
         dataset["X"] = dataset["X"][id_split:]
         dataset["y"] = dataset["y"][id_split:]
     return dataset
 
 
 def fetch_medical_charge(data_home=None):
-    """Fetches the medical charge dataset (regression), available at \
+    """
+    Fetches the medical charge dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
-        provides information on inpatient discharges for Medicare
-        fee-for-service beneficiaries. The Inpatient PUF includes information
-        on utilization, payment (total payment and Medicare payment), and
-        hospital-specific charges for the more than 3,000 U.S. hospitals that
-        receive Medicare Inpatient Prospective Payment System (IPPS) payments.
-        The PUF is organized by hospital and Medicare Severity Diagnosis
-        Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
-        Size on disk: 36MB.
+    The dataset provides information on inpatient discharges for Medicare
+    fee-for-service beneficiaries. It includes information
+    on utilization, payment (total payment and Medicare payment), and
+    hospital-specific charges for the more than 3,000 U.S. hospitals that
+    receive Medicare Inpatient Prospective Payment System (IPPS) payments.
+    Size on disk: 36MB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``medical_charge`` : pd.DataFrame, the dataframe. Shape: (163065, 12)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (163065, 11)
-        - ``y`` : pd.DataFrame, target labels. Shape: (163065, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the medical charge CSV file
+        medical_charge : DataFrame of shape (163065, 12)
+            The dataframe.
+        X : DataFrame of shape (163065, 11)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (163065, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the medical charge CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_medical_charge
+    >>> data = fetch_medical_charge()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'medical_charge', 'medical_charge_path', 'metadata',
+      'metadata_path', 'X', 'y'])
     """
     return load_simple_dataset("medical_charge", data_home)
 
 
 def fetch_midwest_survey(data_home=None):
-    """Fetches the midwest survey dataset (classification), available at \
+    """
+    Fetches the midwest survey dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Survey to know if people self-identify as Midwesterners. Size on disk: 504KB.
+
+    Survey to know if people self-identify as Midwesterners. Size on disk: 504KB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``midwest_survey`` : pd.DataFrame, the dataframe. Shape: (2494, 29)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (2494, 28)
-        - ``y`` : pd.DataFrame, target labels. Shape: (2494, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the midwest survey CSV file
+        midwest_survey : DataFrame of shape (2494, 29)
+            The dataframe.
+        X : DataFrame of shape (2494, 28)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (2494, 1)
+            Target labels,
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the midwest survey CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_midwest_survey
+    >>> data = fetch_midwest_survey()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path', 'midwest_survey',
+      'midwest_survey_path', 'X', 'y'])
     """
     return load_simple_dataset("midwest_survey", data_home)
 
 
 def fetch_open_payments(data_home=None):
-    """Fetches the open payments dataset (classification), available at \
+    """
+    Fetches the open payments dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Payments given by healthcare manufacturing companies to medical doctors
-        or hospitals. Size on disk: 8.7MB.
+    Payments given by healthcare manufacturing companies to medical doctors
+    or hospitals. Size on disk: 8.7MB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``open_payments`` : pd.DataFrame, the dataframe. Shape: (73558, 6)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (73558, 5)
-        - ``y`` : pd.DataFrame, target labels. Shape: (73558, 1)
-        - ``metadata`` : a dictionary containing the name, description, source
-          and target
-        - ``path`` : str, the path to the open payments CSV file
+        open_payments : DataFrame of shape (73558, 6)
+            The dataframe.
+        X : DataFrame of shape (73558, 5)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (73558, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the open payments CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_open_payments
+    >>> data = fetch_open_payments()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path', 'open_payments',
+      'open_payments_path', 'X', 'y'])
     """
     return load_simple_dataset("open_payments", data_home)
 
 
 def fetch_traffic_violations(data_home=None):
-    """Fetches the traffic violations dataset (classification), available at \
+    """
+    Fetches the traffic violations dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        This dataset contains traffic violation information from all electronic
-        traffic violations issued in the Montgomery County, MD. Any information
-        that can be used to uniquely identify the vehicle, the vehicle owner or
-        the officer issuing the violation will not be published. Size on disk: 736MB.
+    This dataset contains traffic violation information from all electronic
+    traffic violations issued in the Montgomery County, MD. Any information
+    that can be used to uniquely identify the vehicle, the vehicle owner or
+    the officer issuing the violation will not be published. Size on disk: 736MB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``traffic_violations`` : pd.DataFrame, the dataframe. Shape: (1578154, 43)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (1578154, 42)
-        - ``y`` : pd.DataFrame, target labels. Shape: (1578154, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the traffic violations CSV file
+        traffic_violations : DataFrame of shape (1578154, 43)
+            The dataframe.
+        X : DataFrame of shape (1578154, 42)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (1578154, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the traffic violations CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_traffic_violations
+    >>> data = fetch_traffic_violations()  # doctest: +SKIP
+    >>> data.y.shape  # doctest: +SKIP
+    (1578154,)
     """
     return load_simple_dataset("traffic_violations", data_home)
 
 
 def fetch_drug_directory(data_home=None):
-    """Fetches the drug directory dataset (classification), available at \
+    """
+    Fetches the drug directory dataset (classification), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        Product listing data submitted to the U.S. FDA for all unfinished,
-        unapproved drugs. Size on disk: 44MB.
+    Product listing data submitted to the U.S. FDA for all unfinished,
+    unapproved drugs. Size on disk: 44MB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``drug_directory`` : pd.DataFrame, the dataframe. Shape: (120215, 21)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (120215, 20)
-        - ``y`` : pd.DataFrame, target labels. Shape: (120215, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the drug directory CSV file
+        drug_directory : DataFrame of shape (120215, 21)
+            The dataframe.
+        X : DataFrame of shape (120215, 20)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (120215, 1)
+            The target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the drug directory CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_drug_directory
+    >>> data = fetch_drug_directory()  # doctest: +SKIP
+    >>> data.drug_directory.shape  # doctest: +SKIP
+    (120215, 21)
     """
     return load_simple_dataset("drug_directory", data_home)
 
 
 def fetch_credit_fraud(data_home=None, split="train"):
-    """Fetch the credit fraud dataset (classification) available at \
-        https://github.com/skrub-data/skrub-data-files
+    """
+    Fetch the credit fraud dataset. Available
+    at https://github.com/skrub-data/skrub-data-files
 
     This is an imbalanced binary classification use-case. This dataset consists of
     two tables:
@@ -249,7 +311,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Parameters
     ----------
-    data_home : str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     split : str, default="train"
@@ -257,17 +319,26 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``baskets`` : pd.DataFrame, table containing baskets ID and target.
-        Shape: (92790, 2)
-        - ``products`` : pd.DataFrame, table containing features about products
-          contained in baskets. Shape: (163357, 7)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``baskets_path`` : str, the path to the baskets CSV file
-        - ``products_path`` : str, the path to the products CSV file
+        baskets : DataFrame of shape (92790, 2)
+            Table containing baskets ID and target.
+        products : DataFrame of shape (163357, 7)
+            Table containing features about products contained in baskets
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        baskets_path : str
+            The path to the baskets CSV file.
+        products_path : str
+            The path to the products CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_credit_fraud
+    >>> data = fetch_credit_fraud()  # doctest: +SKIP
+    >>> data.baskets.shape  # doctest: +SKIP
+    (61241, 2)
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -302,40 +373,57 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
 
 def fetch_toxicity(data_home=None):
-    """Fetch the toxicity dataset (classification) available at \
-        https://github.com/skrub-data/skrub-data-files
+    """
+    Fetch the toxicity dataset available at \
+    https://github.com/skrub-data/skrub-data-files
 
     This is a balanced binary classification use-case, where the single table
     consists in only two columns:
 
-   - ``text``: the text of the comment
-   - ``is_toxic``: whether or not the comment is toxic
+    - ``text``: the text of the comment
+    - ``is_toxic``: whether or not the comment is toxic
 
     Size on disk: 220KB.
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``toxicity`` : pd.DataFrame, the dataframe. Shape: (1000, 2)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (1000, 1)
-        - ``y`` : pd.DataFrame, target labels. Shape: (1000, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the toxicity CSV file
+        toxicity : DataFrame of shape (1000, 2)
+            The dataframe.
+        X : DataFrame of shape (1000, 1)
+            Features, i.e. the dataframe without the target.
+        y : DataFrame of shape (1000, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the toxicity CSV file.
+
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_toxicity
+    >>> data = fetch_toxicity()  # doctest: +SKIP
+    >>> data.toxicity.shape  # doctest: +SKIP
+    (1000, 2)
     """
-    return load_simple_dataset("toxicity", data_home)
+    result = load_simple_dataset("toxicity_v1", data_home)
+    result["toxicity"] = result.pop("toxicity_v1")
+    result["toxicity_path"] = result.pop("toxicity_v1_path")
+
+    return result
 
 
 def fetch_videogame_sales(data_home=None):
-    """Fetch the videogame sales dataset (regression) available at \
+    """
+    Fetch the videogame sales dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the single table contains information
@@ -351,20 +439,32 @@ def fetch_videogame_sales(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``videogame_sales`` : pd.DataFrame, the full dataframe. Shape: (16572, 11)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (16572, 5)
-        - ``y`` : pd.DataFrame, target labels. Shape: (16572, 1)
-        - ``metadata`` : a dictionary containing the name, source and target
-        - ``path`` : str, the path to the videogame sales CSV file
+        videogame_sales : DataFrame of shape (16572, 11)
+            The dataframe.
+        X : DataFrame of shape (16572, 5)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (16572, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, source and target.
+        path : str
+            The path to the videogame sales CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_videogame_sales
+    >>> data = fetch_videogame_sales()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'metadata', 'metadata_path',
+      'videogame_sales', 'videogame_sales_path', 'X', 'y'])
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -384,27 +484,40 @@ def fetch_bike_sharing(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``bike_sharing``: pd.DataFrame, the full dataframe. Shape: (17379, 11)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels.
-          Shape: (17379, 10)
-        - ``y`` : pd.DataFrame, target labels. Shape: (17379, 1)
-        - ``metadata`` : a dictionary containing the name and target
-        - ``path`` : str, the path to the bike sharing CSV file
+        bike_sharing : DataFrame of shape (17379, 11)
+            The full dataframe.
+        X : DataFrame of shape (17379, 10)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (17379, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name and target.
+        path : str
+            The path to the bike sharing CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_bike_sharing
+    >>> data = fetch_bike_sharing()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'bike_sharing', 'bike_sharing_path',
+      'metadata', 'metadata_path', 'X', 'y'])
     """
 
     return load_simple_dataset("bike_sharing", data_home)
 
 
 def fetch_movielens(data_home=None):
-    """Fetch the movielens dataset (regression) available at \
+    """
+    Fetch the movielens dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict movie ratings.
@@ -413,26 +526,39 @@ def fetch_movielens(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``movies`` : pd.DataFrame, movie ID, title and genres. Shape: (9742, 3)
-        - ``ratings``: pd.DataFrame, user ID, movie ID, rating. Shape: (100836, 4)
-        - ``metadata`` : a dictionary containing the name source and description
-        - ``movies_path`` : str, the path to the movies CSV file
-        - ``ratings_path`` : str, the path to the ratings CSV file
+        movies : DataFrame of shape (9742, 3)
+            Dataframe with movie titles and genres.
+        ratings : DataFrame of shape (100836, 4)
+            Dataframe with ratings of movies.
+        metadata : dict
+            A dictionary containing the name source and description.
+        movies_path : str
+            The path to the movies CSV file.
+        ratings_path : str
+            The path to the ratings CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_movielens
+    >>> data = fetch_movielens()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['metadata', 'metadata_path', 'movies',
+      'movies_path', 'ratings', 'ratings_path'])
     """
 
     return load_dataset_files("movielens", data_home)
 
 
-def fetch_flight_delays(data_home=None):
-    """Fetch the flight delays dataset (regression) available at \
+def fetch_flight_delays(data_home=None, load_data=True):
+    """Fetch the flight delays dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict flight delays.
@@ -440,38 +566,64 @@ def fetch_flight_delays(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
+
+    load_data : bool, default=True
+        Whether to load the dataframes into memory. When set to ``False``,
+        only the paths to the CSV files are returned. This is useful when the
+        data should be read with custom options (for example to read only a
+        subset of a large table) to avoid loading the full dataset.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``flights``: information about the flights, including departure and
-          arrival airports, and delay. Shape: (2370030, 12)
-        - ``airports``: information about airports, such as city and coordinates.
-          The airport's ``iata`` can be matched to the flights' ``Origin`` and
-          ``Dest``. Shape: (3376, 7)
-        - ``weather``: weather data that could be used to help improve the delay
-          predictions. Note the weather data is not measured at the airports
-          directly but at weather stations, whose location and information is
-          provided in ``stations``. Shape: (11282238, 5)
-        - ``stations``: information about the weather stations. ``weather`` and
-          ``stations`` can be joined on their ``ID`` columns. Weather stations
-          can only be matched to the nearest airport based on the latitude and
-          longitude. Shape: (124245, 9)
-        - ``metadata`` : a dictionary containing the name  of the dataset.
-        - ``flights_path`` : str, the path to the flights CSV file
-        - ``airports_path`` : str, the path to the airports CSV file
-        - ``weather_path`` : str, the path to the weather CSV file
-        - ``stations_path`` : str, the path to the stations CSV file
+        flights : DataFrame of shape (2370030, 12)
+            Information about the flights, including departure and
+            arrival airports, and delay.
+        airports : DataFrame of shape (3376, 7)
+            Information about airports, such as city and coordinates.
+            The airport's ``iata`` can be matched to the flights' ``Origin`` and
+            ``Dest``.
+        weather : DataFrame of shape (11282238, 5)
+            Weather data that could be used to help improve the delay
+            predictions. Note the weather data is not measured at the airports
+            directly but at weather stations, whose location and information is
+            provided in ``stations``.
+        stations : dataframe of shape (124245, 9)
+            Information about the weather stations. ``weather`` and
+            ``stations`` can be joined on their ``ID`` columns. Weather stations
+            can only be matched to the nearest airport based on the latitude and
+            longitude.
+        metadata : dict
+            A dictionary containing the name of the dataset.
+        flights_path : str
+            The path to the flights CSV file.
+        airports_path : str
+            The path to the airports CSV file.
+        weather_path : str
+            The path to the weather CSV file.
+        stations_path : str
+            The path to the stations CSV file.
+
+        The ``flights``, ``airports``, ``weather`` and ``stations`` dataframes
+        are only present when ``load_data=True``.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_flight_delays
+    >>> data = fetch_flight_delays()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['airports', 'airports_path', 'flights', 'flights_path', 'metadata',
+      'metadata_path', 'stations', 'stations_path', 'weather', 'weather_path'])
     """
-    return load_dataset_files("flight_delays", data_home)
+    return load_dataset_files("flight_delays", data_home, load_data=load_data)
 
 
 def fetch_country_happiness(data_home=None):
-    """Fetch the happiness index dataset (regression) available at \
+    """Fetch the happiness index dataset available at \
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict the happiness
@@ -481,53 +633,129 @@ def fetch_country_happiness(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or ``path-like``, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``happiness_report``: dataframe, data from the world happiness report.
-          Shape: (146, 12)
-        - ``GDP_per_capita``: dataframe from the World Bank. Shape: (262, 2)
-        - ``life_expectancy``: dataframe from the World Bank. Shape: (260, 2)
-        - ``legal_rights_index``: dataframe from the World Bank. Shape: (238, 2)
-        - ``metadata`` : a dictionary containing the name of the dataset, a
-          description and the sources.
-        - ``happiness_report_path`` : str, the path to the happiness report CSV file
-        - ``GDP_per_capita_path`` : str, the path to the GDP per capita CSV file
-        - ``life_expectancy_path`` : str, the path to the life expectancy CSV file
-        - ``legal_rights_index_path`` : str, the path to the legal rights index CSV file
+        happiness_report : DataFrame of shape (146, 12)
+            Data from the world happiness report.
+        GDP_per_capita : DataFrame of shape (262, 2)
+            Data from the World Bank.
+        life_expectancy : DataFrame of shape (260, 2)
+            Data from the World Bank.
+        legal_rights_index : DataFrame of shape (238, 2)
+            Data from the World Bank.
+        metadata : dict
+            A dictionary containing the name of the dataset, a description
+            and the sources.
+        happiness_report_path : str
+            The path to the happiness report CSV file.
+        GDP_per_capita_path : str
+            The path to the GDP per capita CSV file.
+        life_expectancy_path : str
+            The path to the life expectancy CSV file.
+        legal_rights_index_path : str
+            The path to the legal rights index CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_country_happiness
+    >>> data = fetch_country_happiness()  # doctest: +SKIP
+    >>> data.happiness_report.shape  # doctest: +SKIP
+    (146, 12)
     """
     return load_dataset_files("country_happiness", data_home)
 
 
 def fetch_california_housing(data_home=None):
-    """Fetches the california housing dataset (regression), available at \
+    """
+    Fetches the california housing dataset (regression), available at \
+    https://github.com/skrub-data/skrub-data-files
+
+    This dataset was obtained from the StatLib repository:
+    https://www.dcc.fc.up.pt/~ltorgo/Regression/cal_housing.html
+
+    The target variable is the median house value for California districts,
+    expressed in hundreds of thousands of dollars ($100,000).
+
+    This dataset was derived from the 1990 U.S. census, using one row per census
+    block group. A block group is the smallest geographical unit for which the U.S.
+    Census Bureau publishes sample data (a block group typically has a population of
+    600 to 3,000 people).
+
+    A household is a group of people residing within a home. Since the average
+    number of rooms and bedrooms in this dataset are provided per household, these
+    columns may take surprisingly large values for block groups with few households
+    and many empty houses, such as vacation resorts.
+
+    It can be downloaded/loaded using the sklearn.datasets.fetch_california_housing
+    function.
+    Size on disk: 1.80MB.
+
+    .. seealso::
+
+        :func:`sklearn.datasets.fetch_california_housing`
+            Scikit-learn function to load the same California housing
+            dataset.
+
+    Parameters
+    ----------
+    data_home : str or ``path-like``, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : :class:`~sklearn.utils.Bunch`
+        A dictionary-like object with the following keys:
+
+        california_housing : DataFrame of shape (20640, 9)
+            A dataframe with the California housing data.
+        X : DataFrame of shape (20640, 8)
+            Features, i.e. the dataframe without the target labels.
+        y : DataFrame of shape (20640, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the california housing CSV file.
+
+    Examples
+    --------
+    >>> from skrub.datasets import fetch_california_housing
+    >>> data = fetch_california_housing()  # doctest: +SKIP
+    >>> print(data.keys())  # doctest: +SKIP
+    dict_keys(['path', 'california_housing', 'california_housing_path', 'metadata',
+    'metadata_path', 'X', 'y'])
+    """
+    return load_simple_dataset("california_housing", data_home)
+
+
+def fetch_electricity_forecasting(data_home=None):
+    """
+    Fetches the electricity usage dataset (forecasting), available at \
         https://github.com/skrub-data/skrub-data-files
 
-    Description of the dataset:
-        This dataset was obtained from the StatLib repository:
-        https://www.dcc.fc.up.pt/~ltorgo/Regression/cal_housing.html
+    This dataset was generated from data obtained from the
+    ENTSOE Open Data portal under the open source license (CC-BY 4.0):
+    https://transparencyplatform.zendesk.com/hc/article_attachments/40921869376401
 
-        The target variable is the median house value for California districts,
-        expressed in hundreds of thousands of dollars ($100,000).
+    and the Open Meteo Historical Weather API:
+    https://open-meteo.com/en/docs/historical-forecast-api
+    in accordance with the licence described:
+    https://open-meteo.com/en/licence
 
-        This dataset was derived from the 1990 U.S. census, using one row per census
-        block group. A block group is the smallest geographical unit for which the U.S.
-        Census Bureau publishes sample data (a block group typically has a population of
-        600 to 3,000 people).
+    This is a time-series forecasting use case. This dataset gives the total
+    electricity load in MW in France, covering a time range from
+    March 23, 2021 to May 31, 2025. In addition, the dataset contains
+    weather data for several cities within France.
 
-        A household is a group of people residing within a home. Since the average
-        number of rooms and bedrooms in this dataset are provided per household, these
-        columns may take surprisingly large values for block groups with few households
-        and many empty houses, such as vacation resorts.
-
-        It can be downloaded/loaded using the sklearn.datasets.fetch_california_housing
-        function.
-        Size on disk: 1.80MB.
+    It can be downloaded/loaded using the
+    sklearn.datasets.fetch_electricity_forecasting function.
+    Size on disk: 26MB.
 
     Parameters
     ----------
@@ -536,15 +764,24 @@ def fetch_california_housing(data_home=None):
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
-        A dictionary-like object with the following keys:
+    Path : PosixPath
+         The path to the electricity usage CSV file. These include the electricity load
+         and weather data for several cities in France.
 
-        - ``california_housing`` : pd.DataFrame, the dataframe. Shape: (20640, 9)
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels.
-          Shape: (20640, 8)
-        - ``y`` : pd.DataFrame, target labels. Shape: (20640, 1)
-        - ``metadata`` : a dictionary containing the name, description, source and
-          target
-        - ``path`` : str, the path to the california housing CSV file
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from pathlib import Path
+    >>> from skrub.datasets import fetch_electricity_forecasting
+    >>> path = fetch_electricity_forecasting()  # doctest: +SKIP
+    >>> bayonne = pd.read_csv(path / "weather_bayonne.csv")  # doctest: +SKIP
+    >>> bayonne.shape  # doctest: +SKIP
+    (38688, 7)
+
+    .. seealso::
+
+    For more detailed instructions on how to use this dataset, please refer
+    to the example here: `EuroSciPy2025 <https://github.com/skrub-data/EuroSciPy2025>`_
+
     """
-    return load_simple_dataset("california_housing", data_home)
+    return download_dataset("electricity_forecasting", data_home=data_home)

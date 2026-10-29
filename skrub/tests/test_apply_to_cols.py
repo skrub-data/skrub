@@ -3,12 +3,13 @@ import datetime
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._to_datetime import ToDatetime
+from skrub.core import RejectColumn
 
 
 def test_single_column_transformer_becomes_apply_to_each_col(df_module):
@@ -28,30 +29,16 @@ def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
     assert hasattr(at, "transformer_")
 
 
-def test_columnwise_override_forces_apply_to_each_col(df_module):
-    """
-    how="cols" should force ApplyToEachCol even
-    for non-SingleColumnTransformer.
-    """
-    at = ApplyToCols(OrdinalEncoder(), cols=s.all(), how="cols")
-    X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
-    at.fit(X)
-    assert hasattr(at, "transformers_")
-
-
 def test_invalid_parameters():
     """all these parameters should be boolean."""
 
     X = None  # Placeholder for the dataframe, not used in this test
 
-    with pytest.raises((TypeError, ValueError), match=r"allow_reject.*bool"):
+    with pytest.raises(TypeError, match=r"allow_reject.*bool"):
         at = ApplyToCols(ToDatetime(), allow_reject="yes")
         at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError), match=r"keep_original.*bool"):
+    with pytest.raises(TypeError, match=r"keep_original.*bool"):
         at = ApplyToCols(ToDatetime(), keep_original="no")
-        at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError), match=r"how.*(auto|cols|frame)"):
-        at = ApplyToCols(ToDatetime(), how="maybe")
         at.fit_transform(X)
 
 
@@ -99,6 +86,52 @@ def test_column_selection_with_selector(df_module):
     assert np.array_equal(sbd.col(X_transformed, "numeric2"), [10.0, 20.0, 30.0])
 
 
+def test_exclude_single_column(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols="col2")
+    X = df_module.make_dataframe({"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]})
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+
+
+def test_exclude_multiple_columns(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols=["col2", "col3"])
+    X = df_module.make_dataframe(
+        {
+            "col1": ["a", "b", "c"],
+            "col2": ["x", "y", "z"],
+            "col3": ["m", "n", "o"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+    assert sbd.to_list(sbd.col(X_transformed, "col3")) == ["m", "n", "o"]
+
+
+def test_cols_selector_with_excluded_column(df_module):
+    at = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="id")
+    X = df_module.make_dataframe(
+        {
+            "id": [1, 2],
+            "value1": [10.0, 20.0],
+            "value2": [100.0, 300.0],
+            "name": ["a", "b"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "id")), [1, 2])
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value1")), [-1.0, 1.0])
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value2")), [-1.0, 1.0])
+    assert sbd.to_list(sbd.col(X_transformed, "name")) == ["a", "b"]
+
+
 def test_fit_and_transform_separate(df_module):
     """Test that fit and transform can be called separately."""
     at = ApplyToCols(OrdinalEncoder(), cols=s.string())
@@ -131,8 +164,7 @@ def test_reject_column(df_module):
 
     df_module.assert_frame_equal(X_transformed, X_expected)
 
-    # A RejectColumn exception should be raised
-    with pytest.raises(ValueError):
+    with pytest.raises(RejectColumn):
         at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=False)
         X = df_module.make_dataframe(
             {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}
@@ -176,32 +208,47 @@ def test_get_feature_names_out_after_fit(df_module):
     assert feature_names == ["date_col"]
 
 
-# This test is needed to make coverage happy
-@pytest.mark.parametrize(
-    "transformer,expected_attr",
-    [
-        (ToDatetime(), "transformers_"),
-        (OrdinalEncoder(), "transformer_"),
-    ],
-)
-def test_check_is_fitted_missing_fitted_attribute_transform(
-    df_module, transformer, expected_attr
-):
-    """Test check_is_fitted in transform when fitted attributes are missing."""
-    at = ApplyToCols(transformer, cols=s.all())
-    X = df_module.make_dataframe({"col": ["2020-01-01", "2020-01-02"]})
+def test_getattr_raises_for_wrong_attribute(df_module):
+    """Test __getattr__ raises proper AttributeError for wrong attributes."""
+    # Test that accessing transformers_ on non-single-column transformer raises error
+    at = ApplyToCols(OrdinalEncoder())
+    X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
 
-    # Fit the estimator
     at.fit(X)
 
-    # Artificially remove the fitted attribute to test check_is_fitted
-    if hasattr(at, expected_attr):
-        delattr(at, expected_attr)
+    with pytest.raises(
+        AttributeError,
+        match="'transformers_' is only available for single-column transformers",
+    ):
+        _ = at.transformers_
 
-    # Should raise NotFittedError when fitted attribute is missing
-    with pytest.raises(NotFittedError):
-        at.transform(X)
+    delattr(at, "transformer_")
 
-    # Should raise NotFittedError when fitted attribute is missing
-    with pytest.raises(NotFittedError):
-        at.get_feature_names_out()
+    # artificially remove transformer_ to test that accessing it raises error
+    with pytest.raises(
+        AttributeError, match="ApplyToCols.*has no attribute.*transformer_"
+    ):
+        _ = at.transformer_
+
+    # Test that accessing transformer_ on single-column transformer raises error
+    at = ApplyToCols(ToDatetime())
+    X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
+    at.fit(X)
+
+    with pytest.raises(
+        AttributeError,
+        match="'transformer_' is only available for non-single-column transformers",
+    ):
+        _ = at.transformer_
+
+    delattr(at, "transformers_")
+
+    # artificially remove transformers_ to test that accessing it raises error
+    with pytest.raises(
+        AttributeError, match="ApplyToCols.*has no attribute.*transformers_"
+    ):
+        _ = at.transformers_
+
+    # Test that accessing any non-existent attribute raises error
+    with pytest.raises(AttributeError, match="ApplyToCols.*has no attribute.*foo"):
+        _ = at.foo

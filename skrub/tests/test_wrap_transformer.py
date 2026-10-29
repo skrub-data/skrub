@@ -1,9 +1,9 @@
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
-from skrub import ApplyToEachCol
 from skrub import selectors as s
-from skrub._apply_sub_frame import ApplyToSubFrame
+from skrub._apply_to_each_col import ApplyToEachCol
+from skrub._apply_to_sub_frame import ApplyToSubFrame
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._to_datetime import ToDatetime
 from skrub._wrap_transformer import wrap_transformer
