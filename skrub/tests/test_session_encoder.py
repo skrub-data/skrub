@@ -288,6 +288,34 @@ def test_time_gap_threshold(df_module):
     assert len(set(session_ids_40)) == 1
 
 
+def test_sub_second_time_gap(df_module):
+    """Sub-second gaps must not be truncated to whole seconds (polars backend)."""
+    t0 = datetime.datetime(2024, 1, 1, 10, 0)
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                t0,
+                t0 + datetime.timedelta(seconds=30 * 60),  # exactly the gap
+                t0 + datetime.timedelta(seconds=60 * 60, milliseconds=500),
+                t0 + datetime.timedelta(seconds=60 * 60, milliseconds=1300),
+            ],
+            "user_id": [101, 101, 101, 101],
+        }
+    )
+
+    se = SessionEncoder(split_by="user_id", timestamp_col="timestamp")
+    result = se.fit_transform(df)
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    # 1800 s gap: same session; 1800.5 s gap: new session
+    assert session_ids == [0, 0, 1, 1]
+
+    se = SessionEncoder(timestamp_col="timestamp", session_gap=0.5)
+    result = se.fit_transform(df)
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
+    # the last gap is 0.8 s, which exceeds 0.5 s
+    assert session_ids == [0, 1, 2, 3]
+
+
 def test_no_user_column(df_module):
     """Test sessionization without a user identifier column.
 

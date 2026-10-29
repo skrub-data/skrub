@@ -38,6 +38,10 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
+  dataframes: the gaps were truncated to whole seconds, so events could be
+  wrongly put in the same session and results differed from pandas.
+  :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
