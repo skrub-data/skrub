@@ -33,6 +33,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableVectorizer` now warns when the input contains GeoPandas geometry
+  columns, which it would otherwise encode as strings. Such columns should be
+  handled with ``specific_transformers`` or dropped.
+  :pr:`2374` by :user:`Oscar-man-shrestha <Oscar-man-shrestha>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
