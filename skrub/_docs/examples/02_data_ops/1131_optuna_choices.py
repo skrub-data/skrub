@@ -50,6 +50,9 @@ data = skrub.var("data")
 X = data.drop(columns="MedHouseVal", errors="ignore").skb.mark_as_X()
 y = data["MedHouseVal"].skb.mark_as_y()
 pred = X.skb.apply(regressor, y=y)
+pred
+
+# %%
 print(pred.skb.describe_param_grid())
 
 # %%
