@@ -148,7 +148,6 @@ def get_data_home(data_home=None):
 
     You can even customize the default data directory by setting in your environment
     the `SKB_DATA_DIRECTORY` variable to an *absolute directory path*.
-    The deprecated `SKRUB_DATA_DIRECTORY` is still supported with a deprecation warning.
 
     Alternatively, it can be set programmatically by giving an explicit folder
     path. The '~' symbol is expanded to the user home folder.

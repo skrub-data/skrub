@@ -41,6 +41,29 @@ Bugfixes
 
 Deprecations
 ------------
+- Removed the deprecated ``splitter`` parameter of :meth:`.skb.train_test_split
+  <DataOp.skb.train_test_split>`. Use ``split_func`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed support for the deprecated ``SKRUB_DATA_DIRECTORY`` environment
+  variable. Use ``SKB_DATA_DIRECTORY`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated ``TextEncoder`` alias. Use :class:`LLMEncoder` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameter ``drop_if_unique`` of
+  :class:`DropUninformative` and :class:`TableVectorizer`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameters ``max_plot_columns`` and
+  ``max_association_columns`` of :func:`set_config` and :func:`config_context`,
+  and the corresponding environment variables ``SKB_MAX_PLOT_COLUMNS`` and
+  ``SKB_MAX_ASSOCIATION_COLUMNS``. Use ``table_report_plots_threshold`` and
+  ``table_report_associations_threshold`` (and the environment variables
+  ``SKB_TABLE_REPORT_PLOTS_THRESHOLD`` and
+  ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``) instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
 0.11.0
 ===================
