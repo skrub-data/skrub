@@ -30,6 +30,7 @@ Changes
   feature is extracted by default, even if all items in the column have their
   time at ``00:00:00``.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+  
 
 Bugfixes
 --------
@@ -38,6 +39,10 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+  - The icon-only buttons (copy, close and dismiss) and the column filter of the
+  :class:`TableReport` now have accessible names, so that screen readers can
+  announce what they do.
+  :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
 
 Deprecations
 ------------
