@@ -28,7 +28,6 @@ class InterpolationJoiner(TransformerMixin, SkrubBaseEstimator):
     rows in the right table that satisfy the join condition, we estimate what
     those rows would contain if they existed in the table.
 
-
     Parameters
     ----------
     aux_table : DataFrame

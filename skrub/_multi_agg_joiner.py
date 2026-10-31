@@ -141,7 +141,6 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
-
     Examples
     --------
     >>> import pandas as pd

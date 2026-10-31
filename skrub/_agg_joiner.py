@@ -193,7 +193,6 @@ class AggJoiner(TransformerMixin, SkrubBaseEstimator):
         and a standard dataframe library (Pandas or Polars) to perform the
         aggregation instead.
 
-
     Parameters
     ----------
     aux_table : DataFrameLike or "X"
