@@ -138,6 +138,16 @@ def test_bool_column_mean(df_module):
     assert "0.667" in html
 
 
+def test_controls_have_accessible_names(df_module):
+    # The icon-only buttons and the column filter must have an accessible
+    # name so that screen readers can announce them (WCAG 4.1.2).
+    df = df_module.make_dataframe({"a": [1, 2, 3], "b": ["x", "y", "z"]})
+    html = TableReport(df).html()
+    assert 'aria-label="Copy to clipboard"' in html
+    assert 'aria-label="Close"' in html
+    assert 'aria-label="Filter columns"' in html
+
+
 def test_duplicate_columns(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     df.columns = ["a", "a"]
