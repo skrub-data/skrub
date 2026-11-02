@@ -19,9 +19,10 @@ There are situations in which information in a column is encoded according
 to a specific set of rules, and it may be beneficial to write a transformer that
 makes use of those rules to convert the starting column into separate features.
 
-The |SingleColumnTransformer| can be used to define such a transformer, providing
-additional features to simplify its inclusion in a pipeline and the rejection of
-columns that cannot be handled by the transformer.
+The |SingleColumnTransformer| can be used to define a custom transformer that is
+aware of those rules. Additionally, the |SingleColumnTransformer| provides additional
+features for simplifying the inclusion of such custom transformers in pipelines, and
+dealing with columns that cannot be handled by the transformer.
 
 For example, consider a situation where we want to identify municipalities in France
 based on their "COG"
@@ -48,7 +49,7 @@ by this particular transformer.
 requirements:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
->>> class ZipcodeParser(SingleColumnTransformer):
+>>> class GeocodeParser(SingleColumnTransformer):
 ...     def __init__(self):
 ...         return
 ...     def fit_transform(self, X, y=None):
@@ -68,7 +69,7 @@ requirements:
 ...                              f'{self.col_name_}_commune': commune}))
 
 
->>> ZipcodeParser().fit_transform(df["sent"])
+>>> GeocodeParser().fit_transform(df["sent"])
   sent_department sent_commune
 0              75          001
 1              13          001
@@ -78,7 +79,7 @@ We can use |ApplyToCols| to apply this transformer to the entire dataframe at on
 and set ``allow_reject=True`` to let rejected columns pass through without changes:
 
 >>> from skrub import ApplyToCols
->>> ApplyToCols(ZipcodeParser(), allow_reject=True).fit_transform(df)
+>>> ApplyToCols(GeocodeParser(), allow_reject=True).fit_transform(df)
   sent_department sent_commune received
 0              75          001    ABCDE
 1              13          001   DU3K93
@@ -99,13 +100,13 @@ and error checking of dataframes.
 By default, the |RejectColumn| exception is raised if a column cannot be handled
 the transformer; this can be useful to detect errors at fit time.
 
->>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
+>>> ApplyToCols(GeocodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
-    ...
-skrub.core.RejectColumn: Input zip codes must be numeric.
-Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
+...
+skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
+Transformer GeocodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 
-In some situations, we may not know in advance whether a column can be transformed
+or not-this can be the case, for example, if we are trying to convert strings
 or not: this can be the case if, for example, we are trying to convert strings
 to datetimes.
 
