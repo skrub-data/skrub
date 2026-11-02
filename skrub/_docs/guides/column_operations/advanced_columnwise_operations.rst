@@ -102,7 +102,7 @@ the transformer; this can be useful to detect errors at fit time.
 >>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-skrub.core.RejectColumn: Input zip codes must be numeric.
+skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
 Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 
 In some situations, we may not know in advance whether a column can be transformed
