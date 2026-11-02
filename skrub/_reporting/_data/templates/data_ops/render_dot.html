@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        {#
+          This page is displayed in an iframe (see render_dot_iframe.html), tell
+          the parent page which size the iframe should have once the graph is
+          rendered.
+        #}
+        <script>
+         document.addEventListener("graph-rendered", () => {
+             if (window.parent !== window) {
+                 window.parent.postMessage({
+                     "{{ uuid }}_h": document.body.scrollHeight + 20,
+                     "{{ uuid }}_w": document.body.scrollWidth + 20,
+                 }, "*");
+             }
+         });
+        </script>
+        {% include "render_dot_fragment.html" %}
+    </body>
+</html>

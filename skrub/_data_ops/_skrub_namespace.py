@@ -1610,7 +1610,7 @@ class SkrubNamespace:
 
     @_check_before
     def draw_graph(self, *, show_ids=False):
-        """Get an SVG string representing the computation graph.
+        """Get a drawing of the computation graph.
 
         In addition to the usual ``str`` methods, the result has an ``open()``
         method which displays it in a web browser window.
@@ -1622,6 +1622,16 @@ class SkrubNamespace:
            ``svg`` and ``png``, containing representations of the graph in
            those formats (as ``bytes`` objects), and a method ``.open()`` to
            display it in a browser window.
+
+        Notes
+        -----
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_,
+        which must be installed on the system with its package manager (not
+        with pip). If it is not installed, the ``svg`` and ``png`` attributes
+        raise an error, but the graph is still displayed by ``open()`` and in
+        notebooks: it is then drawn by the web browser, so JavaScript must be
+        enabled. In a notebook, the browser needs an internet connection to
+        download the library that draws the graph.
         """
 
         return draw_data_op_graph(self._data_op, show_ids=show_ids)
@@ -1821,6 +1831,10 @@ class SkrubNamespace:
         intermediate result (or error). By default, the report is stored in
         a timestamped subdirectory of the skrub data folder.
 
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_ if it is
+        installed. Otherwise it is drawn by the web browser, so JavaScript must be
+        enabled; the report does not need an internet connection.
+
         .. note::
             When this function is invoked reports starting with ``full_data_op_report_``
             that are stored in the skrub data folder are automatically deleted after
@@ -1896,17 +1910,14 @@ class SkrubNamespace:
 
         Examples
         --------
-        >>> # ignore this line:
-        >>> import pytest; pytest.skip('graphviz may not be installed')
-
         >>> import skrub
         >>> c = skrub.var('a', 1) / skrub.var('b', 2)
         >>> report = c.skb.report(open=False)
         >>> report['result']
         0.5
         >>> report['error']
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
 
         We pass data:
 
@@ -1920,8 +1931,8 @@ class SkrubNamespace:
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
         """
 
         data_op = self._data_op
@@ -2290,16 +2301,6 @@ class SkrubNamespace:
         overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
         ignored, and the function passed to ``train_test_split`` is used instead.
         """
-        if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
-            warnings.warn(
-                (
-                    "The `splitter` parameter of `.skb.train_test_split` has been"
-                    " renamed `split_func`. Using it will raise an error in a future"
-                    " release of skrub."
-                ),
-                category=FutureWarning,
-            )
-            split_func = splitter
         environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
@@ -3913,6 +3914,6 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.find_X_y()
-        {'X': <X>, 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        {'X': <X>..., 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
         """  # noqa: E501
         return find_X_y_and_cv(self._data_op)

@@ -140,6 +140,21 @@ def test_fetching_several_tables(dataset_name, keys):
     assert all(key in data.keys() for key in keys)
 
 
+@xfail_with_download_error
+def test_fetch_flight_delays_without_loading_data():
+    data = _fetching.fetch_flight_delays(load_data=False)
+    assert not _get_table_names_from_bunch(data)
+    assert all(
+        name in data
+        for name in [
+            "flights_path",
+            "airports_path",
+            "weather_path",
+            "stations_path",
+        ]
+    )
+
+
 def test_fetching_wrong_checksum(monkeypatch):
     dataset_info = _utils.DATASET_INFO["employee_salaries"]
     monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")

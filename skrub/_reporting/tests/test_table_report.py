@@ -170,11 +170,11 @@ def test_duration(df_module):
     "filename_type",
     ["str", "Path", "text_file_object", "binary_file_object"],
 )
-def test_write_html(tmp_path, pd_module, filename_type):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file(tmp_path, pd_module, filename_type, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df)
-
-    tmp_file_path = tmp_path / Path("report.html")
+    report = TableReport(df, title="the title")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     # making sure we are closing the open files, and dealing with the first
     # condition which doesn't require opening any file
@@ -188,33 +188,51 @@ def test_write_html(tmp_path, pd_module, filename_type):
         else:
             filename = tmp_file_path
 
-        report.write_html(filename)
+        getattr(report, f"write_{output_format}")(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, encoding="utf-8") as file:
-        saved_content = file.read()
-    assert "</html>" in saved_content
+    saved_content = tmp_file_path.read_text(encoding="utf-8")
+    if output_format == "html":
+        assert "</html>" in saved_content
+    else:  # output_format == "json"
+        assert saved_content == report.json()
+        assert json.loads(saved_content)["title"] == "the title"
 
 
-def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
+@pytest.mark.parametrize("output_format", ["json", "html"])
+def test_write_file_with_not_utf8_encoding(tmp_path, pd_module, output_format):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
-    tmp_file_path = tmp_path / Path("report.html")
+    tmp_file_path = tmp_path / Path(f"report.{output_format}")
 
     with open(tmp_file_path, "w", encoding="latin-1") as file:
-        encoding = getattr(file, "encoding", None)
         with pytest.raises(
             ValueError,
             match=(
                 "If `file` is a text file it should use utf-8 encoding; got:"
-                f" {encoding!r}"
+                f" {file.encoding!r}"
             ),
         ):
-            report.write_html(file)
+            getattr(report, f"write_{output_format}")(file)
 
-    with open(tmp_file_path, encoding="latin-1") as file:
-        saved_content = file.read()
-    assert "</html>" not in saved_content
+    assert tmp_file_path.read_text(encoding="latin-1") == ""
+
+
+@pytest.mark.parametrize("indent", [None, 2, "\t"])
+def test_json_indent(tmp_path, pd_module, indent):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    json_str = report.json(indent=indent)
+    assert json.loads(json_str) == report.dict()
+    if indent is None:
+        assert "\n" not in json_str
+    else:
+        assert f'\n{indent if isinstance(indent, str) else " " * indent}"' in json_str
+
+    tmp_file_path = tmp_path / Path("report.json")
+    report.write_json(tmp_file_path, indent=indent)
+    assert tmp_file_path.read_text(encoding="utf-8") == json_str
 
 
 @skip_polars_installed_without_pyarrow

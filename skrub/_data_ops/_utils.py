@@ -1,4 +1,5 @@
 import enum
+import os
 import re
 import shutil
 import time
@@ -124,30 +125,12 @@ def unique_renaming():
     return rename
 
 
-def graphviz_error_message(html=False):
-    if html:
-        return """\
-To display the DataOp graph, please install Pydot and Graphviz
-and make sure the dot command is in your <code>$PATH</code>.<br/>
-You may also need to run <code>dot -c</code> in bash or powershell
-to rebuild the plugin cache of Graphviz.<br/>
-Graphviz must be installed using your system's
-package manager rather than pip.<br/>
-<a href="https://pypi.org/project/pydot/">Pydot documentation</a><br/>
-<a href="https://graphviz.org/download/">Graphviz installation instructions</a><br/>
-"""
-    else:
-        return """\
-To display the DataOp graph,
-please install Pydot and Graphviz and make sure the 'dot' command is in your $PATH.
-You may also need to run 'dot -c' in bash or powershell
-to rebuild the plugin cache of Graphviz.
-Graphviz must be installed using your system's package manager rather than pip.
-https://pypi.org/project/pydot/
-https://graphviz.org/download/"""
-
-
 def has_graphviz():
+    # (possibly temporary)
+    # Give beta-testers / maintainers an easy way to have skrub behave as
+    # if graphviz was not installed by defining an env variable.
+    if os.environ.get("SKB_NO_GRAPHVIZ") is not None:
+        return False
     try:
         import pydot
 
@@ -162,4 +145,13 @@ def has_graphviz():
 def check_graphviz():
     if has_graphviz():
         return
-    raise RuntimeError(graphviz_error_message())
+    raise RuntimeError(
+        """To render the DataOp graph, please install Graphviz and make sure
+the 'dot' command is in your $PATH.
+Graphviz must be installed using your system's package manager rather than pip,
+for example 'brew install graphviz', 'apt install graphviz' or
+'conda install graphviz'.
+On macOS you may also need to run 'dot -c' to rebuild the plugin cache of Graphviz.
+https://graphviz.org/download/
+"""
+    )

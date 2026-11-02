@@ -18,6 +18,38 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
+def _write_text(text, file):
+    """Write ``text`` to a path or a file object, using UTF-8 encoding."""
+    if isinstance(file, (str, Path)):
+        with open(file, "w", encoding="utf8") as stream:
+            stream.write(text)
+        return
+
+    try:
+        # We don't have information about the write mode of the provided
+        # file-object. We start by writing bytes into it.
+        file.write(text.encode("utf-8"))
+        return
+    except TypeError:
+        # We end-up here if the file-object was open in text mode
+        # Let's give it another chance in this mode.
+        pass
+
+    if (encoding := getattr(file, "encoding", None)) is not None:
+        try:
+            encoding_name = codecs.lookup(encoding).name
+        except LookupError:  # pragma: no cover
+            encoding_name = None
+        if encoding_name != "utf-8":
+            raise ValueError(
+                "If `file` is a text file it should use utf-8 encoding; got:"
+                f" {encoding!r}"
+            )
+    # We write into the file-object expecting it to be in text mode at this
+    # stage and with a UTF-8 encoding.
+    file.write(text)
+
+
 def _validate_plot_and_association(plot_distributions, compute_associations, n_columns):
     if plot_distributions is None:
         plot_distributions = "auto"
@@ -383,7 +415,7 @@ class TableReport:
             **self._to_html_kwargs,
         )
 
-    def json(self):
+    def json(self, indent=None):
         """Get the report data in JSON format.
 
         By default, the JSON output includes the plots in SVG format, which can
@@ -392,6 +424,12 @@ class TableReport:
 
         The schema of the JSON data is reported in :ref:`table_report_json_schema`.
 
+        Parameters
+        ----------
+        indent : int, str or None, default=None
+            Indentation used to pretty-print the JSON output, passed to
+            :func:`json.dumps`. If ``None``, the most compact representation
+            is used.
 
         Returns
         -------
@@ -400,7 +438,7 @@ class TableReport:
         """
         to_remove = ["dataframe", "sample_table"]
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
-        return json.dumps(data, cls=JSONEncoder)
+        return json.dumps(data, cls=JSONEncoder, indent=indent)
 
     def dict(self):
         """Get the report data in Python Dictionary format.
@@ -448,35 +486,21 @@ class TableReport:
         file : str, pathlib.Path or file object
             The file object or path of the file to store the HTML output.
         """
-        html = self.html()
-        if isinstance(file, (str, Path)):
-            with open(file, "w", encoding="utf8") as stream:
-                stream.write(html)
-            return
+        _write_text(self.html(), file)
 
-        try:
-            # We don't have information about the write mode of the provided
-            # file-object. We start by writing bytes into it.
-            file.write(html.encode("utf-8"))
-            return
-        except TypeError:
-            # We end-up here if the file-object was open in text mode
-            # Let's give it another chance in this mode.
-            pass
+    def write_json(self, file, indent=None):
+        """Store the report data into a JSON file.
 
-        if (encoding := getattr(file, "encoding", None)) is not None:
-            try:
-                encoding_name = codecs.lookup(encoding).name
-            except LookupError:  # pragma: no cover
-                encoding_name = None
-            if encoding_name != "utf-8":
-                raise ValueError(
-                    "If `file` is a text file it should use utf-8 encoding; got:"
-                    f" {encoding!r}"
-                )
-        # We write into the file-object expecting it to be in text mode at this
-        # stage and with a UTF-8 encoding.
-        file.write(html)
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the JSON output.
+        indent : int, str or None, default=None
+            Indentation used to pretty-print the JSON output, passed to
+            :func:`json.dumps`. If ``None``, the most compact representation
+            is used.
+        """
+        _write_text(self.json(indent=indent), file)
 
     def open(self):
         """Open the HTML report in a web browser."""
