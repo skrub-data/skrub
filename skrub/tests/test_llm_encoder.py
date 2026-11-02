@@ -252,17 +252,16 @@ def test_categorical_features(df_module, encoder):
     assert len(sbd.column_names(out)) == 30
 
 
-@pytest.fixture
 def test_cache_size(df_module):
-    df = sbd.make_dataframe(
+    df = df_module.make_dataframe(
         {
             "id": [1, 2, 3, 4, 5],
             "name": ["one", "two", "three", "four", "one"],
             "answer": ["yes", "no", "yes", "yes", "perhaps"],
         }
     )
-    encoder = TextEncoder(
-        model_name="llm_e5-base-v2",
+    encoder = LLMEncoder(
+        model_name="intfloat/e5-small-v2",
         token_env_variable=None,
         batch_size=32,
         n_components=30,
@@ -280,7 +279,7 @@ def test_cache_size(df_module):
 
     cached_values = pl.read_parquet(os.path.join(".cache", "cached_outputs.parquet"))
     expected_cache = pl.DataFrame(
-        {"Values": ["one", "two", "three", "four", "yes", "no", "perhaps"]}
+        {"values": ["one", "two", "three", "four", "yes", "no", "perhaps"]}
     )
 
     assert cached_values["values"] == expected_cache["values"]

@@ -334,23 +334,17 @@ class LLMEncoder(SingleColumnTransformer):
     def _vectorize_with_cache(self, column):
         total_values = column.to_frame().rename({column.name: "values"})
         unique_values = column.unique().to_frame().rename({column.name: "values"})
+        outputs_path = os.path.join(
+            self.cache_folder,
+            self.model_name.replace("/", "-") + "cached_outputs.parquet",
+        )
 
-        if os.path.exists(
-            os.path.join(
-                self.cache_folder,
-                self.model_name.replace("/", "-") + "cached_outputs.parquet",
-            )
-        ):
-            cached_values = pl.read_parquet(
-                os.path.join(
-                    self.cache_folder,
-                    self.model_name.replace("/", "-") + "cached_outputs.parquet",
-                )
-            )  # !!!!POLARS DEPENDENT
+        if os.path.exists(outputs_path):
+            cached_values = pl.read_parquet(outputs_path)  # !!!! POLARS DEPENDENT
         else:
             cached_values = pl.DataFrame(
                 schema={"values": pl.String}
-            )  #!!!!!! POLARS DEPENDENT
+            )  # !!!! POLARS DEPENDENT
 
         to_compute = unique_values.join(cached_values, on="values", how="anti")[
             "values"
@@ -365,10 +359,7 @@ class LLMEncoder(SingleColumnTransformer):
             )
             os.rename(
                 os.path.join(self.cache_folder, "temp_cache.parquet"),
-                os.path.join(
-                    self.cache_folder,
-                    self.model_name.replace("/", "-") + "cached_outputs.parquet",
-                ),
+                outputs_path,
             )
         else:
             new_cache = cached_values
