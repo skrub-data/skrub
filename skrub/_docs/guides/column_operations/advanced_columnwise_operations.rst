@@ -102,9 +102,9 @@ the transformer; this can be useful to detect errors at fit time.
 
 >>> ApplyToCols(GeocodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
-...
+    ...
 skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
-Transformer GeocodeParser.fit_transform failed on column 'received'. See above for the full traceback.
+Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 
 or not-this can be the case, for example, if we are trying to convert strings
 or not: this can be the case if, for example, we are trying to convert strings
