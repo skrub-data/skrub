@@ -137,6 +137,7 @@ sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+tabicl = "*"
 
 [tool.pixi.feature.lint.dependencies]
 python = ">=3.13,<3.14"
@@ -335,6 +336,8 @@ ignore = [
 "examples/*" = ["E402"]
 "doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+"skrub/_docs/examples/**" = ["E402"]
+"skrub/_docs/tutorials/**" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
 
