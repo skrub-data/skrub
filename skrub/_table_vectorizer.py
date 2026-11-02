@@ -628,6 +628,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
 
+    random_state : int, RandomState instance or None, default=None
+        Random state passed to the default ``high_cardinality`` encoder
+        (:class:`~skrub.StringEncoder`). Ignored if a custom transformer is
+        provided for ``high_cardinality``.
+
     Attributes
     ----------
     transformers_ : dict
@@ -901,6 +906,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         datetime_format=None,
         null_strings=None,
         n_jobs=None,
+        random_state=None,
     ):
         self.cardinality_threshold = cardinality_threshold
         self.low_cardinality = _utils.clone_if_default(
@@ -909,6 +915,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         self.high_cardinality = _utils.clone_if_default(
             high_cardinality, HIGH_CARDINALITY_TRANSFORMER
         )
+        if (
+            high_cardinality is HIGH_CARDINALITY_TRANSFORMER
+            and random_state is not None
+        ):
+            self.high_cardinality.set_params(random_state=random_state)
         self.numeric = _utils.clone_if_default(numeric, NUMERIC_TRANSFORMER)
         self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
@@ -917,6 +928,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         self.drop_if_constant = drop_if_constant
         self.datetime_format = datetime_format
         self.null_strings = null_strings
+        self.random_state = random_state
 
     def fit(self, X, y=None):
         """Fit transformer.
