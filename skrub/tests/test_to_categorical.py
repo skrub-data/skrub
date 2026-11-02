@@ -43,10 +43,15 @@ def test_to_categorical(df_module):
         (False, [1.1, 2.2, None]),  # float rejected always
         (True, [1.1, 2.2, None]),  # float rejected always
         (False, [1, 2, None]),  # int rejected when accept_int=False
+        ("Wrong", [1, 2, None]),  # wrong type rejected
     ],
 )
 def test_to_categorical_reject(df_module, accept_int, values):
     # reject columns based on accept_int parameter
     col = df_module.make_column("c", values)
-    with pytest.raises(RejectColumn, match=".*does not contain only strings*"):
-        ToCategorical(accept_int=accept_int).fit_transform(col)
+    if isinstance(accept_int, bool):
+        with pytest.raises(RejectColumn, match=".*does not contain only strings*"):
+            ToCategorical(accept_int=accept_int).fit_transform(col)
+    else:
+        with pytest.raises(TypeError, match="Expected `accept_int` to be*"):
+            ToCategorical(accept_int=accept_int)

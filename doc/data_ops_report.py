@@ -54,7 +54,7 @@ def create_credit_fraud_report():
     )
     predictions = baskets.skb.apply(hgb, y=fraud_flags)
 
-    predictions.skb.full_report(
+    predictions.skb.report(
         output_dir=output_dir,
         overwrite=True,
         open=False,
@@ -82,7 +82,7 @@ def create_employee_salaries_report():
 
     dataset = skrub.datasets.fetch_employee_salaries(split="train")
 
-    pred.skb.full_report(
+    pred.skb.report(
         {"employee_data": dataset.X, "salary": dataset.y},
         output_dir=output_dir,
         overwrite=True,

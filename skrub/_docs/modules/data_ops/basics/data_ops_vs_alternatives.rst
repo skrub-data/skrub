@@ -2,7 +2,7 @@
 
 .. _user_guide_data_ops_vs_alternatives:
 
-How do skrub Data Ops differ from the alternatives?
+How do skrub DataOps differ from the alternatives?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

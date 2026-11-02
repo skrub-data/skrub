@@ -47,7 +47,11 @@ def _soft_clip(X, max_absolute_value, mask_inf):
     X_clipped : array-like, shape (n_samples, n_features)
         The clipped version of the input.
     """
-    X = X / np.sqrt(1 + (X / max_absolute_value) ** 2)
+    # np.hypot(1.0, x) computes sqrt(1 + x ** 2) without evaluating the square
+    # naively, so it does not overflow to inf for the large finite values that
+    # sqrt(1 + x ** 2) would overflow on. Without it, huge (but finite)
+    # outliers would be mapped to 0 instead of approaching the clipping limit.
+    X = X / np.hypot(1.0, X / max_absolute_value)
     X = np.where(mask_inf == 1, max_absolute_value, X)
     X = np.where(mask_inf == -1, -max_absolute_value, X)
     return X

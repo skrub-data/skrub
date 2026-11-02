@@ -120,7 +120,6 @@ def _get_preprocessors(
     *,
     cols,
     drop_null_fraction,
-    drop_if_unique=False,
     drop_if_constant,
     n_jobs,
     parse_numbers=False,
@@ -143,7 +142,6 @@ def _get_preprocessors(
             DropUninformative(
                 drop_null_fraction=drop_null_fraction,
                 drop_if_constant=drop_if_constant,
-                drop_if_unique=drop_if_unique,
             ),
             cols,
         ),
@@ -324,7 +322,11 @@ class Cleaner(TransformerMixin, SkrubBaseEstimator):
       parameter. When ``cast_to_str=False`` (default), string conversion is
       skipped. When ``cast_to_str=True``, string conversion is applied.
 
-
+    The transformations applied to each column can be inspected in the
+    ``all_processing_steps_`` attribute, which maps each column name to a list of
+    the transformers that were applied to it.
+    :func:`~Cleaner.describe_transformations` provides a summary of the
+    transformations in plain text.
 
     Examples
     --------
@@ -599,7 +601,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         ``specific_transformers``.
         Consider wrapping the ``TableVectorizer`` in  :class:`~skrub.ApplyToCols`
         to select or exclude specific columns from the processing. Alternatively,
-        the :ref:`skrub Data Ops <user_guide_data_ops_index>` allow for more complex
+        the :ref:`skrub DataOps <user_guide_data_ops_index>` allow for more complex
         pre-processing.
 
     drop_null_fraction : float or None, default=1.0
@@ -614,16 +616,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     drop_if_constant : bool, default=False
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
-
-    drop_if_unique : bool, default=False
-        If set to true, drop columns that contain only unique values, i.e., the number
-        of unique values is equal to the number of rows in the column. Numeric columns
-        are never dropped.
-
-        .. deprecated:: 0.9.0
-        This functionality can drop informative columns and is unlikely to be
-        of use in practice. It is therefore deprecated and will be removed in a
-        future version.
 
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
@@ -733,6 +725,11 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     overriding the categorization described above. This is done by providing a
     list of pairs ``(transformer, list_of_columns)`` as the
     ``specific_transformers`` parameter.
+
+    The transformations applied to each column can be inspected in the ``all_processing_steps_``
+    attribute, which maps each column name to a list of the transformers that were applied to it.
+    :func:`~TableVectorizer.describe_transformations` provides a summary of the transformations
+    in plain text.
 
     Examples
     --------
@@ -901,7 +898,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         specific_transformers=(),
         drop_null_fraction=1.0,
         drop_if_constant=False,
-        drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
         n_jobs=None,
@@ -919,7 +915,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
-        self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.null_strings = null_strings
 
@@ -1035,7 +1030,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             cols=cols,
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
-            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_numbers=True,
             cast_to_float32=True,

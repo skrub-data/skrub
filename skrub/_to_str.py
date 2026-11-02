@@ -164,7 +164,7 @@ class ToStr(SingleColumnTransformer):
     Traceback (most recent call last):
         ...
     skrub.core.RejectColumn: Refusing to convert 's' with dtype 'Enum(categories=['a', 'b'])' to strings.
-    >>> to_str.fit_transform(pl.Series('s', ['2020-02-01']).cast(pl.Date))
+    >>> to_str.fit_transform(pl.Series('s', ['2020-02-01']).str.to_date())
     Traceback (most recent call last):
         ...
     skrub.core.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.

@@ -7,6 +7,7 @@ import warnings
 
 import numpy as np
 from sklearn import model_selection
+from sklearn.utils import deprecated
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
@@ -50,7 +51,7 @@ from ._evaluation import (
 from ._inspection import (
     describe_param_grid,
     draw_data_op_graph,
-    full_report,
+    report,
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
@@ -1444,6 +1445,9 @@ class SkrubNamespace:
         DataOp.skb.set_name :
             Assign a name to a DataOp.
 
+        DataOp.skb.get_choices :
+            Similar function for getting the choices contained in the DataOp.
+
         Examples
         --------
         >>> import skrub
@@ -1501,7 +1505,19 @@ class SkrubNamespace:
 
         >>> learner.fit({'a': 2, 'b': 3})
         SkrubLearner(data_op=<BinOp: add>)
-        """
+
+        Similarly, choices can be obtained with ``get_choices``
+
+        >>> f = d + skrub.choose_from([1, 2], name='e')
+        >>> f.skb.get_choices()
+        {'e': choose_from([1, 2], name='e')}
+
+        So all the names that can be passed in an env, merging named DataOps
+        and choices, are obtained with:
+
+        >>> list(f.skb.get_vars(all_named_ops=True) | f.skb.get_choices(named_only=True))
+        ['a', 'b', 'c', 'e']
+        """  # noqa: E501
         from ._data_ops import Var
 
         found_nodes = named_nodes(self._data_op)
@@ -1514,8 +1530,87 @@ class SkrubNamespace:
         }
 
     @_check_before
+    def get_choices(self, named_only=False):
+        """
+        Get all the choices used in the DataOp.
+
+        Parameters
+        ----------
+        named_only : bool, default = False
+            If True, only choices that have their ``name`` attribute set are
+            returned. Those are the only names for which a value can be passed
+            in the environment passed to ``eval()``.
+
+            If False, all choices are returned. For choices that have a
+            ``name``, that ``name`` is their key in the returned dictionary.
+            For other choices, the key is arbitrary but stable for a same
+            DataOp and its clones, and is the same string that is used in the
+            parallel coordinate plots produced by
+            :meth:`ParamSearch.plot_results`.
+
+        Returns
+        -------
+        dict :
+            Keys are names, and values the corresponding choice object.
+
+        See Also
+        --------
+        DataOp.skb.get_vars :
+            Similar function for getting variables created with :func:`var` and
+            DataOps whose name was set with :meth:`.skb.set_name
+            <DataOp.skb.set_name>`.
+
+        DataOp.skb.describe_defaults :
+            Get a dictionary showing the default values for choices. Only
+            choices that actually get used in the default configuration are
+            shown.
+
+        SkrubLearner.get_named_params :
+            Get a dictionary mapping choice name to value in a SkrubLearner.
+
+        SkrubLearner.set_named_params :
+            Set choice values by name on a SkrubLearner.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> dop = (
+        ...     skrub.var("a")
+        ...     + skrub.choose_int(0, 10, name="b")
+        ...     + skrub.choose_float(0.0, 1.0)
+        ... )
+        >>> dop.skb.get_choices()
+        {'b': choose_int(0, 10, name='b'), 'choose_float(0.0, 1.0)': choose_float(0.0, 1.0)}
+
+        With ``named_only`` we can restrict to choices that have an actual name
+        (only choices with a name can be passed in an environment, and to
+        :meth:`SkrubLearner.set_named_params`):
+
+        >>> dop.skb.get_choices(named_only=True)
+        {'b': choose_int(0, 10, name='b')}
+
+        Similarly, vars can be obtained:
+
+        >>> dop.skb.get_vars()
+        {'a': <Var 'a'>}
+
+        All the names that can be passed in the environment are thus obtained with:
+
+        >>> list(dop.skb.get_vars(all_named_ops=True) | dop.skb.get_choices(named_only=True))
+        ['a', 'b']
+        """  # noqa: E501
+        from ._evaluation import choice_graph
+
+        g = choice_graph(self._data_op, check_Xy=False)
+        if named_only:
+            return {c.name: c for c in g["choices"].values() if c.name is not None}
+        return {
+            name: g["choices"][c_id] for c_id, name in g["choice_display_names"].items()
+        }
+
+    @_check_before
     def draw_graph(self, *, show_ids=False):
-        """Get an SVG string representing the computation graph.
+        """Get a drawing of the computation graph.
 
         In addition to the usual ``str`` methods, the result has an ``open()``
         method which displays it in a web browser window.
@@ -1527,6 +1622,16 @@ class SkrubNamespace:
            ``svg`` and ``png``, containing representations of the graph in
            those formats (as ``bytes`` objects), and a method ``.open()`` to
            display it in a browser window.
+
+        Notes
+        -----
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_,
+        which must be installed on the system with its package manager (not
+        with pip). If it is not installed, the ``svg`` and ``png`` attributes
+        raise an error, but the graph is still displayed by ``open()`` and in
+        notebooks: it is then drawn by the web browser, so JavaScript must be
+        enabled. In a notebook, the browser needs an internet connection to
+        download the library that draws the graph.
         """
 
         return draw_data_op_graph(self._data_op, show_ids=show_ids)
@@ -1536,7 +1641,7 @@ class SkrubNamespace:
         """Get a text representation of the computation graph.
 
         Usually the graphical representation provided by :meth:`DataOp.skb.draw_graph`
-        or :meth:`DataOp.skb.full_report` is more useful. This is a fallback for
+        or :meth:`DataOp.skb.report` is more useful. This is a fallback for
         inspecting the computation graph when only text output is available.
 
         Returns
@@ -1563,19 +1668,20 @@ class SkrubNamespace:
         >>> print(d.skb.describe_steps())
         Var 'a'
         Var 'b'
-        BinOp: add
-        ( Var 'a' )*
-        ( Var 'b' )*
-        ( BinOp: add )*
+        BinOp: add -> _2
+        Load _2 (BinOp: add)
         BinOp: mul
-        * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
         simple stack machine: load the variable 'a', load the variable 'b',
         compute the addition leaving the result of (a + b) on the stack, then
-        repeat this operation (but the second time no computation actually runs
-        because the result of evaluating ``c`` has been cached in-memory), and
-        finally evaluate the multiplication.
+        load the previous result again (the result of evaluating ``c`` has been
+        cached in-memory), and finally evaluate the multiplication.
+
+        As we can see results that are used several times are kept and not
+        re-computed; this is indicated in the printed list above by ``-> _2``
+        (storing, where 2 is an arbitrary id / memory location) and ``Load _2``
+        when reusing that result later.
         """
 
         return describe_steps(self._data_op)
@@ -1699,14 +1805,23 @@ class SkrubNamespace:
 
         return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
+    @deprecated(
+        "DataOp.skb.full_report has been renamed to DataOp.skb.report and will "
+        "be removed in a future version of skrub."
+    )
+    def full_report(self, *args, **kwargs):
+        """Deprecated alias for :meth:`DataOp.skb.report`."""
+        return self.report(*args, **kwargs)
+
     @_check_before
-    def full_report(
+    def report(
         self,
         environment=None,
         open=True,
         output_dir=None,
         overwrite=False,
         title=None,
+        eval=True,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1715,6 +1830,10 @@ class SkrubNamespace:
         was defined, the time it took to run, and more) and a display of the
         intermediate result (or error). By default, the report is stored in
         a timestamped subdirectory of the skrub data folder.
+
+        The graph is drawn by `Graphviz <https://graphviz.org/download/>`_ if it is
+        installed. Otherwise it is drawn by the web browser, so JavaScript must be
+        enabled; the report does not need an internet connection.
 
         .. note::
             When this function is invoked reports starting with ``full_data_op_report_``
@@ -1747,6 +1866,16 @@ class SkrubNamespace:
         title: str (default=None)
             Title to display at the top of the report. If ``None``, no title will be
             displayed.
+
+        eval : bool (default=True)
+            If False, the DataOp is not evaluated, no computation runs. The
+            computation graph and information that is available about the
+            different nodes (such as the functions and estimators applied with
+            ``skb.apply_func`` and ``skb.apply`` ) is shown, but there are no
+            node outputs nor computation times.
+
+            If set to ``False``, ``environment`` must be ``None`` (it would be
+            unused, as the DataOp is not evaluated).
 
         Returns
         -------
@@ -1781,43 +1910,52 @@ class SkrubNamespace:
 
         Examples
         --------
-        >>> # ignore this line:
-        >>> import pytest; pytest.skip('graphviz may not be installed')
-
         >>> import skrub
         >>> c = skrub.var('a', 1) / skrub.var('b', 2)
-        >>> report = c.skb.full_report(open=False)
+        >>> report = c.skb.report(open=False)
         >>> report['result']
         0.5
         >>> report['error']
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
 
         We pass data:
 
-        >>> report = c.skb.full_report({'a': 33, 'b': 11 }, open=False)
+        >>> report = c.skb.report({'a': 33, 'b': 11 }, open=False)
         >>> report['result']
         3.0
 
         And if there was an error:
 
-        >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
+        >>> report = c.skb.report({'a': 1, 'b': 0}, open=False)
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+        >>> report['report_path'].name
+        'index.html'
         """
 
-        if environment is None:
+        data_op = self._data_op
+        if not eval:
+            if environment is not None:
+                raise TypeError(
+                    "environment must be None when eval is False, "
+                    f"got {type(environment).__name__!r}."
+                )
+            # Get a clone without preview results; preserve previews on the
+            # original dataop.
+            data_op = data_op.skb.clone()
+            mode = "fit_transform"
+            clear = True
+        elif environment is None:
             mode = "preview"
             clear = False
         else:
             mode = "fit_transform"
             clear = True
 
-        return full_report(
-            self._data_op,
+        return report(
+            data_op,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1825,6 +1963,7 @@ class SkrubNamespace:
             output_dir=output_dir,
             overwrite=overwrite,
             title=title,
+            eval=eval,
         )
 
     @_check_before
@@ -2162,16 +2301,6 @@ class SkrubNamespace:
         overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
         ignored, and the function passed to ``train_test_split`` is used instead.
         """
-        if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
-            warnings.warn(
-                (
-                    "The `splitter` parameter of `.skb.train_test_split` has been"
-                    " renamed `split_func`. Using it will raise an error in a future"
-                    " release of skrub."
-                ),
-                category=FutureWarning,
-            )
-            split_func = splitter
         environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
@@ -2285,7 +2414,7 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.GridSearchCV``.
+            ``sklearn.model_selection.GridSearchCV``.
 
         Returns
         -------
@@ -3197,10 +3326,10 @@ class SkrubNamespace:
         -----
         If this method is used several times, all calls to it must be grouped
         -- there can be no other nodes in-between. For example
-        ``pred.skb.score_with('accuracy').skb.score_with('roc_auc')`` is allowed,
+        ``pred.skb.with_scoring('accuracy').skb.with_scoring('roc_auc')`` is allowed,
         whereas
-        ``pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`` is not.
-        Typically all the ``score_with`` calls happen at the very end of the
+        ``pred.skb.with_scoring('accuracy').skb.apply_func(a_function).skb.with_scoring('roc_auc')`` is not.
+        Typically all the ``with_scoring`` calls happen at the very end of the
         DataOp construction.
 
         Examples
@@ -3382,7 +3511,7 @@ class SkrubNamespace:
         """A user-defined description or comment about the DataOp.
 
         This can be set with :func:`DataOp.skb.set_description` and is displayed
-        in the execution report generated with :func:`~DataOp.skb.full_report()`
+        in the execution report generated with :meth:`DataOp.skb.report`
         or :func:`~skrub.SkrubLearner.report()`.
 
         Examples
@@ -3428,7 +3557,7 @@ class SkrubNamespace:
         -----
         The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
         passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
-        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
 
         Examples
         --------
@@ -3577,7 +3706,7 @@ class SkrubNamespace:
         -----
         The IDs of nodes can be inspected with :attr:`DataOp.skb.id`, by
         passing ``show_ids=True`` to :meth:`DataOp.skb.draw_graph`, or in the
-        nodes' detailed pages generated by :meth:`DataOp.skb.full_report`.
+        nodes' detailed pages generated by :meth:`DataOp.skb.report`.
 
         Examples
         --------
@@ -3785,6 +3914,6 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.find_X_y()
-        {'X': <X>, 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        {'X': <X>..., 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
         """  # noqa: E501
         return find_X_y_and_cv(self._data_op)

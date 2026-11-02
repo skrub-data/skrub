@@ -17,7 +17,7 @@ datetime) with imprecise correspondence.
     **Joiners are designed for small-to-medium datasets.**
 
     - **Memory**: The auxiliary table is stored in the transformer state.
-      For tables > 1 million rows, consider using :ref:`skrub Data Ops
+      For tables > 1 million rows, consider using :ref:`skrub DataOps
       <user_guide_data_ops_index>` with pandas/polars joins instead.
 
     - **Computational Cost**: Fuzzy joining requires vectorizing columns

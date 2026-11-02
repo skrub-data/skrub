@@ -111,14 +111,13 @@ scikit-learn = ">=1.5.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.6.1"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
 jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
-pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 sphinx-design = "*"
@@ -138,6 +137,7 @@ sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+tabicl = "*"
 
 [tool.pixi.feature.lint.dependencies]
 python = ">=3.13,<3.14"
@@ -186,7 +186,6 @@ scikit-learn = "==1.5.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.6.1"
-pydot = "*"
 requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
@@ -207,6 +206,7 @@ extra-index-urls = [
 # TODO remove once scikit-learn is available again in
 # https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/
 index-strategy = "unsafe-first-match"
+prerelease-mode = "allow"
 
 [tool.pixi.feature.nightly-dependencies.pypi-dependencies]
 # Have to repeat dependencies here because otherwise pixi pulls from conda channels
@@ -218,11 +218,11 @@ scikit-learn = "*"
 scipy = "*"
 jinja2 = "*"
 matplotlib = "*"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = "*"
 pyarrow = "*"
-polars = "*"
 plotly = "*"
+polars = "*"
 
 [tool.pixi.feature.polars-without-pyarrow.dependencies]
 polars = "*"
@@ -336,6 +336,8 @@ ignore = [
 "examples/*" = ["E402"]
 "doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+"skrub/_docs/examples/**" = ["E402"]
+"skrub/_docs/tutorials/**" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
 
@@ -372,7 +374,7 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   # Sentence-transformers using a deprecated huggingface_hub function.
   # We avoid turning huggingface_hub warnings into errors, because they get
-  # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
+  # masked as OSErrors by sentence_transformers. See note in test_llm_encoder.
   'default::DeprecationWarning:huggingface_hub',
   # Ignore polars warning about horizontal concatenation being deprecated
   # We always expect dataframes to concatenate to have the same length, so the
@@ -387,7 +389,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

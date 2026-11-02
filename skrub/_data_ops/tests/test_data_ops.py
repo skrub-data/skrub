@@ -100,7 +100,7 @@ def test_environement_with_values():
     # however if we provide a binding for any of the variables we must do it
     # for all the variables actually used, `value` is not considered for any
     # variable.
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         # Note: errors and messages are checked in detail in `test_errors.py`,
         # not here.
         f.skb.eval({"a": "welcome"})
@@ -112,7 +112,7 @@ def test_environement_with_values():
     # it is fine for a variable that is not actually used to be missing from
     # the environment. Here we override the value of 'd' so a, b, c are not
     # needed to compute it
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         f.skb.eval({"e": "3"})
     assert f.skb.eval({"d": "12", "e": "3"}) == "123"
 
@@ -176,7 +176,7 @@ def test_choice_in_environment():
     # for all variables. Note it does not need to be one of the choice's
     # outcomes.
     assert d.skb.eval({"c": 3}) == 113
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         d.skb.eval({"c": 3, "b": 20})
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
@@ -238,7 +238,7 @@ def test_match():
     assert d.skb.eval({"a": "right", "c": 3}) == 3
 
     # if there is no match we get KeyError:
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         d.skb.eval({"a": "missing key", "b": 0, "c": 0})
 
     # unless we provide a default:
@@ -586,8 +586,7 @@ def test_data_op_impl():
 
     a = _data_ops.DataOp(A())
     assert repr(a) == "<A>"
-    # This is raising a RuntimeError in < Python 3.11
-    with pytest.raises((NotImplementedError, RuntimeError)):
+    with pytest.raises(NotImplementedError):
         a.skb.eval()
 
 
@@ -631,7 +630,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
     no_wrap = True if why_no_wrap == "no_wrap" else False
 
     with pytest.raises(
-        (ValueError, RuntimeError),
+        RuntimeError,
         match=(
             r"(`cols` must be `all\(\)`|`exclude_cols` must be None|"
             r"`allow_reject` must be False)"
@@ -824,7 +823,7 @@ def test_apply_kwargs_evaluation():
 
 def test_apply_bad_kwargs():
     with pytest.raises(
-        (TypeError, RuntimeError),
+        RuntimeError,
         match=(
             r".*The `fit_kwargs` passed to `\.skb\.apply\(\)` should be a dict of named"
             r" arguments"
@@ -936,6 +935,42 @@ def test_get_vars():
     assert list(d.skb.get_vars().keys()) == ["a", "b"]
     assert d.skb.get_vars()["a"] is a
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+def test_get_choices():
+    a = skrub.var("a")
+    named = skrub.choose_float(0.0, 1.0, name="x")
+    unnamed = skrub.choose_from([1, 2])
+    d = a + named + unnamed
+
+    choices = d.skb.get_choices()
+    assert list(choices.keys()) == ["x", "choose_from([1, 2])"]
+    assert choices["x"] is named
+    assert choices["choose_from([1, 2])"] is unnamed
+    assert d.skb.get_choices(named_only=True) == {"x": named}
+    assert list(
+        d.skb.get_vars(all_named_ops=True) | d.skb.get_choices(named_only=True)
+    ) == [
+        "a",
+        "x",
+    ]
+
+
+def test_get_choices_unnamed_duplicate_display_names():
+    d = skrub.var("a") + skrub.choose_bool() + skrub.choose_bool()
+    assert list(d.skb.get_choices().keys()) == ["choose_bool()", "choose_bool()_1"]
+
+
+def test_get_choices_nested():
+    # choices nested inside the outcome of another choice are also found
+    e = skrub.choose_from(
+        [Ridge(alpha=skrub.choose_float(0.1, 1.0, name="alpha")), DummyRegressor()],
+        name="regressor",
+    ).as_data_op()
+    choices = e.skb.get_choices()
+    assert set(choices.keys()) == {"alpha", "regressor"}
+    assert choices["alpha"].name == "alpha"
+    assert choices["regressor"].name == "regressor"
 
 
 def test_set_data():

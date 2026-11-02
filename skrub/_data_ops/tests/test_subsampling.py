@@ -120,7 +120,9 @@ def test_how(as_frame):
 
 
 def test_sample_errors():
-    with pytest.raises(RuntimeError, match=".*`how` should be 'head' or 'random'"):
+    with pytest.raises(
+        RuntimeError, match=".*`how` should be 'head' or 'random', got: 'bad-how'"
+    ):
         skrub.as_data_op(np.eye(3)).skb.subsample(n=2, how="bad-how")
     with pytest.raises(RuntimeError, match=".*the input should be a dataframe"):
         skrub.as_data_op(list(range(30))).skb.subsample(n=2)

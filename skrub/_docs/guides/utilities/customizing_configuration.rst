@@ -54,7 +54,7 @@ These are the parameters currently available in the global configuration:
    * - ``use_table_report_data_ops``
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
-     - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
+     - Set the HTML representation used for the DataOps previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
    * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
@@ -86,7 +86,7 @@ These are the parameters currently available in the global configuration:
    * - ``data_dir``
      - ``~/skrub_data``
      - ``SKB_DATA_DIRECTORY``
-     - Set the default location used by skrub to store datasets and other data, such as the Data Ops reports.
+     - Set the default location used by skrub to store datasets and other data, such as the DataOps reports.
    * - ``cache``
      - ``False``
      - ``SKB_CACHE``
