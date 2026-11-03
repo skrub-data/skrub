@@ -1,10 +1,12 @@
 import base64
+import datetime
 import json
 import numbers
 import re
 import unicodedata
 
 import numpy as np
+import pandas as pd
 
 from skrub import _dataframe as sbd
 from skrub._config import get_config
@@ -84,9 +86,54 @@ def ellide_string(s, max_len=30):
     return shown_text + ellipsis + end
 
 
+def format_duration(duration):
+    if pd.isna(duration):
+        return str(duration)
+    if isinstance(duration, np.timedelta64):
+        try:
+            duration = pd.Timedelta(duration)
+        except (ValueError, OverflowError, TypeError):
+            return str(duration)
+    sign = "-" if duration < datetime.timedelta(0) else ""
+    duration = abs(duration)
+    days = duration.days
+    hours, rem = divmod(duration.seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    microseconds = duration.microseconds
+    nanoseconds = getattr(duration, "nanoseconds", 0)
+
+    if days or hours or minutes:
+        parts = [
+            f"{val}{unit}"
+            for val, unit in [
+                (days, "d"),
+                (hours, "h"),
+                (minutes, "m"),
+                (seconds, "s"),
+            ]
+            if val
+        ]
+        return f"{sign}{' '.join(parts)}"
+
+    if seconds:
+        total_s = seconds + microseconds / 1e6 + nanoseconds / 1e9
+        return f"{sign}{round(total_s, 2):g}s"
+
+    total_ns = microseconds * 1_000 + nanoseconds
+    if total_ns == 0:
+        return "0s"
+    if total_ns >= 1_000_000:
+        return f"{sign}{round(total_ns / 1_000_000, 2):g}ms"
+    if total_ns >= 1_000:
+        return f"{sign}{round(total_ns / 1_000, 2):g}µs"
+    return f"{sign}{total_ns}ns"
+
+
 def format_number(number):
     if isinstance(number, bool):
         return str(number)
+    if isinstance(number, (datetime.timedelta, np.timedelta64)):
+        return format_duration(number)
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):

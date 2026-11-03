@@ -22,6 +22,10 @@ New Features
 
 Changes
 -------
+- Improved the formatting of durations in :class:`TableReport` to show explicit
+  time units (e.g., ``3h 2m``, ``2.4s``) and trim fractional seconds for long
+  durations.
+  :issue:`2079` by :user:`Omkar Ganda <omkarganda>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
