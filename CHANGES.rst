@@ -22,6 +22,11 @@ New Features
 
 Changes
 -------
+- Added a compact dot-based progress mode (``verbose=1``) alongside the detailed
+  column counter (``verbose=2``) and silent mode (``verbose=0``) in
+  :class:`TableReport`, and adapted the default verbosity depending on whether
+  ``sys.stderr`` is a TTY.
+  :pr:`2396` by :user:`Omkar Ganda <omkarganda>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.

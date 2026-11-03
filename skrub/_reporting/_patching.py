@@ -91,7 +91,8 @@ def patch_display(
     verbose : int, default = 1
         Whether to print progress information while table report is being generated.
 
-        * verbose = 1 prints how many columns have been processed so far.
+        * verbose >= 2 prints how many columns have been processed so far.
+        * verbose = 1 prints a single dot (``.``) for each processed column.
         * verbose = 0 silences the output.
     plot_distributions : bool or "auto", default=False
         Whether to plot distributions in :class:`~skrub.TableReport`.

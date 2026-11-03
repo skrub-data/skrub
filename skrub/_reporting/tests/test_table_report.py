@@ -236,7 +236,7 @@ def test_json_indent(tmp_path, pd_module, indent):
 
 
 @skip_polars_installed_without_pyarrow
-def test_verbosity_parameter(df_module, capsys):
+def test_verbosity_parameter(df_module, capsys, monkeypatch):
     df = df_module.make_dataframe(
         dict(
             a=[1, 2, 3, 4],
@@ -244,18 +244,31 @@ def test_verbosity_parameter(df_module, capsys):
             c=[11.1, 11.2, 11.3, 11.4],
         )
     )
+    pattern = re.compile(r"Processing column\s+\d+\s*/\s*\d+")
 
+    # Under capsys, sys.stderr.isatty() is False -> default verbose resolves to 1 (dots)
+    monkeypatch.setattr("sys.stderr.isatty", lambda: False)
     report = TableReport(df)
     report.html()
-    assert capsys.readouterr().err != ""
+    assert capsys.readouterr().err == "...\n"
 
-    report_2 = TableReport(df, verbose=0)
-    report_2.html()
+    # When sys.stderr.isatty() is True -> default verbose resolves to 2
+    monkeypatch.setattr("sys.stderr.isatty", lambda: True)
+    report_tty = TableReport(df)
+    report_tty.html()
+    assert re.search(pattern, capsys.readouterr().err)
+
+    report_0 = TableReport(df, verbose=0)
+    report_0.html()
     assert capsys.readouterr().err == ""
 
-    report_3 = TableReport(df, verbose=1)
-    report_3.html()
-    assert capsys.readouterr().err != ""
+    report_1 = TableReport(df, verbose=1)
+    report_1.html()
+    assert capsys.readouterr().err == "...\n"
+
+    report_2 = TableReport(df, verbose=2)
+    report_2.html()
+    assert re.search(pattern, capsys.readouterr().err)
 
 
 @skip_polars_installed_without_pyarrow
@@ -268,7 +281,7 @@ def test_write_to_stderr(df_module, capsys):
         )
     )
 
-    report = TableReport(df)
+    report = TableReport(df, verbose=2)
     report.html()
 
     captured = capsys.readouterr()

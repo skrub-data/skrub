@@ -2,6 +2,7 @@ import codecs
 import functools
 import json
 import numbers
+import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -163,8 +164,9 @@ class TableReport:
         Whether to print progress information while the report is being generated.
 
         * verbose = ``None`` uses the global configuration (see :func:`set_config`),
-          which then defaults to 1.
-        * verbose = 1 prints how many columns have been processed so far.
+          which defaults to ``2`` when ``sys.stderr`` is a TTY and ``1`` otherwise.
+        * verbose >= 2 prints how many columns have been processed so far.
+        * verbose = 1 prints a single dot (``.``) for each processed column.
         * verbose = 0 silences the output.
 
     plot_distributions : bool or "auto", default="auto"
@@ -309,9 +311,10 @@ class TableReport:
         n_rows = max(1, n_rows)
 
         if verbose is None:
-            self.verbose = _config.get_config()["table_report_verbosity"]
-        else:
-            self.verbose = verbose
+            verbose = _config.get_config()["table_report_verbosity"]
+        if verbose is None:
+            verbose = 2 if sys.stderr.isatty() else 1
+        self.verbose = verbose
 
         # Validate open_tab parameter
         valid_tabs = ["table", "stats", "distributions", "associations"]
