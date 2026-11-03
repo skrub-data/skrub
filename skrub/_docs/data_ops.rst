@@ -76,6 +76,7 @@ DataOps basic concepts
 
    modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
+   modules/data_ops/validation/exporting_data_ops
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods
    modules/data_ops/basics/control_flow
@@ -105,5 +106,4 @@ Tuning and validating skrub DataOps plans
    modules/data_ops/validation/hyperparameter_tuning
    modules/data_ops/validation/nested_cross_validation
    modules/data_ops/validation/nesting_choices_choosing_pipelines
-   modules/data_ops/validation/exporting_data_ops
    modules/data_ops/validation/tuning_with_optuna
