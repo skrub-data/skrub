@@ -181,8 +181,9 @@ def deduplicate(
 
     Returns
     -------
-    list of str
-       The deduplicated data.
+    pandas.Series
+        A Series of deduplicated values, indexed by the corresponding original
+        values. Input order and repeated values are preserved.
 
     See Also
     --------
