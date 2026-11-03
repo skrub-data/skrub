@@ -8,6 +8,7 @@ from skrub import TableReport, config_context, get_config, set_config
 from skrub._config import (
     _get_deprecated_int_env,
     _load_cache_env_var,
+    _load_verbosity_env_var,
     _parse_env_bool,
     get_cache_dir,
 )
@@ -42,7 +43,7 @@ def test_default_config():
     # On CI the absolute path is different, check that it ends with skrub_data
     assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
     assert cfg["table_report_n_rows"] == 10
-    assert cfg["table_report_verbosity"] == 1
+    assert cfg["table_report_verbosity"] is None
     assert cfg["table_report_plots_threshold"] == 30
     assert cfg["table_report_associations_threshold"] == 30
     assert cfg["subsampling_seed"] == 0
@@ -186,9 +187,24 @@ def test_parsing(monkeypatch):
 
 
 def test_wrong_verbosity():
-    with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
-        with config_context(table_report_verbosity=-1):
-            pass
+    for bad_val in (-1, True, "auto"):
+        with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
+            with config_context(table_report_verbosity=bad_val):
+                pass
+
+
+def test_verbosity_config_and_env(monkeypatch):
+    with config_context(table_report_verbosity=2):
+        assert get_config()["table_report_verbosity"] == 2
+        with config_context(table_report_verbosity=None):
+            assert get_config()["table_report_verbosity"] is None
+        assert get_config()["table_report_verbosity"] == 2
+    assert get_config()["table_report_verbosity"] is None
+
+    monkeypatch.setenv("SKB_TABLE_REPORT_VERBOSITY", "2")
+    assert _load_verbosity_env_var() == 2
+    monkeypatch.setenv("SKB_TABLE_REPORT_VERBOSITY", "none")
+    assert _load_verbosity_env_var() is None
 
 
 def test_get_deprecated_int_env_deprecated_var(monkeypatch):

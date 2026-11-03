@@ -47,6 +47,13 @@ def _load_cache_env_var():
     return cache
 
 
+def _load_verbosity_env_var():
+    val = os.environ.get("SKB_TABLE_REPORT_VERBOSITY", "").strip()
+    if val.lower() in ("", "none"):
+        return None
+    return int(val)
+
+
 def _get_deprecated_int_env(new_var, deprecated_var, default):
     """Get an int config from env, warning if the deprecated name is used."""
     new_val = os.environ.get(new_var)
@@ -87,7 +94,7 @@ _global_config = {
         os.environ.get("SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD", 30)
     ),
     "table_report_n_rows": int(os.environ.get("SKB_TABLE_REPORT_N_ROWS", 10)),
-    "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
+    "table_report_verbosity": _load_verbosity_env_var(),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
@@ -150,7 +157,7 @@ def set_config(
     table_report_plots_threshold=None,
     table_report_associations_threshold=None,
     table_report_n_rows=None,
-    table_report_verbosity=None,
+    table_report_verbosity=UNCHANGED,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -203,9 +210,10 @@ def set_config(
         environment variable.
 
 
-    table_report_verbosity : int, default=None
+    table_report_verbosity : int or None, default=None
         Set the level of verbosity of the :class:`~skrub.TableReport`.
-        Default is 1 (print the progress bar). Refer to the ``TableReport``
+        Default is ``None`` (which resolves to ``2`` when ``sys.stderr`` is a
+        TTY and ``1`` otherwise). Refer to the :class:`~skrub.TableReport`
         documentation for more details.
 
     subsampling_seed : int, default=None
@@ -361,14 +369,15 @@ def set_config(
             )
         local_config["table_report_n_rows"] = table_report_n_rows
 
-    if table_report_verbosity is not None:
-        if (
-            not isinstance(table_report_verbosity, numbers.Integral)
+    if table_report_verbosity is not UNCHANGED:
+        if table_report_verbosity is not None and (
+            isinstance(table_report_verbosity, bool)
+            or not isinstance(table_report_verbosity, numbers.Integral)
             or table_report_verbosity < 0
         ):
             raise ValueError(
-                "'table_report_verbosity' must be a non-negative integer, got"
-                f" {table_report_verbosity!r}"
+                "'table_report_verbosity' must be None or a non-negative integer,"
+                f" got {table_report_verbosity!r}"
             )
         local_config["table_report_verbosity"] = table_report_verbosity
 
@@ -427,7 +436,7 @@ def config_context(
     table_report_plots_threshold=None,
     table_report_associations_threshold=None,
     table_report_n_rows=None,
-    table_report_verbosity=None,
+    table_report_verbosity=UNCHANGED,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -460,10 +469,11 @@ def config_context(
         This configuration can also be set with the ``SKB_TABLE_REPORT_N_ROWS``
         environment variable.
 
-    table_report_verbosity : int, default=None
+    table_report_verbosity : int or None, default=None
         Set the level of verbosity of the :class:`~skrub.TableReport`.
-        Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
-        more details.
+        Default is ``None`` (which resolves to ``2`` when ``sys.stderr`` is a
+        TTY and ``1`` otherwise). Refer to the :class:`~skrub.TableReport`
+        documentation for more details.
 
     table_report_plots_threshold : int, default=None
         Maximum number of columns for which distribution plots are generated

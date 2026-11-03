@@ -56,9 +56,9 @@ These are the parameters currently available in the global configuration:
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
      - Set the HTML representation used for the DataOps previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
    * - ``table_report_verbosity``
-     - ``1``
+     - ``None``
      - ``SKB_TABLE_REPORT_VERBOSITY``
-     - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
+     - Set the verbosity of the :class:`~skrub.TableReport`. If ``None``, defaults to ``2`` when ``sys.stderr`` is a TTY and ``1`` otherwise. If ``>= 2``, print on screen the progress by column; if ``1``, print a dot per column; if ``0``, print nothing.
    * - ``table_report_plots_threshold``
      - 30
      - ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``

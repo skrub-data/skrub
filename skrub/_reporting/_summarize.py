@@ -27,7 +27,7 @@ def summarize_dataframe(
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
-    verbose=1,
+    verbose=None,
 ):
     """Collect information about a dataframe, used to produce reports.
 
@@ -60,10 +60,13 @@ def summarize_dataframe(
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
-    verbose : int, default=1
+    verbose : int or None, default=None
         Whether to print progress information while the report is being generated.
 
-        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = ``None`` defaults to ``2`` when ``sys.stderr`` is a TTY
+          and ``1`` otherwise.
+        * verbose >= 2 prints how many columns have been processed so far.
+        * verbose = 1 prints a single dot (``.``) for each processed column.
         * verbose = 0 silences the output.
 
     Returns
@@ -98,14 +101,18 @@ def summarize_dataframe(
     else:
         order_by_idx = sbd.column_names(df).index(order_by)
         order_by_column = sbd.col_by_idx(df, order_by_idx)
+    if verbose is None:
+        verbose = 2 if sys.stderr.isatty() else 1
     for position in range(sbd.shape(df)[1]):
-        if verbose > 0:
+        if verbose >= 2:
             print(
                 f"Processing column {position + 1: >3} / {n_columns}",
                 file=sys.stderr,
                 end="\r",
                 flush=True,
             )
+        elif verbose == 1:
+            print(".", file=sys.stderr, end="", flush=True)
         summary["columns"].append(
             _summarize_column(
                 sbd.col_by_idx(df, position),
