@@ -161,9 +161,19 @@ def test_infinite_values(df_module):
 @skip_polars_installed_without_pyarrow
 def test_duration(df_module):
     df = df_module.make_dataframe(
-        {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
+        {
+            "a": [
+                datetime.timedelta(days=2),
+                datetime.timedelta(hours=3, minutes=2),
+                datetime.timedelta(seconds=2.4),
+            ]
+        }
     )
-    assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
+    html = TableReport(df).html()
+    assert re.search(r"2(\.0)?\s+days", html)
+    assert "2d" in html
+    assert "3h 2m" in html
+    assert "2.4s" in html
 
 
 @pytest.mark.parametrize(

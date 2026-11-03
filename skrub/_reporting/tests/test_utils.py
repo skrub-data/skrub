@@ -2,6 +2,7 @@ import datetime
 import json
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -83,6 +84,44 @@ def test_ellide_non_string():
 )
 def test_format_number(n_in, n_out):
     assert _utils.format_number(n_in) == n_out
+
+
+@pytest.mark.parametrize(
+    "d_in, d_out",
+    [
+        (datetime.timedelta(0), "0s"),
+        (datetime.timedelta(weeks=4), "28d"),
+        (datetime.timedelta(hours=3, minutes=2), "3h 2m"),
+        (datetime.timedelta(minutes=42, seconds=37), "42m 37s"),
+        (
+            datetime.timedelta(minutes=42, seconds=37, microseconds=123456),
+            "42m 37s",
+        ),
+        (
+            datetime.timedelta(days=1, hours=2, minutes=3, seconds=4),
+            "1d 2h 3m 4s",
+        ),
+        (datetime.timedelta(seconds=2.4), "2.4s"),
+        (datetime.timedelta(seconds=15), "15s"),
+        (datetime.timedelta(seconds=2, microseconds=123456), "2.12s"),
+        (datetime.timedelta(milliseconds=500), "500ms"),
+        (datetime.timedelta(microseconds=20), "20µs"),
+        (datetime.timedelta(minutes=-42, seconds=-37), "-42m 37s"),
+        (datetime.timedelta(seconds=-2.4), "-2.4s"),
+        (pd.Timedelta(hours=3, minutes=2), "3h 2m"),
+        (pd.Timedelta(nanoseconds=50), "50ns"),
+        (pd.Timedelta(microseconds=1, nanoseconds=500), "1.5µs"),
+        (pd.NaT, "NaT"),
+        (np.timedelta64(4, "W"), "28d"),
+        (np.timedelta64(500, "ms"), "500ms"),
+        (np.timedelta64(50, "ns"), "50ns"),
+        (np.timedelta64("NaT", "ns"), "NaT"),
+        (np.timedelta64(1000, "Y"), "1000 years"),
+    ],
+)
+def test_format_duration(d_in, d_out):
+    assert _utils.format_duration(d_in) == d_out
+    assert _utils.format_number(d_in) == d_out
 
 
 @pytest.mark.parametrize(

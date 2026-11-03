@@ -68,11 +68,12 @@
                     <td data-value="nan" data-numeric></td>
                     {% endif %}
 
+                    {% set unit = " " + column["unit"] if "unit" in column else "" %}
                     {% if "mean" in column %}
                     <td data-value="{{ column['mean'] }}" data-numeric>
-                        {{ column["mean"] | format_number }}</td>
+                        {{ column["mean"] | format_number }}{{ unit }}</td>
                     <td data-value="{{ column['standard_deviation'] }}" data-numeric>
-                        {{ column["standard_deviation"] | format_number }}</td>
+                        {{ column["standard_deviation"] | format_number }}{{ unit }}</td>
                     {% else %}
                     <td data-value="nan" data-numeric></td>
                     <td data-value="nan" data-numeric></td>
@@ -80,17 +81,17 @@
 
                     {% if column.quantiles %}
                     <td data-value="{{ column.quantiles[0.0] }}" data-numeric>
-                        {{ column.quantiles[0.0] | format_number }}</td>
+                        {{ column.quantiles[0.0] | format_number }}{{ unit }}</td>
                     <td data-value="{{ column.quantiles[0.5] }}" data-numeric>
-                        {{ column.quantiles[0.5] | format_number }}</td>
+                        {{ column.quantiles[0.5] | format_number }}{{ unit }}</td>
                     <td data-value="{{ column.quantiles[1.0] }}" data-numeric>
-                        {{ column.quantiles[1.0] | format_number }}</td>
+                        {{ column.quantiles[1.0] | format_number }}{{ unit }}</td>
                     {% elif "min" in column %}
                     <td data-value="{{ column.min }}" data-numeric>
-                        {{ column.min | format_number }}</td>
+                        {{ column.min | format_number }}{{ unit }}</td>
                     <td data-value="nan" data-numeric></td>
                     <td data-value="{{ column.max }}" data-numeric>
-                        {{ column.max | format_number }}</td>
+                        {{ column.max | format_number }}{{ unit }}</td>
                     {% else %}
                     <td data-value="nan" data-numeric></td>
                     <td data-value="nan" data-numeric></td>
