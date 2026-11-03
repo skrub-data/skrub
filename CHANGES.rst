@@ -28,6 +28,13 @@ Changes
   validated like other values. ``cache=None`` still disables caching and
   ``target_cache_size=None`` still disables cache pruning.
   :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name, or node ID, in the DataOp) now causes a warning displaying the
+  extra keys to help detect typos and mistakes. It can be silenced with the
+  warnings module, or, more robustly, by adding
+  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
