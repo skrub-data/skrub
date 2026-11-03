@@ -30,6 +30,46 @@ item price in dollars:
 - Akin to scikit-learn pipelines, we apply an estimator (Ridge) at the end of the
   processing.
 
+A two-table calculation with pandas and DataOps
+-------------------------------------------------
+
+Consider computing order totals from two tables. A reusable pandas function can
+join the inputs and perform the calculation:
+
+>>> import pandas as pd
+>>> orders = pd.DataFrame({"sku": ["pen", "cup"], "qty": [2, 3]})
+>>> prices = pd.DataFrame({"sku": ["pen", "cup"], "unit_price": [5.0, 4.0]})
+>>> def totals_pandas(orders, prices):
+...     joined = orders.merge(prices, on="sku")
+...     return joined["qty"] * joined["unit_price"]
+>>> totals_pandas(orders, prices).tolist()
+[10.0, 12.0]
+
+The same operations can be recorded as a DataOps plan with two named inputs:
+
+>>> import skrub
+>>> order_input = skrub.var("orders", orders)
+>>> price_input = skrub.var("prices", prices)
+>>> joined = order_input.merge(price_input, on="sku")
+>>> totals = joined["qty"] * joined["unit_price"]
+>>> totals.skb.eval({"orders": orders, "prices": prices}).tolist()
+[10.0, 12.0]
+
+The DataOps graph can also be exported as a learner and applied to new inputs:
+
+>>> learner = totals.skb.make_learner()
+>>> new_orders = pd.DataFrame({"sku": ["cup"], "qty": [4]})
+>>> learner.fit_transform({"orders": new_orders, "prices": prices}).tolist()
+[16.0]
+
+Both approaches reuse the same calculation. The difference is that DataOps
+retains the operations as a graph and accepts a named input environment when
+evaluated or exported as a learner. By contrast, a standard scikit-learn
+:class:`sklearn.pipeline.Pipeline` receives one ``X`` object; combining multiple
+input tables requires preparing the joined table beforehand or providing a
+custom transformer or input wrapper. This small example only compares
+feature preparation, not estimator fitting or leakage-safe validation.
+
 The rest of this user guide will detail how the DataOps work.
 
 
