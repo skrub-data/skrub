@@ -138,9 +138,6 @@ def test_bool_column_mean(df_module):
     assert "0.667" in html
 
 
-
-
-
 def test_duplicate_columns(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     df.columns = ["a", "a"]
