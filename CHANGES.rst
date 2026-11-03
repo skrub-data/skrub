@@ -26,7 +26,7 @@ Changes
   column counter (``verbose=2``) and silent mode (``verbose=0``) in
   :class:`TableReport`, and adapted the default verbosity depending on whether
   ``sys.stderr`` is a TTY.
-  :issue:`1175` by :user:`Omkar Ganda <omkarganda>`.
+  :pr:`2396` by :user:`Omkar Ganda <omkarganda>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
