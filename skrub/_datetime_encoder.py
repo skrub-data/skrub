@@ -118,7 +118,10 @@ def _is_holidays(col, country):
     except NotImplementedError:
         raise ValueError(f"Unknown country: {country} for holidays")
 
-    return col.dt.apply(lambda x: x in country_holidays)
+    # TODO: polars version
+    # be wary that None gives NaT and only isnull os isna
+    # https://medium.com/@amit25173/understanding-pandas-nat-and-why-it-matters-e73abf694098
+    return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
 
 
 class DatetimeEncoder(SingleColumnTransformer):
@@ -419,6 +422,8 @@ class DatetimeEncoder(SingleColumnTransformer):
             self.extracted_features_.append("weekday")
         if self.add_day_of_year:
             self.extracted_features_.append("day_of_year")
+        if self.add_holidays:
+            self.extracted_features_.append(f"holidays_{self.add_holidays}")
 
         col_name = sbd.name(column)
 
