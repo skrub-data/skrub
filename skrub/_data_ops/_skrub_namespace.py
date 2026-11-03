@@ -2301,16 +2301,6 @@ class SkrubNamespace:
         overrides ``mark_as_X``: the splitter defined in ``mark_as_X`` is
         ignored, and the function passed to ``train_test_split`` is used instead.
         """
-        if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
-            warnings.warn(
-                (
-                    "The `splitter` parameter of `.skb.train_test_split` has been"
-                    " renamed `split_func`. Using it will raise an error in a future"
-                    " release of skrub."
-                ),
-                category=FutureWarning,
-            )
-            split_func = splitter
         environment = self._get_env(environment)
         return train_test_split(
             self._data_op,
@@ -3924,6 +3914,6 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.find_X_y()
-        {'X': <X>, 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        {'X': <X>..., 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
         """  # noqa: E501
         return find_X_y_and_cv(self._data_op)

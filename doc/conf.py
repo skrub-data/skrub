@@ -554,6 +554,7 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
     "default_thumb_file": "./_static/skrub.svg",
+    "image_scrapers": ("matplotlib", "data_ops_thumbnail.scrape_data_op_graph"),
     "reset_modules": (reset_skrub_config, call_garbage_collector),
     "show_memory": True,
 }

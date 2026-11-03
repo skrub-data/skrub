@@ -11,8 +11,9 @@ set -e
 # We always build the documentation for jobs that are not related to a specific
 # PR (e.g. a merge to master or a maintenance branch).
 #
-# If this is a PR, do a full build if there are some files in this PR that are
-# under the "doc/" or "examples/" folders, otherwise perform a quick build.
+# If this is a PR, build the documentation and run the examples modified by the
+# PR if there are some files under the "skrub/_docs/" folder, otherwise perform
+# a quick build.
 #
 # If the inspection of the current commit fails for any reason, the default
 # behavior is to quick build the documentation.
@@ -57,7 +58,7 @@ get_build_type() {
         echo QUICK BUILD: no changed filenames for $git_range
         return
     fi
-    changed_examples=$(echo "$filenames" | grep -e ^examples/)
+    changed_examples=$(echo "$filenames" | grep -e ^skrub/_docs/examples/.*\.py$)
     if [[ -n "$changed_examples" ]]
     then
         echo BUILD: detected examples/ filename modified in $git_range: $changed_examples
@@ -82,7 +83,7 @@ then
 elif [[ "$build_type" =~ ^QUICK ]]
 then
     make_args="build-doc-quick"
-elif [[ "$build_type" =~ ^'BUILD: detected examples' ]]
+elif [[ "$build_type" =~ ^BUILD:\ detected\ examples ]]
 then
     # pattern for examples to run is the last line of output
     pattern=$(echo "$build_type" | tail -n 1)
@@ -107,8 +108,8 @@ set +o pipefail
 
 affected_doc_paths() {
     files=$(git diff --name-only origin/main...$CIRCLE_SHA1)
-    echo "$files" | grep ^doc/.*\.rst | sed 's/^doc\/\(.*\)\.rst$/\1.html/'
-    echo "$files" | grep ^examples/.*.py | sed 's/^\(.*\)\.py$/auto_\1.html/'
+    echo "$files" | grep -E '^(doc|skrub/_docs)/.*\.rst$' | sed -E 's#^(doc|skrub/_docs)/(.*)\.rst$#\2.html#'
+    echo "$files" | grep -E '^skrub/_docs/examples/.*\.py$' | sed -E 's#^skrub/_docs/examples/(.*)\.py$#auto_examples/\1.html#'
     project_files=$(echo "$files" | grep '^skrub/')
     if [ -n "$project_files" ]
     then
