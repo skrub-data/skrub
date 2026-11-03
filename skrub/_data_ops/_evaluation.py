@@ -498,15 +498,24 @@ def _check_environment(environment, unused_keys):
     # Notes about checking the env keys:
     #
     # - env ⊂ variables: we check that there are no extra keys in
-    #   `environment`, i.e. all keys in `environment` correspond to a name (or ID) in
-    #   the DataOp. However in some cases users can naturally end up using a bigger
-    #   environment than what is needed. For example they want to evaluate a
-    #   sub-DataOp (such as the result of `.skb.find()` or `.skb.find_X_y()`),
-    #   and to do it we use the environment created to evaluate the full
-    #   DataOp. Users can filter the names by inspecting the DataOp or pass
-    #   _skrub_ignore_extra_keys in the env. Skrub itself keeps track of the
-    #   root DataOp when it evaluates a subset so it can compare to the full
-    #   set of variable and choice names.
+    #   `environment`, i.e. all keys in `environment` correspond to a name (or
+    #   ID) in the DataOp. However in some cases users a DataOp is naturally
+    #   evaluated in a bigger environment than what is needed. For example when
+    #   evaluating a sub-DataOp (such as the result of `.skb.find()` or
+    #   `.skb.find_X_y()`), in an environment created to evaluate the full
+    #   DataOp. For this reason, this check does not immediately raise an
+    #   exception. It emits a warning, and if an exception is later raised due
+    #   to missing data in the environment, the extra keys are shown in the
+    #   error message.
+    #   Moreover,
+    #
+    #       - Skrub itself keeps track of the root DataOp when it evaluates a
+    #         subset so it can compare the environment to the full set of
+    #         variable and choice names.
+    #
+    #       - Users can filter the names by inspecting the DataOp or pass
+    #         _skrub_ignore_extra_keys in the environment, in which case this
+    #         check is skipped.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the

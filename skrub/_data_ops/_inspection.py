@@ -66,7 +66,8 @@ def _use_table_report_display():
 
 def node_report(data_op, mode="preview", environment=None, **report_kwargs):
     # report() passes the environment for the full DataOp but this gets called
-    # for every node so extra keys in the env are expected -> ignore extra keys
+    # for every node (not just the root) so extra keys in the env
+    # are expected -> ignore extra keys
     if environment is not None:
         environment = {**environment, _utils.IGNORE_EXTRA_KEYS_NAME: True}
     result = evaluate(data_op, mode=mode, environment=environment)
