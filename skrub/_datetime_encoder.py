@@ -100,6 +100,10 @@ def _get_dt_feature_polars(col, feature):
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     if feature == "day_of_year":
         return col.dt.ordinal_day()
+    if feature.startswith("holidays_"):
+        country_iso = feature.split("_")[1]
+        return _is_holidays_pl(col, country_iso)
+
     assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
 
@@ -122,6 +126,30 @@ def _is_holidays(col, country):
     # be wary that None gives NaT and only isnull os isna
     # https://medium.com/@amit25173/understanding-pandas-nat-and-why-it-matters-e73abf694098
     return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
+
+
+def _is_holidays_pl(col, country):
+    # TODO: common code pandas / polars ?
+    try:
+        import holidays
+    except ModuleNotFoundError:
+        raise ValueError(
+            "add_holidays is set but holidays package is missing, please "
+            "install it or remove the add_holidays option"
+        )
+    # holidays dictionary is 'lazy' so we need to warm it up with
+    # existing years
+    # Only needed for polars's is_in (not needed with less performant
+    # map_elements)
+    unique_years = col.dt.year().drop_nulls().unique().to_list()
+    try:
+        country_holidays = holidays.country_holidays(
+            country=country, years=unique_years
+        )
+    except NotImplementedError:
+        raise ValueError(f"Unknown country: {country} for holidays")
+
+    return col.dt.date().is_in(country_holidays)
 
 
 class DatetimeEncoder(SingleColumnTransformer):
