@@ -351,6 +351,11 @@ def test_reject_non_datetime(df_module):
         DatetimeEncoder().fit_transform(df_module.example_column)
 
 
+def test_invalid_holidays_country(datetime_cols):
+    with pytest.raises(ValueError, match="Unknown country: ZZ for holidays"):
+        DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
+
+
 # Checking parameters for CircularEncoder and SplineEncoder
 @pytest.mark.parametrize(
     "params, transformers",
