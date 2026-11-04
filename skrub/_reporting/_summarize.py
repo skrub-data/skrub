@@ -24,6 +24,7 @@ def summarize_dataframe(
     order_by=None,
     with_plots=True,
     with_associations=True,
+    with_kendall=False,
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
@@ -47,6 +48,10 @@ def summarize_dataframe(
 
     with_associations : bool, default=True
         Compute the associations or not.
+
+    with_kendall : bool, default=False
+        Also compute Kendall's Tau correlation in the associations or not.
+        Ignored when ``with_associations`` is False.
 
     title : str or None, default=None
         A title that gets added to the returned dictionary and can be picked up
@@ -126,19 +131,21 @@ def summarize_dataframe(
         summary["associations_skipped_polars_no_pyarrow"] = True
     elif with_associations:
         if n_rows and n_columns:
-            _add_associations(df, summary)
+            _add_associations(df, summary, with_kendall=with_kendall)
         else:
             summary["top_associations"] = []
     return summary
 
 
-def _add_associations(df, dataframe_summary):
+def _add_associations(df, dataframe_summary, with_kendall=False):
     df = sbd.sample(
         df,
         n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE),
         seed=_config.get_config()["subsampling_seed"],
     )
-    associations = _column_associations.column_associations(df)
+    associations = _column_associations.column_associations(
+        df, compute_kendall=with_kendall
+    )
 
     # get only the top _N_TOP_ASSOCIATIONS
     associations = sbd.slice(associations, _N_TOP_ASSOCIATIONS)

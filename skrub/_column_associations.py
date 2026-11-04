@@ -13,13 +13,16 @@ _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
 
 
-def column_associations(df, *, compute_pearson=True):
+def column_associations(
+    df, *, compute_pearson=True, compute_spearman=True, compute_kendall=False
+):
     """Get measures of statistical associations between all pairs of columns.
 
-    Reported metrics include Cramer's V statistic and Pearson's Correlation
-    Coefficient. The result is returned as a dataframe that contains the column
-    name and idx for the left and right table and the requested associations;
-    results are sorted in descending order by Cramer's V association.
+    Reported metrics include Cramer's V statistic, Pearson's and Spearman's
+    Correlation Coefficients and, optionally, Kendall's Tau. The result is
+    returned as a dataframe that contains the column name and idx for the left
+    and right table and the requested associations; results are sorted in
+    descending order by Cramer's V association.
 
     Parameters
     ----------
@@ -27,6 +30,10 @@ def column_associations(df, *, compute_pearson=True):
         The dataframe whose columns will be compared to each other.
     compute_pearson : bool, default=True
         Whether to compute Pearson's Correlation Coefficient. Currently, computing Pearson correlations for polars DataFrames requires PyArrow to be installed and internally converts the dataframe to pandas.
+    compute_spearman : bool, default=True
+        Whether to compute Spearman's Rank Correlation Coefficient. Currently, computing Spearman correlations for polars DataFrames requires PyArrow to be installed and internally converts the dataframe to pandas.
+    compute_kendall : bool, default=False
+        Whether to compute Kendall's Tau Rank Correlation Coefficient. It is slower to compute than the other correlations, so it is not computed by default. Currently, computing Kendall correlations for polars DataFrames requires PyArrow to be installed and internally converts the dataframe to pandas.
 
     Returns
     -------
@@ -38,9 +45,11 @@ def column_associations(df, *, compute_pearson=True):
     The result is returned as a dataframe with columns:
 
     ``['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v', 'pearson_corr']``.
+    'right_column_idx', 'cramer_v', 'pearson_corr', 'spearman_corr']``.
 
-    When ``compute_pearson=False``, the ``'pearson_corr'`` column is omitted.
+    When ``compute_pearson=False`` (resp. ``compute_spearman=False``), the
+    ``'pearson_corr'`` (resp. ``'spearman_corr'``) column is omitted. When
+    ``compute_kendall=True``, a ``'kendall_corr'`` column is added at the end.
 
     As the function is commutative, each pair of columns appears only once
     (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
@@ -66,6 +75,19 @@ def column_associations(df, *, compute_pearson=True):
 
     * `Pearson's Correlation Coefficient
       <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+
+    Spearman's and Kendall's Rank Correlation Coefficients are computed in the
+    same way as Pearson's, using the corresponding pandas method. They only
+    depend on the ranks of the values, so they measure how well the
+    relationship between two variables can be described by a monotonic
+    function, which need not be linear. They give a value between -1 and +1
+    (inclusive).
+
+    * `Spearman's Rank Correlation Coefficient
+      <https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient>`_
+
+    * `Kendall's Tau Rank Correlation Coefficient
+      <https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient>`_
 
     * `pandas.DataFrame.corr
       <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_
@@ -93,32 +115,37 @@ def column_associations(df, *, compute_pearson=True):
     >>> # Compute the associations
     >>> associations = skrub.column_associations(df)
     >>> associations # doctest: +SKIP
-       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v  pearson_corr
-    0              c_1                1               c_4                 4    0.8215        0.1597
-    1              c_0                0               c_1                 1    0.8215        0.1123
-    2              c_0                0               c_3                 3    0.7551        0.3212
-    3              c_1                1               c_3                 3    0.6837       -0.1887
-    4              c_0                0               c_4                 4    0.6837       -0.3202
-    5              c_3                3               c_4                 4    0.6053       -0.0150
-    6              c_2                2               c_3                 3    0.6053        0.1757
-    7              c_0                0               c_2                 2    0.6053       -0.0578
-    8              c_2                2               c_4                 4    0.5169       -0.2885
-    9              c_1                1               c_2                 2    0.4122       -0.4986
+       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v  pearson_corr  spearman_corr
+    0              c_1                1               c_4                 4    0.8215        0.1597         0.1820
+    1              c_0                0               c_1                 1    0.8215        0.1123         0.0391
+    2              c_0                0               c_3                 3    0.7551        0.3212         0.3534
+    3              c_1                1               c_3                 3    0.6837       -0.1887        -0.0872
+    4              c_0                0               c_4                 4    0.6837       -0.3202        -0.3985
+    5              c_3                3               c_4                 4    0.6053       -0.0150        -0.1549
+    6              c_2                2               c_3                 3    0.6053        0.1757         0.0617
+    7              c_0                0               c_2                 2    0.6053       -0.0578        -0.0015
+    8              c_2                2               c_4                 4    0.5169       -0.2885        -0.3744
+    9              c_1                1               c_2                 2    0.4122       -0.4986        -0.3955
     >>> pd.reset_option('display.width')
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
     """  # noqa: E501
-    cramer_v_table = _stack_symmetric_associations(
+    associations = _stack_symmetric_associations(
         _cramer_v_matrix(df),
         df,
     )
-    if not compute_pearson:
-        return cramer_v_table
-    pearson_c_table = _compute_pearson(df)
     on = ["left_column_name", "right_column_name"]
-    return _join_utils.left_join(
-        cramer_v_table, pearson_c_table, right_on=on, left_on=on
-    )
+    for compute, corr_func, val in [
+        (compute_pearson, sbd.pearson_corr, "pearson_corr"),
+        (compute_spearman, sbd.spearman_corr, "spearman_corr"),
+        (compute_kendall, sbd.kendall_corr, "kendall_corr"),
+    ]:
+        if compute:
+            corr_table = _compute_correlation(df, corr_func, val)
+            associations = _join_utils.left_join(
+                associations, corr_table, right_on=on, left_on=on
+            )
+    return associations
 
 
 def _stack_symmetric_associations(associations, df):
@@ -275,27 +302,31 @@ def _compute_cramer(table, n_samples):
     return stat
 
 
-def _compute_pearson(df):
-    """Compute the Pearson's correlation coefficient for all pairs of columns.
+def _compute_correlation(df, corr_func, val):
+    """Compute a correlation coefficient for all pairs of columns.
 
-    This returns the Pearson's correlation as a dataframe in the long format, of shape
+    ``corr_func`` is one of ``sbd.pearson_corr``, ``sbd.spearman_corr`` or
+    ``sbd.kendall_corr``, and ``val`` is the name of the output column holding
+    the coefficient.
+
+    This returns the correlation as a dataframe in the long format, of shape
     (n samples * n samples, 3), whose module is the same as the input.
     """
-    corr = sbd.pearson_corr(df)
+    corr = corr_func(df)
     if sbd.shape(corr)[0] == 0:
         return sbd.make_dataframe_like(
             df,
             {
                 "left_column_name": np.array([], dtype="str"),
                 "right_column_name": np.array([], dtype="str"),
-                "pearson_corr": np.array([], dtype="float64"),
+                val: np.array([], dtype="float64"),
             },
         )
     return _melt(
         corr,
         left_col="left_column_name",
         right_col="right_column_name",
-        val="pearson_corr",
+        val=val,
     )
 
 

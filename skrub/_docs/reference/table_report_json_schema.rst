@@ -346,3 +346,16 @@ association between a pair of columns.
        <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
        coefficient (``[-1, 1]``) for the pair. ``null`` when it could not be
        computed (e.g. one column is not numeric).
+   * - ``spearman_corr``
+     - number or null
+     - `Spearman rank correlation
+       <https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient>`_
+       coefficient (``[-1, 1]``) for the pair. ``null`` when it could not be
+       computed (e.g. one column is not numeric).
+   * - ``kendall_corr``
+     - number or null
+     - `Kendall rank correlation (Tau)
+       <https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient>`_
+       coefficient (``[-1, 1]``) for the pair. ``null`` when it could not be
+       computed (e.g. one column is not numeric). Present only when the report
+       was created with ``compute_kendall=True``.
