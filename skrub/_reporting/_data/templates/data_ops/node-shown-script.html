@@ -1,0 +1,8 @@
+<script>
+ // Tell index.html (which displays this page in an iframe) which node is shown
+ // (null when no particular node is).
+ if (window.parent !== window) {
+     window.parent.postMessage(
+         {type: "skrub-report-node-shown", nodeId: {{ node_id | tojson }}}, "*");
+ }
+</script>

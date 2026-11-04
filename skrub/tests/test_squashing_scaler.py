@@ -144,3 +144,21 @@ def test_squashing_scaler_known_values(df_module):
         -1, 1
     )
     assert_almost_equal(X_target, X_out)
+
+
+@pytest.mark.parametrize(
+    "dtype, magnitude",
+    [
+        (np.float16, 1e4),
+        (np.float32, 1e30),
+        (np.float64, 1e200),
+    ],
+)
+def test_squashing_scaler_large_finite_outliers(dtype, magnitude):
+    # Large but finite outliers should be soft-clipped to ~max_absolute_value
+    # instead of being mapped to 0 by an overflow in the intermediate square.
+    train = np.array([[-2], [-1], [0], [1], [2]], dtype=dtype)
+    values = np.array([[-magnitude], [0], [magnitude]], dtype=dtype)
+    tfm = SquashingScaler().fit(train)
+    X_out = tfm.transform(values)
+    assert_almost_equal(X_out, np.array([[-3.0], [0.0], [3.0]]), decimal=2)
