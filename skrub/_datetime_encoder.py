@@ -13,6 +13,7 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
+from ._utils import import_optional_dependency
 
 __all__ = ["DatetimeEncoder"]
 
@@ -86,7 +87,7 @@ def _get_dt_feature_pandas(col, feature):
         return col.dt.day_of_year
     if feature.startswith("holidays_"):
         country_iso = feature.split("_")[1]
-        return _is_holidays(col, country_iso)
+        return _is_holidays_pandas(col, country_iso)
 
     assert feature in _TIME_LEVELS
     return getattr(col.dt, feature)
@@ -102,21 +103,15 @@ def _get_dt_feature_polars(col, feature):
         return col.dt.ordinal_day()
     if feature.startswith("holidays_"):
         country_iso = feature.split("_")[1]
-        return _is_holidays_pl(col, country_iso)
+        return _is_holidays_polars(col, country_iso)
 
     assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
 
 
-def _is_holidays(col, country):
-    # TODO: common code pandas / polars ?
-    try:
-        import holidays
-    except ModuleNotFoundError:
-        raise ValueError(
-            "add_holidays is set but holidays package is missing, please "
-            "install it or remove the add_holidays option"
-        )
+def _is_holidays_pandas(col, country):
+    holidays = import_optional_dependency("holidays")
+
     try:
         country_holidays = holidays.country_holidays(country)
     except NotImplementedError:
@@ -128,15 +123,9 @@ def _is_holidays(col, country):
     return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
 
 
-def _is_holidays_pl(col, country):
-    # TODO: common code pandas / polars ?
-    try:
-        import holidays
-    except ModuleNotFoundError:
-        raise ValueError(
-            "add_holidays is set but holidays package is missing, please "
-            "install it or remove the add_holidays option"
-        )
+def _is_holidays_polars(col, country):
+    holidays = import_optional_dependency("holidays")
+
     # holidays dictionary is 'lazy' so we need to warm it up with
     # existing years
     # Only needed for polars's is_in (not needed with less performant
