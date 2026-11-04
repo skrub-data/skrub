@@ -1,9 +1,9 @@
 import builtins
 import sys
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 from skrub import _dataframe as sbd
 from skrub._drop_similar import DropSimilar, _filter_associations

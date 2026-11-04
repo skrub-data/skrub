@@ -15,11 +15,11 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import selectors as s
 from ._base import SkrubBaseEstimator
+from ._check_input import CheckInputDataFrame
 from ._column_associations import column_associations
 from ._dataframe._common import raise_dispatch_unregistered_type
 from ._dispatch import dispatch
 from ._select_cols import DropCols
-from ._check_input import CheckInputDataFrame
 
 
 @dispatch
