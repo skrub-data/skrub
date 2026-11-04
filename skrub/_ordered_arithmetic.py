@@ -1,27 +1,30 @@
+import pandas as pd
+from sklearn.base import TransformerMixin
+
 from . import _dataframe as sbd
 from . import selectors as s
-from ._base import SkrubBaseEstimator, TransformerMixin
+from ._base import SkrubBaseEstimator
+
+# from ._dispatch import dispatch, raise_dispatch_unregistered_type
+
+print(sbd.__name__)
+__all__ = ["OrderedArithmetic"]
 
 
-def _mode_frequency(X):
-    """Compute the mode frequency for each feature in a dataframe.
+# @dispatch
+# def top_N_features(modes, N):
+#     raise_dispatch_unregistered_type(modes)
 
-    Parameters
-    ----------
-    X : dataframe of shape (n_samples, n_features)
-        Input data to compute mode frequency.
 
-    Returns
-    -------
-    dict
-        A dictionary containing the mode frequency for each feature.
-    """
-    mode_freq = {}
-    for col in s.select(X, s.numeric).columns:
-        mode_freq[col] = X[col].value_counts(normalize=True).max()
+# @top_N_features.specialize("pandas")
+# def _top_N_features_pandas(modes, N):
+# # Get the column names
+#     top_N = modes.iloc[0].nlargest(n).index.tolist()
 
-    # Sort the dictionary by mode frequency in ascending order and return it
-    return dict(sorted(mode_freq.items(), key=lambda item: item[1]))
+
+# @top_N_features.specialize("polars")
+# def _top_N_features_polars(df, N):
+#     return "polars"
 
 
 class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
@@ -60,8 +63,8 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         tau_miss=0.95,
         tau_mode=0.95,
         max_base_feats=100,
-        M_features=100,
-        R_order=2,
+        Mfeatures=10,
+        Rorder=2,
         exclude_cols=None,
         max_sample=10000,
     ):
@@ -69,8 +72,8 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         self.tau_miss = tau_miss
         self.tau_mode = tau_mode
         self.max_base_feats = max_base_feats
-        self.M_features = M_features
-        self.R_order = R_order
+        self.M_features = Mfeatures
+        self.R_order = Rorder
         self.exclude_cols = exclude_cols
         self.max_sample = max_sample
 
@@ -93,13 +96,12 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
                 The transformed input.
             """
         # sample 10% of the data up to max_sample
-        n = min(X.shape[0] * 0.10, max_sample=self.max_sample)
-        self.filter = self._filter(sbd.sample(X, n))
-        output = self._generate_features(X, y=y)
+        n = min(int(X.shape[0] * 0.10), self.max_sample)
+        self.filter = self._filter(sbd.sample(s.select(X, s.numeric()), n))
+        output = "output"  # self._generate_features(X, y=y)
         # for sklearn DO I NEED THESE TOO?
         # self.feature_names_in_ = self._preprocessors[0].feature_names_out_
         # self.n_features_in_ = len(self.feature_names_in_)
-
         return output
 
     def _transform(self, X, y=None):
@@ -107,43 +109,71 @@ class OrderedArithmetic(TransformerMixin, SkrubBaseEstimator):
         return output
 
     def _filter(self, X):
-        f_mode = _mode_frequency(X)
+        modes = self._mode_frequencies(X)
+
         # selectors which define the filtering rules
         low_card = ~s.cardinality_below(self.tau_card)
         missing = ~s.has_nulls(self.tau_miss)
-        f_mode_threshold = s.cols(lambda col: f_mode[col] < self.tau_mode)
+        fmode_threshold = s.select(
+            modes, s.filter(lambda col: sbd.max(col) < self.tau_mode)
+        )
+        fmode_threshold = s.cols(*fmode_threshold)
         top_N_features = s.cols(
-            f_mode.keys()[: min(self.max_base_feats, len(f_mode.keys()))]
+            *modes.iloc[0].nlargest(self.max_base_feats).index.tolist()
         )
-        excluded = s.cols(self.exclude_cols) if self.exclude_cols else s.none
 
-        filter = (
-            s.numeric
-            & low_card
-            & missing
-            & f_mode_threshold
-            & top_N_features
-            & ~excluded
-        )
+        filter = s.numeric() & low_card & missing & fmode_threshold & top_N_features
+        if self.exclude_cols:
+            excluded = s.cols(*self.exclude_cols)
+            filter = filter & ~excluded
 
         return filter
+        #
+        # return [s.numeric(),
+        #         low_card,
+        #         missing,
+        #         fmode_threshold,
+        #         top_N_features,
+        #         ]
 
     def _generate_features(self, X, y=None):
-        # combinatorics
-        # combinations = itertools.combinations(X.columns, 2)
-        # permutations = itertools.permutations(X.columns, 2)
+        # X_filtered = s.select(X, self.filter)
 
-        # add = random.sample(
-        #     list(combinations), min(self.M_features, len(list(combinations)))
-        # )
-        # subtract = random.sample(
-        #     list(permutations), min(self.M_features, len(list(permutations)))
-        # )
-        # multiply = random.sample(
-        #     list(combinations), min(self.M_features, len(list(combinations)))
-        # )
-        # divide = random.sample(
-        #     list(permutations), min(self.M_features, len(list(permutations)))
-        # )
+        # self.nfeatures = 0
+        # # combinatorics
+        # #   combos = itertools.combinations(X_filtered.columns, 2)
 
+        # # should this be a decorator?
+        # def _generate_indices(columns, order):
+        #     combos = itertools.combinations(columns, order)
+        #     perms = itertools.permutations(columns, order)
+
+        #     add = random.sample(perms, min(self.M_features, len(perms)))
+        #     subtract = random.sample(combos, min(self.M_features, len(combos)))
+        #     multiply = random.sample(perms, min(self.M_features, len(perms)))
+        #     divide = random.sample(perms, min(self.M_features, len(perms)))
+
+        #     return add, subtract, multiply, divide
+
+        # order = 2
+        # features = []
+        # while self.nfeatures < self.M_features:
+        #     if len(features) % 4 == 0:
+        #         order += 1
+
+        #     perms = itertools.permutations(X_filtered.columns, 2)
+        #     pairs = random.sample(perms, min(self.M_features, len(perms)))
+        #     features.append(pairs)
+        #     self.nfeatures += len(pairs)
         pass
+
+    def _mode_frequencies(self, X, y=None):
+        N = sbd.shape(X)[0]
+
+        modes = {
+            n: sorted(
+                sbd.to_list(sbd.value_counts(sbd.col(X, n))["count"] / N), reverse=True
+            )[:1]
+            for n in sbd.column_names(X)
+        }
+        return pd.DataFrame(modes)
