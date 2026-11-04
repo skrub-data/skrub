@@ -17,7 +17,6 @@ from sklearn.utils import check_random_state
 
 import skrub
 from skrub import selectors as s
-from skrub._apply_to_each_col import ApplyToEachCol
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
@@ -44,6 +43,33 @@ def test_slice():
     c = a[:b]
     assert c.skb.eval({"a": list(range(10)), "b": 3}) == [0, 1, 2]
     assert c.skb.eval({"a": list(range(10, 20)), "b": 5}) == [10, 11, 12, 13, 14]
+
+
+def test_unpacking():
+    a = skrub.var("a", [10, 20, 30])
+    first, second, third = a
+    assert repr(first).startswith("<GetItem 0>")
+    assert (first.skb.eval(), second.skb.eval(), third.skb.eval()) == (10, 20, 30)
+    assert (first + second).skb.eval({"a": [1, 2, 3]}) == 3
+
+
+def test_unpacking_iterable():
+    # the result does not need to be a sequence, and an iterator must be
+    # consumed only once even though each target indexes into it.
+    @skrub.deferred
+    def f():
+        yield 1
+        yield 2
+        yield 3
+
+    a, b, c = f()
+    assert (a + b + c).skb.eval() == 6
+
+
+def test_unpacking_nested():
+    a = skrub.var("a", [1, [2, 3]])
+    first, (second, third) = a
+    assert (first.skb.eval(), second.skb.eval(), third.skb.eval()) == (1, 2, 3)
 
 
 def test_estimator():
@@ -74,7 +100,7 @@ def test_environement_with_values():
     # however if we provide a binding for any of the variables we must do it
     # for all the variables actually used, `value` is not considered for any
     # variable.
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         # Note: errors and messages are checked in detail in `test_errors.py`,
         # not here.
         f.skb.eval({"a": "welcome"})
@@ -86,7 +112,7 @@ def test_environement_with_values():
     # it is fine for a variable that is not actually used to be missing from
     # the environment. Here we override the value of 'd' so a, b, c are not
     # needed to compute it
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         f.skb.eval({"e": "3"})
     assert f.skb.eval({"d": "12", "e": "3"}) == "123"
 
@@ -150,7 +176,7 @@ def test_choice_in_environment():
     # for all variables. Note it does not need to be one of the choice's
     # outcomes.
     assert d.skb.eval({"c": 3}) == 113
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         d.skb.eval({"c": 3, "b": 20})
     assert d.skb.eval({"c": 3, "b": 20, "a": 400}) == 423
 
@@ -164,22 +190,18 @@ def test_becomes_default():
     # default
     assert c.skb.eval({"b": 20}) == 21
     # Whereas b is not
-    if sys.version_info < (3, 11):
-        err_t, err_msg = RuntimeError, "Evaluation of node <Var 'b'> failed"
-    else:
-        err_t, err_msg = KeyError, "No value has been provided for 'b'"
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         c.skb.eval({"a": 10})
     d = c.skb.clone(drop_values=True)
     assert d.skb.get_data() == {"a": 1}
     assert d.skb.eval({"b": 20}) == 21
     assert d.skb.eval({"a": 10, "b": 20}) == 30
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         d.skb.eval({})
     learner = c.skb.make_learner()
     assert learner.fit_transform({"b": 20}) == 21
     assert learner.fit_transform({"a": 10, "b": 20}) == 30
-    with pytest.raises(err_t, match=err_msg):
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
         learner.fit_transform({})
 
 
@@ -216,7 +238,7 @@ def test_match():
     assert d.skb.eval({"a": "right", "c": 3}) == 3
 
     # if there is no match we get KeyError:
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         d.skb.eval({"a": "missing key", "b": 0, "c": 0})
 
     # unless we provide a default:
@@ -253,7 +275,7 @@ def test_transformer_with_score():
     or other nodes than Apply do not affect this.
     """
     X_a, y_a = make_regression()
-    env = {"X": X_a, "y": y_a}
+    env = {"X": X_a, "y": y_a, "_skrub_ignore_extra_keys": True}
     feat = skrub.X().skb.apply(PCA(n_components=2)).skb.apply_func(lambda x: x)
     y = skrub.y()
     ridge_1 = feat.skb.apply(Ridge(), y=y)
@@ -564,23 +586,20 @@ def test_data_op_impl():
 
     a = _data_ops.DataOp(A())
     assert repr(a) == "<A>"
-    # This is raising a RuntimeError in < Python 3.11
-    with pytest.raises((NotImplementedError, RuntimeError)):
+    with pytest.raises(NotImplementedError):
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap", "how"])
-@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "how", "allow_reject"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap"])
+@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "allow_reject"])
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or no_wrap=True, or how='no_wrap') the estimator can only be
+    # dataframe) (or no_wrap=True) the estimator can only be
     # applied to the full input without wrapping in ApplyToCols, ApplyToEachCol
     # or ApplyToSubFrame. In this case if the user passed a parameter that
     # would require wrapping, such as passing a value for `cols` that is not
-    # `all()`, or passing how='cols' or allow_reject=True, we get an error.
+    # `all()`, or passing allow_reject=True, we get an error.
 
-    if bad_param == "how" and why_no_wrap in ["no_wrap", "how"]:
-        return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
 
@@ -591,8 +610,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
     else:
         estimator = PassThrough()
         y = None
-    how = "no_wrap" if why_no_wrap == "how" else "auto"
-    # X is a numpy array: how must be no_wrap and selecting columns is not
+    # X is a numpy array: selecting columns is not
     # allowed.
     if bad_param == "cols":
         if why_no_wrap == "numpy":
@@ -608,49 +626,25 @@ def test_apply_bad_params(why_no_wrap, bad_param):
             exclude_cols = ["col_0"]
     else:
         exclude_cols = None
-    how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
     no_wrap = True if why_no_wrap == "no_wrap" else False
 
     with pytest.raises(
-        (ValueError, RuntimeError),
+        RuntimeError,
         match=(
             r"(`cols` must be `all\(\)`|`exclude_cols` must be None|"
-            r"`how` must be 'auto'|`allow_reject` must be False)"
+            r"`allow_reject` must be False)"
         ),
     ):
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*how.*deprecated.*")
             X.skb.apply(
                 estimator,
                 y=y,
                 no_wrap=no_wrap,
-                how=how,
                 allow_reject=allow_reject,
                 cols=cols,
                 exclude_cols=exclude_cols,
             )
-
-
-def test_apply_how():
-    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    X = skrub.var("X", df)
-    t = PassThrough()
-    for how in ["cols", "frame", "no_wrap"]:
-        with pytest.warns(
-            FutureWarning,
-            match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-        ):
-            assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
-    assert list(X.skb.apply(t, how="auto").skb.eval().columns) == ["a", "b"]
-    with pytest.raises(RuntimeError, match="`how` must be one of"):
-        X.skb.apply(t, how="bad value")
-    with pytest.warns(
-        FutureWarning,
-        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-    ):
-        wrapper = X.skb.apply(t, how="cols").skb.applied_estimator.skb.eval()
-        assert isinstance(wrapper, ApplyToEachCol)
 
 
 def test_apply_no_wrap():
@@ -727,7 +721,7 @@ def test_apply_kwargs():
 
 
 def test_apply_transformer_kwargs():
-    # check kwargs get passed correctly to the transformer for all 'how' values.
+    # check kwargs get passed correctly to the transformer for all 'no_wrap' values.
     class T(BaseEstimator):
         def fit_transform(self, X, y=None, extra_f=None):
             assert extra_f == "kwarg for fit_transform"
@@ -741,21 +735,12 @@ def test_apply_transformer_kwargs():
         "fit_transform_kwargs": {"extra_f": "kwarg for fit_transform"},
         "transform_kwargs": {"extra_t": "kwarg for transform"},
     }
-    learner = (
-        skrub.var("df")
-        .skb.apply(T(), how="no_wrap", **kwargs)
-        .skb.apply(T(), how="cols", **kwargs)
-        .skb.apply(T(), how="frame", **kwargs)
-        .skb.make_learner()
-    )
+    learner = skrub.var("df").skb.apply(T(), no_wrap=True, **kwargs).skb.make_learner()
     df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    with pytest.warns(
-        FutureWarning,
-        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
-    ):
-        learner.fit({"df": df})
-        learner.fit_transform({"df": df})
-        learner.transform({"df": df})
+
+    learner.fit({"df": df})
+    learner.fit_transform({"df": df})
+    learner.transform({"df": df})
 
 
 def test_apply_kwargs_evaluation():
@@ -838,7 +823,7 @@ def test_apply_kwargs_evaluation():
 
 def test_apply_bad_kwargs():
     with pytest.raises(
-        (TypeError, RuntimeError),
+        RuntimeError,
         match=(
             r".*The `fit_kwargs` passed to `\.skb\.apply\(\)` should be a dict of named"
             r" arguments"
@@ -950,6 +935,42 @@ def test_get_vars():
     assert list(d.skb.get_vars().keys()) == ["a", "b"]
     assert d.skb.get_vars()["a"] is a
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+def test_get_choices():
+    a = skrub.var("a")
+    named = skrub.choose_float(0.0, 1.0, name="x")
+    unnamed = skrub.choose_from([1, 2])
+    d = a + named + unnamed
+
+    choices = d.skb.get_choices()
+    assert list(choices.keys()) == ["x", "choose_from([1, 2])"]
+    assert choices["x"] is named
+    assert choices["choose_from([1, 2])"] is unnamed
+    assert d.skb.get_choices(named_only=True) == {"x": named}
+    assert list(
+        d.skb.get_vars(all_named_ops=True) | d.skb.get_choices(named_only=True)
+    ) == [
+        "a",
+        "x",
+    ]
+
+
+def test_get_choices_unnamed_duplicate_display_names():
+    d = skrub.var("a") + skrub.choose_bool() + skrub.choose_bool()
+    assert list(d.skb.get_choices().keys()) == ["choose_bool()", "choose_bool()_1"]
+
+
+def test_get_choices_nested():
+    # choices nested inside the outcome of another choice are also found
+    e = skrub.choose_from(
+        [Ridge(alpha=skrub.choose_float(0.1, 1.0, name="alpha")), DummyRegressor()],
+        name="regressor",
+    ).as_data_op()
+    choices = e.skb.get_choices()
+    assert set(choices.keys()) == {"alpha", "regressor"}
+    assert choices["alpha"].name == "alpha"
+    assert choices["regressor"].name == "regressor"
 
 
 def test_set_data():

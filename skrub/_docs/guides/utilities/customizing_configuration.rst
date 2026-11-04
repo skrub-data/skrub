@@ -39,7 +39,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report_data_ops', 'table_report_plots_threshold', 'table_report_associations_threshold', 'table_report_n_rows', 'table_report_verbosity', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
+dict_keys(['use_table_report_data_ops', 'table_report_plots_threshold', 'table_report_associations_threshold', 'table_report_n_rows', 'table_report_verbosity', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'cache', 'target_cache_size', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
 
 These are the parameters currently available in the global configuration:
 
@@ -54,7 +54,7 @@ These are the parameters currently available in the global configuration:
    * - ``use_table_report_data_ops``
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
-     - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
+     - Set the HTML representation used for the DataOps previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
    * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
@@ -86,7 +86,15 @@ These are the parameters currently available in the global configuration:
    * - ``data_dir``
      - ``~/skrub_data``
      - ``SKB_DATA_DIRECTORY``
-     - Set the default location used by skrub to store datasets and other data, such as the Data Ops reports.
+     - Set the default location used by skrub to store datasets and other data, such as the DataOps reports.
+   * - ``cache``
+     - ``False``
+     - ``SKB_CACHE``
+     - Enable :ref:`caching <user_guide_data_ops_caching>` of the estimators and functions used in a DataOp. ``True`` uses a default directory inside ``data_dir``; a path can also be provided.
+   * - ``target_cache_size``
+     - ``'2G'``
+     - ``SKB_TARGET_CACHE_SIZE``
+     - Approximate size above which the cache directory is pruned, as an int (bytes) or a string such as ``'3G'``. ``None`` disables pruning.
    * - ``eager_data_ops``
      - ``True``
      - ``SKB_EAGER_DATA_OPS``

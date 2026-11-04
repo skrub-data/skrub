@@ -325,9 +325,8 @@ def histogram(col, duration_unit=None, color=COLOR_0):
 def line(x_col, y_col):
     """Line plot for a numeric column.
 
-    ``x_col`` provides the x-axis values, ie the sorting column (corresponding
-    to the report's ``order_by`` parameter). ``y_col`` is the column to plot as
-    a function of x.
+    ``x_col`` provides the x-axis values, ie the sorting column.
+    ``y_col`` is the column to plot as a function of x.
     """
     x = sbd.to_numpy(x_col)
     y = sbd.to_numpy(y_col)

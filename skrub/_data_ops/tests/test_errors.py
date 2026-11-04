@@ -1,7 +1,8 @@
 import pickle
 import re
-import sys
 import traceback
+import types
+import warnings
 
 import numpy as np
 import pytest
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 import skrub
+from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -26,6 +28,79 @@ def test_for():
     ):
         for _item in a:
             pass
+
+
+def test_star_unpacking():
+    # unlike `a, b = data_op`, iteration with a starred target does not tell us
+    # how many values are expected so it remains unsupported.
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, *_rest = a
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        (lambda *args: None)(*a)
+
+
+def test_unpacking_wrong_number_of_targets():
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*too many values to unpack \(expected 2, got 3\)",
+    ):
+        _first, _second = a
+    with pytest.raises(
+        RuntimeError,
+        match=r"(?s)Evaluation of 'unpack\(\)' failed"
+        r".*not enough values to unpack \(expected 4, got 3\)",
+    ):
+        _first, _second, _third, _fourth = a
+
+
+def _bytecode_inspection_failure(code):
+    raise RuntimeError("cannot inspect bytecode")
+
+
+@pytest.mark.parametrize(
+    "module_name, replacement",
+    [
+        # a Python implementation that does not provide sys._getframe
+        pytest.param("sys", types.SimpleNamespace(), id="no_getframe"),
+        # inspecting the bytecode fails
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=_bytecode_inspection_failure),
+            id="inspection_error",
+        ),
+        # the instruction being executed is not found in the bytecode
+        pytest.param(
+            "dis",
+            types.SimpleNamespace(get_instructions=lambda code: iter(())),
+            id="instruction_not_found",
+        ),
+    ],
+)
+def test_unpacking_without_bytecode_inspection(monkeypatch, module_name, replacement):
+    # `a, b = data_op` relies on finding the UNPACK_SEQUENCE instruction that is
+    # being executed. When that is not possible we fall back on refusing to
+    # iterate, as users can always index into the result instead.
+    monkeypatch.setattr(_data_ops, module_name, replacement)
+    a = skrub.var("a", [1, 2])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        _first, _second = a
+
+
+def test_unpacking_wrong_number_of_targets_at_runtime():
+    # without a value for 'a' the length is only known when the plan runs
+    a = skrub.var("a")
+    first, _second = a
+    with pytest.raises(ValueError, match="too many values to unpack"):
+        first.skb.eval({"a": [1, 2, 3]})
 
 
 def test_if():
@@ -287,11 +362,8 @@ def test_inconsistent_subsampling():
     pred.skb.eval({"X": X_a, "y": y_a})
     # evaluating with subsampling raises
     with pytest.raises(
-        (ValueError, RuntimeError),
-        match=(
-            "(`y` was subsampled.*`X` was not)|(Evaluation of node <Apply"
-            " LogisticRegression> failed)"
-        ),
+        ValueError,
+        match="`y` was subsampled.*`X` was not",
     ):
         pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
 
@@ -360,10 +432,8 @@ def test_missing_var():
     assert e.skb.eval() == 1
     assert e.skb.eval({}) == 1
     with pytest.raises(
-        (KeyError, RuntimeError),
-        match=(
-            "(Evaluation of node <Var 'b'> failed|No value has been provided for 'b')"
-        ),
+        KeyError,
+        match="No value has been provided for 'b'",
     ):
         e.skb.eval({"a": 10})
 
@@ -426,7 +496,7 @@ def test_call_method_errors():
     # right away, before we add the call (when creating a GetAttr node)
     a = skrub.var("a", 0)
     with pytest.raises(
-        (AttributeError, RuntimeError),
+        RuntimeError,
         match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
     ):
         a.mark_as_X()
@@ -436,7 +506,7 @@ def test_call_method_errors():
     # call `.skb.eval()` and provide a value. By then the GetAttr + Call have
     # been collapsed in the graph into a CallMethod node, so the error
     # originates from a different place but it should provide the same info.
-    with pytest.raises((AttributeError, RuntimeError)) as exc:
+    with pytest.raises(AttributeError) as exc:
         a.skb.eval({"a": 0})
     assert "Did you mean `.skb.mark_as_X` and forget the `.skb`?" in "\n".join(
         traceback.format_exception(exc.value, exc.value, exc.tb)
@@ -643,7 +713,6 @@ def test_mark_as_X_missing_cv():
         skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
 def test_missing_var_message():
     data_op = (
         skrub.var("a", "a value")
@@ -651,8 +720,11 @@ def test_missing_var_message():
         + skrub.choose_from(["?", "!"], name="c")
     )
     learner = data_op.skb.make_learner()
-    with pytest.raises(KeyError) as exc:
-        learner.fit({"bad_key": "another value"})
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+        with pytest.raises(KeyError) as exc:
+            learner.fit({"bad_key": "another value"})
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
     assert "bad_key" in full_msg
     assert "var_b_name" not in full_msg
@@ -674,24 +746,110 @@ def test_missing_var_message():
     )
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="no add_note")
 def test_missing_var_message_train_test_split():
     b = skrub.var("b")
     X = (skrub.var("x", np.arange(20)) + skrub.var("a")).skb.mark_as_X() + b
     # 'z' is extra but not 'b', even though 'b' is not needed for collecting X
     # it still exists in the DataOp as a whole.
-    with pytest.raises(KeyError, match=r"\['z'\]"):
-        X.skb.train_test_split({"z": 0, "b": 1})
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+        with pytest.raises(KeyError, match=r"\['z'\]"):
+            X.skb.train_test_split({"z": 0, "b": 1})
     # check that we still get the correct error when the env contains int (ID)
     # keys
-    with pytest.raises(KeyError, match=r"\['z'\]") as exc:
-        X.skb.train_test_split({"z": 0, b.skb.id: 1})
-    with pytest.raises(KeyError) as exc:
-        X.skb.train_test_split()
+    with warnings.catch_warnings():
+        # warning checked separately
+        warnings.simplefilter("ignore")
+
+        with pytest.raises(KeyError, match=r"\['z'\]") as exc:
+            X.skb.train_test_split({"z": 0, b.skb.id: 1})
+        with pytest.raises(KeyError) as exc:
+            X.skb.train_test_split()
     full_msg = "\n".join(traceback.format_exception(exc.value, exc.value, exc.tb))
-    print(full_msg)
     assert "No value has been provided for 'a'" in full_msg
     assert (
         "ignored by default whenever we pass an explicit 'environment' dictionary"
         not in full_msg
     )
+
+
+def test_extra_key_warning():
+    a = skrub.var("a")
+    b = a + 1
+    with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
+        a.skb.eval({"a": 0, "this_is_an_extra_key": 0})
+    with pytest.warns(UserWarning, match=r"(?s).*\[12345, 'this_is_an_extra_key'\]"):
+        b.skb.eval({"a": 0, 12345: 0, "this_is_an_extra_key": 0})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        a.skb.eval(
+            {"a": 0, "this_is_an_extra_key": 0, "_skrub_ignore_extra_keys": True}
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        # the ID of a node is a valid key
+        b.skb.eval({"a": 0, b.skb.id: 5})
+
+
+def test_extra_key_warning_sub_data_op():
+    b = skrub.var("b")
+    X = (skrub.var("x") + skrub.var("a")).skb.mark_as_X() + b
+    # even though 'b' is not needed for collecting X
+    # it still exists in the DataOp as a whole so we should not get the warning
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        X.skb.train_test_split({"x": np.arange(20), "a": 0, b.skb.id: 1})
+    with pytest.warns(UserWarning, match="(?s).*this_is_an_extra_key"):
+        X.skb.train_test_split(
+            {"x": np.arange(20), "a": 0, "b": 1, "this_is_an_extra_key": 0}
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        X.skb.train_test_split(
+            {
+                "x": np.arange(20),
+                "a": 0,
+                "b": 1,
+                "this_is_an_extra_key": 0,
+                "_skrub_ignore_extra_keys": True,
+            }
+        )
+
+
+def test_apply_deferred_func():
+    # Test warning / error when user erroneously combines skrub.deferred
+    # and .skb.apply_func (or applies deferred twice)
+
+    def f(x):
+        return x + 1
+
+    x = skrub.var("x")
+
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"(?s)deferred function was passed to \.skb\.apply_func\(\)"
+            r".*pass the original, undecorated function instead"
+        ),
+    ):
+        out = x.skb.apply_func(skrub.deferred(f))
+    assert out.skb.eval({"x": 10}) == 11
+
+    with pytest.warns(
+        UserWarning,
+        match=r"(?s)skrub\.deferred was applied twice.*only be applied once",
+    ):
+        deferred_f = skrub.deferred(skrub.deferred(f))
+    assert deferred_f(x).skb.eval({"x": 10}) == 11
+
+    # When a deferred function is wrapped inside a DataOp it cannot be
+    # inspected when building the graph. We only discover the mistake when
+    # evaluating the DataOp at which point it is too late to correct / unwrap,
+    # so we get an error instead of a warning.
+
+    with pytest.raises(Exception) as e:
+        x.skb.apply_func(skrub.as_data_op(skrub.deferred(f))).skb.eval({"x": 10})
+
+    full_msg = "\n".join(traceback.format_exception(e.value, e.value, e.tb))
+    assert "pass the original, undecorated function instead" in full_msg

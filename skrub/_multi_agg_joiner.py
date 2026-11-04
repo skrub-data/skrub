@@ -32,7 +32,7 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
     .. warning::
         The auxiliary table is stored in memory as part of the state of the transformer,
         which can lead to high memory usage if the auxiliary table is large.
-        Consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>` and
+        Consider using the :ref:`skrub DataOps <user_guide_data_ops_index>` and
         a standard dataframe library (Pandas or Polars) to perform the aggregation
         instead.
 
@@ -252,15 +252,16 @@ class MultiAggJoiner(TransformerMixin, SkrubBaseEstimator):
                 " string 'X'. If you are using a single auxiliary table, convert your"
                 " current`aux_tables` into [`aux_tables`]."
             )
+
         # Check `X` input type
-        if not hasattr(X, "__dataframe__"):
+        if not sbd.is_dataframe(X):
             raise TypeError(f"`X` must be a dataframe, got {type(X)}.")
 
         # Check `aux_tables` input types
         for i, aux_table in enumerate(aux_tables):
             if isinstance(aux_table, str) and aux_table == "X":
                 aux_tables[i] = X
-            elif not hasattr(aux_table, "__dataframe__"):
+            elif not sbd.is_dataframe(aux_table):
                 raise ValueError(
                     "`aux_tables` must be an iterable containing dataframes and/or the"
                     " string 'X'"

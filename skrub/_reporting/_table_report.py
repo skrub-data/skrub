@@ -2,7 +2,6 @@ import codecs
 import functools
 import json
 import numbers
-import warnings
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -17,6 +16,38 @@ from ._html import to_html, to_markdown
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
+
+
+def _write_text(text, file):
+    """Write ``text`` to a path or a file object, using UTF-8 encoding."""
+    if isinstance(file, (str, Path)):
+        with open(file, "w", encoding="utf8") as stream:
+            stream.write(text)
+        return
+
+    try:
+        # We don't have information about the write mode of the provided
+        # file-object. We start by writing bytes into it.
+        file.write(text.encode("utf-8"))
+        return
+    except TypeError:
+        # We end-up here if the file-object was open in text mode
+        # Let's give it another chance in this mode.
+        pass
+
+    if (encoding := getattr(file, "encoding", None)) is not None:
+        try:
+            encoding_name = codecs.lookup(encoding).name
+        except LookupError:  # pragma: no cover
+            encoding_name = None
+        if encoding_name != "utf-8":
+            raise ValueError(
+                "If `file` is a text file it should use utf-8 encoding; got:"
+                f" {encoding!r}"
+            )
+    # We write into the file-object expecting it to be in text mode at this
+    # stage and with a UTF-8 encoding.
+    file.write(text)
 
 
 def _validate_plot_and_association(plot_distributions, compute_associations, n_columns):
@@ -117,13 +148,6 @@ class TableReport:
         The default value ``None`` uses the global configuration (see
         :func:`set_config`), which then defaults to 10.
 
-    order_by : str, deprecated
-        Deprecated. Column name to use for sorting. Other numerical columns
-        will be plotted as function of the sorting column. Must be of
-        numerical or datetime type.
-
-        .. deprecated:: 0.10.0
-
     title : str
         Title for the report.
 
@@ -160,18 +184,6 @@ class TableReport:
         - ``"auto"`` (default): compute associations only when the number of
           columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
-
-    max_plot_columns : int or "all", deprecated
-        Deprecated in favor of ``plot_distributions``. This parameter overrides
-        the value chosen for ``plot_distributions`` when it is not None.
-
-        .. deprecated:: 0.9.0
-
-    max_association_columns : int or "all", deprecated
-        Deprecated in favor of ``compute_associations``. This parameter overrides
-        the value chosen for ``compute_associations`` when it is not None.
-
-        .. deprecated:: 0.9.0
 
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
@@ -270,16 +282,12 @@ class TableReport:
         self,
         dataframe,
         n_rows=None,
-        order_by=None,
         title=None,
         column_filters=None,
         verbose=None,
         plot_distributions="auto",
         compute_associations="auto",
         open_tab="table",
-        # Deprecated parameters kept for backward compatibility
-        max_plot_columns=None,
-        max_association_columns=None,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -313,17 +321,7 @@ class TableReport:
             )
         self.open_tab = open_tab
 
-        # Deprecate order_by parameter on TableReport; prefer pre-sorted dataframes
-        if order_by is not None:
-            warnings.warn(
-                "'order_by' parameter of TableReport is deprecated and will be"
-                " removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         self._summary_kwargs = {
-            "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
             "verbose": self.verbose,
@@ -335,29 +333,6 @@ class TableReport:
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
-
-        if max_plot_columns is not None:
-            warnings.warn(
-                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            plot_distributions = (
-                max_plot_columns == "all" or max_plot_columns >= self.n_columns
-            )
-
-        if max_association_columns is not None:
-            warnings.warn(
-                "'max_association_columns' is deprecated. Use 'compute_associations'"
-                " (bool) instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            compute_associations = (
-                max_association_columns == "all"
-                or max_association_columns >= self.n_columns
-            )
 
         (
             self.plot_distributions,
@@ -440,7 +415,7 @@ class TableReport:
             **self._to_html_kwargs,
         )
 
-    def json(self):
+    def json(self, indent=None):
         """Get the report data in JSON format.
 
         By default, the JSON output includes the plots in SVG format, which can
@@ -449,6 +424,12 @@ class TableReport:
 
         The schema of the JSON data is reported in :ref:`table_report_json_schema`.
 
+        Parameters
+        ----------
+        indent : int, str or None, default=None
+            Indentation used to pretty-print the JSON output, passed to
+            :func:`json.dumps`. If ``None``, the most compact representation
+            is used.
 
         Returns
         -------
@@ -457,7 +438,7 @@ class TableReport:
         """
         to_remove = ["dataframe", "sample_table"]
         data = {k: v for k, v in self._summary.items() if k not in to_remove}
-        return json.dumps(data, cls=JSONEncoder)
+        return json.dumps(data, cls=JSONEncoder, indent=indent)
 
     def dict(self):
         """Get the report data in Python Dictionary format.
@@ -505,35 +486,21 @@ class TableReport:
         file : str, pathlib.Path or file object
             The file object or path of the file to store the HTML output.
         """
-        html = self.html()
-        if isinstance(file, (str, Path)):
-            with open(file, "w", encoding="utf8") as stream:
-                stream.write(html)
-            return
+        _write_text(self.html(), file)
 
-        try:
-            # We don't have information about the write mode of the provided
-            # file-object. We start by writing bytes into it.
-            file.write(html.encode("utf-8"))
-            return
-        except TypeError:
-            # We end-up here if the file-object was open in text mode
-            # Let's give it another chance in this mode.
-            pass
+    def write_json(self, file, indent=None):
+        """Store the report data into a JSON file.
 
-        if (encoding := getattr(file, "encoding", None)) is not None:
-            try:
-                encoding_name = codecs.lookup(encoding).name
-            except LookupError:  # pragma: no cover
-                encoding_name = None
-            if encoding_name != "utf-8":
-                raise ValueError(
-                    "If `file` is a text file it should use utf-8 encoding; got:"
-                    f" {encoding!r}"
-                )
-        # We write into the file-object expecting it to be in text mode at this
-        # stage and with a UTF-8 encoding.
-        file.write(html)
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the JSON output.
+        indent : int, str or None, default=None
+            Indentation used to pretty-print the JSON output, passed to
+            :func:`json.dumps`. If ``None``, the most compact representation
+            is used.
+        """
+        _write_text(self.json(indent=indent), file)
 
     def open(self):
         """Open the HTML report in a web browser."""

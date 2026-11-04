@@ -442,15 +442,11 @@ def _fit_transform_column(
     except allowed:
         return col_name, [column], None
     except Exception as e:
-        msg = (
+        e.add_note(
             f"Transformer {transformer.__class__.__name__}.fit_transform "
             f"failed on column {col_name!r}. See above for the full traceback."
         )
-        if hasattr(e, "add_note"):
-            # TODO: simplify (remove hasattr check) after python 3.10 support is dropped
-            e.add_note(msg)
-            raise
-        raise RuntimeError(msg) from e
+        raise
     output = _utils.check_output(transformer, transformer_input, output)
     output_cols = sbd.to_column_list(output)
     return col_name, output_cols, transformer
@@ -463,15 +459,11 @@ def _transform_column(column, transformer, kwargs):
     try:
         output = transformer.transform(transformer_input, **kwargs)
     except Exception as e:
-        msg = (
+        e.add_note(
             f"Transformer {transformer.__class__.__name__}.transform "
             f"failed on column {sbd.name(column)!r}. See above for the full traceback."
         )
-        if hasattr(e, "add_note"):
-            # TODO: simplify (remove hasattr check) after python 3.10 support is dropped
-            e.add_note(msg)
-            raise
-        raise RuntimeError(msg) from e
+        raise
     # we do not call `_utils.check_output` here, assuming that if the output
     # had a correct type (e.g. polars dataframe) in `fit_transform` it will
     # have the same (correct) type in `transform`.

@@ -1,0 +1,64 @@
+{#
+  Draws a graph in the browser with a wasm build of graphviz. This is used when
+  graphviz is not installed, so we cannot create an svg.
+
+  The container initially holds the message displayed when JavaScript is
+  disabled; the script below runs right after it and replaces it with the
+  drawing (or another message if it fails), so the message is never visible when
+  JavaScript is available.
+
+  The library is taken from `window.skrubGraphviz` if the page defines it
+  (reports and `GraphDrawing.open()` have `include_graphviz`: the library is
+  written in the page just before, so they work offline, see
+  wasm-graphviz/README.md), otherwise it is loaded from a CDN (DataOps displayed
+  in notebooks, where including the library in every output would be too
+  large). The version must match the vendored one.
+#}
+{% if include_graphviz %}
+<script>{{ graphviz_wasm_script | safe }}</script>
+{% endif %}
+<div id="{{ uuid }}">
+<p>
+  Graphviz was not installed when this output was generated, so the graph is drawn
+  by your browser: this needs JavaScript (and in a notebook, an internet
+  connection). Enable JavaScript, or
+  <a href="https://graphviz.org/download/">install Graphviz</a> and generate
+  this output again.
+</p>
+</div>
+<script>
+ (async () => {
+     const container = document.getElementById("{{ uuid }}");
+     const dot = new TextDecoder().decode(Uint8Array.from(atob("{{ dot_base64 }}"), c => c.charCodeAt(0)));
+     container.textContent = "Loading graph …";
+     const cdnUrl = "https://cdn.jsdelivr.net/npm/@hpcc-js/wasm-graphviz@1.29.2/dist/index.js";
+     let usingCdn = false;
+     try {
+         let Graphviz;
+         if (window.skrubGraphviz) {
+             Graphviz = window.skrubGraphviz.Graphviz;
+         } else {
+             usingCdn = true;
+             Graphviz = (await import(cdnUrl)).Graphviz;
+         }
+         const graphviz = await Graphviz.load();
+         // graphviz only outputs the single family it was given; add fallbacks.
+         container.innerHTML = graphviz.dot(dot).replaceAll(
+             'font-family="Arial"', 'font-family="Arial,Helvetica,sans-serif"');
+         // graphviz adds a <title> (name of the graph, nodes and edges) that
+         // browsers show as a tooltip. The tooltips we want are the nodes' own.
+         // Same as for the svg produced by native graphviz.
+         container.querySelectorAll("title").forEach(title => title.remove());
+     } catch (err) {
+         const error = document.createElement("p");
+         error.textContent = "The graph cannot be drawn: " + (usingCdn
+             ? "could not download the drawing library (check your internet connection)."
+             : err.message + ".")
+             + " Or install Graphviz and generate this page again.";
+         container.textContent = "";
+         container.append(error);
+     }
+     // Let the page embedding the graph know that it is there (or failed).
+     container.dispatchEvent(new CustomEvent("graph-rendered", {bubbles: true}));
+ })();
+</script>

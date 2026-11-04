@@ -38,7 +38,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
-from skrub._data_ops import _utils
 from skrub._data_ops._estimator import _SharedDict
 
 #
@@ -670,7 +669,7 @@ def test_unsupervised():
     k_means.fit(X)
     assert (k_means.predict(X) == data_op_k_means.predict({"X": X})).all()
     assert_allclose(k_means.score(X, y), data_op_k_means.score({"X": X, "y": y}))
-    with pytest.raises((KeyError, RuntimeError)):
+    with pytest.raises(KeyError):
         data_op_k_means.score({"X": X})
 
 
@@ -1099,19 +1098,6 @@ def test_iter_cv_splits():
     assert list(s["row_indices_test"]) == [1]
 
 
-def test_train_test_split_splitter_renaming():
-    # TODO remove when `splitter` is removed in 0.7.0
-    X = skrub.X(list(range(10)))
-
-    def split(X, shuffle):
-        return train_test_split(X, shuffle=shuffle)
-
-    with pytest.warns(FutureWarning, match="`splitter`.*has been renamed"):
-        assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
-            range(7)
-        )
-
-
 def _make_grouped_data():
     return pd.DataFrame(
         {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
@@ -1443,7 +1429,6 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _utils.has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
@@ -1469,6 +1454,29 @@ def test_report(tmp_path):
     assert score_report["result"] == pytest.approx(0.94, abs=0.1)
     assert score_report["error"] is None
     assert score_report["report_path"].is_relative_to(tmp_path)
+
+    # get a fresh unfitted learner
+    pipe = data_op.skb.make_learner()
+
+    no_eval_report = pipe.report(
+        eval=False, open=False, output_dir=tmp_path / "report", overwrite=True
+    )
+    assert not pipe.__sklearn_is_fitted__()
+    assert no_eval_report["result"] is None
+    assert no_eval_report["error"] is None
+    assert no_eval_report["report_path"].is_relative_to(tmp_path)
+
+
+def test_report_eval_argument_errors():
+    learner = get_data_op_and_data("simple")[0].skb.make_learner()
+    with pytest.raises(TypeError, match="environment must be None"):
+        learner.report(environment={}, eval=False, open=False)
+    with pytest.raises(TypeError, match="mode must be None"):
+        learner.report(mode="fit", eval=False, open=False)
+    with pytest.raises(TypeError, match="environment cannot be None"):
+        learner.report(open=False)
+    with pytest.raises(TypeError, match="mode cannot be None"):
+        learner.report(environment={}, open=False)
 
 
 #

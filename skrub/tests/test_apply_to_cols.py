@@ -1,5 +1,4 @@
 import datetime
-import sys
 
 import numpy as np
 import pytest
@@ -165,9 +164,7 @@ def test_reject_column(df_module):
 
     df_module.assert_frame_equal(X_transformed, X_expected)
 
-    # TODO simplify after dropping support for python 3.10
-    err_t = RuntimeError if sys.version_info < (3, 11) else RejectColumn
-    with pytest.raises(err_t):
+    with pytest.raises(RejectColumn):
         at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=False)
         X = df_module.make_dataframe(
             {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}

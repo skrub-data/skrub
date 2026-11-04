@@ -21,7 +21,6 @@ classifiers = [
   "Environment :: Console",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -29,11 +28,11 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.23.5",
   "pandas>=1.5.3",
-  "scikit-learn>=1.4.2",
+  "scikit-learn>=1.5.2",
   "scipy>=1.9.3",
   "jinja2>=3.1.2",
   "matplotlib>=3.6.1",
@@ -108,18 +107,17 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 [tool.pixi.dependencies]
 numpy = ">=1.23.5"
 pandas = ">=1.5.3"
-scikit-learn = ">=1.4.2"
+scikit-learn = ">=1.5.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.6.1"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
 jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
-pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 sphinx-design = "*"
@@ -139,6 +137,7 @@ sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+tabicl = "*"
 
 [tool.pixi.feature.lint.dependencies]
 python = ">=3.13,<3.14"
@@ -183,11 +182,10 @@ skrub = { path = ".", editable = true }
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
 pandas = "==1.5.3"
-scikit-learn = "==1.4.2"
+scikit-learn = "==1.5.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.6.1"
-pydot = "*"
 requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
@@ -208,6 +206,7 @@ extra-index-urls = [
 # TODO remove once scikit-learn is available again in
 # https://pypi.anaconda.org/scientific-python-nightly-wheels/simple/
 index-strategy = "unsafe-first-match"
+prerelease-mode = "allow"
 
 [tool.pixi.feature.nightly-dependencies.pypi-dependencies]
 # Have to repeat dependencies here because otherwise pixi pulls from conda channels
@@ -219,19 +218,17 @@ scikit-learn = "*"
 scipy = "*"
 jinja2 = "*"
 matplotlib = "*"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = "*"
 pyarrow = "*"
-polars = "*"
 plotly = "*"
+polars = "*"
 
 [tool.pixi.feature.polars-without-pyarrow.dependencies]
 polars = "*"
 plotly = "*"
 optuna = "*"
 
-[tool.pixi.feature.py310.dependencies]
-python = "~=3.10.0"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -273,9 +270,9 @@ check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
-ci-py310-min-deps = ["py310", "min-dependencies", "test"]
-ci-py310-min-optional-deps = [
-  "py310",
+ci-py311-min-deps = ["py311", "min-dependencies", "test"]
+ci-py311-min-optional-deps = [
+  "py311",
   "min-dependencies",
   "min-optional-dependencies",
   "test",
@@ -339,6 +336,8 @@ ignore = [
 "examples/*" = ["E402"]
 "doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+"skrub/_docs/examples/**" = ["E402"]
+"skrub/_docs/tutorials/**" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
 
@@ -375,7 +374,7 @@ filterwarnings = [
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
   # Sentence-transformers using a deprecated huggingface_hub function.
   # We avoid turning huggingface_hub warnings into errors, because they get
-  # masked as OSErrors by sentence_transformers. See note in test_text_encoder.
+  # masked as OSErrors by sentence_transformers. See note in test_llm_encoder.
   'default::DeprecationWarning:huggingface_hub',
   # Ignore polars warning about horizontal concatenation being deprecated
   # We always expect dataframes to concatenate to have the same length, so the
@@ -390,7 +389,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

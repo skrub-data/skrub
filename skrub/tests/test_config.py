@@ -5,7 +5,12 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _get_default_data_dir, _parse_env_bool
+from skrub._config import (
+    _get_deprecated_int_env,
+    _load_cache_env_var,
+    _parse_env_bool,
+    get_cache_dir,
+)
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -53,6 +58,8 @@ def test_default_config():
     expected_keys = {
         "use_table_report_data_ops",
         "data_dir",
+        "cache",
+        "target_cache_size",
         "table_report_n_rows",
         "table_report_verbosity",
         "table_report_plots_threshold",
@@ -65,23 +72,6 @@ def test_default_config():
         "data_ops_open_graph_dropdown",
     }
     assert set(cfg.keys()) == expected_keys
-
-
-def test_deprecated_env_var_warning(monkeypatch, tmp_path):
-    """Test that using the deprecated SKRUB_DATA_DIRECTORY env var raises a warning."""
-    deprecated_data_dir = str(tmp_path / "deprecated_data")
-
-    with monkeypatch.context() as mp:
-        # Clear any existing SKB_DATA_DIRECTORY
-        mp.delenv("SKB_DATA_DIRECTORY", raising=False)
-        # Set the deprecated env var
-        mp.setenv("SKRUB_DATA_DIRECTORY", deprecated_data_dir)
-
-        # Call _get_default_data_folder and capture the warning
-        with pytest.warns(
-            DeprecationWarning, match="'SKRUB_DATA_DIRECTORY' is deprecated"
-        ):
-            _get_default_data_dir()
 
 
 def test_use_table_report_data_ops(simple_df):
@@ -201,85 +191,58 @@ def test_wrong_verbosity():
             pass
 
 
-def test_deprecated_max_plot_columns_set_config():
-    """set_config(max_plot_columns=...) warns and forwards
-    to table_report_plots_threshold."""
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        set_config(max_plot_columns=15)
-    assert get_config()["table_report_plots_threshold"] == 15
-    # Reset
-    set_config(table_report_plots_threshold=30)
-
-
-def test_deprecated_max_association_columns_set_config():
-    """set_config(max_association_columns=...) warns and forwards
-    to table_report_associations_threshold."""
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        set_config(max_association_columns=10)
-    assert get_config()["table_report_associations_threshold"] == 10
-    # Reset
-    set_config(table_report_associations_threshold=30)
-
-
-def test_deprecated_max_plot_columns_all_set_config():
-    """set_config(max_plot_columns='all') warns but does not change threshold."""
-    original = get_config()["table_report_plots_threshold"]
-    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
-        set_config(max_plot_columns="all")
-    assert get_config()["table_report_plots_threshold"] == original
-
-
-def test_deprecated_max_association_columns_all_set_config():
-    """set_config(max_association_columns='all') warns but does not change threshold."""
-    original = get_config()["table_report_associations_threshold"]
-    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
-        set_config(max_association_columns="all")
-    assert get_config()["table_report_associations_threshold"] == original
-
-
-@pytest.mark.parametrize(
-    "old_var,new_var",
-    [
-        ("SKB_MAX_PLOT_COLUMNS", "SKB_TABLE_REPORT_PLOTS_THRESHOLD"),
-        ("SKB_MAX_ASSOCIATION_COLUMNS", "SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD"),
-    ],
-)
-def test_deprecated_env_var_plot_association(monkeypatch, old_var, new_var):
-    """Deprecated SKB_MAX_PLOT_COLUMNS / SKB_MAX_ASSOCIATION_COLUMNS env vars warn."""
-    from skrub._config import _get_deprecated_int_env
-
+def test_get_deprecated_int_env_deprecated_var(monkeypatch):
+    """Deprecated env var is used with a warning when the new one is not set."""
     with monkeypatch.context() as mp:
-        mp.delenv(new_var, raising=False)
-        mp.setenv(old_var, "42")
-        with pytest.warns(DeprecationWarning, match=f"'{old_var}' is deprecated"):
-            result = _get_deprecated_int_env(new_var, old_var, 30)
+        mp.delenv("SKB_NEW_VAR", raising=False)
+        mp.setenv("SKB_OLD_VAR", "42")
+        with pytest.warns(DeprecationWarning, match="'SKB_OLD_VAR' is deprecated"):
+            result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
         assert result == 42
 
 
 def test_get_deprecated_int_env_new_var_takes_precedence(monkeypatch):
     """New env var takes precedence over deprecated one, no warning emitted."""
-    from skrub._config import _get_deprecated_int_env
-
     with monkeypatch.context() as mp:
-        mp.setenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", "20")
-        mp.setenv("SKB_MAX_PLOT_COLUMNS", "99")
+        mp.setenv("SKB_NEW_VAR", "20")
+        mp.setenv("SKB_OLD_VAR", "99")
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
-            result = _get_deprecated_int_env(
-                "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
-            )
+            result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
         assert result == 20
         assert not any(issubclass(w.category, DeprecationWarning) for w in caught)
 
 
 def test_get_deprecated_int_env_default(monkeypatch):
     """Returns default when neither env var is set."""
-    from skrub._config import _get_deprecated_int_env
-
     with monkeypatch.context() as mp:
-        mp.delenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", raising=False)
-        mp.delenv("SKB_MAX_PLOT_COLUMNS", raising=False)
-        result = _get_deprecated_int_env(
-            "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
-        )
+        mp.delenv("SKB_NEW_VAR", raising=False)
+        mp.delenv("SKB_OLD_VAR", raising=False)
+        result = _get_deprecated_int_env("SKB_NEW_VAR", "SKB_OLD_VAR", 30)
     assert result == 30
+
+
+def test_cache_dir(tmp_path):
+    assert get_cache_dir() is None
+    set_config(cache=True)
+    assert get_cache_dir().is_dir()
+    set_config(cache=None)
+    assert get_cache_dir() is None
+    set_config(cache=False)
+    assert get_cache_dir() is None
+    set_config(cache=tmp_path)
+    assert get_cache_dir() == tmp_path
+
+
+def test_cache_env_var(monkeypatch):
+    monkeypatch.setenv("SKB_CACHE", "none")
+    assert _load_cache_env_var() is False
+    monkeypatch.setenv("SKB_CACHE", "1")
+    assert _load_cache_env_var() is True
+    monkeypatch.setenv("SKB_CACHE", "/tmp/cache")
+    assert _load_cache_env_var() == "/tmp/cache"
+
+
+def test_unchanged():
+    # make codecov happy
+    assert repr(skrub._config.UNCHANGED) == "unchanged"
