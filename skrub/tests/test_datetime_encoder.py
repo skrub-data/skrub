@@ -224,6 +224,10 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             ),
             ["year", "month", "day", "day_of_year"],
         ),
+        (
+            dict(add_holidays="FR"),
+            ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
+        ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
@@ -318,6 +322,10 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
                 periodic_encoding="circular",
             ),
             ["weekday_circular_0", "weekday_circular_1"],
+        ),
+        (
+            dict(add_holidays="FR"),
+            ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
         ),
     ],
 )
