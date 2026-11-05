@@ -85,6 +85,7 @@ pre, code {
 
 /* Drawer displaying the selected node (or a source file) next to the graph. */
 .data_op-node > .drawer {
+    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1 1 0;
@@ -107,6 +108,14 @@ pre, code {
 
 .drawer-view[hidden] {
     display: none;
+}
+
+/* A view that is loading is not displayed yet, but takes the space of the drawer
+   so that the page it contains can lay itself out. */
+.drawer-view[data-loading] {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
 }
 
 .drawer-toolbar {

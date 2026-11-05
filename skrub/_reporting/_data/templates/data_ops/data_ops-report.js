@@ -5,9 +5,11 @@
 //   hash is kept up to date with replaceState so the URL for a specific node
 //   can be shared.
 // - The browser's back button must leave the report rather than step through
-//   nodes. So each node is opened in a fresh iframe (the initial load of an
-//   iframe adds no history entry), and pages inside the iframe navigate with
-//   location.replace() (see report-navigation.js).
+//   nodes. So the iframe is navigated with location.replace(), which adds no
+//   history entry, both from here and from the pages inside the iframe (see
+//   report-navigation.js). The same iframe is reused, so that the previous node
+//   stays visible until the next one is ready rather than flashing an empty
+//   drawer.
 // - The report must work from file:// URLs, where the iframe is cross-origin
 //   and we cannot read its location. Node pages therefore tell us what they
 //   show via postMessage (see node.html and report-navigation.js).
@@ -22,7 +24,8 @@
     // drawn later by the browser.
     const highlightStyle = document.getElementById('current-node-style');
 
-    // The iframe showing the selected node; recreated for each node.
+    // The iframe showing the selected node; created when the first node is
+    // opened and reused until the drawer is closed.
     let nodeFrame = null;
     const totalNNodes = Number(document.body.dataset.totalNodes);
 
@@ -59,10 +62,16 @@
     function openNode(nodeId) {
         closeSource();
 
-        nodeFrameContainer.replaceChildren();
-        nodeFrame = makeFrame('Details of the selected node');
-        nodeFrame.src = nodeUrl(nodeId);
-        nodeFrameContainer.append(nodeFrame);
+        if (nodeFrame) {
+            // Navigate the existing iframe: the previous page stays visible
+            // until the new one is ready, and replace() adds no history entry.
+            nodeFrame.contentWindow.location.replace(nodeUrl(nodeId));
+        } else {
+            // The initial load of an iframe adds no history entry either.
+            nodeFrame = makeFrame('Details of the selected node');
+            nodeFrame.src = nodeUrl(nodeId);
+            nodeFrameContainer.append(nodeFrame);
+        }
 
         nodeView.hidden = false;
         drawer.hidden = false;
@@ -83,17 +92,26 @@
     function openSource(url) {
         sourceFrameContainer.replaceChildren();
         const frame = makeFrame('Source code');
+        // The node view stays displayed until the source page has loaded, to
+        // avoid flashing an empty view. Meanwhile the source view is laid out
+        // but invisible (not display: none), as the page scrolls to the
+        // highlighted line when it loads.
+        sourceView.dataset.loading = '';
+        sourceView.hidden = false;
+        frame.addEventListener('load', () => {
+            nodeView.hidden = true;
+            delete sourceView.dataset.loading;
+        }, {once: true});
         frame.src = url;
         sourceFrameContainer.append(frame);
 
-        nodeView.hidden = true;
-        sourceView.hidden = false;
         drawer.hidden = false;
         document.body.classList.add('drawer-open');
     }
 
     function closeSource() {
         sourceFrameContainer.replaceChildren();
+        delete sourceView.dataset.loading;
         sourceView.hidden = true;
         if (!drawer.hidden) {
             nodeView.hidden = false;
