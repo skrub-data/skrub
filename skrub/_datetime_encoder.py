@@ -176,6 +176,10 @@ class DatetimeEncoder(SingleColumnTransformer):
         366 in the case of leap years). January 1st will be day 1, December 31st
         will be day 365 on non-leap years.
 
+    add_holidays: string (country ISO code), default=None
+        If the package holidays is installed, will add a binary variable with value
+        1.0 if the day is holiday in the country or 0.0 if not
+
     periodic_encoding : 'circular', 'spline', or None, default=None
         Add periodic features with different granularities. Add periodic features
         using either trigonometric (``circular``) or ``spline`` encoding.
@@ -367,6 +371,25 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     Here we can see the Sao Paulo input of the encoder has been converted back to the
     time zone used during the fitting and that we get the same result for "hour".
+
+    **Holidays**
+
+    Provided the `holidays` package is installed, a binary feature is_holidays_COUNTRY-ISO-CODE
+    is extracted. For example for France (iso "FR")
+
+    >>> birthday = pd.to_datetime(pd.Series([
+    ...     "2020-01-01",
+    ...     None,
+    ...     "2018-11-11",
+    ...     "2026-10-20"
+    ... ], name='birthday'))
+    >>> encoder = DatetimeEncoder(add_holidays="FR")
+    >>> encoder.fit_transform(birthday)
+       birthday_year  birthday_month  birthday_day  birthday_total_seconds  birthday_holidays_FR
+    0         2020.0             1.0           1.0            1.577837e+09                   1.0
+    1            NaN             NaN           NaN                     NaN                   NaN
+    2         2018.0            11.0          11.0            1.541894e+09                   1.0
+    3         2026.0            10.0          20.0            1.792454e+09                   0.0
 
     The DatetimeEncoder can also create new features based on either trigonometric
     functions or splines by setting ``periodic_encoder="circular"`` or
