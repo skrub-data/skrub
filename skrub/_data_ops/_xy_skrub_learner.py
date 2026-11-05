@@ -11,7 +11,7 @@
 # attribute and sends the X and y passed to estimator methods to the nodes
 # marked with .skb.mark_as_X() and .skb.mark_as_y().
 #
-# The class defined here is for skrub users. It does _not_ store any data in
+# The class defined here is for users. It does _not_ store any data in
 # attributes, instead other variables than X and y must be passed as kwargs
 # (and the typical intended usage is for DataOps that do not require anything
 # else than X and y). X and y are sent to the nodes with matching names or IDs.
