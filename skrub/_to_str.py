@@ -181,7 +181,7 @@ class ToStr(SingleColumnTransformer):
     -----
 
     For pandas versions older than 3.0, the output always has the ``object``
-    dtype, not the more recent ``StringDtype`` extension dtype, and null values 
+    dtype, not the more recent ``StringDtype`` extension dtype, and null values
     are represented by ``np.nan``. This is due to the fact that scikit-learn
     estimators and encoders do not yet handle pandas extension dtypes, especially
     in the presence of missing values (represented by ``pd.NA``).

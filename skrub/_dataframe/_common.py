@@ -316,13 +316,11 @@ def null_value_for(obj):
 
 
 def _is_pandas3_str_column(col):
-    # Check that the given column is a pandas 3 string column with np.nan as 
+    # Check that the given column is a pandas 3 string column with np.nan as
     # the missing value, and return True if so. Otherwise return False.
-    return (
-        parse_version(pd.__version__).base_version
-        >= parse_version("3.0.0").base_version
-        and getattr(col, "dtype", None) == pd.StringDtype(na_value=np.nan)
-    )
+    return parse_version(pd.__version__).base_version >= parse_version(
+        "3.0.0"
+    ).base_version and getattr(col, "dtype", None) == pd.StringDtype(na_value=np.nan)
 
 
 @null_value_for.specialize("pandas")
@@ -878,8 +876,8 @@ def to_string(col):
 def _to_string_pandas(col):
     is_na = col.isna()
     if _is_pandas3_str_column(col):
-        # If the column is already a pandas 3 string column, it is already 
-        # in the canonical form the missing values are already np.nan, so 
+        # If the column is already a pandas 3 string column, it is already
+        # in the canonical form the missing values are already np.nan, so
         # we can return it unchanged.
         return col
     if not (is_pandas_object(col) and is_string(col)):
