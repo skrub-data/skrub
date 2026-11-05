@@ -42,7 +42,7 @@ Changes
   :class:`Cleaner` and :class:`TableVectorizer`, and their missing values are
   represented by ``np.nan`` (the null representation of the ``str`` dtype)
   instead of ``pd.NA``.
-  :pr:`2392` by :user:`Riccardo Cappuzzo <rcap107>`.
+  :pr:`2404` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
