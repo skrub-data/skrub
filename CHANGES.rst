@@ -24,6 +24,13 @@ New Features
 
 Changes
 -------
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name, or node ID, in the DataOp) now causes a warning displaying the
+  extra keys to help detect typos and mistakes. It can be silenced with the
+  warnings module, or, more robustly, by adding
+  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -35,6 +42,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`SquashingScaler` no longer maps large finite outliers to zero: an
+  intermediate overflow in the computation of the soft clipping is avoided, so
+  that large finite values are soft-clipped toward ``max_absolute_value`` as
+  intended.
+  :pr:`2370` by :user:`Jay Singh <JaySingh79>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
@@ -43,6 +55,29 @@ Bugfixes
 
 Deprecations
 ------------
+- Removed the deprecated ``splitter`` parameter of :meth:`.skb.train_test_split
+  <DataOp.skb.train_test_split>`. Use ``split_func`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed support for the deprecated ``SKRUB_DATA_DIRECTORY`` environment
+  variable. Use ``SKB_DATA_DIRECTORY`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated ``TextEncoder`` alias. Use :class:`LLMEncoder` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameter ``drop_if_unique`` of
+  :class:`DropUninformative` and :class:`TableVectorizer`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameters ``max_plot_columns`` and
+  ``max_association_columns`` of :func:`set_config` and :func:`config_context`,
+  and the corresponding environment variables ``SKB_MAX_PLOT_COLUMNS`` and
+  ``SKB_MAX_ASSOCIATION_COLUMNS``. Use ``table_report_plots_threshold`` and
+  ``table_report_associations_threshold`` (and the environment variables
+  ``SKB_TABLE_REPORT_PLOTS_THRESHOLD`` and
+  ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``) instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
 0.11.0
 ===================

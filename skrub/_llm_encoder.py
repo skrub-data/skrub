@@ -6,7 +6,6 @@ from pathlib import Path
 
 import polars as pl
 from sklearn.decomposition import PCA
-from sklearn.utils import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd

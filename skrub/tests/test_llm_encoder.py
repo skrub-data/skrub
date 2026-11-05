@@ -25,7 +25,7 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer
-from skrub._llm_encoder import LLMEncoder, ModelNotFound, TextEncoder
+from skrub._llm_encoder import LLMEncoder, ModelNotFound
 from skrub._single_column_transformer import RejectColumn
 
 
