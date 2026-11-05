@@ -43,8 +43,9 @@ class ToStr(SingleColumnTransformer):
     >>> _[0]
     "('one', 1)"
 
-    A string column with the extension dtype ``StringDtype`` is converted to the
-    ``object`` dtype, and ``pd.NA`` is converted to ``np.nan``:
+    A string column with the extension dtype ``StringDtype`` is converted
+    to either the ``object`` dtype (before pandas 3.0) or the ``str`` dtype (since
+    pandas 3.0). ``pd.NA`` is converted to ``np.nan``:
 
     >>> s = pd.Series(['one', 'two', None], dtype='string')
     >>> s
@@ -179,12 +180,15 @@ class ToStr(SingleColumnTransformer):
     Notes
     -----
 
-    For pandas, the output always has the ``object`` dtype (the old way of
-    representing strings in pandas), not the more recent ``StringDtype``
-    extension dtype, and null values are represented by ``np.nan``. This is due
-    to the fact that scikit-learn estimators and encoders do not yet handle
-    pandas extension dtypes, especially in the presence of missing values
-    (represented by ``pd.NA``).
+    For pandas versions older than 3.0, the output always has the ``object``
+    dtype, not the more recent ``StringDtype`` extension dtype, and null values 
+    are represented by ``np.nan``. This is due to the fact that scikit-learn
+    estimators and encoders do not yet handle pandas extension dtypes, especially
+    in the presence of missing values (represented by ``pd.NA``).
+
+    Since pandas 3.0, the ``str`` dtype is the canonical dtype for string
+    columns and represents missing values with ``np.nan``. Columns that
+    already have the ``str`` dtype are thus passed through unchanged.
 
     """  # noqa: E501
 

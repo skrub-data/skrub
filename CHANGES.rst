@@ -37,6 +37,12 @@ Changes
   feature is extracted by default, even if all items in the column have their
   time at ``00:00:00``.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- With pandas 3.0 or newer, string columns (which have the ``str`` dtype by
+  default) are no longer downgraded to the ``object`` dtype by the
+  :class:`Cleaner` and :class:`TableVectorizer`, and their missing values are
+  represented by ``np.nan`` (the null representation of the ``str`` dtype)
+  instead of ``pd.NA``.
+  :pr:`2392` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
