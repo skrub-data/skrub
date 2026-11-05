@@ -46,6 +46,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`set_config` and :func:`config_context` now correctly store the
+  ``cardinality_threshold`` parameter. Previously, the value was validated but
+  ignored, so the default threshold kept being used.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - :class:`SquashingScaler` no longer maps large finite outliers to zero: an
   intermediate overflow in the computation of the soft clipping is avoided, so
   that large finite values are soft-clipped toward ``max_absolute_value`` as
