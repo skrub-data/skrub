@@ -117,9 +117,7 @@ def _is_holidays_pandas(col, country):
     except NotImplementedError:
         raise ValueError(f"Unknown country: {country} for holidays")
 
-    # TODO: polars version
-    # be wary that None gives NaT and only isnull os isna
-    # https://medium.com/@amit25173/understanding-pandas-nat-and-why-it-matters-e73abf694098
+    # be wary that None gives NaT and only isnull or isna could test it
     return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
 
 
