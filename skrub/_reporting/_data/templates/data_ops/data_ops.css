@@ -37,6 +37,18 @@ pre, code {
     transform: translateY(2px);
 }
 
+.graph-hint {
+    display: inline-block;
+    max-width: 100%;
+    margin: 0 0 0.75rem;
+    padding: 10px 12px;
+    border-left: 4px solid #6b9bd2;
+    border-radius: 3px;
+    background: #eef4fb;
+    color: #1f3b5c;
+    font-size: 0.95rem;
+}
+
 .data_op-node-wrapper {
     overflow-x: auto;
 }
@@ -61,6 +73,9 @@ pre, code {
 .data_op-node > nav.main-nav {
     border-right: 2px solid #ccc;
     flex-shrink: 0;
+    resize: horizontal;
+    min-width: 8rem;
+    box-sizing: border-box;
 }
 
 .node-details {
@@ -68,22 +83,78 @@ pre, code {
     flex-shrink: 1;
 }
 
-.data_op-node > nav.main-nav {
-    resize: horizontal;
-    min-width: 8rem;
-    /* A wide graph scrolls rather than squeezing the node details. */
-    max-width: 75vw;
-    box-sizing: border-box;
+/* Drawer displaying the selected node (or a source file) next to the graph. */
+.data_op-node > .drawer {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-left: 2px solid #ccc;
 }
 
-.data_op-node > .node-frame {
-    flex-grow: 1;
-    flex-shrink: 1;
+.data_op-node > .drawer[hidden] {
+    display: none;
+}
+
+.drawer-view {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.drawer-view[hidden] {
+    display: none;
+}
+
+.drawer-toolbar {
+    display: flex;
+    flex: none;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.header-button,
+.drawer-toolbar button {
+    padding: 4px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.header-button:hover,
+.drawer-toolbar button:hover {
+    background: #f0f0f0;
+}
+
+.header-button:focus-visible,
+.drawer-toolbar button:focus-visible {
+    outline: 2px solid #6b9bd2;
+    outline-offset: 1px;
+}
+
+.drawer-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.drawer-body > iframe {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
     min-width: 0;
     padding: 0;
     border: none;
-    width: 100%;
-    height: 100%;
 }
 
 /* Node pages are displayed inside the iframe of the index page: they fill it
@@ -153,8 +224,8 @@ pre, code {
     margin-top: 2rem;
 }
 
-/* Layout of the index page: a header (toggle button and report title), below
-   it the graph and the iframe displaying the selected node. */
+/* Layout of the index page: a header with the title and graph toggle, below it
+   the graph and the drawer displaying the selected node. */
 .report-index {
     margin: 0;
     height: 100vh;
@@ -166,8 +237,10 @@ pre, code {
     flex: none;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+    background: #fafafa;
 }
 
 .report-index > .data_op-node-wrapper {
@@ -182,16 +255,29 @@ pre, code {
     min-height: 0;
 }
 
-.icon-button {
+.report-index .data_op-node > nav.main-nav {
+    flex: 1 1 auto;
+}
+
+/* When the drawer is open the graph and the drawer share the width. */
+.report-index.drawer-open .data_op-node > nav.main-nav {
+    flex: 0 0 auto;
+    width: 50%;
+}
+
+.header-button {
+    display: inline-flex;
     flex: none;
-    padding: 2px;
-    width: 24px;
-    height: 24px;
+    align-items: center;
+    margin-left: auto;
 }
 
 .report-title {
+    flex: 0 1 auto;
     margin: 0;
     min-width: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

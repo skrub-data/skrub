@@ -9,7 +9,19 @@
     <style>
      {% include "data_ops.css" %}
     </style>
-    {% with node_id=node_nb %}{% include "node-shown-script.html" %}{% endwith %}
+    <script>
+     // When displayed in the drawer of index.html, tell it which node is
+     // shown (so that it can highlight it in the graph and update the URL
+     // hash). It cannot read our location: for file:// URLs the iframe is
+     // cross-origin, and the target origin must be "*" for the same reason.
+     if (window.parent !== window) {
+         window.parent.postMessage(
+             {type: "skrub-report-node-shown", nodeId: {{ node_nb | tojson }}}, "*");
+     }
+    </script>
+    <script>
+     {% include "report-navigation.js" %}
+    </script>
 </head>
 
 <body class="node-page">
