@@ -35,7 +35,7 @@ The rest of this user guide will detail how the DataOps work.
 Both can also be combined: a learner exported from a DataOps plan can be turned
 into a standard scikit-learn estimator (see
 :ref:`user_guide_data_ops_sklearn_interface`) and used inside a scikit-learn
-pipeline or a ``GridSearchCV``, and conversely a scikit-learn pipeline can be
+pipeline or a ``GridSearchCV``. Conversely, a scikit-learn pipeline can be
 used as a step of a DataOps plan with :meth:`.skb.apply() <DataOp.skb.apply>`.
 
 

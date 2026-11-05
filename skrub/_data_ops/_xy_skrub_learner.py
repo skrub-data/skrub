@@ -230,8 +230,8 @@ class XySkrubLearner(BaseEstimator):
         >>> pipe = Pipeline([("encoder", encoder), ("ridge", Ridge())])
         >>> outer_grid = {"ridge__alpha": [.1, 1., 10.]}
 
-        We obtain a grid that can be passed to GridSearchCV that can be used for tuning
-        jointly the parameters of the Ridge and of the skrub learner:
+        We obtain a grid that can be passed to GridSearchCV that can be used for jointly
+        tuning the parameters of the Ridge and skrub learner:
 
         >>> encoder.get_param_grid("encoder__", outer_grid)
         [{'ridge__alpha': [0.1, 1.0, 10.0], 'encoder__0:n_components': ['0:10', '1:20', '2:30']}]
