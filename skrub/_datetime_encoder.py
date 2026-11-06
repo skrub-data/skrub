@@ -110,7 +110,11 @@ def _get_dt_feature_polars(col, feature):
 
 
 def _is_holidays_pandas(col, country):
-    holidays = import_optional_dependency("holidays")
+    holidays = import_optional_dependency(
+        "holidays",
+        extra="The holidays package is needed when using the add_holidays "
+        "parameter of DatetimeEncoder.",
+    )
 
     try:
         country_holidays = holidays.country_holidays(country)
@@ -122,7 +126,11 @@ def _is_holidays_pandas(col, country):
 
 
 def _is_holidays_polars(col, country):
-    holidays = import_optional_dependency("holidays")
+    holidays = import_optional_dependency(
+        "holidays",
+        extra="The holidays package is needed when using the add_holidays "
+        "parameter of DatetimeEncoder.",
+    )
 
     # holidays dictionary is 'lazy' so we need to warm it up with
     # existing years
