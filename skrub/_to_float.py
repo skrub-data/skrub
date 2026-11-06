@@ -35,6 +35,28 @@ def _str_replace_polars(col, decimal, thousand, parentheses):
     return col.str.replace_all(decimal, ".", literal=True)
 
 
+# A trailing "%", with optional spaces before it and an optional closing
+# parenthesis after it, e.g. "1 %" or "(1.5%)".
+_PERCENT_PATTERN = r"^(.*?)\s*%(\)?)\s*$"
+
+
+@dispatch
+def _strip_percent(col):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_strip_percent.specialize("pandas", argument_type="Column")
+def _strip_percent_pandas(col):
+    is_percent = col.str.contains(r"%\)?\s*$", regex=True).fillna(False).astype(bool)
+    return col.str.replace(_PERCENT_PATTERN, r"\1\2", regex=True), is_percent
+
+
+@_strip_percent.specialize("polars", argument_type="Column")
+def _strip_percent_polars(col):
+    is_percent = col.str.contains(r"%\)?\s*$").fill_null(False)
+    return col.str.replace(_PERCENT_PATTERN, r"$1$2"), is_percent
+
+
 class ToFloat(SingleColumnTransformer):
     """
     Convert a column to 32-bit floating-point numbers.
@@ -67,6 +89,10 @@ class ToFloat(SingleColumnTransformer):
         Whether to recognize negative numbers represented using parentheses, e.g.,
         "(123.45)" → "-123.45". If True, parentheses around numbers are replaced
         with a leading minus sign before conversion.
+    percentage : bool, default=False
+        Whether to recognize percentages, e.g., "12.5%" → 0.125. If True, a
+        trailing "%" (and any spaces before it) is removed and the values that
+        had it are divided by 100. Values without a "%" are left as they are.
 
     Notes
     -----
@@ -224,6 +250,24 @@ class ToFloat(SingleColumnTransformer):
     2   -1234.5...
     dtype: float32
 
+    If ``percentage=True``, percentages are converted to fractions:
+
+    >>> s = pd.Series(["12.5%", "1 %", "0.3"], name="pct")
+    >>> ToFloat(percentage=True).fit_transform(s)
+    0    0.125
+    1    0.010
+    2    0.300
+    Name: pct, dtype: float32
+
+    It can be combined with the other options:
+
+    >>> ToFloat(decimal=",", parentheses=True, percentage=True).fit_transform(
+    ...     pd.Series(["(1,5 %)", "12,5%"])
+    ... )
+    0   -0.015
+    1    0.125
+    dtype: float32
+
     Numbers that use scientific notation are converted:
 
     >>> s = pd.Series(["1.23e+4", "1.23E+4"], name="x")
@@ -254,10 +298,11 @@ class ToFloat(SingleColumnTransformer):
 
     """  # noqa: E501
 
-    def __init__(self, decimal=".", thousand=None, parentheses=False):
+    def __init__(self, decimal=".", thousand=None, parentheses=False, percentage=False):
         self.decimal = decimal
         self.thousand = thousand
         self.parentheses = parentheses
+        self.percentage = percentage
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -295,15 +340,13 @@ class ToFloat(SingleColumnTransformer):
             # Optimization: allows us to avoid manipulation for
             # formats that Python can parse natively.
             if (
-                self.decimal != "." or self._thousand != "" or self.parentheses
+                self.decimal != "."
+                or self._thousand != ""
+                or self.parentheses
+                or self.percentage
             ) and sbd.is_string(column):
                 self._needs_str_replace = True
-                column = _str_replace(
-                    column,
-                    decimal=self.decimal,
-                    thousand=self._thousand,
-                    parentheses=self.parentheses,
-                )
+                return self._parse_strings(column, strict=True)
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
@@ -325,10 +368,19 @@ class ToFloat(SingleColumnTransformer):
             The input transformed to Float32.
         """
         if self._needs_str_replace:
-            column = _str_replace(
-                column,
-                decimal=self.decimal,
-                thousand=self._thousand,
-                parentheses=self.parentheses,
-            )
+            return self._parse_strings(column, strict=False)
         return sbd.to_float32(column, strict=False)
+
+    def _parse_strings(self, column, strict):
+        if self.percentage:
+            column, is_percent = _strip_percent(column)
+        column = _str_replace(
+            column,
+            decimal=self.decimal,
+            thousand=self._thousand,
+            parentheses=self.parentheses,
+        )
+        numeric = sbd.to_float32(column, strict=strict)
+        if self.percentage:
+            numeric = sbd.to_float32(sbd.where(numeric, ~is_percent, numeric / 100))
+        return numeric
