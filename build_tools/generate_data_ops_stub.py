@@ -85,6 +85,7 @@ for name in sorted(skrub.DataOp.__dict__):
         "__init__",
         "__iter__",
         "__module__",
+        "__defining_module__",
         "__setattr__",
         "__setitem__",
         "__signature__",
