@@ -99,6 +99,42 @@ def test__create_spelling_correction(seed=123):
         ).all()
 
 
+@pytest.mark.parametrize("missing", [None, np.nan, pd.NA])
+def test_deduplicate_missing_values(missing):
+    """Missing values are left unchanged while other strings are deduplicated.
+
+    Non-regression test for https://github.com/skrub-data/skrub/issues/770.
+    """
+    X = make_deduplication_data(
+        examples=["black", "white", "red"],
+        entries_per_example=[30, 30, 30],
+        prob_mistake_per_letter=0.1,
+        random_state=42,
+    )
+    X_with_missing = X[:10] + [missing] + X[10:20] + [missing] + X[20:]
+    result = deduplicate(X_with_missing, n_clusters=3)
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(X_with_missing)
+
+    result_values = result.tolist()
+    is_missing = [pd.isna(value) for value in X_with_missing]
+    assert [pd.isna(value) for value in result_values] == is_missing
+
+    # non-missing entries are deduplicated exactly as without missing values
+    expected = deduplicate(
+        [value for value in X_with_missing if not pd.isna(value)], n_clusters=3
+    ).tolist()
+    assert [value for value in result_values if not pd.isna(value)] == expected
+
+
+def test_deduplicate_all_missing_values():
+    """deduplicate of only missing values returns them unchanged."""
+    result = deduplicate([None, np.nan, pd.NA])
+    assert isinstance(result, pd.Series)
+    assert len(result) == 3
+    assert all(pd.isna(value) for value in result.tolist())
+
+
 def default_deduplicate(n=500, random_state=0):
     """
     Create a default deduplication dataset.
