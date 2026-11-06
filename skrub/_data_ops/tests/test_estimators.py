@@ -1275,15 +1275,16 @@ def test_optuna_storage_with_incomplete_trial(tmp_path):
     kwargs = dict(
         n_iter=1, cv=2, backend="optuna", storage=storage, study_name="search"
     )
-    data_op.skb.make_randomized_search(**kwargs).fit(data)
+    search = data_op.skb.make_randomized_search(**kwargs).fit(data)
+    assert len(search.study_.trials) == 1
+    assert len(search.cv_results_["params"]) == 1
     study = optuna.load_study(study_name="search", storage=storage)
     study.add_trial(
         optuna.trial.create_trial(state=optuna.trial.TrialState.RUNNING, params={})
     )
-    kwargs["n_iter"] = 0
     search = data_op.skb.make_randomized_search(**kwargs).fit(data)
-    assert len(search.study_.trials) == 2
-    assert len(search.cv_results_["params"]) == 1
+    assert len(search.study_.trials) == 3
+    assert len(search.cv_results_["params"]) == 2
 
 
 @pytest.mark.parametrize("sampler_class", ("RandomSampler", "TPESampler"))
