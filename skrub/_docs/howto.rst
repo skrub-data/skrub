@@ -31,6 +31,7 @@ Featurizing dataframes
 .. toctree::
    :maxdepth: 1
 
+   guides/column_operations/advanced_columnwise_operations.rst
    guides/featurizing/01_describe_transformations.rst
 
 Utilities
