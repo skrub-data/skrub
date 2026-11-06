@@ -119,7 +119,11 @@ def _is_holidays_pandas(col, country):
     try:
         country_holidays = holidays.country_holidays(country)
     except NotImplementedError:
-        raise ValueError(f"Unknown country: {country} for holidays")
+        raise ValueError(
+            f"Unknown country: {country} for holidays "
+            "You could find supported country code in "
+            "'holidays.list_supported_countries().keys()'"
+        )
 
     # be wary that None gives NaT and only isnull or isna could test it
     return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
@@ -142,7 +146,11 @@ def _is_holidays_polars(col, country):
             country=country, years=unique_years
         )
     except NotImplementedError:
-        raise ValueError(f"Unknown country: {country} for holidays")
+        raise ValueError(
+            f"Unknown country: {country} for holidays "
+            "You could find supported country code in "
+            "'holidays.list_supported_countries().keys()'"
+        )
 
     return col.dt.date().is_in(country_holidays)
 

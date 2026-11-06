@@ -380,7 +380,7 @@ def test_reject_non_datetime(df_module):
 
 
 def test_invalid_holidays_country(datetime_cols):
-    with pytest.raises(ValueError, match="Unknown country: ZZ for holidays"):
+    with pytest.raises(ValueError, match="Unknown country: ZZ for holidays.*"):
         DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
 
 
