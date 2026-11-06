@@ -50,6 +50,10 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :class:`DataOp.skb.make_randomized_search(backend='optuna')
+  <DataOp.skb.make_randomized_search>` reusing an existing optuna study with incomplete
+  trials (i.e. which had been killed while running) could raise an exception.
+  This has been fixed in :pr:`2409` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
