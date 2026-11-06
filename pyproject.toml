@@ -84,6 +84,7 @@ dev = [
   "polars",
   "plotly",
   "optuna",
+  "holidays"
 ]
 transformers = ["sentence-transformers"]
 

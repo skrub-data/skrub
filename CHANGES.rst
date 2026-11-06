@@ -19,6 +19,10 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`DatetimeEncoder` has a new option `add_holidays`, which allows
+  a binary value feature "holidays" to be extracted, provided the holidays
+  package is installed
+  :pr:`2357` by :user:`Laurent Steff <lsioctl>`
 
 Changes
 -------

@@ -13,6 +13,7 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
+from ._utils import import_optional_dependency
 
 __all__ = ["DatetimeEncoder"]
 
@@ -84,6 +85,9 @@ def _get_dt_feature_pandas(col, feature):
         return col.dt.day_of_week + 1
     if feature == "day_of_year":
         return col.dt.day_of_year
+    if feature.startswith("holidays_"):
+        country_iso = feature.split("_")[1]
+        return _is_holidays_pandas(col, country_iso)
 
     assert feature in _TIME_LEVELS
     return getattr(col.dt, feature)
@@ -97,8 +101,50 @@ def _get_dt_feature_polars(col, feature):
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     if feature == "day_of_year":
         return col.dt.ordinal_day()
+    if feature.startswith("holidays_"):
+        country_iso = feature.split("_")[1]
+        return _is_holidays_polars(col, country_iso)
+
     assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
+
+
+def _is_holidays_pandas(col, country):
+    holidays = import_optional_dependency(
+        "holidays",
+        extra="The holidays package is needed when using the add_holidays "
+        "parameter of DatetimeEncoder.",
+    )
+
+    try:
+        country_holidays = holidays.country_holidays(country)
+    except NotImplementedError:
+        raise ValueError(f"Unknown country: {country} for holidays")
+
+    # be wary that None gives NaT and only isnull or isna could test it
+    return col.apply(lambda x: False if pd.isnull(x) else x in country_holidays)
+
+
+def _is_holidays_polars(col, country):
+    holidays = import_optional_dependency(
+        "holidays",
+        extra="The holidays package is needed when using the add_holidays "
+        "parameter of DatetimeEncoder.",
+    )
+
+    # holidays dictionary is 'lazy' so we need to warm it up with
+    # existing years
+    # Only needed for polars's is_in (not needed with less performant
+    # map_elements)
+    unique_years = col.dt.year().drop_nulls().unique().to_list()
+    try:
+        country_holidays = holidays.country_holidays(
+            country=country, years=unique_years
+        )
+    except NotImplementedError:
+        raise ValueError(f"Unknown country: {country} for holidays")
+
+    return col.dt.date().is_in(country_holidays)
 
 
 class DatetimeEncoder(SingleColumnTransformer):
@@ -135,6 +181,10 @@ class DatetimeEncoder(SingleColumnTransformer):
         Add the day of year (ordinal day) as an integer in the range 1 to 365 (or
         366 in the case of leap years). January 1st will be day 1, December 31st
         will be day 365 on non-leap years.
+
+    add_holidays: string (country ISO code), default=None
+        If the package holidays is installed, will add a binary variable with value
+        1.0 if the day is holiday in the country or 0.0 if not
 
     periodic_encoding : 'circular', 'spline', or None, default=None
         Add periodic features with different granularities. Add periodic features
@@ -328,6 +378,25 @@ class DatetimeEncoder(SingleColumnTransformer):
     Here we can see the Sao Paulo input of the encoder has been converted back to the
     time zone used during the fitting and that we get the same result for "hour".
 
+    **Holidays**
+
+    Provided the `holidays` package is installed, a binary feature is_holidays_COUNTRY-ISO-CODE
+    is extracted. For example for France (iso "FR")
+
+    >>> birthday = pd.to_datetime(pd.Series([
+    ...     "2020-01-01",
+    ...     None,
+    ...     "2018-11-11",
+    ...     "2026-10-20"
+    ... ], name='birthday'))
+    >>> encoder = DatetimeEncoder(add_holidays="FR")
+    >>> encoder.fit_transform(birthday)
+       birthday_year  birthday_month  birthday_day  birthday_total_seconds  birthday_holidays_FR
+    0         2020.0             1.0           1.0            1.577837e+09                   1.0
+    1            NaN             NaN           NaN                     NaN                   NaN
+    2         2018.0            11.0          11.0            1.541894e+09                   1.0
+    3         2026.0            10.0          20.0            1.792454e+09                   0.0
+
     The DatetimeEncoder can also create new features based on either trigonometric
     functions or splines by setting ``periodic_encoder="circular"`` or
     ``periodic_encoder="spline"`` respectively.
@@ -355,12 +424,14 @@ class DatetimeEncoder(SingleColumnTransformer):
         add_total_seconds=True,
         add_day_of_year=False,
         periodic_encoding=None,
+        add_holidays=None,
     ):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
         self.add_day_of_year = add_day_of_year
         self.periodic_encoding = periodic_encoding
+        self.add_holidays = add_holidays
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -397,6 +468,8 @@ class DatetimeEncoder(SingleColumnTransformer):
             self.extracted_features_.append("weekday")
         if self.add_day_of_year:
             self.extracted_features_.append("day_of_year")
+        if self.add_holidays:
+            self.extracted_features_.append(f"holidays_{self.add_holidays}")
 
         col_name = sbd.name(column)
 
