@@ -22,7 +22,7 @@ New Features
 - :class:`ToFloat` has a new ``percentage`` parameter. When it is ``True``,
   strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are converted
   to fractions (``0.125``, ``0.01``).
-  :pr:`XXXX` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
+  :pr:`2407` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
 
 Changes
 -------
