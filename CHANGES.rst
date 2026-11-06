@@ -40,6 +40,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
 - :class:`SquashingScaler` no longer maps large finite outliers to zero: an
   intermediate overflow in the computation of the soft clipping is avoided, so
   that large finite values are soft-clipped toward ``max_absolute_value`` as
