@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat, _str_replace
+from skrub._to_float import ToFloat, _str_replace, _strip_percent
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -136,6 +136,8 @@ def test_parentheses_disabled(df_module):
 def test_error_dispatch():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         _str_replace(np.array([1]), decimal=".", thousand=None, parentheses=False)
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _strip_percent(np.array(["1%"]))
 
 
 def test_is_string(df_module):
@@ -147,3 +149,47 @@ def test_is_string(df_module):
     transformed = to_float.transform(new_column)
     expected = sbd.to_float32(df_module.make_column("col", [1400.5]))
     df_module.assert_column_equal(transformed, expected)
+
+
+@pytest.mark.parametrize(
+    "values, kwargs, expected",
+    [
+        (["1%", "55%", "100 %", "12.5   %"], {}, [0.01, 0.55, 1.0, 0.125]),
+        (["1%", "2", None], {}, [0.01, 2.0, np.nan]),
+        (["-3%", "1.5e1%"], {}, [-0.03, 0.15]),
+        (["1,234.5%"], {"thousand": ","}, [12.345]),
+        (["12,5 %"], {"decimal": ","}, [0.125]),
+        (
+            ["(1,5 %)", "(2,5)%", "(3)"],
+            {"decimal": ",", "parentheses": True},
+            [-0.015, -0.025, -3.0],
+        ),
+    ],
+)
+def test_percentage_enabled(df_module, values, kwargs, expected):
+    column = df_module.make_column("col", values)
+    result = ToFloat(percentage=True, **kwargs).fit_transform(column)
+    np.testing.assert_allclose(sbd.to_numpy(result), expected, rtol=1e-6)
+
+
+def test_percentage_disabled(df_module):
+    column = df_module.make_column("col", ["1%", "2%"])
+    with pytest.raises(RejectColumn):
+        ToFloat().fit_transform(column)
+
+
+def test_percentage_transform(df_module):
+    to_float = ToFloat(percentage=True).fit(df_module.make_column("col", ["1%"]))
+    result = to_float.transform(
+        df_module.make_column("col", ["50%", "0.5", "abc", None])
+    )
+    np.testing.assert_allclose(
+        sbd.to_numpy(result), [0.5, 0.5, np.nan, np.nan], rtol=1e-6
+    )
+
+
+def test_percentage_numeric_column(df_module):
+    # numbers are passed through unchanged, they are not divided by 100
+    column = df_module.make_column("col", [1.0, 50.0])
+    result = ToFloat(percentage=True).fit_transform(column)
+    np.testing.assert_allclose(sbd.to_numpy(result), [1.0, 50.0])
