@@ -22,6 +22,13 @@ New Features
 
 Changes
 -------
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name, or node ID, in the DataOp) now causes a warning displaying the
+  extra keys to help detect typos and mistakes. It can be silenced with the
+  warnings module, or, more robustly, by adding
+  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -33,15 +40,29 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
+- :class:`SquashingScaler` no longer maps large finite outliers to zero: an
+  intermediate overflow in the computation of the soft clipping is avoided, so
+  that large finite values are soft-clipped toward ``max_absolute_value`` as
+  intended.
+  :pr:`2370` by :user:`Jay Singh <JaySingh79>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :meth:`deduplicate` no longer fails when the input contains missing values;
+  missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
+  remaining strings are deduplicated.
+  :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
 - The icon-only buttons (copy, close and dismiss) and the column filter of the
   :class:`TableReport` now have accessible names, so that screen readers can
   announce what they do.
   :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
+  
 Deprecations
 ------------
 - Removed the deprecated ``splitter`` parameter of :meth:`.skb.train_test_split
