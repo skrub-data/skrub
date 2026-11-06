@@ -19,6 +19,10 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`ToDatetime` has a new ``epoch_seconds`` parameter. When set to
+  ``True``, numeric columns are interpreted as seconds since the Unix epoch and
+  converted to (UTC, time zone naive) datetimes.
+  :pr:`2379` by :user:`Turki <turki013>`.
 
 Changes
 -------
