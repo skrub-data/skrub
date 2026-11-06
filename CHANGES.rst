@@ -58,6 +58,10 @@ Bugfixes
   missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
   remaining strings are deduplicated.
   :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
+  dataframes: the gaps were truncated to whole seconds, so events could be
+  wrongly put in the same session and results differed from pandas.
+  :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
