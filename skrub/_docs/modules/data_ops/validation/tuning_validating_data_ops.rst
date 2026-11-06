@@ -4,6 +4,9 @@
 Tuning and validating skrub DataOps plans
 =========================================
 
+Preparing validation data
+-------------------------
+
 To evaluate the prediction performance of our plan, we can fit it on a training
 dataset, then obtaining prediction on an unseen, test dataset.
 
@@ -50,6 +53,9 @@ Similarly for ``y``, we use :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`:
 
 >>> y = data["target"].skb.mark_as_y()
 
+Simple validation process
+-------------------------
+
 Now we can add our supervised estimator:
 
 >>> pred = X.skb.apply(Ridge(), y=y)
@@ -75,10 +81,7 @@ Result:
 Once a pipeline is defined and the ``X`` and ``y`` nodes are identified, skrub
 is able to split the dataset and perform cross-validation.
 
-Improving the confidence in our score through cross-validation
-==============================================================
-
-We can increase our confidence in our score by using cross-validation instead of
+We can increase our confidence in our score by using **cross-validation** instead of
 a single split. The same mechanism is used but we now fit and evaluate the model
 on several splits. This is done with :meth:`.skb.cross_validate()
 <DataOp.skb.cross_validate>`.
@@ -94,7 +97,7 @@ on several splits. This is done with :meth:`.skb.cross_validate()
 .. _user_guide_data_ops_splitting_data:
 
 Splitting the data in train and test sets
-=========================================
+----------------------------------
 
 We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
 perform a single train-test split. skrub first evaluates the DataOps on
@@ -138,7 +141,7 @@ It is possible to define a custom split function to use instead of
 :func:`sklearn.model_selection.train_test_split`.
 
 Passing additional arguments to the splitter
-============================================
+--------------------------------------------
 
 Sometimes we want to pass additional data to the cross-validation splitter.
 
