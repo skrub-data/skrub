@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat, _str_replace
+from skrub._to_float import ToFloat, _str_replace, _strip_percent
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -136,6 +136,8 @@ def test_parentheses_disabled(df_module):
 def test_error_dispatch():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         _str_replace(np.array([1]), decimal=".", thousand=None, parentheses=False)
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _strip_percent(np.array(["1%"]))
 
 
 def test_is_string(df_module):
