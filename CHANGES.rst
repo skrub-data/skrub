@@ -19,6 +19,8 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+  - :class:`TextEncoder` has cache support, by allowing to store the values it computes
+  in a custom parquet file. :pr:`1955` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
