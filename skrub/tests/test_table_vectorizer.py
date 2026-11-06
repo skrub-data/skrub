@@ -1362,28 +1362,6 @@ DropUninformative (1 columns):
         assert output == expected
 
 
-def test_geometry_columns_warning():
-    gpd = pytest.importorskip("geopandas")
-    shapely_geometry = pytest.importorskip("shapely.geometry")
-    gdf = gpd.GeoDataFrame(
-        {"city": ["Paris", "Berlin", "Madrid"]},
-        geometry=[
-            shapely_geometry.Point(2.35, 48.86),
-            shapely_geometry.Point(13.40, 52.52),
-            shapely_geometry.Point(-3.70, 40.42),
-        ],
-    )
-    with pytest.warns(UserWarning, match=r"\['geometry'\] contain GeoPandas"):
-        TableVectorizer().fit_transform(gdf)
-
-    # No warning when the geometry column is handled by a specific transformer.
-    tv = TableVectorizer(specific_transformers=[("drop", ["geometry"])])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error", message=".*GeoPandas.*")
-        out = tv.fit_transform(gdf)
-    assert "geometry" not in sbd.column_names(out)
-
-
 class _FakeGeometryDtype(pd.api.extensions.ExtensionDtype):
     # Minimal extension dtype named like the geopandas one. Subclassing an
     # existing pandas dtype does not work because old pandas versions convert
@@ -1391,22 +1369,11 @@ class _FakeGeometryDtype(pd.api.extensions.ExtensionDtype):
     name = "geometry"
     type = object
 
-    @classmethod
-    def construct_array_type(cls):
-        return _FakeGeometryArray
-
 
 class _FakeGeometryArray(pd.api.extensions.ExtensionArray):
+    # Only the methods needed by the TableVectorizer in the test below.
     def __init__(self, values):
         self._data = np.asarray(values, dtype=object)
-
-    @classmethod
-    def _from_sequence(cls, scalars, dtype=None, copy=False):
-        return cls(scalars)
-
-    @classmethod
-    def _from_factorized(cls, values, original):
-        return cls(values)
 
     @property
     def dtype(self):
@@ -1419,36 +1386,28 @@ class _FakeGeometryArray(pd.api.extensions.ExtensionArray):
     def __len__(self):
         return len(self._data)
 
-    @property
-    def nbytes(self):
-        return self._data.nbytes
-
     def isna(self):
         return pd.isna(self._data)
-
-    def take(self, indices, allow_fill=False, fill_value=None):
-        return type(self)(
-            pd.api.extensions.take(
-                self._data, indices, allow_fill=allow_fill, fill_value=fill_value
-            )
-        )
 
     def copy(self):
         return type(self)(self._data.copy())
 
-    @classmethod
-    def _concat_same_type(cls, to_concat):
-        return cls(np.concatenate([a._data for a in to_concat]))
 
-
-def test_geometry_columns_warning_without_geopandas():
+def test_geometry_columns_warning():
     # Only the dtype name is checked, so a fake dtype named "geometry" is
-    # enough to test the warning when geopandas is not installed.
+    # enough to test the warning without installing geopandas.
     df = pd.DataFrame(
         {
             "city": ["Paris", "Berlin", "Madrid"],
             "geometry": _FakeGeometryArray(["a", "b", "c"]),
         }
     )
-    with pytest.warns(UserWarning, match=r"\['geometry'\] contain GeoPandas"):
+    with pytest.warns(UserWarning, match=r"\['geometry'\] have a 'geometry' dtype"):
         TableVectorizer().fit_transform(df)
+
+    # No warning when the geometry column is handled by a specific transformer.
+    tv = TableVectorizer(specific_transformers=[("drop", ["geometry"])])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=".*'geometry' dtype.*")
+        out = tv.fit_transform(df)
+    assert "geometry" not in sbd.column_names(out)

@@ -1027,9 +1027,10 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         ]
         if geometry_columns:
             warnings.warn(
-                f"The columns {geometry_columns} contain GeoPandas geometries. "
-                "The TableVectorizer does not encode geometries and will treat "
-                "them as strings, which is unlikely to be useful. Consider "
+                f"The columns {geometry_columns} have a 'geometry' dtype and "
+                "probably contain geometries, for example from GeoPandas. The "
+                "TableVectorizer treats these values as strings rather than using "
+                "their spatial information, which is unlikely to be useful. Consider "
                 "encoding them yourself, for example by extracting coordinates, "
                 "and passing them to 'specific_transformers', or dropping them.",
                 UserWarning,

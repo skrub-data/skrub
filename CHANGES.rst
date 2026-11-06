@@ -33,9 +33,10 @@ Changes
 
 Bugfixes
 --------
-- :class:`TableVectorizer` now warns when the input contains GeoPandas geometry
-  columns, which it would otherwise encode as strings. Such columns should be
-  handled with ``specific_transformers`` or dropped.
+- :class:`TableVectorizer` now warns when the input contains columns with a
+  ``"geometry"`` dtype, such as GeoPandas geometry columns. These columns are
+  still encoded as strings unless they are handled with
+  ``specific_transformers`` or dropped.
   :pr:`2374` by :user:`Oscar-man-shrestha <Oscar-man-shrestha>`.
 - :class:`SquashingScaler` no longer maps large finite outliers to zero: an
   intermediate overflow in the computation of the soft clipping is avoided, so
