@@ -15,9 +15,7 @@
     <header class="report-header">
         <h2 class="report-title">{{ report_title if report_title else "DataOp report" }}</h2>
         <button type="button" class="header-button" id="toggle-nav"
-            aria-expanded="true" title="Hide graph">
-            <span id="toggle-nav-label">Hide graph</span>
-        </button>
+            aria-expanded="true" disabled>Hide graph</button>
     </header>
     <div class="data_op-node-wrapper">
         <div class="data_op-node">
@@ -29,23 +27,16 @@
                 </div>
             </nav>
             {#
-              The drawer has two views: the details of the selected node, and
-              the source code file linked from a node page. The latter is
-              closed to return to the former.
+              The drawer displays the details of the selected node, or a source
+              code file linked from the node page; the "Back to node details"
+              button returns from source code to the node details.
             #}
-            <div id="drawer" class="drawer" hidden>
-                <div id="node-view" class="drawer-view">
-                    <div class="drawer-toolbar">
-                        <button type="button" id="close-drawer">Close</button>
-                    </div>
-                    <div id="node-frame-container" class="drawer-body"></div>
+            <div id="drawer" class="drawer">
+                <div class="drawer-toolbar">
+                    <button type="button" id="close-drawer">Close</button>
+                    <button type="button" id="back-to-node" hidden>Back to node details</button>
                 </div>
-                <div id="source-view" class="drawer-view" hidden>
-                    <div class="drawer-toolbar">
-                        <button type="button" id="close-source">Back to node details</button>
-                    </div>
-                    <div id="source-frame-container" class="drawer-body"></div>
-                </div>
+                <iframe id="drawer-frame" title="Details of the selected node"></iframe>
             </div>
         </div>
     </div>
