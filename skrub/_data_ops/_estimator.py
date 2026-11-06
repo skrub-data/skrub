@@ -475,7 +475,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
 
         We can get the params out of our best learner:
 
-        >>> best_learner.get_named_params()  # doctest +SKIP
+        >>> best_learner.get_named_params()  # doctest: +SKIP
         {'scaler': 2, 'n_components': np.int64(11)}
 
         Note that the ridge's ``alpha`` does not appear, as it has no name.
