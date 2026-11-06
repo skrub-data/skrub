@@ -50,6 +50,10 @@ Bugfixes
   ``cardinality_threshold`` parameter. Previously, the value was validated but
   ignored, so the default threshold kept being used.
   :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
 - :class:`SquashingScaler` no longer maps large finite outliers to zero: an
   intermediate overflow in the computation of the soft clipping is avoided, so
   that large finite values are soft-clipped toward ``max_absolute_value`` as
@@ -60,6 +64,10 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :meth:`deduplicate` no longer fails when the input contains missing values;
+  missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
+  remaining strings are deduplicated.
+  :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
 
 Deprecations
 ------------
