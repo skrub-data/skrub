@@ -227,3 +227,39 @@ def test_tabicl_pipeline(tabicl_estimator):
     assert isinstance(tv.high_cardinality, StringEncoder)
     assert tv.cardinality_threshold == 10
     assert tv.datetime.periodic_encoding == "spline"
+
+
+@pytest.mark.parametrize(
+    "learner_kind",
+    ["regressor", "regression", "classifier", "classification"],
+)
+def test_tabular_pipeline_random_state_string_estimator(learner_kind):
+    p = tabular_pipeline(learner_kind, random_state=42)
+    tv, learner = (e for _, e in p.steps)
+    assert tv.random_state == 42
+    assert tv.high_cardinality.random_state == 42
+    assert learner.random_state == 42
+
+
+def test_tabular_pipeline_random_state_reproducible():
+    rng = np.random.default_rng(0)
+    X = pd.DataFrame(
+        {
+            "text": [f"category_{i}_{rng.integers(0, 1000)}" for i in range(60)],
+            "num": rng.normal(size=60),
+        }
+    )
+    y = rng.integers(0, 2, size=60)
+
+    p1 = tabular_pipeline("classifier", random_state=42)
+    p2 = tabular_pipeline("classifier", random_state=42)
+    assert_array_equal = np.testing.assert_array_equal
+    assert_array_equal(p1.fit(X, y).predict_proba(X), p2.fit(X, y).predict_proba(X))
+
+    # User-provided estimator's random_state is not modified
+    user_rf = ensemble.RandomForestClassifier(random_state=7)
+    p_rf = tabular_pipeline(user_rf, random_state=42)
+    tv_rf, learner_rf = (e for _, e in p_rf.steps)
+    assert tv_rf.random_state == 42
+    assert tv_rf.high_cardinality.random_state == 42
+    assert learner_rf.random_state == 7

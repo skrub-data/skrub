@@ -6,7 +6,6 @@ from sklearn.preprocessing import OrdinalEncoder
 from ._datetime_encoder import DatetimeEncoder
 from ._sklearn_compat import get_tags
 from ._squashing_scaler import SquashingScaler
-from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -34,7 +33,7 @@ def _is_scikit_learn_compatible_estimator(estimator) -> tuple[bool, str | None]:
     return True, None
 
 
-def tabular_pipeline(estimator, *, n_jobs=None):
+def tabular_pipeline(estimator, *, n_jobs=None, random_state=None):
     """Get a simple machine-learning pipeline for tabular data.
 
     Given either a scikit-learn compatible estimator or one of the special-cased strings
@@ -81,6 +80,13 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
         means 1 unless in a joblib ``parallel_backend`` context. ``-1`` means using all
         processors.
+
+    random_state : int, RandomState instance or None, default=None
+        Random state passed to the :obj:`TableVectorizer` step, and to the final
+        :class:`~sklearn.ensemble.HistGradientBoostingClassifier` or
+        :class:`~sklearn.ensemble.HistGradientBoostingRegressor` when ``estimator``
+        is a string (``'classifier'``, ``'classification'``, ``'regressor'``, or
+        ``'regression'``). Ignored for user-supplied ``estimator`` instances.
 
     Returns
     -------
@@ -239,18 +245,23 @@ def tabular_pipeline(estimator, *, n_jobs=None):
       mechanism for dealing with missing values, and no standard scaling because it is
       unnecessary for tree ensembles.
     """  # noqa: E501
-    vectorizer = TableVectorizer(n_jobs=n_jobs)
-    cat_feat_kwargs = {"categorical_features": "from_dtype"}
+    vectorizer = TableVectorizer(n_jobs=n_jobs, random_state=random_state)
+    cat_feat_kwargs = {
+        "categorical_features": "from_dtype",
+        "random_state": random_state,
+    }
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
+                random_state=random_state,
             )
         if estimator in ("regressor", "regression"):
             return tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
+                random_state=random_state,
             )
         raise ValueError(
             "If ``estimator`` is a string it should be 'regressor', 'regression',"
@@ -300,7 +311,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
-            high_cardinality=StringEncoder(),
         )
     elif is_tree_ensemble_estimator:
         vectorizer.set_params(
@@ -308,12 +318,10 @@ def tabular_pipeline(estimator, *, n_jobs=None):
                 handle_unknown="use_encoded_value",
                 unknown_value=-1,
             ),
-            high_cardinality=StringEncoder(),
         )
     elif is_estimator_from_tabicl:
         vectorizer.set_params(
             low_cardinality="passthrough",
-            high_cardinality=StringEncoder(),
             cardinality_threshold=10,
             datetime=DatetimeEncoder(periodic_encoding="spline"),
         )
