@@ -98,6 +98,35 @@ pre, code {
     display: flex;
 }
 
+/* The node page and the source page are stacked. The one not displayed is only
+   invisible, not display: none, so that the node page keeps its scroll position
+   and the source page can scroll to its highlighted line while it loads. The
+   keyboard does not reach an invisible iframe either. */
+.drawer-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.drawer-body > iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+}
+
+.drawer[data-mode="node"] #source-frame,
+.drawer[data-mode="source"] #node-frame {
+    visibility: hidden;
+}
+
+.drawer[data-mode="source"] #close-drawer,
+.drawer[data-mode="node"] #back-to-node {
+    display: none;
+}
+
 .drawer-toolbar {
     display: flex;
     flex: none;
@@ -134,14 +163,6 @@ pre, code {
 .drawer-toolbar button:focus-visible {
     outline: 2px solid #6b9bd2;
     outline-offset: 1px;
-}
-
-.drawer > iframe {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    padding: 0;
-    border: none;
 }
 
 /* Node pages are displayed inside the iframe of the index page: they fill it

@@ -5,20 +5,22 @@
 // button must leave the report rather than step through nodes, so the iframe is
 // always navigated with location.replace(), which adds no history entry.
 // When a link to another node ("previous", "next", ...) is clicked in the
-// iframe, the event is captured and a message is posted so the navigation can
-// be handled here (see report-navigation.js).
+// node iframe, the event is captured and a message is posted so the navigation
+// can be handled here (see report-navigation.js).
 //
 // The URL hash is kept up to date with replaceState so the URL for a specific
 // node can be shared.
 //
-// There is a single persistent iframe, for nodes and source files.
-// The browser keeps displaying the previous page until the next one
-// is ready.
+// The browser keeps displaying the previous node until the next one is ready.
+//
+// A source file is displayed in a second iframe, on top of the node iframe, so
+// that the node page is still there, as we left it, when we come back. It is
+// displayed once it has loaded, so that nothing flashes either.
 //
 (function() {
-    const frame = document.getElementById('drawer-frame');
-    const closeButton = document.getElementById('close-drawer');
-    const backButton = document.getElementById('back-to-node');
+    const drawer = document.getElementById('drawer');
+    const nodeFrame = document.getElementById('node-frame');
+    let sourceFrame = document.getElementById('source-frame');
     const graphPanel = document.getElementById('graph-panel');
     const toggleGraphButton = document.getElementById('toggle-nav');
     // The current node is highlighted with a CSS rule rather than by editing
@@ -26,10 +28,8 @@
     // drawn later by the browser (in which case it may still be rendering).
     const highlightStyle = document.getElementById('current-node-style');
     const totalNNodes = Number(document.body.dataset.totalNodes);
-    // The selected node, also while one of its source files is displayed.
-    let currentNodeId = null;
 
-    function navigate(url) {
+    function navigate(frame, url) {
         frame.contentWindow.location.replace(new URL(url, window.location.href));
     }
 
@@ -38,13 +38,6 @@
         graphPanel.toggleAttribute('data-is-open', isOpen);
         toggleGraphButton.setAttribute('aria-expanded', String(isOpen));
         toggleGraphButton.textContent = isOpen ? 'Hide graph' : 'Show graph';
-    }
-
-    // The toolbar has "Close" when a node is displayed, and only "Back to node
-    // details" when a source file is.
-    function setSourceMode(isSource) {
-        closeButton.hidden = isSource;
-        backButton.hidden = !isSource;
     }
 
     function nodeIdFromHash() {
@@ -57,7 +50,6 @@
 
     // Keep the URL shareable (index.html#node_3) without adding history entries.
     function updateState(nodeId) {
-        currentNodeId = nodeId;
         document.body.classList.toggle('drawer-open', nodeId !== null);
         // Never leave the page empty: without a node there is nothing to show
         // but the graph.
@@ -77,29 +69,59 @@
     }
 
     function openNode(nodeId) {
-        setSourceMode(false);
-        navigate(`node_${nodeId}.html`);
+        closeSource();
+        navigate(nodeFrame, `node_${nodeId}.html`);
         updateState(nodeId);
     }
 
+    // The source page is loaded in a new iframe, which replaces the previous one
+    // and is displayed (instead of the node page) once loaded. A new iframe is
+    // needed because navigating one that shows the same page (or another line of
+    // it) fires no load event. Dropping the previous iframe also drops its
+    // events: there is nothing to cancel if the user goes elsewhere while the
+    // page loads.
+    function replaceSourceFrame(url) {
+        const frame = document.createElement('iframe');
+        frame.id = 'source-frame';
+        frame.title = 'Source code';
+        if (url !== null) {
+            frame.addEventListener('load', () => {
+                drawer.dataset.mode = 'source';
+                // so that keyboard navigation continues in the page displayed
+                // (the frame can only be focused once it is visible)
+                frame.focus();
+            }, {once: true});
+            frame.src = new URL(url, window.location.href).href;
+        }
+        sourceFrame.replaceWith(frame);
+        sourceFrame = frame;
+    }
+
     function openSource(url) {
-        setSourceMode(true);
-        navigate(url);
+        replaceSourceFrame(url);
+    }
+
+    function closeSource() {
+        replaceSourceFrame(null);
+        drawer.dataset.mode = 'node';
     }
 
     function closeDrawer() {
-        setSourceMode(false);
+        closeSource();
         // do not show this page again if the drawer is reopened
-        navigate('about:blank');
+        navigate(nodeFrame, 'about:blank');
         updateState(null);
     }
 
-    closeButton.addEventListener('click', closeDrawer);
-    backButton.addEventListener('click', () => openNode(currentNodeId));
+    document.getElementById('close-drawer').addEventListener('click', closeDrawer);
+    document.getElementById('back-to-node').addEventListener('click', () => {
+        closeSource();
+        nodeFrame.focus();
+    });
 
     // Node pages ask us to display the node or source file their links point to.
     window.addEventListener('message', (event) => {
-        if (event.source !== frame.contentWindow ||
+        if (event.source !== nodeFrame.contentWindow ||
             !event.data || event.data.type !== 'skrub-report-link') {
             return;
         }

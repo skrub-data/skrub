@@ -29,14 +29,19 @@
             {#
               The drawer displays the details of the selected node, or a source
               code file linked from the node page; the "Back to node details"
-              button returns from source code to the node details.
+              button returns from source code to the node details. Both pages
+              are kept in the drawer, one on top of the other (see data-mode in
+              data_ops.css and data_ops-report.js).
             #}
-            <div id="drawer" class="drawer">
+            <div id="drawer" class="drawer" data-mode="node">
                 <div class="drawer-toolbar">
                     <button type="button" id="close-drawer">Close</button>
-                    <button type="button" id="back-to-node" hidden>Back to node details</button>
+                    <button type="button" id="back-to-node">Back to node details</button>
                 </div>
-                <iframe id="drawer-frame" title="Details of the selected node"></iframe>
+                <div class="drawer-body">
+                    <iframe id="node-frame" title="Details of the selected node"></iframe>
+                    <iframe id="source-frame" title="Source code"></iframe>
+                </div>
             </div>
         </div>
     </div>
