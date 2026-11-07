@@ -11,6 +11,10 @@ Ongoing Development
 
 New Features
 ------------
+- :class:`TableVectorizer` and :func:`tabular_pipeline` now accept a
+  ``random_state`` parameter to make default high-cardinality encoding and
+  gradient boosting models reproducible across calls.
+  :pr:`2394` by :user:`Omkar Ganda <omkarganda>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,

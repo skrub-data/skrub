@@ -1360,3 +1360,27 @@ DropUninformative (1 columns):
         cleaner_output.split("\n"), expected_cleaner_output.split("\n")
     ):
         assert output == expected
+
+
+def test_table_vectorizer_random_state(df_module):
+    rng = np.random.default_rng(0)
+    words = [f"word_{i}_{rng.integers(0, 1000)}" for i in range(60)]
+    X = df_module.make_dataframe({"text": words})
+
+    tv1 = TableVectorizer(cardinality_threshold=10, random_state=42)
+    tv2 = TableVectorizer(cardinality_threshold=10, random_state=42)
+    tv_cloned = clone(tv1)
+
+    assert tv1.high_cardinality.random_state == 42
+    assert tv_cloned.high_cardinality.random_state == 42
+
+    out1 = tv1.fit_transform(X)
+    out2 = tv2.fit_transform(X)
+    out_cloned = tv_cloned.fit_transform(X)
+    df_module.assert_frame_equal(out1, out2)
+    df_module.assert_frame_equal(out1, out_cloned)
+
+    # User-supplied high_cardinality encoder should keep its random_state
+    custom_encoder = GapEncoder(n_components=2, random_state=7)
+    tv_custom = TableVectorizer(high_cardinality=custom_encoder, random_state=42)
+    assert tv_custom.high_cardinality.random_state == 7
