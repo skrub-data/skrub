@@ -297,7 +297,7 @@ def set_module(module):
     """
 
     def decorator(cls):
-        cls.__defining_module__ = cls.__module__
+        cls.__skrub_defining_module__ = cls.__module__
         cls.__module__ = module
         return cls
 

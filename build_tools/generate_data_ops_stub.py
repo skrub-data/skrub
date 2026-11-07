@@ -85,12 +85,12 @@ for name in sorted(skrub.DataOp.__dict__):
         "__init__",
         "__iter__",
         "__module__",
-        "__defining_module__",
         "__setattr__",
         "__setitem__",
         "__signature__",
         "__static_attributes__",
         "__weakref__",
+        "__skrub_defining_module__",
         "skb",
     ]:
         out = output_types.get(name, "DataOp")

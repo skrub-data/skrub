@@ -43,18 +43,20 @@ collect_ignore_glob = ["_docs/**/*.py"]
 # Classes decorated with ``@set_module("skrub")`` have their ``__module__``
 # rewritten, which makes ``doctest`` skip their docstrings (and those of their
 # methods) when scanning the module where they are defined. ``set_module``
-# saves the original module in ``__defining_module__``; use it to collect those
-# doctests from their defining module.
+# saves the original module in ``__skrub_defining_module__``; use it to collect
+# those doctests from their defining module.
 _orig_from_module = doctest.DocTestFinder._from_module
 
 
-def _from_module(self, module, object):
+def _from_module(self, module, obj):
     if module is None:
         return True
-    defining_module = getattr(object, "__defining_module__", None)
+    # Read from the class's __dict__, not getattr so that it is only taken into
+    # account for the class decorated with set_module and not its subclasses
+    defining_module = getattr(obj, "__dict__", {}).get("__skrub_defining_module__")
     if defining_module is not None:
         return defining_module == module.__name__
-    return _orig_from_module(self, module, object)
+    return _orig_from_module(self, module, obj)
 
 
 doctest.DocTestFinder._from_module = _from_module
