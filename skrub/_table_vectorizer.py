@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
@@ -958,6 +959,7 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             The transformed input.
         """
         self._check_specific_columns()
+        self._warn_geometry_columns(X)
         self._make_pipeline()
         output = self._pipeline.fit_transform(X, y=y)
         self.all_outputs_ = sbd.column_names(output)
@@ -1011,6 +1013,28 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
                     )
             specific_columns.update(dict.fromkeys(cols, i))
         self._specific_columns = list(specific_columns.keys())
+
+    def _warn_geometry_columns(self, X):
+        # Check the dtype name rather than isinstance so that geopandas does
+        # not need to be imported.
+        if not (sbd.is_dataframe(X) and sbd.is_pandas(X)):
+            return
+        geometry_columns = [
+            sbd.name(col)
+            for col in sbd.to_column_list(X)
+            if sbd.dtype(col).name == "geometry"
+            and sbd.name(col) not in self._specific_columns
+        ]
+        if geometry_columns:
+            warnings.warn(
+                f"The columns {geometry_columns} have a 'geometry' dtype and "
+                "probably contain geometries, for example from GeoPandas. The "
+                "TableVectorizer treats these values as strings rather than using "
+                "their spatial information, which is unlikely to be useful. Consider "
+                "encoding them yourself, for example by extracting coordinates, "
+                "and passing them to 'specific_transformers', or dropping them.",
+                UserWarning,
+            )
 
     def _make_pipeline(self):
         def add_step(steps, transformer, cols, allow_reject=False):
