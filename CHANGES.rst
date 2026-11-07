@@ -40,6 +40,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer counts unused pandas categories as distinct
+  values or includes them among the most frequent values. This also fixes
+  constant-column detection after filtering a categorical column.
+  :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
+
 - :class:`DropSimilar` now checks the input dataframe with
   :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
   are not unique strings no longer cause errors.

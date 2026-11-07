@@ -794,6 +794,26 @@ def test_value_counts(df_module):
         df_module.assert_frame_equal(counts, expected)
 
 
+@pytest.mark.parametrize(
+    "values, expected_values, expected_counts",
+    [(["b", "b", "c", None], ["b", "c"], [2, 1]), ([], [], []), ([None, None], [], [])],
+)
+def test_value_counts_unobserved_categories(
+    df_module, values, expected_values, expected_counts
+):
+    col = df_module.make_column("x", values or ["b"])
+    col = ns.to_categorical(col.head(len(values)))
+    if ns.is_pandas(col):
+        col = col.cat.set_categories(["a", "b", "c", "d"])
+    else:
+        import polars as pl
+
+        col = col.cast(pl.Enum(["a", "b", "c", "d"]))
+    counts = ns.sort(ns.value_counts(col), by="value")
+    assert ns.to_list(ns.col(counts, "value")) == expected_values
+    assert ns.to_list(ns.col(counts, "count")) == expected_counts
+
+
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
 @pytest.mark.parametrize(
     "interpolation", ["nearest", "higher", "lower", "midpoint", "linear"]

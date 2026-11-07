@@ -1152,11 +1152,10 @@ def value_counts(col):
 
 @value_counts.specialize("pandas", argument_type="Column")
 def _value_counts_pandas(col):
-    return (
-        col.value_counts(dropna=True)
-        .reset_index()
-        .set_axis(["value", "count"], axis="columns")
-    )
+    counts = col.value_counts(dropna=True)
+    # Categorical columns also list unused categories with a count of zero.
+    counts = counts[counts > 0]
+    return counts.reset_index().set_axis(["value", "count"], axis="columns")
 
 
 @value_counts.specialize("polars", argument_type="Column")
