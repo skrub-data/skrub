@@ -22,6 +22,12 @@ New Features
 
 Changes
 -------
+- :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
+  default for every parameter.
+  Explicit ``None`` values are no longer treated as "leave unchanged" and are
+  validated like other values. ``cache=None`` still disables caching and
+  ``target_cache_size=None`` still disables cache pruning.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - Evaluating a :class:`DataOp` and passing an environment that has extra keys
   (keys in the environment that do not correspond to any variable, node or
   choice name, or node ID, in the DataOp) now causes a warning displaying the
@@ -45,6 +51,10 @@ Bugfixes
   constant-column detection after filtering a categorical column.
   :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
 
+- :func:`set_config` and :func:`config_context` now correctly store the
+  ``cardinality_threshold`` parameter. Previously, the value was validated but
+  ignored, so the default threshold kept being used.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - :class:`DropSimilar` now checks the input dataframe with
   :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
   are not unique strings no longer cause errors.
