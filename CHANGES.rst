@@ -22,6 +22,13 @@ New Features
 
 Changes
 -------
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name, or node ID, in the DataOp) now causes a warning displaying the
+  extra keys to help detect typos and mistakes. It can be silenced with the
+  warnings module, or, more robustly, by adding
+  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -38,6 +45,10 @@ Bugfixes
   constant-column detection after filtering a categorical column.
   :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
 
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
 - :class:`SquashingScaler` no longer maps large finite outliers to zero: an
   intermediate overflow in the computation of the soft clipping is avoided, so
   that large finite values are soft-clipped toward ``max_absolute_value`` as
@@ -48,6 +59,18 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :class:`DataOp.skb.make_randomized_search(backend='optuna')
+  <DataOp.skb.make_randomized_search>`: reusing an existing optuna study with incomplete
+  trials (i.e. which had been killed while running) could raise an exception.
+  This has been fixed in :pr:`2409` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`deduplicate` no longer fails when the input contains missing values;
+  missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
+  remaining strings are deduplicated.
+  :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
+  dataframes: the gaps were truncated to whole seconds, so events could be
+  wrongly put in the same session and results differed from pandas.
+  :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------

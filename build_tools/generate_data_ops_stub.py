@@ -90,6 +90,7 @@ for name in sorted(skrub.DataOp.__dict__):
         "__signature__",
         "__static_attributes__",
         "__weakref__",
+        "__skrub_defining_module__",
         "skb",
     ]:
         out = output_types.get(name, "DataOp")
