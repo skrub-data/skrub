@@ -72,6 +72,10 @@ Bugfixes
   missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
   remaining strings are deduplicated.
   :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- The icon-only buttons (copy, close and dismiss) and the column filter of the
+  :class:`TableReport` now have accessible names, so that screen readers can
+  announce what they do.
+  :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
 - :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.

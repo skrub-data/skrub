@@ -3,6 +3,7 @@
     class="copybutton copybutton-left"
     data-manager="CopyButton"
     type="button"
+    aria-label="Copy to clipboard"
     data-target-id="{{ target }}">
     {% include "icons/copy.svg" %}
     {% include "icons/check-lg.svg" %}
@@ -13,6 +14,7 @@
 {% macro closebutton() %}
 <button class="close-card-button"
         type="button"
+        aria-label="Close"
         data-role="close-button">
     {% include "icons/x-lg.svg" %}
 </button>
@@ -21,6 +23,7 @@
 {% macro dismissbutton() %}
 <button class="alert-dismiss-button"
         type="button"
+        aria-label="Dismiss"
         data-role="dismiss-button">
         {% include "icons/x-lg.svg" %}
 </button>
