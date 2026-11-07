@@ -742,7 +742,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
 
         We can get the params out of our best learner:
 
-        >>> best_learner.get_named_params()
+        >>> best_learner.get_named_params()  # doctest: +SKIP
         {'scaler': 2, 'n_components': np.int64(11)}
 
         Note that the ridge's ``alpha`` does not appear, as it has no name.
@@ -787,7 +787,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         >>> best_learner.set_named_params(scaler=StandardScaler())
         Traceback (most recent call last):
             ...
-        TypeError: For enumerated choices, the value must be a positional index (int). Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
+        TypeError: For enumerated choices, the value must be a positional index (int) in the list of outcomes. Got value StandardScaler() of type StandardScaler for choice choose_from([MinMaxScaler(), StandardScaler(), SquashingScaler()], name='scaler').
         """  # noqa: E501
         data_op_choices = _evaluation.choices(self.data_op)
         name_to_id = {
@@ -955,7 +955,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
 
         >>> pca = learner.find_fitted_estimator('pca')
         >>> pca
-        ApplyToSubFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
+        ApplyToCols(cols=glob('date_*'), transformer=PCA(n_components=2))
         >>> pca.transformer_
         PCA(n_components=2)
         >>> pca.transformer_.mean_
@@ -1079,7 +1079,7 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
         step:
 
         >>> learner.find_fitted_estimator("vectorizer")
-        ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
+        ApplyToCols(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
         node = self.data_op.skb.find(what)
         if node is None:

@@ -15,6 +15,7 @@ ESTIMATOR_METHODS = ["fit", "fit_transform", *FITTED_ESTIMATOR_METHODS]
 X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
 IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
+IGNORE_EXTRA_KEYS_NAME = "_skrub_ignore_extra_keys"
 
 
 class Sentinels(enum.Enum):

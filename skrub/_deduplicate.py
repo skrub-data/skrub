@@ -142,6 +142,9 @@ def deduplicate(
     This works best if there are a number of underlying categories that
     sometimes appear in the data with small variations and/or misspellings.
 
+    Missing values (``None``, ``np.nan``, ``pd.NA``) do not take part in the
+    clustering and are left unchanged in the output.
+
     .. warning::
         This method can be computationally expensive for large datasets, as it
         requires computing pairwise distances between unique values and performing
@@ -270,7 +273,14 @@ def deduplicate(
     8  white      8              white
     9  white      9              white
     """
-    unique_words, counts = np.unique(X, return_counts=True)
+    # Missing values cannot be compared or clustered: deduplicate only the
+    # observed strings and leave missing values as they are (see #770).
+    X = pd.Series(X)
+    is_null = X.isna()
+    observed = X[~is_null]
+    if observed.empty:
+        return pd.Series(X.tolist(), index=X.tolist())
+    unique_words, counts = np.unique(observed, return_counts=True)
     distance_mat = _compute_ngram_distance(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
@@ -281,5 +291,8 @@ def deduplicate(
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
 
     translation_table = _create_spelling_correction(unique_words, counts, clusters)
-    unrolled_corrections = translation_table[X]
+    # Map the observed strings through the translation table with a vectorized
+    # Series operation; missing values are passed through unchanged.
+    unrolled_corrections = X.map(translation_table, na_action="ignore")
+    unrolled_corrections.index = X
     return unrolled_corrections

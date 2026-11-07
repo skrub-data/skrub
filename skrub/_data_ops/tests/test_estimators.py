@@ -1098,19 +1098,6 @@ def test_iter_cv_splits():
     assert list(s["row_indices_test"]) == [1]
 
 
-def test_train_test_split_splitter_renaming():
-    # TODO remove when `splitter` is removed in 0.7.0
-    X = skrub.X(list(range(10)))
-
-    def split(X, shuffle):
-        return train_test_split(X, shuffle=shuffle)
-
-    with pytest.warns(FutureWarning, match="`splitter`.*has been renamed"):
-        assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
-            range(7)
-        )
-
-
 def _make_grouped_data():
     return pd.DataFrame(
         {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
@@ -1277,6 +1264,27 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
             study_name="classif_search",
         )
         search.fit(data)
+
+
+def test_optuna_storage_with_incomplete_trial(tmp_path):
+    # non-regression test: loading a persisted study with an interrupted
+    # (RUNNING) trial used to raise KeyError: 'cv_results'.
+    optuna = pytest.importorskip("optuna")
+    data_op, data = get_data_op_and_data("simple")
+    storage = f"sqlite:///{tmp_path / 'search_data.sqlite'}"
+    kwargs = dict(
+        n_iter=1, cv=2, backend="optuna", storage=storage, study_name="search"
+    )
+    search = data_op.skb.make_randomized_search(**kwargs).fit(data)
+    assert len(search.study_.trials) == 1
+    assert len(search.cv_results_["params"]) == 1
+    study = optuna.load_study(study_name="search", storage=storage)
+    study.add_trial(
+        optuna.trial.create_trial(state=optuna.trial.TrialState.RUNNING, params={})
+    )
+    search = data_op.skb.make_randomized_search(**kwargs).fit(data)
+    assert len(search.study_.trials) == 3
+    assert len(search.cv_results_["params"]) == 2
 
 
 @pytest.mark.parametrize("sampler_class", ("RandomSampler", "TPESampler"))
