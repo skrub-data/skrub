@@ -1266,6 +1266,27 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
         search.fit(data)
 
 
+def test_optuna_storage_with_incomplete_trial(tmp_path):
+    # non-regression test: loading a persisted study with an interrupted
+    # (RUNNING) trial used to raise KeyError: 'cv_results'.
+    optuna = pytest.importorskip("optuna")
+    data_op, data = get_data_op_and_data("simple")
+    storage = f"sqlite:///{tmp_path / 'search_data.sqlite'}"
+    kwargs = dict(
+        n_iter=1, cv=2, backend="optuna", storage=storage, study_name="search"
+    )
+    search = data_op.skb.make_randomized_search(**kwargs).fit(data)
+    assert len(search.study_.trials) == 1
+    assert len(search.cv_results_["params"]) == 1
+    study = optuna.load_study(study_name="search", storage=storage)
+    study.add_trial(
+        optuna.trial.create_trial(state=optuna.trial.TrialState.RUNNING, params={})
+    )
+    search = data_op.skb.make_randomized_search(**kwargs).fit(data)
+    assert len(search.study_.trials) == 3
+    assert len(search.cv_results_["params"]) == 2
+
+
 @pytest.mark.parametrize("sampler_class", ("RandomSampler", "TPESampler"))
 def test_optuna_sampler(sampler_class):
     pytest.importorskip("optuna")
