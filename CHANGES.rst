@@ -22,6 +22,12 @@ New Features
 
 Changes
 -------
+- :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
+  default for every parameter.
+  Explicit ``None`` values are no longer treated as "leave unchanged" and are
+  validated like other values. ``cache=None`` still disables caching and
+  ``target_cache_size=None`` still disables cache pruning.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - Evaluating a :class:`DataOp` and passing an environment that has extra keys
   (keys in the environment that do not correspond to any variable, node or
   choice name, or node ID, in the DataOp) now causes a warning displaying the
@@ -45,6 +51,10 @@ Bugfixes
   still encoded as strings unless they are handled with
   ``specific_transformers`` or dropped.
   :pr:`2374` by :user:`Oscar-man-shrestha <Oscar-man-shrestha>`.
+- :func:`set_config` and :func:`config_context` now correctly store the
+  ``cardinality_threshold`` parameter. Previously, the value was validated but
+  ignored, so the default threshold kept being used.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - :class:`DropSimilar` now checks the input dataframe with
   :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
   are not unique strings no longer cause errors.
@@ -59,10 +69,18 @@ Bugfixes
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
   :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+- :class:`DataOp.skb.make_randomized_search(backend='optuna')
+  <DataOp.skb.make_randomized_search>`: reusing an existing optuna study with incomplete
+  trials (i.e. which had been killed while running) could raise an exception.
+  This has been fixed in :pr:`2409` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`deduplicate` no longer fails when the input contains missing values;
   missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
   remaining strings are deduplicated.
   :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
+  dataframes: the gaps were truncated to whole seconds, so events could be
+  wrongly put in the same session and results differed from pandas.
+  :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------

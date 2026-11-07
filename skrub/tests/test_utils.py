@@ -1,3 +1,4 @@
+import doctest
 from inspect import ismodule
 
 import numpy as np
@@ -6,6 +7,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import _utils
+from skrub._data_ops import _estimator
 from skrub._utils import (
     LRUDict,
     import_optional_dependency,
@@ -101,3 +103,16 @@ def test_format_duration():
     assert _utils.format_duration(0) == "0h 0m 0s"
     with pytest.raises(ValueError, match=".*only handles non-negative durations"):
         _utils.format_duration(-1)
+
+
+def test_set_module_doctests_are_collected():
+    # ``SkrubLearner`` is decorated with ``@set_module("skrub")``; its method
+    # doctests must still be found when scanning its defining module.
+    finder = doctest.DocTestFinder()
+    names = {
+        test.name
+        for test in finder.find(_estimator, _estimator.__name__)
+        if test.examples
+    }
+    prefix = f"{_estimator.__name__}.SkrubLearner."
+    assert any(name.startswith(prefix) for name in names), names
