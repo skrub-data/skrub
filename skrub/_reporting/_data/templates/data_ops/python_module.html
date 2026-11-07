@@ -14,15 +14,52 @@
 </style>
 
 <style>
-  body { font-family: sans-serif; max-width: 100%; margin: 2em auto; padding: 2em; }
-  pre[class*="language-"] { font-size: 0.95em; }
+  /* compact layout: this page is displayed in the drawer of the index page */
+  html, body { height: 100%; }
+  body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 1em 1.5em;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  /* The file name stays visible and the code scrolls on its own, so that the
+     horizontal scrollbar is always at the bottom of the view. */
+  h1 {
+    flex: none;
+    margin: 0 0 0.75em;
+    font-size: 1.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .code-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  /* Let .code-scroll do the scrolling (instead of the <pre> from prism) so that
+     the horizontal scrollbar sits at the bottom of the view. */
+  pre[class*="language-"] {
+    font-size: 0.95em;
+    margin: 0;
+    box-sizing: border-box;
+    width: max-content;
+    min-width: 100%;
+    overflow: visible;
+  }
+  /* Prism sets a pixel width on the highlight when a line is selected; that
+     width goes stale when the drawer is resized and then makes the page scroll
+     horizontally. Let it span the code block instead (it is positioned with
+     left: 0 and right: 0). */
+  .line-highlight { width: auto !important; }
 </style>
 </head>
 <body>
 
     <h1><code>{{ source_file }}</code></h1>
 
+<div class="code-scroll">
 <pre id="code-container" class="line-numbers" data-line=""><code class="language-python" id="code">{{ python_source_code }}</code></pre>
+</div>
 
 <script>
 {% include "prism-1.29.0/prism-core.min.js" %}
