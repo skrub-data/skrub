@@ -71,9 +71,7 @@ pre, code {
 }
 
 .data_op-node > nav.main-nav {
-    border-right: 2px solid #ccc;
     flex-shrink: 0;
-    resize: horizontal;
     min-width: 8rem;
     box-sizing: border-box;
 }
@@ -91,7 +89,6 @@ pre, code {
     min-width: 0;
     padding: 0;
     overflow: hidden;
-    border-left: 2px solid #ccc;
 }
 
 .drawer-open .data_op-node > .drawer {
@@ -268,8 +265,7 @@ pre, code {
 }
 
 /* The graph is not scrolled but panned and zoomed in a viewport filling the
-   panel (see data_ops-report.js). The viewport stays inside the panel's padding
-   so that the panel's resize handle (bottom right corner) remains reachable. */
+   panel (see data_ops-report.js). */
 .report-index .data_op-node > nav.main-nav[data-is-open] {
     display: flex;
     flex-direction: column;
@@ -334,10 +330,70 @@ pre, code {
     background: #eef4fb;
 }
 
-/* When the drawer is open the graph and the drawer share the width. */
+/* When the drawer is open the graph and the drawer share the width; the
+   splitter between them sets the share (--graph-width, see data_ops-report.js). */
 .report-index.drawer-open .data_op-node > nav.main-nav {
     flex: 0 0 auto;
-    width: 50%;
+    width: var(--graph-width, 50%);
+}
+
+/* Draggable divider between the graph and the drawer. The whole line can be
+   dragged (it is wider than it looks, to be easy to grab), and the handle in
+   the middle shows that it can be. Only displayed when both panels are. */
+.data_op-node > .splitter {
+    display: none;
+    position: relative;
+    flex: none;
+    width: 16px;
+    padding: 0;
+    overflow: visible;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(#ccc, #ccc) center / 2px 100% no-repeat;
+    cursor: col-resize;
+    /* we handle touch gestures */
+    touch-action: none;
+}
+
+.drawer-open .data_op-node > nav.main-nav[data-is-open] + .splitter {
+    display: flex;
+}
+
+.splitter-handle {
+    width: 16px;
+    height: 64px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    background:
+        radial-gradient(circle, #666 1.5px, transparent 2px) center / 6px 10px repeat-y,
+        #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+.splitter:hover,
+.splitter.dragging {
+    background-image: linear-gradient(#6b9bd2, #6b9bd2);
+}
+
+.splitter:hover .splitter-handle,
+.splitter.dragging .splitter-handle {
+    border-color: #6b9bd2;
+}
+
+.splitter:focus-visible {
+    outline: 2px solid #6b9bd2;
+}
+
+/* While dragging, the pointer must not be captured by the iframes nor select
+   text. */
+.report-index.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+.report-index.resizing iframe {
+    pointer-events: none;
 }
 
 .header-button {

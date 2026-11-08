@@ -166,13 +166,67 @@
         setGraphOpen(!graphPanel.hasAttribute('data-is-open'));
     });
 
+    // Splitter between the graph and the drawer. Its position is stored as the
+    // width of the graph panel in percent of the total width (CSS variable
+    // --graph-width), so that it scales with the window. Pointer capture sends
+    // the events to the splitter even when the pointer is over an iframe.
+    const splitter = document.getElementById('splitter');
+    const panels = splitter.parentElement;
+    const MIN_PANEL_WIDTH = 160;
+    const KEYBOARD_STEP = 2;
+    let graphWidthPercent = 50;
+
+    function setGraphWidth(percent) {
+        const total = panels.clientWidth;
+        const minPercent = total > 2 * MIN_PANEL_WIDTH ?
+            100 * MIN_PANEL_WIDTH / total : 0;
+        graphWidthPercent = Math.min(100 - minPercent, Math.max(minPercent, percent));
+        panels.style.setProperty('--graph-width', `${graphWidthPercent}%`);
+        splitter.setAttribute('aria-valuenow', String(Math.round(graphWidthPercent)));
+    }
+
+    let grabOffset = null;
+    splitter.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        splitter.setPointerCapture(event.pointerId);
+        grabOffset = event.clientX - splitter.getBoundingClientRect().left;
+        splitter.classList.add('dragging');
+        document.body.classList.add('resizing');
+    });
+    splitter.addEventListener('pointermove', (event) => {
+        if (grabOffset === null) {
+            return;
+        }
+        const rect = panels.getBoundingClientRect();
+        setGraphWidth(100 * (event.clientX - grabOffset - rect.left) / rect.width);
+    });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        splitter.addEventListener(name, () => {
+            grabOffset = null;
+            splitter.classList.remove('dragging');
+            document.body.classList.remove('resizing');
+        });
+    }
+    splitter.addEventListener('keydown', (event) => {
+        const direction = {ArrowLeft: -1, ArrowRight: 1}[event.key];
+        if (direction !== undefined) {
+            event.preventDefault();
+            setGraphWidth(graphWidthPercent + direction * KEYBOARD_STEP);
+        }
+    });
+    splitter.addEventListener('dblclick', () => setGraphWidth(50));
+    setGraphWidth(graphWidthPercent);
+
     // Pan and zoom of the graph, with the Panzoom library (included in the page).
     // - drag: pan; buttons: zoom; Ctrl (or Cmd) + wheel, or pinch: zoom at the
     //   pointer; wheel: pan, as the graph used to scroll before.
     // - a drag must not click the node it ends on.
     const graphNav = document.getElementById('graph-nav');
     const graphCanvas = document.getElementById('graph-canvas');
-        const MIN_SCALE = 0.05;
+    const MIN_SCALE = 0.05;
     const MAX_SCALE = 4;
     const WHEEL_FACTOR = 1.1;
     const panzoom = Panzoom(graphCanvas, {

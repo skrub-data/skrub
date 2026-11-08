@@ -39,6 +39,12 @@
                     </div>
                 </div>
             </nav>
+            {# Drag it to resize the graph and the drawer (see data_ops-report.js). #}
+            <div id="splitter" class="splitter" role="separator"
+                aria-orientation="vertical" aria-label="Resize the graph and node details panels"
+                aria-controls="graph-panel" tabindex="0" title="Drag to resize (double-click to reset)">
+                <div class="splitter-handle" aria-hidden="true"></div>
+            </div>
             {#
               The drawer displays the details of the selected node, or a source
               code file linked from the node page; the "Back to node details"
