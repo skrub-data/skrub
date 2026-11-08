@@ -893,6 +893,17 @@ def test_unique(df_module):
     )
 
 
+def test_unique_ignores_nan(df_module):
+    # NaN is treated as a null value (as in is_null and drop_nulls), so it is
+    # not counted as a distinct value
+    s = df_module.make_column("", [1.0, np.nan, 2.0, np.nan, 1.0])
+    assert ns.n_unique(s) == 2
+    assert sorted(ns.to_list(ns.unique(s))) == [1.0, 2.0]
+    s = df_module.make_column("", [np.nan, np.nan])
+    assert ns.n_unique(s) == 0
+    assert ns.to_list(ns.unique(s)) == []
+
+
 def test_filter(df_module):
     df = df_module.example_dataframe
     pred = ns.col(df, "int-not-null-col") > 1
