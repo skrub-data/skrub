@@ -11,6 +11,13 @@ Ongoing Development
 
 New Features
 ------------
+- :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
+  skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
+  standard scikit-learn interface: ``fit(X, y)`` rather than the usual
+  SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
+  <SkrubLearner.with_sklearn_interface>` and an :ref:`example
+  <example_with_sklearn_interface>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,

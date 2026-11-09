@@ -176,6 +176,269 @@ class _DataOpWrapperMixin(_CloudPickle):
             html = f"<div>{data_op_html}</div>"
         return _SklearnParamsReprHtml(html)
 
+    def __skrub_quoted_params__(self):
+        """
+        Estimator params (attributes) that are a DataOp but that should be
+        treated as a quoted expressions: they are data, not code, and should
+        not be evaluated and replaced with their value while evaluating the
+        estimator itself.
+
+        For example in Ridge(alpha=<some dataop or choice>) alpha should be
+        evaluated, but the data_op attribute of a
+        SkrubLearner(data_op=<some dataop>) passed to .skb.apply() should not.
+        """
+        return ["data_op"]
+
+    def with_sklearn_interface(self, X="X", y="y"):
+        """
+        Wrap this learner in an estimator exposing the standard scikit-learn interface.
+
+        Learners created from a :class:`DataOp` with :meth:`.skb.make_learner()
+        <DataOp.skb.make_learner>`, :meth:`.skb.make_randomized_search()
+        <DataOp.skb.make_randomized_search>`, etc. accept their inputs as a
+        dictionary, because there are no restrictions on the number and type of
+        inputs they can process:
+        ``learner.fit({"some_input": ..., "some_other_input": ..., ...})``.
+
+        When we need the standard scikit-learn interface ``fit(X, y)`` we can
+        wrap our learner in a :class:`XySkrubLearner` by calling
+        :meth:`SkrubLearner.with_sklearn_interface`. The returned estimator
+        accepts X, y and kwargs and those are put in a dictionary that is
+        passed to the wrapped SkrubLearner (or ParamSearch, or OptunaParamSearch).
+
+        The parameters ``X`` and ``y`` give the names of variables that should
+        be bound to the ``X`` and ``y`` arguments passed to ``fit``,
+        ``predict``, etc. (by default "X" and "y").
+
+        Parameters
+        ----------
+        X : str or int, default="X"
+            :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
+            node (usually a :func:`variable <skrub.var>`) in the DataOp that
+            receives the ``X`` argument.
+
+        y : str or int or None, default="y"
+            :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
+            node (usually a :func:`variable <skrub.var>`) in the DataOp that
+            receives the ``y`` argument. Only required if the DataOp uses a ``y``.
+
+            (Passing ``None`` explicitly disables passing any ``y`` even if one
+            is provided to the estimator method. Usually leaving the default is
+            fine even for DataOps that do not use a ``y``.)
+
+        Returns
+        -------
+        :class:`skrub.XySkrubLearner`
+            A wrapper that adapts this learner to the standard scikit-learn
+            ``fit(X, y)`` interface.
+
+        See Also
+        --------
+        XySkrubLearner :
+            The class of the returned estimator.
+        XySkrubLearner.get_param_grid :
+            Param grid for tuning the learner's choices with scikit-learn's
+            ``GridSearchCV`` or ``RandomizedSearchCV``.
+        DataOp.skb.make_learner :
+            Get a skrub learner for a DataOp.
+
+        Notes
+        -----
+        The returned estimator can be used wherever a scikit-learn estimator is
+        expected, for example in a :class:`~sklearn.pipeline.Pipeline`, with
+        :func:`sklearn.model_selection.cross_validate`, or as the ``estimator``
+        in :meth:`DataOp.skb.apply` to nest the DataOp in another one. Skrub
+        functions that expect a skrub learner, such as
+        :func:`skrub.cross_validate`, should be given the original learner
+        instead.
+
+        See also the :ref:`user guide <user_guide_data_ops_sklearn_interface>`
+        and this :ref:`example <example_with_sklearn_interface>`.
+
+        Examples
+        --------
+        We show examples with :meth:`.skb.make_learner()
+        <DataOp.skb.make_learner>` here, which returns a :class:`SkrubLearner`,
+        but this method works similarly for :class:`ParamSearch` and
+        :class:`OptunaParamSearch` (created by :meth:`.skb.make_grid_search()
+        <DataOp.skb.make_grid_search>` and :meth:`.skb.make_randomized_search()
+        <DataOp.skb.make_randomized_search>`).
+
+        >>> import sklearn
+        >>> from sklearn.utils.fixes import parse_version
+        >>> if parse_version(sklearn.__version__) < parse_version("1.9"):
+        ...     import pytest
+        ...     raise pytest.skip()
+        >>> import skrub
+        >>> from sklearn.preprocessing import TargetEncoder
+        >>> from sklearn.model_selection import KFold
+
+        **Example data**
+
+        >>> data = skrub.datasets.toy_orders()
+        >>> orders_df, delayed_col = data["X"], data["y"]
+        >>> orders_df
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+
+        >>> delayed_col
+        0    False
+        1    False
+        2     True
+        3    False
+        Name: delayed, dtype: bool
+
+        **Skrub learner and scikit-learn adapter**
+
+        Let us define a DataOp that preprocesses the orders dataframe,
+        and build the corresponding skrub learner:
+
+        >>> cv = KFold(2)
+        >>> learner = (
+        ...     skrub.var("X")
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("y"), cols="product")
+        ... ).skb.make_learner()
+
+        The SkrubLearner accepts an 'environment' dictionary, containing
+        values for all the variables in the DataOp (here, X and y):
+
+        >>> learner.fit_transform({"X": orders_df, "y": delayed_col})
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        If we need an estimator that has the standard scikit-learn
+        interface, we can use ``with_sklearn_interface()``:
+
+        >>> learner.with_sklearn_interface().fit_transform(orders_df, delayed_col)
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        In this case the ``X`` and ``y`` passed to ``fit_transform`` are
+        mapped to the ``"X"`` and ``"y"`` keys in the environment.
+
+        If the DataOp contains no supervised estimators, ``y`` can be
+        omitted. Here ``y`` is needed because the TargetEncoder requires
+        it.
+
+        **The learner and its wrapper share state.**
+
+        The estimator returned by ``with_sklearn_interface`` wraps the
+        original learner (and not a copy), so any fitted attributes are
+        shared. Thus it can also be obtained from an already-fitted
+        model. Here our ``learner`` has been fitted, so we can call
+        ``transform``:
+
+        >>> learner.with_sklearn_interface().transform(orders_df, delayed_col)
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.0
+        1   2         3     2020.0         4.0       4.0      0.4
+        2   3         5     2020.0         4.0       4.0      0.4
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        The wrapped learner can be obtained from the ``learner``
+        attribute:
+
+        >>> learner.with_sklearn_interface().learner is learner
+        True
+
+        **Using different variable names than X and y.**
+
+        If the names of our variables are different than ``"X"`` and
+        ``"y"``, we can specify the names to use in the call to
+        ``with_sklearn_interface``. For example here we use the names
+        ``"orders"`` and ``"delayed"`` instead:
+
+        >>> learner = (
+        ...     skrub.var("orders")
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("delayed"), cols="product")
+        ... ).skb.make_learner()
+
+        >>> learner.fit_transform({"orders": orders_df, "delayed": delayed_col})
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        >>> learner.with_sklearn_interface(X="orders", y="delayed").fit_transform(
+        ...     orders_df, delayed_col
+        ... )
+           ID  quantity  date_year  date_month  date_day  product
+        0   1         2     2020.0         4.0       3.0      0.5
+        1   2         3     2020.0         4.0       4.0      1.0
+        2   3         5     2020.0         4.0       4.0      0.0
+        3   4         1     2020.0         4.0       5.0      0.0
+
+        Moreover, the names to which we map ``X`` and ``y`` are not required to
+        belong to skrub variables (created with :func:`var()`, shown here).
+        They can be any type of node with a name (set with
+        :meth:`.skb.set_name() <DataOp.skb.set_name>`), or they can also be a
+        node ID rather than a string (see :attr:`.skb.id <DataOp.skb.id>`).
+
+        **Additional variables can be passed as kwargs.**
+
+        When our DataOp has more than those 2 inputs, additional data can
+        be passed to the sklearn interface through kwargs. Suppose we
+        have a third table containing information about the products:
+
+        >>> products_df = data.products
+        >>> products_df
+          product  price
+        0     cup      5
+        1     pen      2
+        2   spoon      3
+
+        >>> learner = (
+        ...     skrub.var("orders")
+        ...     .merge(skrub.var("products"), on="product")  # ⟵ Add the price information
+        ...     .skb.apply(skrub.Cleaner())
+        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
+        ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("delayed"), cols="product")
+        ... ).skb.make_learner()
+
+        In the usual SkrubLearner interface, bindings for all the
+        variables are passed in the environment:
+
+        >>> learner.fit_transform(
+        ...     {"orders": orders_df, "delayed": delayed_col, "products": products_df}
+        ... )
+           ID  quantity  date_year  date_month  date_day  price  product
+        0   1         2     2020.0         4.0       3.0      2      0.5
+        1   2         3     2020.0         4.0       4.0      5      1.0
+        2   3         5     2020.0         4.0       4.0      5      0.0
+        3   4         1     2020.0         4.0       5.0      3      0.0
+
+        In the scikit-learn-compatible wrapper, additional inputs are
+        passed as named arguments (the name corresponds to the variable
+        name, here "products"):
+
+        >>> learner.with_sklearn_interface(X="orders", y="delayed").fit_transform(
+        ...     orders_df, delayed_col, products=products_df
+        ... )
+           ID  quantity  date_year  date_month  date_day  price  product
+        0   1         2     2020.0         4.0       3.0      2      0.5
+        1   2         3     2020.0         4.0       4.0      5      1.0
+        2   3         5     2020.0         4.0       4.0      5      0.0
+        3   4         1     2020.0         4.0       5.0      3      0.0
+        """  # noqa: E501
+        from ._xy_skrub_learner import XySkrubLearner, check_sklearn_interface
+
+        check_sklearn_interface(self.data_op, X, y)
+        return XySkrubLearner(self, X, y)
+
 
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
@@ -185,6 +448,10 @@ class SkrubLearner(_DataOpWrapperMixin, SkrubBaseEstimator):
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
     DataOp, or by accessing the ``best_learner_`` attribute of a :class:`ParamSearch`
     after fitting it.
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`SkrubLearner.with_sklearn_interface` to obtain an estimator with the
+    standard scikit-learn interface.
     """
 
     def __init__(self, data_op):
@@ -981,17 +1248,27 @@ class _CachingXyPipeline(_XyPipeline):
         return super()._eval_in_mode("score", X, y=y)
 
 
+def data_op_needs_y(data_op):
+    def is_apply_and_needs_y(node):
+        if not isinstance(node, DataOp):
+            # node is a choice object
+            return False
+        if not isinstance(node._skrub_impl, Apply):
+            return False
+        return node._skrub_impl.y is not None
+
+    return data_op.skb.find(is_apply_and_needs_y) is not None
+
+
 def _compute_X_y_and_cv(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
     nodes = find_X_y_and_cv(data_op.skb.clone())
     if "X" not in nodes:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
-    if "y" not in nodes:
-        first = find_first_apply(data_op)
-        if first is not None and getattr(first._skrub_impl, "y", None) is not None:
-            # the estimator requests a y so some node must have been
-            # marked as y
-            raise ValueError('DataOp should have a node marked with "mark_as_y()"')
+    if "y" not in nodes and data_op_needs_y(data_op):
+        # the estimator requests a y so some node must have been
+        # marked as y
+        raise ValueError('DataOp should have a node marked with "mark_as_y()"')
     values = evaluate(
         nodes,
         mode="fit_transform",
@@ -1541,6 +1818,10 @@ class ParamSearch(_BaseParamSearch):
     This class is not meant to be instantiated manually, ``ParamSearch``
     objects are created by calling :meth:`~DataOp.skb.make_grid_search()` or
     :meth:`~DataOp.skb.make_randomized_search()` on a DataOp.
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`ParamSearch.with_sklearn_interface` to obtain an estimator with the
+    standard scikit-learn interface.
     """
 
     def __init__(self, data_op, search):
