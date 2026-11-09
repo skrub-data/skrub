@@ -3559,6 +3559,177 @@ class SkrubNamespace:
         """
         return self._data_op._skrub_impl.description
 
+    def set_metadata(self, metadata=None, /, **more_metadata):
+        """
+        Set user metadata on this DataOp.
+
+        Returns a modified copy.
+
+        This allows attaching arbitrary user data to this node. It is displayed
+        in the execution report and can be retrieved from the
+        :attr:`DataOp.skb.metadata` attribute. The previous metadata dict is
+        replaced. To update it instead of replacing it, see
+        :meth:`DataOp.skb.update_metadata`.
+
+        Parameters
+        ----------
+        metadata : dict or None
+            The new metadata.
+
+        more_metadata : dict
+            Additional metadata, provided as named arguments.
+
+        Returns
+        -------
+        A new DataOp with the provided metadata.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {'d': pd.to_datetime(['2026-10-01', '2026-10-02']), 'e': [1.2, 3.0]})
+        >>> data_op = skrub.var('df', df).skb.set_metadata(date_col='d')
+        >>> data_op
+        <Var 'df'>
+        Result:
+        ―――――――
+                   d    e
+        0 2026-10-01  1.2
+        1 2026-10-02  3.0
+        >>> data_op.skb.metadata
+        {'date_col': 'd'}
+
+        Previously existing metadata is replaced:
+
+        >>> data_op.skb.set_metadata({'check': True}).skb.metadata
+        {'check': True}
+
+        To keep it, you can use :meth:`DataOp.skb.update_metadata`:
+
+        >>> data_op.skb.update_metadata({'check': True}).skb.metadata
+        {'date_col': 'd', 'check': True}
+
+        Another example where metadata is used together with
+        :meth:`DataOp.skb.find`:
+
+        >>> c = skrub.var('a').skb.set_metadata(mark=True) + skrub.var('b')
+        >>> c
+        <BinOp: add>
+        >>> c.skb.find(lambda n: n.skb.metadata.get('mark'))
+        <Var 'a'>
+        """
+        if metadata is None:
+            metadata = {}
+        if not isinstance(metadata, dict):
+            raise TypeError(f"metadata should be a dict, got: {type(metadata)}.")
+        new = self._data_op._skrub_impl.__copy__()
+        new.user_metadata = metadata | more_metadata
+        return DataOp(new)
+
+    def update_metadata(self, metadata=None, /, **more_metadata):
+        """
+        Update the user metadata on this DataOp.
+
+        Returns a modified copy.
+
+        This allows attaching arbitrary user data to this node. It is displayed
+        in the execution report and can be retrieved from the
+        :attr:`DataOp.skb.metadata` attribute. The previous metadata dict is
+        kept and updated. To replace it completely, see
+        :meth:`DataOp.skb.set_metadata`.
+
+        Parameters
+        ----------
+        metadata : dict or None
+            The new metadata.
+
+        more_metadata : dict
+            Additional metadata, provided as named arguments.
+
+        Returns
+        -------
+        A new DataOp with its metadata dict updated.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {'d': pd.to_datetime(['2026-10-01', '2026-10-02']), 'e': [1.2, 3.0]})
+        >>> data_op = skrub.var('df', df).skb.update_metadata(date_col='d')
+        >>> data_op
+        <Var 'df'>
+        Result:
+        ―――――――
+                   d    e
+        0 2026-10-01  1.2
+        1 2026-10-02  3.0
+        >>> data_op.skb.metadata
+        {'date_col': 'd'}
+
+        Previously existing metadata is kept:
+
+        >>> data_op.skb.update_metadata({'check': True}).skb.metadata
+        {'date_col': 'd', 'check': True}
+
+        To replace it, you can use :meth:`DataOp.skb.set_metadata`:
+
+        >>> data_op.skb.set_metadata({'check': True}).skb.metadata
+        {'check': True}
+
+        Another example where metadata is used together with
+        :meth:`DataOp.skb.find`:
+
+        >>> c = skrub.var('a').skb.set_metadata(mark=True) + skrub.var('b')
+        >>> c
+        <BinOp: add>
+        >>> c.skb.find(lambda n: n.skb.metadata.get('mark'))
+        <Var 'a'>
+        """
+        if metadata is None:
+            metadata = {}
+        if not isinstance(metadata, dict):
+            raise TypeError(f"metadata should be a dict, got: {type(metadata)}.")
+        return self.set_metadata(self.metadata | metadata, **more_metadata)
+
+    @property
+    def metadata(self):
+        """
+        User metadata for this DataOp.
+
+        This allows attaching arbitrary user data to this node. It is displayed
+        in the execution report and can be set with
+        :meth:`DataOp.skb.set_metadata` or :meth:`DataOp.skb.update_metadata`.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {'d': pd.to_datetime(['2026-10-01', '2026-10-02']), 'e': [1.2, 3.0]})
+        >>> data_op = skrub.var('df', df).skb.set_metadata(date_col='d')
+        >>> data_op
+        <Var 'df'>
+        Result:
+        ―――――――
+                   d    e
+        0 2026-10-01  1.2
+        1 2026-10-02  3.0
+        >>> data_op.skb.metadata
+        {'date_col': 'd'}
+
+        Another example where metadata is used together with
+        :meth:`DataOp.skb.find`:
+
+        >>> c = skrub.var('a').skb.set_metadata(mark=True) + skrub.var('b')
+        >>> c
+        <BinOp: add>
+        >>> c.skb.find(lambda n: n.skb.metadata.get('mark'))
+        <Var 'a'>
+        """
+        return self._data_op._skrub_impl.user_metadata.copy()
+
     @property
     def id(self):
         """

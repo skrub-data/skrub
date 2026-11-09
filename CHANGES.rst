@@ -26,6 +26,9 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :meth:`DataOp.skb.set_metadata` and :meth:`DataOp.skb.update_metadata` allow
+  attaching arbitrary user metadata to a :class:`DataOp`, which can be read with
+  :attr:`DataOp.skb.metadata` and is shown in the DataOp report.
 
 Changes
 -------

@@ -403,6 +403,7 @@ def _make_report(
                     node._skrub_impl.creation_stack(), output_dir
                 ),
                 node_description=node._skrub_impl.description,
+                node_user_metadata=node._skrub_impl.user_metadata,
                 node_name=node._skrub_impl.name,
                 node_uuid=node._skrub_impl.uuid,
                 node_type=node._skrub_impl.__class__.__name__,

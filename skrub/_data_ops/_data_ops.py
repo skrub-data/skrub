@@ -300,6 +300,7 @@ class DataOpImpl:
             # topology: we rely on actual Python object ids for this.
             self.uuid = uuid.uuid4().int
             self.description = None
+            self.user_metadata = {}
             self.checked = False
 
         cls.__init__ = __init__
@@ -313,6 +314,7 @@ class DataOpImpl:
         new.name = self.name
         new.uuid = self.uuid
         new.description = self.description
+        new.user_metadata = dict(self.user_metadata)
         new.checked = False
         return new
 

@@ -45,6 +45,13 @@
                     </p>
                     {% endif %}
 
+                    {% if node_user_metadata %}
+                    <h3>Metadata:</h3>
+                    <code>
+                    {{ node_user_metadata }}
+                    </code>
+                    {% endif %}
+
                     <h3>This step uses:</h3>
                     <ul>
                         {% for child in node_children %}
