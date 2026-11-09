@@ -29,6 +29,7 @@ New Features
 - :meth:`DataOp.skb.set_metadata` and :meth:`DataOp.skb.update_metadata` allow
   attaching arbitrary user metadata to a :class:`DataOp`, which can be read with
   :attr:`DataOp.skb.metadata` and is shown in the DataOp report.
+  :pr:`2418` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
