@@ -182,7 +182,11 @@
     const graphCanvas = document.getElementById('graph-canvas');
     const MIN_SCALE = 0.05;
     const MAX_SCALE = 4;
-    const WHEEL_FACTOR = 1.1;
+    // Zoom per pixel of wheel movement: a classic mouse wheel notch (100 px)
+    // zooms by 10%, and the small deltas of a trackpad pinch zoom smoothly.
+    const ZOOM_PER_PIXEL = Math.log(1.1) / 100;
+    const MAX_WHEEL_ZOOM_DELTA = 100;
+    const LINE_HEIGHT = 16;
     const panzoom = Panzoom(graphCanvas, {
         origin: '0 0', canvas: true, cursor: 'inherit',
         minScale: MIN_SCALE, maxScale: MAX_SCALE,
@@ -193,23 +197,16 @@
         panzoom.pan(x, y, {animate: false});
     }
 
-    // Initial view: the width of the graph fits the panel (never enlarged), top
-    // of the graph visible.
+    // Initial view, and what the Reset button goes back to: the whole graph
+    // fits the panel (never enlarged), in its top left corner.
     function resetView() {
-        const scale = Math.min(1, graphNav.clientWidth / graphCanvas.offsetWidth);
-        setView(Math.max(scale, MIN_SCALE), 0, 0);
-    }
-
-    // The whole graph, centered.
-    function fitView() {
         const w = graphCanvas.offsetWidth, h = graphCanvas.offsetHeight;
         const vw = graphNav.clientWidth, vh = graphNav.clientHeight;
         if (!w || !h) {
             return;
         }
-        const scale = Math.min(vw / w, vh / h, 1);
-        setView(Math.max(scale, MIN_SCALE),
-                (vw / scale - w) / 2, (vh / scale - h) / 2);
+        const scale = Math.max(Math.min(vw / w, vh / h, 1), MIN_SCALE);
+        setView(scale, 0, 0);
     }
 
     // Zoom keeping the point of the graph under (clientX, clientY) in place. We do
@@ -228,21 +225,52 @@
                 pan.y + py / newScale - py / oldScale);
     }
 
+    // Zoom for the buttons, around the center of the part of the graph that is
+    // visible: zooming around the center of the panel would push a graph smaller
+    // than the panel (or not centered in it) away from the center, possibly out
+    // of view.
     function zoomAtCenter(factor) {
+        const scale = panzoom.getScale();
+        const pan = panzoom.getPan();
+        const center = (start, size, viewportSize) => {
+            const lo = Math.max(0, start * scale);
+            const hi = Math.min(viewportSize, (start + size) * scale);
+            return lo < hi ? (lo + hi) / 2 : viewportSize / 2;
+        };
         const rect = graphNav.getBoundingClientRect();
-        zoomAround(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        zoomAround(factor,
+                   rect.left + graphNav.clientLeft + center(
+                       pan.x, graphCanvas.offsetWidth, graphNav.clientWidth),
+                   rect.top + graphNav.clientTop + center(
+                       pan.y, graphCanvas.offsetHeight, graphNav.clientHeight));
+    }
+
+    // Wheel deltas in pixels. Depending on the browser and device they can be
+    // given in lines or pages (deltaMode) rather than pixels.
+    function wheelDeltaPixels(event) {
+        let factorX = 1, factorY = 1;
+        if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+            factorX = factorY = LINE_HEIGHT;
+        } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+            factorX = graphNav.clientWidth;
+            factorY = graphNav.clientHeight;
+        }
+        return {x: event.deltaX * factorX, y: event.deltaY * factorY};
     }
 
     graphNav.addEventListener('wheel', (event) => {
         event.preventDefault();
+        const delta = wheelDeltaPixels(event);
         if (event.ctrlKey || event.metaKey) {
             // also what browsers send for a trackpad pinch
-            zoomAround(event.deltaY < 0 ? WHEEL_FACTOR : 1 / WHEEL_FACTOR,
+            const amount = Math.max(
+                -MAX_WHEEL_ZOOM_DELTA, Math.min(MAX_WHEEL_ZOOM_DELTA, delta.y));
+            zoomAround(Math.exp(-amount * ZOOM_PER_PIXEL),
                        event.clientX, event.clientY);
         } else {
             const scale = panzoom.getScale();
             const pan = panzoom.getPan();
-            panzoom.pan(pan.x - event.deltaX / scale, pan.y - event.deltaY / scale,
+            panzoom.pan(pan.x - delta.x / scale, pan.y - delta.y / scale,
                         {animate: false});
         }
     }, {passive: false});
@@ -281,11 +309,11 @@
 
     document.getElementById('zoom-in').addEventListener('click', () => zoomAtCenter(1.5));
     document.getElementById('zoom-out').addEventListener('click', () => zoomAtCenter(1 / 1.5));
-    document.getElementById('zoom-fit').addEventListener('click', fitView);
     document.getElementById('zoom-reset').addEventListener('click', resetView);
 
     // The size of the graph is known once it is drawn (immediately, unless the
-    // browser draws it).
-    resetView();
+    // browser draws it). Panzoom resets the pan in a timeout of its own when it is
+    // created, so we must wait for it.
+    setTimeout(resetView, 0);
     graphNav.addEventListener('graph-rendered', resetView);
 })();
