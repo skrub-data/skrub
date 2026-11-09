@@ -50,6 +50,7 @@ Changes
   history; node details and source code displays can be closed more easily; the
   scrolling of the source code display is improved.
   :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
+- The graph displayed in the :meth:`DataOp.skb.report` can be panned and zoomed.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their

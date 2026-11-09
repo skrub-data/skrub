@@ -18,6 +18,10 @@
 // displayed once it has loaded, so that nothing flashes either.
 //
 (function() {
+    //
+    // Navigation
+    // ----------
+    //
     const drawer = document.getElementById('drawer');
     const nodeFrame = document.getElementById('node-frame');
     let sourceFrame = document.getElementById('source-frame');
@@ -166,13 +170,17 @@
         setGraphOpen(!graphPanel.hasAttribute('data-is-open'));
     });
 
+    //
+    // Pan & zoom
+    // ----------
+    //
     // Pan and zoom of the graph, with the Panzoom library (included in the page).
     // - drag: pan; buttons: zoom; Ctrl (or Cmd) + wheel, or pinch: zoom at the
     //   pointer; wheel: pan, as the graph used to scroll before.
     // - a drag must not click the node it ends on.
     const graphNav = document.getElementById('graph-nav');
     const graphCanvas = document.getElementById('graph-canvas');
-        const MIN_SCALE = 0.05;
+    const MIN_SCALE = 0.05;
     const MAX_SCALE = 4;
     const WHEEL_FACTOR = 1.1;
     const panzoom = Panzoom(graphCanvas, {
