@@ -11,6 +11,13 @@ Ongoing Development
 
 New Features
 ------------
+- :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
+  skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
+  standard scikit-learn interface: ``fit(X, y)`` rather than the usual
+  SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
+  <SkrubLearner.with_sklearn_interface>` and an :ref:`example
+  <example_with_sklearn_interface>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
@@ -22,6 +29,12 @@ New Features
 
 Changes
 -------
+- :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
+  default for every parameter.
+  Explicit ``None`` values are no longer treated as "leave unchanged" and are
+  validated like other values. ``cache=None`` still disables caching and
+  ``target_cache_size=None`` still disables cache pruning.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - Evaluating a :class:`DataOp` and passing an environment that has extra keys
   (keys in the environment that do not correspond to any variable, node or
   choice name, or node ID, in the DataOp) now causes a warning displaying the
@@ -37,6 +50,7 @@ Changes
   history; node details and source code displays can be closed more easily; the
   scrolling of the source code display is improved.
   :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
+- The graph displayed in the :meth:`DataOp.skb.report` can be panned and zoomed.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
@@ -45,6 +59,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`set_config` and :func:`config_context` now correctly store the
+  ``cardinality_threshold`` parameter. Previously, the value was validated but
+  ignored, so the default threshold kept being used.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
 - :class:`DropSimilar` now checks the input dataframe with
   :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
   are not unique strings no longer cause errors.
