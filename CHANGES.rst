@@ -46,7 +46,9 @@ Changes
   :class:`DataOp` have been renamed from ``_skrub_<name>`` to ``skrub.<name>``
   (for example ``_skrub_predictions`` is now ``skrub.predictions``). Names of
   variables, choices and nodes starting with ``skrub`` or ``_skrub`` are now
-  reserved.
+  reserved. The old names will be silently ignored, for example passing
+  ``"_skrub_predictions"`` now has no effect.
+  :pr:`2420` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
