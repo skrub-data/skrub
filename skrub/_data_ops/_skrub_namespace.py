@@ -55,7 +55,12 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, attribute_error
+from ._utils import (
+    IS_PREVIEW_DATA_ENV_NAME,
+    NULL,
+    USE_VAR_VALUES_NAME,
+    attribute_error,
+)
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -1152,7 +1157,7 @@ class SkrubNamespace:
         else:
             environment = {
                 **environment,
-                "skrub.use_var_values": not _var_values_provided(
+                USE_VAR_VALUES_NAME: not _var_values_provided(
                     self._data_op, environment
                 ),
             }

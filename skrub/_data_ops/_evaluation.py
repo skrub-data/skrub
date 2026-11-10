@@ -36,6 +36,7 @@ from ._utils import (
     IGNORE_EXTRA_KEYS_NAME,
     IS_PREVIEW_DATA_ENV_NAME,
     NULL,
+    SPECIAL_KEY_PREFIX,
     X_NAME,
     Y_NAME,
     simple_repr,
@@ -457,7 +458,8 @@ def _get_unused_keys(data_op, ancestor_data_op, environment):
         {
             k
             for k in environment.keys()
-            if isinstance(k, int) or (isinstance(k, str) and not k.startswith("skrub."))
+            if isinstance(k, int)
+            or (isinstance(k, str) and not k.startswith(SPECIAL_KEY_PREFIX))
         }.difference(used_keys),
         key=str,
     )

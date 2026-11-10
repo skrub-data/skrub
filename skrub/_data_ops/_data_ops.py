@@ -53,7 +53,12 @@ from .._check_input import cast_column_names_to_strings
 from .._utils import PassThrough, set_module, short_repr
 from . import _caching, _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
+from ._utils import (
+    FITTED_PREDICTOR_METHODS,
+    NULL,
+    USE_VAR_VALUES_NAME,
+    attribute_error,
+)
 
 __all__ = [
     "var",
@@ -988,7 +993,7 @@ class Var(DataOpImpl):
         if e.name in environment:
             return environment[e.name]
         if (
-            e.becomes_default or environment.get("skrub.use_var_values", False)
+            e.becomes_default or environment.get(USE_VAR_VALUES_NAME, False)
         ) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(e.name)

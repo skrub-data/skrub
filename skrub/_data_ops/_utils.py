@@ -16,6 +16,11 @@ X_NAME = "skrub.X"
 Y_NAME = "skrub.y"
 IS_PREVIEW_DATA_ENV_NAME = "skrub.is_preview_data_env"
 IGNORE_EXTRA_KEYS_NAME = "skrub.ignore_extra_keys"
+USE_VAR_VALUES_NAME = "skrub.use_var_values"
+PREDICTIONS_NAME = "skrub.predictions"
+SHOULD_SUBSAMPLE_NAME = "skrub.should_subsample"
+# All the special keys above start with this prefix.
+SPECIAL_KEY_PREFIX = "skrub."
 
 
 class Sentinels(enum.Enum):

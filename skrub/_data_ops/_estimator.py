@@ -36,7 +36,14 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error, unique_renaming
+from ._utils import (
+    PREDICTIONS_NAME,
+    X_NAME,
+    Y_NAME,
+    _CloudPickle,
+    attribute_error,
+    unique_renaming,
+)
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -1205,7 +1212,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             ancestor_data_op=self.data_op,
         )
         all_scores = []
-        cache = dict(env.get("skrub.predictions", {}))
+        cache = dict(env.get(PREDICTIONS_NAME, {}))
         caching_estimator = _CachingXyPipeline(
             self.data_op, self.environment, X_id=id(X), cache=cache
         )
