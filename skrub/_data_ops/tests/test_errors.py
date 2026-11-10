@@ -801,6 +801,26 @@ def test_extra_key_warning():
         b.skb.eval({"a": 0, b.skb.id: 5})
 
 
+def test_extra_key_warning_ignore_list():
+    a = skrub.var("a")
+    env = {"a": 0, "extra_1": 0, "extra_2": 1}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        a.skb.eval({**env, "_skrub_ignore_extra_keys": ["extra_1", "extra_2"]})
+    # only the listed keys are ignored
+    with pytest.warns(UserWarning, match=r"(?s).*\['extra_2'\]") as record:
+        a.skb.eval({**env, "_skrub_ignore_extra_keys": ["extra_1"]})
+    assert "extra_1'," not in str(record[0].message)
+    # invalid values
+    for bad in ["extra_1", [1.5], None, 0.5, (k for k in ["extra_1"])]:
+        with pytest.raises(TypeError, match="_skrub_ignore_extra_keys"):
+            a.skb.eval({**env, "_skrub_ignore_extra_keys": bad})
+    # empty list or False: nothing ignored
+    for ignore in [[], False]:
+        with pytest.warns(UserWarning, match="(?s).*extra_1"):
+            a.skb.eval({**env, "_skrub_ignore_extra_keys": ignore})
+
+
 def test_extra_key_warning_sub_data_op():
     b = skrub.var("b")
     X = (skrub.var("x") + skrub.var("a")).skb.mark_as_X() + b

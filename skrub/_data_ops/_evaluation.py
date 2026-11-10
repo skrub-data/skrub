@@ -448,8 +448,21 @@ def _get_unused_keys(data_op, ancestor_data_op, environment):
     if not isinstance(environment, typing.Mapping):
         # checked in _check_environment
         return []
-    if environment.get(IGNORE_EXTRA_KEYS_NAME, False):
+    ignore = environment.get(IGNORE_EXTRA_KEYS_NAME, False)
+    if ignore is True:
         return []
+    if ignore is False:
+        ignore = []
+    if (
+        isinstance(ignore, str)
+        or not isinstance(ignore, typing.Collection)
+        or not all(isinstance(item, (str, int)) for item in ignore)
+    ):
+        raise TypeError(
+            f"The value for {IGNORE_EXTRA_KEYS_NAME!r} should be a Boolean "
+            f"or list of strings (names) or ints (IDs); got: {ignore!r}."
+        )
+    ignore = list(ignore)
     used_keys = _all_names_and_ids(
         ancestor_data_op if ancestor_data_op is not None else data_op
     )
@@ -459,7 +472,7 @@ def _get_unused_keys(data_op, ancestor_data_op, environment):
             for k in environment.keys()
             if isinstance(k, int)
             or (isinstance(k, str) and not k.startswith("_skrub_"))
-        }.difference(used_keys),
+        }.difference(used_keys, ignore),
         key=str,
     )
 
@@ -495,7 +508,9 @@ def _check_environment(environment, unused_keys):
             f"in the DataOp:\n{unused_keys}.\n"
             "This usually indicates a mis-typed variable name.\n"
             "To avoid this warning, remove the extra keys from the environment\n"
-            f"or add {{'{IGNORE_EXTRA_KEYS_NAME}': True}} to the environment.\n"
+            f"or add {{'{IGNORE_EXTRA_KEYS_NAME}': True}} to the environment "
+            "(or a list of keys to ignore, "
+            f"e.g. {{'{IGNORE_EXTRA_KEYS_NAME}': ['some_key']}}).\n"
             "You can get all the names used in a DataOp (valid keys in the env) with:\n"
             "list(data_op.skb.get_vars(all_named_ops=True) | "
             "data_op.skb.get_choices(named_only=True))\n"
@@ -523,7 +538,8 @@ def _check_environment(environment, unused_keys):
     #
     #       - Users can filter the names by inspecting the DataOp or pass
     #         _skrub_ignore_extra_keys in the environment, in which case this
-    #         check is skipped.
+    #         check is skipped (if the value is True) or the listed keys are
+    #         not reported (if the value is a list of keys).
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the

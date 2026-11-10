@@ -41,6 +41,8 @@ Changes
   extra keys to help detect typos and mistakes. It can be silenced with the
   warnings module, or, more robustly, by adding
   ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  Instead of ``True``, ``"_skrub_ignore_extra_keys"`` can also be a list of
+  keys to ignore, e.g. ``{"_skrub_ignore_extra_keys": ["some_key"]}``.
   :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
