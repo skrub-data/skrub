@@ -1152,7 +1152,7 @@ class SkrubNamespace:
         else:
             environment = {
                 **environment,
-                "_skrub_use_var_values": not _var_values_provided(
+                "skrub.use_var_values": not _var_values_provided(
                     self._data_op, environment
                 ),
             }
@@ -3439,7 +3439,7 @@ class SkrubNamespace:
         ----------
         name : str
             The name for this step. Must be unique within a learner. Cannot
-            start with ``"_skrub_"``.
+            start with ``"skrub"`` or ``"_skrub"``.
 
         Returns
         -------

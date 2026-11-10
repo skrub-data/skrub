@@ -457,8 +457,7 @@ def _get_unused_keys(data_op, ancestor_data_op, environment):
         {
             k
             for k in environment.keys()
-            if isinstance(k, int)
-            or (isinstance(k, str) and not k.startswith("_skrub_"))
+            if isinstance(k, int) or (isinstance(k, str) and not k.startswith("skrub."))
         }.difference(used_keys),
         key=str,
     )
@@ -522,7 +521,7 @@ def _check_environment(environment, unused_keys):
     #         variable and choice names.
     #
     #       - Users can filter the names by inspecting the DataOp or pass
-    #         _skrub_ignore_extra_keys in the environment, in which case this
+    #         skrub.ignore_extra_keys in the environment, in which case this
     #         check is skipped.
     #
     # - variables ⊂ env: we cannot check that all variables in the DataOp
@@ -558,8 +557,8 @@ def evaluate(
     environment : dict
         The dict passed by the user, containing binding for all the variables
         contained in the DataOp, e.g., {'users': ..., 'orders': ...}. May
-        contain some additional special keys starting with `_skrub` added by
-        skrub to control some aspects of the evaluation, eg `_skrub_X` to
+        contain some additional special keys starting with `skrub.` added by
+        skrub to control some aspects of the evaluation, eg `skrub.X` to
         override the value of the node marked with `mark_as_X()`.
 
     clear : bool

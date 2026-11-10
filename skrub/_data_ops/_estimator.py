@@ -1205,7 +1205,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             ancestor_data_op=self.data_op,
         )
         all_scores = []
-        cache = dict(env.get("_skrub_predictions", {}))
+        cache = dict(env.get("skrub.predictions", {}))
         caching_estimator = _CachingXyPipeline(
             self.data_op, self.environment, X_id=id(X), cache=cache
         )

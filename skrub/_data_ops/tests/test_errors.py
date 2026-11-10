@@ -648,8 +648,8 @@ def test_bad_names():
     ):
         # less likely to happen but for the sake of completeness
         (skrub.var("a") + 2).skb.set_name(0)
-    with pytest.raises(ValueError, match="names starting with '_skrub_'"):
-        skrub.var("_skrub_X")
+    with pytest.raises(ValueError, match="names starting with 'skrub' or '_skrub'"):
+        skrub.var("skrub.X")
 
 
 @skip_polars_installed_without_pyarrow
@@ -792,9 +792,7 @@ def test_extra_key_warning():
         b.skb.eval({"a": 0, 12345: 0, "this_is_an_extra_key": 0})
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        a.skb.eval(
-            {"a": 0, "this_is_an_extra_key": 0, "_skrub_ignore_extra_keys": True}
-        )
+        a.skb.eval({"a": 0, "this_is_an_extra_key": 0, "skrub.ignore_extra_keys": True})
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         # the ID of a node is a valid key
@@ -821,7 +819,7 @@ def test_extra_key_warning_sub_data_op():
                 "a": 0,
                 "b": 1,
                 "this_is_an_extra_key": 0,
-                "_skrub_ignore_extra_keys": True,
+                "skrub.ignore_extra_keys": True,
             }
         )
 

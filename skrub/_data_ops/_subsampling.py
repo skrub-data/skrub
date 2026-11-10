@@ -8,7 +8,7 @@ from . import _data_ops, _evaluation
 # take place or not. Subsampling can be turned on or off when evaluating a
 # DataOp by setting the corresponding value in the environment.
 
-SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
+SHOULD_SUBSAMPLE_KEY = "skrub.should_subsample"
 
 
 def _should_subsample(mode, environment):
