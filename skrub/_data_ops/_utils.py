@@ -33,6 +33,16 @@ NULL = Sentinels.NULL
 OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
+def check_if_reserved_name(name):
+    if not isinstance(name, str):
+        return
+    if name.startswith("_skrub") or name.startswith("skrub"):
+        raise ValueError(
+            "names starting with 'skrub' or '_skrub' "
+            f"are reserved for skrub use, got: {name!r}."
+        )
+
+
 def simple_repr(data_op):
     return repr(data_op).splitlines()[0].removeprefix("<").removesuffix(">")
 

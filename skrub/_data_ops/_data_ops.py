@@ -959,11 +959,7 @@ def check_name(name, is_var):
         raise TypeError(
             f"`name` must be {description}, got object of type: {type(name)}"
         )
-    if name.startswith("_skrub") or name.startswith("skrub"):
-        raise ValueError(
-            "names starting with 'skrub' or '_skrub' "
-            f"are reserved for skrub use, got: {name!r}."
-        )
+    _utils.check_if_reserved_name(name)
 
 
 def _check_var_value(value):
