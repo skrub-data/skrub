@@ -1804,11 +1804,11 @@ def _get_results_metadata(data_op_choices):
     }
 
 
-def default_score(estimator, X, y):
+def default_score(estimator, X, y=None):
     """
     Wrap estimator.score to force sklearn to take refit parameter into account.
     """
-    return estimator.score(X, y)
+    return estimator.score(X, y=y)
 
 
 @set_module("skrub")

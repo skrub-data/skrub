@@ -83,6 +83,9 @@ Bugfixes
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :meth:`DataOp.skb.make_grid_search` (and randomized search) could produce NaN
+  scores when using the default (built-in score method) scoring for unsupervised
+  estimators (no ``y``). This has been fixed.
 
 Deprecations
 ------------
