@@ -1,3 +1,4 @@
+import sys
 from functools import partial
 from types import SimpleNamespace
 
@@ -382,6 +383,23 @@ def test_reject_non_datetime(df_module):
 def test_invalid_holidays_country(datetime_cols):
     with pytest.raises(ValueError, match="Unknown country: ZZ for holidays.*"):
         DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
+
+
+def test_missing_holidays_module(monkeypatch, datetime_cols):
+    error = "The holidays package is needed when using the add_holidays "
+    "parameter of DatetimeEncoder."
+
+    holidays_module = "holidays"
+    # clear the cache
+    if holidays_module in sys.modules:
+        monkeypatch.delitem(sys.modules, holidays_module, raising=False)
+    # simulate the missing module
+    monkeypatch.setitem(sys.modules, holidays_module, None)
+
+    encoder = DatetimeEncoder(add_holidays="FR")
+
+    with pytest.raises(ImportError, match=error):
+        encoder.fit(datetime_cols.datetime)
 
 
 # Checking parameters for CircularEncoder and SplineEncoder
