@@ -1283,10 +1283,7 @@ def _n_unique_pandas(col):
 
 @n_unique.specialize("polars", argument_type="Column")
 def _n_unique_polars(col):
-    n = col.n_unique()
-    if col.is_null().any():
-        n -= 1
-    return n
+    return drop_nulls(col).n_unique()
 
 
 @dispatch
@@ -1301,7 +1298,7 @@ def _unique_pandas(col):
 
 @unique.specialize("polars", argument_type="Column")
 def _unique_polars(col):
-    return col.unique().drop_nulls()
+    return drop_nulls(col.unique())
 
 
 @dispatch

@@ -92,6 +92,11 @@ Bugfixes
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
+  longer count ``NaN`` as a distinct value in float columns of polars
+  dataframes. ``NaN`` is already counted as a missing value there, so the
+  number of distinct values was off by one and differed from pandas.
+  :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
