@@ -1806,8 +1806,21 @@ def _get_results_metadata(data_op_choices):
 
 def default_score(estimator, X, y=None):
     """
-    Wrap estimator.score to force sklearn to take refit parameter into account.
+    Score an estimator by calling its .score() method.
     """
+    # We wrap estimator.score to force sklearn to take refit parameter into account.
+    #
+    # The 'refit' parameter of GridSearchCV and RandomizedSearchCV can be a
+    # string to specify which score defines the best model, but only when they
+    # are passed a 'scoring' parameter. When using the learner's score()
+    # method, i.e. when 'scoring' is None, they assume it returns a single
+    # score and that 'refit' is a Boolean.
+    #
+    # When scorers are configured with .skb.with_scoring() a SkrubLearner.score
+    # returns a dict of scores. By passing this wrapper as the 'scoring'
+    # parameter we can reach the score() method while having the possibility to
+    # pass a string (score name) as 'refit'.
+
     return estimator.score(X, y=y)
 
 
