@@ -123,6 +123,7 @@ def toy_orders(split="train"):
     0     cup      5
     1     pen      2
     2   spoon      3
+    3    fork      3
     """
     X = pd.DataFrame(
         {
