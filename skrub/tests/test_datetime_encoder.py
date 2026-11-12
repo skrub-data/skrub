@@ -122,6 +122,7 @@ def expected_features(df_module):
         ],
         "when_weekday": [3.0, None, 6.0, 3.0, 3.0],
         "when_holidays_FR": [1.0, None, 1.0, 0.0, 1.0],
+        "when_holidays_CA": [1.0, None, 1.0, 0.0, 0.0],
     }
 
     res = df_module.make_dataframe(values)
@@ -228,6 +229,18 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             dict(add_holidays="FR"),
             ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
         ),
+        (
+            dict(add_holidays=["FR", "CA"]),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "total_seconds",
+                "holidays_FR",
+                "holidays_CA",
+            ],
+        ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
@@ -326,6 +339,18 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
         (
             dict(add_holidays="FR"),
             ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
+        ),
+        (
+            dict(add_holidays=["FR", "CA"]),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "total_seconds",
+                "holidays_FR",
+                "holidays_CA",
+            ],
         ),
     ],
 )
