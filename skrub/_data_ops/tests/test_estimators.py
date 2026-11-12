@@ -657,6 +657,15 @@ def test_unsupervised_no_y():
     assert_allclose(sklearn_scores, data_op_scores)
 
 
+def test_grid_search_default_score_no_y():
+    X = np.random.default_rng(0).normal(size=(30, 20))
+    data_op = skrub.X(X).skb.apply(
+        PCA(**skrub.choose_from([4, 8], name="n_components"))
+    )
+    scores = data_op.skb.make_grid_search(fitted=True).results_["mean_test_score"]
+    assert not scores.isna().any()
+
+
 def test_unsupervised():
     X, y = make_blobs(n_samples=10, random_state=0)
     k_means = KMeans(n_clusters=2, random_state=0, n_init=1)
