@@ -17,7 +17,8 @@ New Features
   SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
   <SkrubLearner.with_sklearn_interface>` and an :ref:`example
   <example_with_sklearn_interface>`.
-  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>` and
+  :pr:`2423` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
