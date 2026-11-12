@@ -9,6 +9,7 @@ import re
 import warnings
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from .. import _dataframe as sbd
 from .. import _datetime_encoder
@@ -38,19 +39,6 @@ COLORS = _SEABORN
 COLOR_0 = COLORS[0]
 
 _RED = "#dd0000"
-
-
-@functools.lru_cache(maxsize=1)
-def _plt():
-    """Import matplotlib.pyplot lazily.
-
-    ``matplotlib.pyplot`` is costly to import; importing it is deferred
-    until a plot is actually requested instead of happening whenever skrub
-    is imported.
-    """
-    from matplotlib import pyplot as plt
-
-    return plt
 
 
 # We want the foreground objects like text and lines to use the css variable
@@ -107,7 +95,6 @@ def _plot(plotting_fun):
         # See https://github.com/skrub-data/skrub/pull/1172
         #
 
-        plt = _plt()
         # fonttype: none causes matplotlib to insert labels etc as text in the
         # svg rather than drawing the glyphs.
         params = {"svg.fonttype": "none", **_MATPLOTLIB_RC_PARAMS}
@@ -153,12 +140,12 @@ def _serialize(fig):
     out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
     out = re.sub(_TEXT_COLOR_PLACEHOLDER, "var(--color-text-primary)", out)
     out = re.sub(_BACKGROUND_COLOR_PLACEHOLDER, "var(--color-background-primary)", out)
-    _plt().close(fig)
+    plt.close(fig)
     return out
 
 
 def _rotate_ticklabels(ax):
-    _plt().setp(ax.get_xticklabels(), rotation=45, horizontalalignment="right")
+    plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment="right")
 
 
 def _get_adjusted_fig_size(fig, ax, direction, target_size):
@@ -323,7 +310,6 @@ def histogram_data(col):
 @_plot
 def histogram(col, duration_unit=None, color=COLOR_0):
     """Histogram for a numeric column."""
-    plt = _plt()
     fig, ax = plt.subplots()
     _despine(ax)
     histogram_data = _robust_hist(col, ax=ax, color=color)
@@ -344,7 +330,6 @@ def line(x_col, y_col):
     """
     x = sbd.to_numpy(x_col)
     y = sbd.to_numpy(y_col)
-    plt = _plt()
     fig, ax = plt.subplots()
     _despine(ax)
     ax.plot(x, y)
@@ -386,7 +371,6 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
         title = f"{len(value_counts)} most frequent"
     else:
         title = None
-    plt = _plt()
     fig, ax = plt.subplots()
     _despine(ax)
     ax.barh(list(map(str, range(len(values)))), counts, color=color)
