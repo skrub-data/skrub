@@ -221,17 +221,24 @@ class _DataOpWrapperMixin(_CloudPickle):
         ``environment`` or drop it with :meth:`XySkrubLearner.drop_env`, and
         pass the extra data through method kwargs instead.
 
+        In case of name collisions, the preference order from highest to lowest
+        precedence is:
+        X and y > kwargs > environment attribute.
+
         Parameters
         ----------
         X : str or int, default="X"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
-            receives the ``X`` argument.
+            receives the ``X`` argument. Can also be "_skrub_X" to indicate the
+            node marked with :meth:`DataOp.skb.mark_as_X`.
 
         y : str or int or None, default="y"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
             receives the ``y`` argument. Only required if the DataOp uses a ``y``.
+            Can also be "_skrub_y" to indicate the node marked with
+            :meth:`DataOp.skb.mark_as_y`.
 
             (Passing ``None`` explicitly disables passing any ``y`` even if one
             is provided to the estimator method. Usually leaving the default is
