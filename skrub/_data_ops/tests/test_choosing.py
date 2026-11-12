@@ -31,6 +31,8 @@ def test_bad_name(name):
         skrub.choose_int(0, 10, name=name)
     with pytest.raises(TypeError, match=".*must be a `str`"):
         skrub.choose_int(0, 10, n_steps=5, name=name)
+    with pytest.raises(ValueError, match="names starting with 'skrub' or '_skrub'"):
+        skrub.choose_int(0, 10, name="skrub.c")
 
 
 def test_choose_from_numpy_array():

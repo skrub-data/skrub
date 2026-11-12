@@ -37,7 +37,14 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error, unique_renaming
+from ._utils import (
+    PREDICTIONS_NAME,
+    X_NAME,
+    Y_NAME,
+    _CloudPickle,
+    attribute_error,
+    unique_renaming,
+)
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -233,14 +240,14 @@ class _DataOpWrapperMixin(_CloudPickle):
         X : str or int, default="X"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
-            receives the ``X`` argument. Can also be "_skrub_X" to indicate the
+            receives the ``X`` argument. Can also be "skrub.X" to indicate the
             node marked with :meth:`DataOp.skb.mark_as_X`.
 
         y : str or int or None, default="y"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
             receives the ``y`` argument. Only required if the DataOp uses a ``y``.
-            Can also be "_skrub_y" to indicate the node marked with
+            Can also be "skrub.y" to indicate the node marked with
             :meth:`DataOp.skb.mark_as_y`.
 
             (Passing ``None`` explicitly disables passing any ``y`` even if one
@@ -1276,7 +1283,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             ancestor_data_op=self.data_op,
         )
         all_scores = []
-        cache = dict(env.get("_skrub_predictions", {}))
+        cache = dict(env.get(PREDICTIONS_NAME, {}))
         caching_estimator = _CachingXyPipeline(
             self.data_op, self.environment, X_id=id(X), cache=cache
         )

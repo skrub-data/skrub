@@ -276,7 +276,7 @@ def test_transformer_with_score():
     or other nodes than Apply do not affect this.
     """
     X_a, y_a = make_regression()
-    env = {"X": X_a, "y": y_a, "_skrub_ignore_extra_keys": True}
+    env = {"X": X_a, "y": y_a, "skrub.ignore_extra_keys": True}
     feat = skrub.X().skb.apply(PCA(n_components=2)).skb.apply_func(lambda x: x)
     y = skrub.y()
     ridge_1 = feat.skb.apply(Ridge(), y=y)
