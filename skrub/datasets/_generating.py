@@ -95,11 +95,11 @@ def toy_orders(split="train"):
     --------
     >>> from skrub.datasets import toy_orders
     >>> toy_orders(split="train").X
-    ID	product	quantity	date
-    0	1	pen	2	2020-04-03
-    1	2	cup	3	2020-04-04
-    2	3	cup	5	2020-04-04
-    3	4	spoon	1	2020-04-05
+       ID product  quantity        date
+    0   1     pen         2  2020-04-03
+    1   2     cup         3  2020-04-04
+    2   3     cup         5  2020-04-04
+    3   4   spoon         1  2020-04-05
     >>> toy_orders(split="train").y
     0    False
     1    False
@@ -110,11 +110,19 @@ def toy_orders(split="train"):
     If you want both X and y in a dataframe, use `.orders`:
 
     >>> toy_orders().orders
-    ID	product	quantity	date	delayed
-    0	1	pen	2	2020-04-03	False
-    1	2	cup	3	2020-04-04	False
-    2	3	cup	5	2020-04-04	True
-    3	4	spoon	1	2020-04-05	False
+       ID product  quantity        date  delayed
+    0   1     pen         2  2020-04-03    False
+    1   2     cup         3  2020-04-04    False
+    2   3     cup         5  2020-04-04     True
+    3   4   spoon         1  2020-04-05    False
+
+    There is also a side table containing information about the products:
+
+    >>> toy_orders().products
+      product  price
+    0     cup      5
+    1     pen      2
+    2   spoon      3
     """
     X = pd.DataFrame(
         {
@@ -138,7 +146,10 @@ def toy_orders(split="train"):
         X, y = X.iloc[4:], y.iloc[4:]
     else:
         assert split == "all", split
-    return Bunch(X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y)
+    products = pd.DataFrame({"product": ["cup", "pen", "spoon"], "price": [5, 2, 3]})
+    return Bunch(
+        X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y, products=products
+    )
 
 
 def toy_products():

@@ -11,9 +11,11 @@ import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
+ESTIMATOR_METHODS = ["fit", "fit_transform", *FITTED_ESTIMATOR_METHODS]
 X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
 IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
+IGNORE_EXTRA_KEYS_NAME = "_skrub_ignore_extra_keys"
 
 
 class Sentinels(enum.Enum):
@@ -39,7 +41,7 @@ def attribute_error(obj, name, comment=None):
     msg = f"{obj.__class__.__name__!r} object has no attribute {name!r}"
     if comment:
         msg = f"{msg}.\n{comment}"
-    raise AttributeError(msg)
+    raise AttributeError(msg) from None
 
 
 class _CloudPickle:
