@@ -50,7 +50,10 @@ def test_report():
     #      can check the content before rendering with jinja
     # however that requires first settling on the content of the report etc.
     e = -(
-        (skrub.var("a", 12345) + 1).skb.set_name("b").skb.set_description("this is b")
+        (skrub.var("a", 12345) + 1)
+        .skb.set_name("b")
+        .skb.set_description("this is b")
+        .skb.set_metadata(something="SOME METADATA")
         / skrub.var("c", 1)
     )
     report = e.skb.report(open=False)
@@ -64,7 +67,7 @@ def test_report():
     assert report["result"] is None
     out = report["report_path"].parent
     text = (out / "node_1.html").read_text("utf-8")
-    assert "12346" in text and "this is b" in text
+    assert "12346" in text and "this is b" in text and "SOME METADATA" in text
     assert "ZeroDivisionError" in (out / "node_3.html").read_text("utf-8")
     assert "This step did not run" in (out / "node_4.html").read_text("utf-8")
 

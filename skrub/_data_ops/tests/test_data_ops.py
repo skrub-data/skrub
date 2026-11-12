@@ -1228,3 +1228,27 @@ def test_apply_meta_estimator_with_choice():
     assert list(learner.get_named_params()) == ["alpha"]
     learner.fit({"X": X, "y": y})
     assert learner.predict({"X": X}).shape == y.shape
+
+
+def test_metadata():
+    a = skrub.var("a", 1)
+    assert a.skb.metadata == {}
+    b = a.skb.set_metadata({"x": 1}, y=2)
+    assert b.skb.metadata == {"x": 1, "y": 2}
+    assert a.skb.metadata == {}
+    c = b.skb.set_metadata(z=3)
+    assert c.skb.metadata == {"z": 3}
+    d = c.skb.update_metadata({"x": 1}, z=4)
+    assert d.skb.metadata == {"x": 1, "z": 4}
+    assert c.skb.metadata == {"z": 3}
+    # the returned dict is a copy
+    d.skb.metadata["x"] = 0
+    assert d.skb.metadata == {"x": 1, "z": 4}
+    # evaluation timings are not user metadata
+    assert (d + 1).skb.set_metadata(w=1).skb.eval() == 2
+    assert d.skb.eval() == 1
+    assert d.skb.metadata == {"x": 1, "z": 4}
+    assert d.skb.clone().skb.metadata == {"x": 1, "z": 4}
+    for method in d.skb.set_metadata, d.skb.update_metadata:
+        with pytest.raises(TypeError, match="metadata should be a dict"):
+            method([1])
