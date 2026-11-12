@@ -342,6 +342,8 @@ ignore = [
 "skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
