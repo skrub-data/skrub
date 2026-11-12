@@ -44,10 +44,9 @@ _RED = "#dd0000"
 def _plt():
     """Import matplotlib.pyplot lazily.
 
-    ``matplotlib.pyplot`` is costly to import (it is itself quite heavy and
-    triggers the import of several other packages); importing it is deferred
-    until a plot is actually requested instead of happening whenever this
-    module -- and therefore ``skrub`` -- is imported.
+    ``matplotlib.pyplot`` is costly to import; importing it is deferred
+    until a plot is actually requested instead of happening whenever skrub
+    is imported.
     """
     from matplotlib import pyplot as plt
 
