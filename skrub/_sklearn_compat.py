@@ -148,9 +148,11 @@ def _to_new_tags(old_tags, estimator=None):
 
 if sklearn_version < parse_version("1.6"):
     # test_common
-    from sklearn.utils.estimator_checks import _construct_instance
-
+    # Imported lazily: this pulls in scikit-learn's estimator-checks test
+    # machinery, which is only needed by skrub's own test suite, never at runtime.
     def _construct_instances(Estimator):
+        from sklearn.utils.estimator_checks import _construct_instance
+
         yield _construct_instance(Estimator)
 
     # validation
@@ -407,9 +409,15 @@ else:
         TargetTags,
         TransformerTags,
     )
-    from sklearn.utils._test_common.instance_generator import (
-        _construct_instances,  # noqa: F401
-    )
+
+    # Imported lazily: this pulls in scikit-learn's estimator-checks test
+    # machinery, which is only needed by skrub's own test suite, never at runtime.
+    def _construct_instances(*args, **kwargs):
+        from sklearn.utils._test_common.instance_generator import (
+            _construct_instances as _sklearn_construct_instances,
+        )
+
+        return _sklearn_construct_instances(*args, **kwargs)
 
     # validation
     from sklearn.utils.validation import (
