@@ -40,7 +40,7 @@ code of the municipality.
 2  69002   WB9M88
 
 We would like to be able to "unpack" the code so that we have a column for the
-department code and one for the commune code. The transformer should also be able to handle columns
+department code and one for the municipality code. The transformer should also be able to handle columns
 that do not satisfy the format we specify by "rejecting" them.
 A "rejected" column should pass through unchanged, as it cannot be handled
 by this particular transformer.
