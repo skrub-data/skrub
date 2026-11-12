@@ -53,6 +53,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer counts unused pandas categories as distinct
+  values or includes them among the most frequent values. This also fixes
+  constant-column detection after filtering a categorical column.
+  :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
+
 - :func:`set_config` and :func:`config_context` now correctly store the
   ``cardinality_threshold`` parameter. Previously, the value was validated but
   ignored, so the default threshold kept being used.
@@ -79,10 +84,19 @@ Bugfixes
   missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
   remaining strings are deduplicated.
   :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- The icon-only buttons (copy, close and dismiss) and the column filter of the
+  :class:`TableReport` now have accessible names, so that screen readers can
+  announce what they do.
+  :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
 - :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
+  longer count ``NaN`` as a distinct value in float columns of polars
+  dataframes. ``NaN`` is already counted as a missing value there, so the
+  number of distinct values was off by one and differed from pandas.
+  :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
