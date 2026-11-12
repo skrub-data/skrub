@@ -29,6 +29,9 @@
     const highlightStyle = document.getElementById('current-node-style');
     const totalNNodes = Number(document.body.dataset.totalNodes);
 
+    // An empty page, with a doctype so that it is rendered in standards mode.
+    const EMPTY_PAGE = 'data:text/html,<!DOCTYPE html><title></title>';
+
     function navigate(frame, url) {
         frame.contentWindow.location.replace(new URL(url, window.location.href));
     }
@@ -109,7 +112,9 @@
     function closeDrawer() {
         closeSource();
         // do not show this page again if the drawer is reopened
-        navigate(nodeFrame, 'about:blank');
+        // (not 'about:blank': it has no doctype, so browsers render it in quirks
+        // mode and log a warning in the console)
+        navigate(nodeFrame, EMPTY_PAGE);
         updateState(null);
     }
 
