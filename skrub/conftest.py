@@ -1,4 +1,5 @@
 import datetime
+import doctest
 import inspect
 from types import SimpleNamespace
 
@@ -37,6 +38,28 @@ def _example_data_dict():
 # this is needed to ignore the skrub/_docs folder when running pytest
 # otherwise, the examples in the folder are executed any time test discovery is run
 collect_ignore_glob = ["_docs/**/*.py"]
+
+
+# Classes decorated with ``@set_module("skrub")`` have their ``__module__``
+# rewritten, which makes ``doctest`` skip their docstrings (and those of their
+# methods) when scanning the module where they are defined. ``set_module``
+# saves the original module in ``__skrub_defining_module__``; use it to collect
+# those doctests from their defining module.
+_orig_from_module = doctest.DocTestFinder._from_module
+
+
+def _from_module(self, module, obj):
+    if module is None:
+        return True
+    # Read from the class's __dict__, not getattr so that it is only taken into
+    # account for the class decorated with set_module and not its subclasses
+    defining_module = getattr(obj, "__dict__", {}).get("__skrub_defining_module__")
+    if defining_module is not None:
+        return defining_module == module.__name__
+    return _orig_from_module(self, module, obj)
+
+
+doctest.DocTestFinder._from_module = _from_module
 
 
 _DATAFRAME_MODULES_INFO = {}

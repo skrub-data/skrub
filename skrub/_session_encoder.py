@@ -108,11 +108,12 @@ def _get_session_column_polars(
     # If there are split_by columns, the difference should be over groups
     # Otherwise, it's just over the timestamp
     if split_by_columns:
-        diff_expr = (
-            pl.col(timestamp_column).diff().over(split_by_columns).dt.total_seconds()
-        )
+        diff_expr = pl.col(timestamp_column).diff().over(split_by_columns)
     else:
-        diff_expr = pl.col(timestamp_column).diff().dt.total_seconds()
+        diff_expr = pl.col(timestamp_column).diff()
+    # In polars, dt.total_seconds() truncates to whole seconds, which would
+    # ignore sub-second gaps (unlike pandas). Use microseconds instead.
+    diff_expr = diff_expr.dt.total_microseconds() / 1_000_000
     diff_column = f"_diff_skrub_{random_string()}"
     X_sorted = X_sorted.with_columns(diff_expr.alias(diff_column))
     # Identify session boundaries based on the time differences, null values
@@ -173,7 +174,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         and all events are considered to belong to the same user (or group).
 
 
-    session_gap : int, default=1800
+    session_gap : int or float, default=1800
         The maximum gap (in seconds) between events in a session. If the gap
         between two events exceeds this value, they are considered to be in
         different sessions. Default is 1800 seconds (30 minutes).
