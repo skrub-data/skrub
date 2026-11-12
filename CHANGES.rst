@@ -92,6 +92,10 @@ Bugfixes
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :meth:`DataOp.skb.make_grid_search` (and randomized search) could produce NaN
+  scores when using the default (built-in score method) scoring for fully unsupervised
+  pipelines (no ``y`` in the final estimator's ``.score()``). This has been fixed in
+  :pr:`2419` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
   longer count ``NaN`` as a distinct value in float columns of polars
   dataframes. ``NaN`` is already counted as a missing value there, so the
