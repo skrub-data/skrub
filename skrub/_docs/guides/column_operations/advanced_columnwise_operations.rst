@@ -15,14 +15,12 @@ Advanced columnwise operations
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are situations in which information in a column is encoded according
-to a specific set of rules, and it may be beneficial to write a transformer that
-makes use of those rules to convert the starting column into separate features.
-
-The |SingleColumnTransformer| can be used to define a custom transformer that is
-aware of those rules. Additionally, the |SingleColumnTransformer| provides additional
-features for simplifying the inclusion of such custom transformers in pipelines, and
-dealing with columns that cannot be handled by the transformer.
+When you have a transformation that only needs to see one column at a time, you
+can define a transformer that processes a single column, then let |ApplyToCols|
+take care of mapping it to all the relevant columns in the input dataframe.
+This can be done by defining the transformer as a subclass of
+|SingleColumnTransformer|. Then, the transformer can restrict the set of columns
+to which it is applied.
 
 For example, consider a situation where we want to identify municipalities in France
 based on their "COG"
@@ -30,14 +28,21 @@ based on their "COG"
 The COG is a 5-digit number with the format XXYYY,
 where the XX digits report the number of the department, and the YYY contain the
 code of the municipality.
+Columns that do not satisfy this format should be ignored.
 
 >>> import pandas as pd
->>> df = pd.DataFrame({'sent': ["75001", "13001", "69002"], 'received': ["ABCDE", "DU3K93", "WB9M88"]})
+>>> df = pd.DataFrame(
+...     {
+...         "sent": ["75001", "13001", "69002"],
+...         "received": ["91120", "12110", "88150"],
+...         "notes": ["Sent", "Missing", "Sent"],
+...     }
+... )
 >>> df
-    sent received
-0  75001    ABCDE
-1  13001   DU3K93
-2  69002   WB9M88
+    sent received    notes
+0  75001    91120     Sent
+1  13001    12110  Missing
+2  69002    88150     Sent
 
 We would like to be able to "unpack" the code so that we have a column for the
 department code and one for the municipality code. The transformer should also be able to handle columns
@@ -51,21 +56,32 @@ requirements:
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>> class GeocodeParser(SingleColumnTransformer):
 ...     def fit_transform(self, X, y=None):
-...         self.col_name_ = X.name if X.name else "parsed_zip"
 ...         if any(X.map(len) != 5):
-...             raise RejectColumn('This transformer only takes zip codes of length 5.')
+...             raise RejectColumn("This transformer only takes zip codes of length 5.")
 ...         if not all(X.map(lambda s: s.isdigit())):
-...             raise RejectColumn('Input zip codes must be numeric.')
-...         department = X.map(lambda s: s[:2])
-...         commune = X.map(lambda s: s[2:])
-...         return(pd.DataFrame({f'{self.col_name_}_department': department,
-...                              f'{self.col_name_}_commune': commune}))
+...             raise RejectColumn("Input zip codes must be numeric")
+...         self.col_name_ = X.name
+...         extracted = X.str.extractall(r"^(?P<dep>\d{2})(?P<city>\d{3})$").reset_index(
+...             drop=True
+...         )
+...         if extracted.shape[0] != X.shape[0]:
+...             raise RejectColumn("Incorrect format")
+...         return pd.DataFrame(
+...             {
+...                 f"{self.col_name_}_department": extracted["dep"],
+...                 f"{self.col_name_}_commune": extracted["city"],
+...             }
+...         )
+...
 ...     def transform(self, X, y=None):
 ...         department = X.map(lambda s: s[:2])
 ...         commune = X.map(lambda s: s[2:])
-...         return(pd.DataFrame({f'{self.col_name_}_department': department,
-...                              f'{self.col_name_}_commune': commune}))
-
+...         return pd.DataFrame(
+...             {
+...                 f"{self.col_name_}_department": extracted["dep"],
+...                 f"{self.col_name_}_commune": extracted["city"],
+...             }
+...         )
 
 >>> GeocodeParser().fit_transform(df["sent"])
   sent_department sent_commune
@@ -78,10 +94,10 @@ and set ``allow_reject=True`` to let rejected columns pass through without chang
 
 >>> from skrub import ApplyToCols
 >>> ApplyToCols(GeocodeParser(), allow_reject=True).fit_transform(df)
-  sent_department sent_commune received
-0              75          001    ABCDE
-1              13          001   DU3K93
-2              69          002   WB9M88
+sent_department sent_commune received_department received_commune    notes
+0              75          001                  91              120     Sent
+1              13          001                  12              110  Missing
+2              69          002                  88              150     Sent
 
 Note how the ``"received"`` column has been "rejected" and passed through unmodified.
 
@@ -95,18 +111,21 @@ How to reject or ignore columns with |ApplyToCols| and |RejectColumn|
 
 The combination of |ApplyToCols| and |RejectColumn| allows flexible manipulation
 and error checking of dataframes.
-By default, the |RejectColumn| exception is raised if a column cannot be handled
-the transformer; this can be useful to detect errors at fit time.
+
+When passed a column that it cannot handle, a |SingleColumnTransformer| should raise
+a |RejectColumn| exception to signal it should not be applied to that column. It
+is then up to |ApplyToCols| to decide whether the column should be passed through
+unchanged or to propagate the exception, based on the ``allow_reject`` parameter.
 
 >>> ApplyToCols(GeocodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
-Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
+RejectColumn: This transformer only takes zip codes of length 5.
+Transformer GeocodeParser.fit_transform failed on column 'notes'. See above for the full traceback.
 
-or not-this can be the case, for example, if we are trying to convert strings
-or not: this can be the case if, for example, we are trying to convert strings
-to datetimes.
+In some cases, we may want to let columns through because we don't know which
+columns will fail. For example, we may want to use |ToDatetime| to find datetime
+columns: in this case, we don't know in advance which columns should be chosen.
 
 >>> from skrub import ToDatetime
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
