@@ -41,7 +41,7 @@ OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 def check_if_reserved_name(name):
     if not isinstance(name, str):
         return
-    if name.startswith("_skrub") or name.startswith("skrub"):
+    if name.startswith(("_skrub", "skrub")):
         raise ValueError(
             "names starting with 'skrub' or '_skrub' "
             f"are reserved for skrub use, got: {name!r}."
