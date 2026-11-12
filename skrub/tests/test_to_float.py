@@ -168,7 +168,7 @@ def test_is_string(df_module):
 )
 def test_percentage_enabled(df_module, values, kwargs, expected):
     column = df_module.make_column("col", values)
-    result = ToFloat(percentage=True, **kwargs).fit_transform(column)
+    result = ToFloat(convert_percentage=True, **kwargs).fit_transform(column)
     np.testing.assert_allclose(sbd.to_numpy(result), expected, rtol=1e-6)
 
 
@@ -179,7 +179,9 @@ def test_percentage_disabled(df_module):
 
 
 def test_percentage_transform(df_module):
-    to_float = ToFloat(percentage=True).fit(df_module.make_column("col", ["1%"]))
+    to_float = ToFloat(convert_percentage=True).fit(
+        df_module.make_column("col", ["1%"])
+    )
     result = to_float.transform(
         df_module.make_column("col", ["50%", "0.5", "abc", None])
     )
@@ -191,5 +193,5 @@ def test_percentage_transform(df_module):
 def test_percentage_numeric_column(df_module):
     # numbers are passed through unchanged, they are not divided by 100
     column = df_module.make_column("col", [1.0, 50.0])
-    result = ToFloat(percentage=True).fit_transform(column)
+    result = ToFloat(convert_percentage=True).fit_transform(column)
     np.testing.assert_allclose(sbd.to_numpy(result), [1.0, 50.0])

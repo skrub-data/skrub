@@ -89,7 +89,7 @@ class ToFloat(SingleColumnTransformer):
         Whether to recognize negative numbers represented using parentheses, e.g.,
         "(123.45)" → "-123.45". If True, parentheses around numbers are replaced
         with a leading minus sign before conversion.
-    percentage : bool, default=False
+    convert_percentage : bool, default=False
         Whether to recognize percentages, e.g., "12.5%" → 0.125. If True, a
         trailing "%" (and any spaces before it) is removed and the values that
         had it are divided by 100. Values without a "%" are left as they are.
@@ -250,10 +250,10 @@ class ToFloat(SingleColumnTransformer):
     2   -1234.5...
     dtype: float32
 
-    If ``percentage=True``, percentages are converted to fractions:
+    If ``convert_percentage=True``, percentages are converted to fractions:
 
     >>> s = pd.Series(["12.5%", "1 %", "0.3"], name="pct")
-    >>> ToFloat(percentage=True).fit_transform(s)
+    >>> ToFloat(convert_percentage=True).fit_transform(s)
     0    0.125
     1    0.010
     2    0.300
@@ -261,7 +261,7 @@ class ToFloat(SingleColumnTransformer):
 
     It can be combined with the other options:
 
-    >>> ToFloat(decimal=",", parentheses=True, percentage=True).fit_transform(
+    >>> ToFloat(decimal=",", parentheses=True, convert_percentage=True).fit_transform(
     ...     pd.Series(["(1,5 %)", "12,5%"])
     ... )
     0   -0.015
@@ -298,11 +298,13 @@ class ToFloat(SingleColumnTransformer):
 
     """  # noqa: E501
 
-    def __init__(self, decimal=".", thousand=None, parentheses=False, percentage=False):
+    def __init__(
+        self, decimal=".", thousand=None, parentheses=False, convert_percentage=False
+    ):
         self.decimal = decimal
         self.thousand = thousand
         self.parentheses = parentheses
-        self.percentage = percentage
+        self.convert_percentage = convert_percentage
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -343,7 +345,7 @@ class ToFloat(SingleColumnTransformer):
                 self.decimal != "."
                 or self._thousand != ""
                 or self.parentheses
-                or self.percentage
+                or self.convert_percentage
             ) and sbd.is_string(column):
                 self._needs_str_replace = True
                 return self._parse_strings(column, strict=True)
@@ -372,7 +374,7 @@ class ToFloat(SingleColumnTransformer):
         return sbd.to_float32(column, strict=False)
 
     def _parse_strings(self, column, strict):
-        if self.percentage:
+        if self.convert_percentage:
             column, is_percent = _strip_percent(column)
         column = _str_replace(
             column,
@@ -381,6 +383,6 @@ class ToFloat(SingleColumnTransformer):
             parentheses=self.parentheses,
         )
         numeric = sbd.to_float32(column, strict=strict)
-        if self.percentage:
+        if self.convert_percentage:
             numeric = sbd.to_float32(sbd.where(numeric, ~is_percent, numeric / 100))
         return numeric

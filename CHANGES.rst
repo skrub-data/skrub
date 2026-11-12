@@ -19,9 +19,9 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
-- :class:`ToFloat` has a new ``percentage`` parameter. When it is ``True``,
-  strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are converted
-  to fractions (``0.125``, ``0.01``).
+- :class:`ToFloat` has a new ``convert_percentage`` parameter. When it is
+  ``True``, strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are
+  converted to fractions (``0.125``, ``0.01``).
   :pr:`2407` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
 
 Changes
