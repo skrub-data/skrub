@@ -83,6 +83,33 @@ def _convert_time_zone_polars(col, time_zone):
             return col.dt.replace_time_zone("UTC").dt.convert_time_zone(time_zone)
 
 
+@dispatch
+def _epoch_seconds_to_datetime(col):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_epoch_seconds_to_datetime.specialize("pandas", argument_type="Column")
+def _epoch_seconds_to_datetime_pandas(col):
+    return pd.to_datetime(col, unit="s")
+
+
+@_epoch_seconds_to_datetime.specialize("polars", argument_type="Column")
+def _epoch_seconds_to_datetime_polars(col):
+    import polars as pl
+
+    # Go through microseconds so that fractional seconds are preserved.
+    return (
+        (col.cast(pl.Float64) * 1_000_000)
+        .round(0)
+        .cast(pl.Int64)
+        .cast(pl.Datetime("us"))
+    )
+
+
+def _is_epoch_candidate(column):
+    return sbd.is_numeric(column) and not sbd.is_bool(column)
+
+
 def _cast_date_objects(column):
     """Convert a pandas object column holding ``datetime.date`` to Datetime.
 
@@ -127,6 +154,12 @@ class ToDatetime(SingleColumnTransformer):
         ``"%d/%m/%Y"``. In the odd chance that all the sampled dates land
         before the 13th day of the month and that both conventions are
         plausible, the USA convention (month first) is chosen.
+
+    epoch_seconds : bool, default=False
+        If ``True``, numeric columns are interpreted as the number of seconds
+        elapsed since the Unix epoch (1970-01-01 00:00:00 UTC) and converted
+        to time zone naive datetimes expressed in UTC. Fractional seconds are
+        supported. If ``False``, numeric columns are rejected.
 
     Attributes
     ----------
@@ -239,6 +272,15 @@ class ToDatetime(SingleColumnTransformer):
     Traceback (most recent call last):
         ...
     skrub.core.RejectColumn: Column 'year' does not contain strings.
+
+    Numeric columns holding Unix timestamps (seconds since 1970-01-01 UTC) can
+    be converted by setting ``epoch_seconds=True``:
+
+    >>> s = pd.Series([1640995200, 1641081600.5], name="ts")
+    >>> ToDatetime(epoch_seconds=True).fit_transform(s)
+    0   2022-01-01 00:00:00.000
+    1   2022-01-02 00:00:00.500
+    Name: ts, dtype: datetime64[...]
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -392,8 +434,9 @@ class ToDatetime(SingleColumnTransformer):
     constructor.
     """  # noqa: E501
 
-    def __init__(self, format=None):
+    def __init__(self, format=None, epoch_seconds=False):
         self.format = format
+        self.epoch_seconds = epoch_seconds
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -421,6 +464,18 @@ class ToDatetime(SingleColumnTransformer):
             self.output_dtype_ = sbd.dtype(column)
             self.output_time_zone_ = _get_time_zone(column)
             return column
+        if self.epoch_seconds and _is_epoch_candidate(column):
+            try:
+                as_datetime = _epoch_seconds_to_datetime(column)
+            except Exception as e:
+                raise RejectColumn(
+                    f"Failed to convert column {sbd.name(column)!r} from "
+                    "seconds since epoch to datetimes."
+                ) from e
+            self.format_ = None
+            self.output_dtype_ = sbd.dtype(as_datetime)
+            self.output_time_zone_ = None
+            return as_datetime
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
@@ -456,7 +511,10 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         check_is_fitted(self, "format_")
-        column = sbd.to_datetime(column, format=self.format_, strict=False)
+        if self.epoch_seconds and _is_epoch_candidate(column):
+            column = _epoch_seconds_to_datetime(column)
+        else:
+            column = sbd.to_datetime(column, format=self.format_, strict=False)
         column = _convert_time_zone(column, self.output_time_zone_)
         return sbd.cast(column, self.output_dtype_)
 
