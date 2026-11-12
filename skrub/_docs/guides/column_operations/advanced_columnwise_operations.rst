@@ -50,8 +50,6 @@ requirements:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>> class GeocodeParser(SingleColumnTransformer):
-...     def __init__(self):
-...         return
 ...     def fit_transform(self, X, y=None):
 ...         self.col_name_ = X.name if X.name else "parsed_zip"
 ...         if any(X.map(len) != 5):
