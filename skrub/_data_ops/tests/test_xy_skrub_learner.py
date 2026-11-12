@@ -188,17 +188,17 @@ def test_mark_as_X_y_names():
     # the names of the nodes marked with mark_as_X / mark_as_y can be used
     X, y = make_classification(n_samples=10)
     plain = skrub.var("a").skb.apply(DummyClassifier(), y=skrub.var("b"))
-    with pytest.raises(ValueError, match="X='_skrub_X'.*mark_as_X"):
-        plain.skb.make_learner().with_sklearn_interface(X="_skrub_X")
-    with pytest.raises(ValueError, match="y='_skrub_y'.*mark_as_y"):
-        plain.skb.make_learner().with_sklearn_interface(X="a", y="_skrub_y")
+    with pytest.raises(ValueError, match="X='skrub.X'.*mark_as_X"):
+        plain.skb.make_learner().with_sklearn_interface(X="skrub.X")
+    with pytest.raises(ValueError, match="y='skrub.y'.*mark_as_y"):
+        plain.skb.make_learner().with_sklearn_interface(X="a", y="skrub.y")
 
     marked = (
         skrub.var("a")
         .skb.mark_as_X()
         .skb.apply(DummyClassifier(), y=skrub.var("b").skb.mark_as_y())
     )
-    est = marked.skb.make_learner().with_sklearn_interface(X="_skrub_X", y="_skrub_y")
+    est = marked.skb.make_learner().with_sklearn_interface(X="skrub.X", y="skrub.y")
     assert est.fit(X, y).predict(X).shape == y.shape
 
 
