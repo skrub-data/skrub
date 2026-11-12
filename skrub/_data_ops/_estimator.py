@@ -18,7 +18,7 @@ from sklearn.utils.validation import check_is_fitted
 from .. import _join_utils
 from .._base import SkrubBaseEstimator
 from .._sklearn_compat import _VisualBlock
-from .._utils import set_module
+from .._utils import set_module, short_repr
 from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
@@ -76,6 +76,9 @@ class _SharedDict(dict):
 
     def __sklearn_clone__(self):
         return self
+
+    def __repr__(self):
+        return short_repr(dict(self))
 
 
 def _copy_attr(source, target, attributes):
@@ -497,7 +500,6 @@ class _DataOpWrapperMixin(_CloudPickle):
         """  # noqa: E501
         from ._xy_skrub_learner import XySkrubLearner, check_sklearn_interface
 
-        check_sklearn_interface(self.data_op, X, y)
         if environment is not None:
             if not isinstance(environment, Mapping):
                 raise TypeError(
@@ -505,6 +507,7 @@ class _DataOpWrapperMixin(_CloudPickle):
                     f"got: {environment.__class__.__name__!r}."
                 )
             environment = _SharedDict(environment)
+        check_sklearn_interface(self.data_op, X, y)
         return XySkrubLearner(self, X, y, environment)
 
 

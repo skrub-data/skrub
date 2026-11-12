@@ -127,6 +127,81 @@ def test_kwargs():
         est.transform(data.X)
 
 
+def test_environment():
+    data = skrub.datasets.toy_orders()
+    learner = (
+        skrub.var("orders")
+        .merge(skrub.var("products"), on="product")
+        .skb.make_learner()
+    )
+    est = learner.with_sklearn_interface(
+        X="orders", environment={"products": data.products}
+    )
+    assert "price" in est.fit_transform(data.X).columns
+    # kwargs take precedence over the environment
+    other = data.products.assign(price=0)
+    assert (est.transform(data.X, products=other)["price"] == 0).all()
+    # cloning keeps the environment
+    assert clone(est).environment == est.environment
+
+    dropped = est.drop_env()
+    assert dropped.environment is None
+    assert est.environment is not None
+    assert dropped.learner is est.learner
+    with pytest.raises(UninitializedVariable, match="products"):
+        dropped.transform(data.X)
+
+    with pytest.raises(TypeError, match="environment should be a dict or None"):
+        learner.with_sklearn_interface(X="orders", environment="products")
+
+
+def test_environment_search():
+    # a search on a DataOp that needs an extra variable
+    X, y = make_classification(n_samples=10)
+    data_op = (
+        (skrub.var("a").skb.mark_as_X() + skrub.var("offset"))
+        .skb.apply(PCA(n_components=skrub.choose_from([2, 3], name="n_components")))
+        .skb.apply(DummyClassifier(), y=skrub.var("b").skb.mark_as_y())
+    )
+    search = data_op.skb.make_grid_search()
+    # the search wraps the fit errors in a ValueError
+    with pytest.raises(ValueError, match="No value has been provided for 'offset'"):
+        search.with_sklearn_interface("a", "b").fit(X, y)
+
+    est = search.with_sklearn_interface("a", "b", environment={"offset": 1.0})
+    est.fit(X, y)
+    assert est.results_.shape[0] == 2
+    assert est.best_learner_.environment == {"offset": 1.0}
+    assert est.best_learner_.predict(X).shape == y.shape
+    assert est.best_learner_.drop_env().environment is None
+
+    # a plain learner with an environment in a scikit-learn GridSearchCV
+    xy = data_op.skb.make_learner().with_sklearn_interface(
+        "a", "b", environment={"offset": 1.0}
+    )
+    gs = GridSearchCV(xy, xy.get_param_grid(), cv=2).fit(X, y)
+    assert len(gs.cv_results_["mean_test_score"]) == 2
+    assert gs.best_estimator_.environment == {"offset": 1.0}
+
+
+def test_mark_as_X_y_names():
+    # the names of the nodes marked with mark_as_X / mark_as_y can be used
+    X, y = make_classification(n_samples=10)
+    plain = skrub.var("a").skb.apply(DummyClassifier(), y=skrub.var("b"))
+    with pytest.raises(ValueError, match="X='_skrub_X'.*mark_as_X"):
+        plain.skb.make_learner().with_sklearn_interface(X="_skrub_X")
+    with pytest.raises(ValueError, match="y='_skrub_y'.*mark_as_y"):
+        plain.skb.make_learner().with_sklearn_interface(X="a", y="_skrub_y")
+
+    marked = (
+        skrub.var("a")
+        .skb.mark_as_X()
+        .skb.apply(DummyClassifier(), y=skrub.var("b").skb.mark_as_y())
+    )
+    est = marked.skb.make_learner().with_sklearn_interface(X="_skrub_X", y="_skrub_y")
+    assert est.fit(X, y).predict(X).shape == y.shape
+
+
 def test_shared_state():
     # the wrapper does not copy the learner: it can wrap an already fitted one
     X, y = make_classification(n_samples=10)
