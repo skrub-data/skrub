@@ -794,6 +794,26 @@ def test_value_counts(df_module):
         df_module.assert_frame_equal(counts, expected)
 
 
+@pytest.mark.parametrize(
+    "values, expected_values, expected_counts",
+    [(["b", "b", "c", None], ["b", "c"], [2, 1]), ([], [], []), ([None, None], [], [])],
+)
+def test_value_counts_unobserved_categories(
+    df_module, values, expected_values, expected_counts
+):
+    col = df_module.make_column("x", values or ["b"])
+    col = ns.to_categorical(col.head(len(values)))
+    if ns.is_pandas(col):
+        col = col.cat.set_categories(["a", "b", "c", "d"])
+    else:
+        import polars as pl
+
+        col = col.cast(pl.Enum(["a", "b", "c", "d"]))
+    counts = ns.sort(ns.value_counts(col), by="value")
+    assert ns.to_list(ns.col(counts, "value")) == expected_values
+    assert ns.to_list(ns.col(counts, "count")) == expected_counts
+
+
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
 @pytest.mark.parametrize(
     "interpolation", ["nearest", "higher", "lower", "midpoint", "linear"]
@@ -891,6 +911,17 @@ def test_unique(df_module):
     df_module.assert_column_equal(
         ns.unique(s), ns.pandas_convert_dtypes(df_module.make_column("", [0, 2, 4]))
     )
+
+
+def test_unique_ignores_nan(df_module):
+    # NaN is treated as a null value (as in is_null and drop_nulls), so it is
+    # not counted as a distinct value
+    s = df_module.make_column("", [1.0, np.nan, 2.0, np.nan, 1.0])
+    assert ns.n_unique(s) == 2
+    assert sorted(ns.to_list(ns.unique(s))) == [1.0, 2.0]
+    s = df_module.make_column("", [np.nan, np.nan])
+    assert ns.n_unique(s) == 0
+    assert ns.to_list(ns.unique(s)) == []
 
 
 def test_filter(df_module):

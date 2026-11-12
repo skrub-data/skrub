@@ -127,7 +127,7 @@ File {% if f['url'] is not none %}<a href="{{ f['url'] }}">{% endif -%}
                         <h3>This value was provided, not computed</h3>
                         This step was not executed because its value was supplied directly in the input data
                         (as the value for
-                        <strong><code>{{ {'_skrub_X': 'X', '_skrub_y': 'y'}.get(env_key, env_key.__repr__()) }}</code></strong>
+                        <strong><code>{{ {'skrub.X': 'X', 'skrub.y': 'y'}.get(env_key, env_key.__repr__()) }}</code></strong>
                         in the <code>environment</code> dictionary),
                         thus short-circuiting its computation. The value is shown below.
                     </div>

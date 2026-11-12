@@ -17,7 +17,8 @@ New Features
   SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
   <SkrubLearner.with_sklearn_interface>` and an :ref:`example
   <example_with_sklearn_interface>`.
-  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>` and
+  :pr:`2423` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
@@ -40,8 +41,16 @@ Changes
   choice name, or node ID, in the DataOp) now causes a warning displaying the
   extra keys to help detect typos and mistakes. It can be silenced with the
   warnings module, or, more robustly, by adding
-  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  ``{"skrub.ignore_extra_keys": True}`` to the environment dictionary.
   :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
+- The special keys used by skrub in the environment dictionaries of
+  :class:`DataOp` have been renamed from ``_skrub_<name>`` to ``skrub.<name>``
+  (for example ``_skrub_predictions`` is now ``skrub.predictions``). Names of
+  variables, choices and nodes starting with ``skrub`` or ``_skrub`` are now
+  reserved. The old names lose their meaning, for example passing
+  ``"_skrub_predictions"`` now has no effect (except possibly triggering an
+  "unused key" warning).
+  :pr:`2420` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -58,6 +67,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer counts unused pandas categories as distinct
+  values or includes them among the most frequent values. This also fixes
+  constant-column detection after filtering a categorical column.
+  :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
+
 - :func:`set_config` and :func:`config_context` now correctly store the
   ``cardinality_threshold`` parameter. Previously, the value was validated but
   ignored, so the default threshold kept being used.
@@ -84,10 +98,23 @@ Bugfixes
   missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
   remaining strings are deduplicated.
   :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- The icon-only buttons (copy, close and dismiss) and the column filter of the
+  :class:`TableReport` now have accessible names, so that screen readers can
+  announce what they do.
+  :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
 - :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :meth:`DataOp.skb.make_grid_search` (and randomized search) could produce NaN
+  scores when using the default (built-in score method) scoring for fully unsupervised
+  pipelines (no ``y`` in the final estimator's ``.score()``). This has been fixed in
+  :pr:`2419` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
+  longer count ``NaN`` as a distinct value in float columns of polars
+  dataframes. ``NaN`` is already counted as a missing value there, so the
+  number of distinct values was off by one and differed from pandas.
+  :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
