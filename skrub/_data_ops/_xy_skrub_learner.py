@@ -2,19 +2,14 @@
 # SkrubLearner (or ParamSearch or OptunaParamSearch).
 # See _DataOpWrapperMixin.with_sklearn_interface for more information.
 #
-# Note: this may seem superficially similar to the _XyPipeline (and param
-# search counterparts) defined in _estimator. However they serve different
-# purposes and have different behavior.
+# _XyPipeline (and param search counterparts) defined in _estimator also adapts
+# a DataOp to the scikit-learn interface. However _XyPipeline is more
+# lightweight and also handles with_scoring() and prediction caching, whereas
+# the class defined here is for external users, wraps a full skrub learner,
+# supports sending X and y to arbitrary nodes and passing extra data through
+# kwargs, and provides better hyperparameter names. We prefer to keep the
+# public wrapper and the internal utility separate.
 #
-# _XyPipeline is an internal class that is used in a transient way during
-# parameter search and cross-validation. It stores the environment as an
-# attribute and sends the X and y passed to estimator methods to the nodes
-# marked with .skb.mark_as_X() and .skb.mark_as_y().
-#
-# The class defined here is for users. It does _not_ store any data in
-# attributes, instead other variables than X and y must be passed as kwargs
-# (and the typical intended usage is for DataOps that do not require anything
-# else than X and y). X and y are sent to the nodes with matching names or IDs.
 
 import itertools
 import re
@@ -41,15 +36,26 @@ def check_sklearn_interface(data_op, X, y):
         )
     all_nodes = _evaluation.nodes(data_op)
     all_names, all_ids = set(), set()
+    X_y = data_op.skb.find_X_y()
+    if "X" in X_y:
+        all_names.add(_utils.X_NAME)
+    if "y" in X_y:
+        all_names.add(_utils.Y_NAME)
     for node in all_nodes:
         all_ids.add(node._skrub_impl.uuid)
         if (name := node._skrub_impl.name) is not None:
             all_names.add(name)
     if isinstance(X, str) and X not in all_names:
-        raise ValueError(
-            f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
-            f"a variable or node named {X!r} but none was found."
-        )
+        if X == _utils.X_NAME:
+            raise ValueError(
+                f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
+                "a node marked with `.skb.mark_as_X()` but none was found."
+            )
+        else:
+            raise ValueError(
+                f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
+                f"a variable or node named {X!r} but none was found."
+            )
     if isinstance(X, int) and X not in all_ids:
         raise ValueError(
             f"`with_sklearn_interface(X={X!r})` requires the DataOp to have "
@@ -58,10 +64,16 @@ def check_sklearn_interface(data_op, X, y):
     if y is None or not _estimator.data_op_needs_y(data_op):
         return
     if isinstance(y, str) and y not in all_names:
-        raise ValueError(
-            f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
-            f"a variable or node named {y!r} but none was found."
-        )
+        if y == _utils.Y_NAME:
+            raise ValueError(
+                f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
+                "a node marked with `.skb.mark_as_y()` but none was found."
+            )
+        else:
+            raise ValueError(
+                f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
+                f"a variable or node named {y!r} but none was found."
+            )
     if isinstance(y, int) and y not in all_ids:
         raise ValueError(
             f"`with_sklearn_interface(y={y!r})` requires the DataOp to have "
@@ -74,7 +86,7 @@ class XySkrubLearner(BaseEstimator):
     """
     Wrapper to expose a standard scikit-learn interface to a skrub learner.
 
-    This class is not usually instantiated manually, but by calling
+    This class is not instantiated manually, but by calling
     :meth:`.with_sklearn_interface() <SkrubLearner.with_sklearn_interface>`
     on a skrub learner. Skrub learners are created from a :class:`DataOp` with
     :meth:`.skb.make_learner() <DataOp.skb.make_learner>`,
@@ -94,6 +106,9 @@ class XySkrubLearner(BaseEstimator):
     y : str or int or None, default="y"
         Name or ID of the node that receives the ``y`` argument.
 
+    environment : dict or None, default=None
+        Additional environment to which X and y are added before evaluation.
+
     See Also
     --------
     SkrubLearner.with_sklearn_interface :
@@ -105,10 +120,20 @@ class XySkrubLearner(BaseEstimator):
     :ref:`example <example_with_sklearn_interface>` for more information.
     """
 
-    def __init__(self, learner, X="X", y="y"):
+    def __init__(self, learner, X="X", y="y", environment=None):
         self.learner = learner
         self.X = X
         self.y = y
+        self.environment = environment
+
+    def drop_env(self):
+        """
+        Create a new XySkrubLearner with an empty ``environment`` attribute.
+
+        This drops the environment but the new object wraps the same
+        SkrubLearner, any fitted state is retained.
+        """
+        return self.learner.with_sklearn_interface(X=self.X, y=self.y, environment=None)
 
     def set_params(self, **params):
         dataop_params, rest = {}, {}
@@ -140,6 +165,11 @@ class XySkrubLearner(BaseEstimator):
             return False
         return True
 
+    def _get_env(self):
+        if self.environment is None:
+            return {}
+        return dict(self.environment)
+
     def __getattr__(self, name):
         if name == "learner":
             # not set yet (e.g. during unpickling / copy): avoid infinite recursion
@@ -152,7 +182,7 @@ class XySkrubLearner(BaseEstimator):
             try:
                 attr = getattr(self.learner, name)
                 if name == "best_learner_":
-                    attr = XySkrubLearner(attr, self.X, self.y)
+                    attr = XySkrubLearner(attr, self.X, self.y, self.environment)
                 return attr
             except AttributeError:
                 _utils.attribute_error(self, name)
@@ -160,7 +190,7 @@ class XySkrubLearner(BaseEstimator):
             _utils.attribute_error(self, name)
 
         def f(X, y=None, **kwargs):
-            env = kwargs | {self.X: X}
+            env = self._get_env() | kwargs | {self.X: X}
             if y is not None and self.y is not None:
                 env[self.y] = y
             result = getattr(self.learner, name)(env)

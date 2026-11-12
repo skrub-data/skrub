@@ -2,6 +2,7 @@
 import copy
 import itertools
 import numbers
+from collections.abc import Mapping
 from functools import partial
 
 import numpy as np
@@ -17,7 +18,7 @@ from sklearn.utils.validation import check_is_fitted
 from .. import _join_utils
 from .._base import SkrubBaseEstimator
 from .._sklearn_compat import _VisualBlock
-from .._utils import set_module
+from .._utils import set_module, short_repr
 from . import _evaluation
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
@@ -75,6 +76,9 @@ class _SharedDict(dict):
 
     def __sklearn_clone__(self):
         return self
+
+    def __repr__(self):
+        return short_repr(dict(self))
 
 
 def _copy_attr(source, target, attributes):
@@ -189,7 +193,7 @@ class _DataOpWrapperMixin(_CloudPickle):
         """
         return ["data_op"]
 
-    def with_sklearn_interface(self, X="X", y="y"):
+    def with_sklearn_interface(self, X="X", y="y", environment=None):
         """
         Wrap this learner in an estimator exposing the standard scikit-learn interface.
 
@@ -210,21 +214,46 @@ class _DataOpWrapperMixin(_CloudPickle):
         be bound to the ``X`` and ``y`` arguments passed to ``fit``,
         ``predict``, etc. (by default "X" and "y").
 
+        In addition, it is possible to pass ``environment`` to store data
+        directly in an attribute. This can be useful to pass the learner to
+        scikit-learn functions such as
+        :func:`~sklearn.inspection.permutation_importance` so that other
+        variables than X and y are accessible. However for learners that we
+        want to keep and reuse on new data later and possibly serialize, we
+        normally do not want to keep this data attached to it. Either pass no
+        ``environment`` or drop it with :meth:`XySkrubLearner.drop_env`, and
+        pass the extra data through method kwargs instead.
+
+        In case of name collisions, the preference order from highest to lowest
+        precedence is:
+        X and y > kwargs > environment attribute.
+
         Parameters
         ----------
         X : str or int, default="X"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
-            receives the ``X`` argument.
+            receives the ``X`` argument. Can also be "_skrub_X" to indicate the
+            node marked with :meth:`DataOp.skb.mark_as_X`.
 
         y : str or int or None, default="y"
             :attr:`Name <DataOp.skb.name>` or :attr:`ID <DataOp.skb.id>` of the
             node (usually a :func:`variable <skrub.var>`) in the DataOp that
             receives the ``y`` argument. Only required if the DataOp uses a ``y``.
+            Can also be "_skrub_y" to indicate the node marked with
+            :meth:`DataOp.skb.mark_as_y`.
 
             (Passing ``None`` explicitly disables passing any ``y`` even if one
             is provided to the estimator method. Usually leaving the default is
             fine even for DataOps that do not use a ``y``.)
+
+        environment : dict or None, default=None
+            Additional environment to which X and y are added before
+            evaluation. This is stored as an attribute of the returned learner.
+            Use only for metadata that is small and always valid for all
+            inputs, or when creating a temporary object to pass it to some
+            scikit-learn function such as
+            :func:`sklearn.inspection.permutation_importance`.
 
         Returns
         -------
@@ -400,10 +429,11 @@ class _DataOpWrapperMixin(_CloudPickle):
         0     cup      5
         1     pen      2
         2   spoon      3
+        3    fork      3
 
         >>> learner = (
         ...     skrub.var("orders")
-        ...     .merge(skrub.var("products"), on="product")  # ⟵ Add the price information
+        ...     .merge(skrub.var("products"), on="product", how="left")  # ⟵ Add the price information
         ...     .skb.apply(skrub.Cleaner())
         ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols="date")
         ...     .skb.apply(TargetEncoder(cv=cv), y=skrub.var("delayed"), cols="product")
@@ -433,11 +463,52 @@ class _DataOpWrapperMixin(_CloudPickle):
         1   2         3     2020.0         4.0       4.0      5      1.0
         2   3         5     2020.0         4.0       4.0      5      0.0
         3   4         1     2020.0         4.0       5.0      3      0.0
+
+        **Additional variables can be attached to the learner**
+
+        When creating a temporary learner that will be consumed by some
+        scikit-learn function that fits and validates it, the additional
+        variables can also be attached to the learner so scikit-learn does not
+        need to forward them.
+
+        >>> from sklearn.inspection import permutation_importance
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> learner = (
+        ...     skrub.var("orders", orders_df)
+        ...     .skb.mark_as_X()
+        ...     .merge(skrub.var("products", products_df), on="product", how="left")
+        ...     .skb.apply(skrub.TableVectorizer())
+        ...     .skb.apply(DummyClassifier(), y=skrub.var("delayed", delayed_col).skb.mark_as_y())
+        ... ).skb.make_learner(fitted=True)
+        >>> test_data = skrub.datasets.toy_orders(split="test")
+        >>> xy_learner = learner.with_sklearn_interface(
+        ...     X="orders", y="delayed", environment={"products": test_data["products"]}
+        ... )
+        >>> permutation_importance(xy_learner, test_data["orders"], test_data["delayed"])[
+        ...     "importances_mean"
+        ... ]
+        array([0., 0., 0., 0., 0.])
+
+        For learners we want to reuse, we do not want to keep data attached to
+        them. Either do not pass an environment, or drop it later:
+
+        >>> xy_learner.drop_env()
+        XySkrubLearner(X='orders',
+                       learner=SkrubLearner(data_op=<Apply DummyClassifier>),
+                       y='delayed')
         """  # noqa: E501
         from ._xy_skrub_learner import XySkrubLearner, check_sklearn_interface
 
+        if environment is not None:
+            if not isinstance(environment, Mapping):
+                raise TypeError(
+                    "environment should be a dict or None, "
+                    f"got: {environment.__class__.__name__!r}."
+                )
+            environment = _SharedDict(environment)
         check_sklearn_interface(self.data_op, X, y)
-        return XySkrubLearner(self, X, y)
+        return XySkrubLearner(self, X, y, environment)
 
 
 @set_module("skrub")
