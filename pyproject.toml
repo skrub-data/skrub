@@ -76,6 +76,7 @@ dev = [
 
   # test
   "pytest",
+  "pytest-asyncio>=0.24",
   "pytest-cov",
   "pytest-xdist",
 
@@ -168,6 +169,7 @@ pyarrow = "<21"
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
 pytest = "*"
+pytest-asyncio = ">=0.24"
 pytest-cov = "*"
 pytest-xdist = "*"
 
@@ -342,6 +344,8 @@ ignore = [
 "skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
