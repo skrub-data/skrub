@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -11,33 +11,63 @@
     <style id="current-node-style"></style>
 </head>
 
-<body class="report-index">
+<body class="report-index" data-total-nodes="{{ total_n_nodes }}">
     <header class="report-header">
-        <button type="button" class="icon-button"
-            id="toggle-nav">{% include "icons/list.svg" %}</button>
-        {% if report_title %}
-        <h2 class="report-title">{{ report_title }}</h2>
-        {% endif %}
+        <h2 class="report-title">{{ report_title if report_title else "DataOp report" }}</h2>
+        <button type="button" class="header-button" id="toggle-nav"
+            aria-expanded="true" disabled>Hide graph</button>
     </header>
     <div class="data_op-node-wrapper">
         <div class="data_op-node">
-            {#
-              The graph is only shown in this page, and it is drawn only once.
-              Node pages are displayed in the iframe next to it; clicking on a
-              node of the graph targets that iframe, and node pages tell this
-              page which node they show (see data_ops-report.js).
-            #}
-            <nav class="main-nav" data-is-open>
+            {# Graph on the left, drawer on the right (see data_ops-report.js). #}
+            <nav id="graph-panel" class="main-nav" data-is-open>
+                <div class="graph-toolbar">
+                    <p class="graph-hint"><strong>Click a node</strong> to display its details.
+                        <strong>Drag</strong> to pan, <strong>Ctrl + scroll</strong> to zoom.</p>
+                    {# Outside the viewport, so that they never hide part of the graph. #}
+                    <div class="graph-controls" role="group" aria-label="Graph zoom">
+                        <button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+                        <button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+                        <button type="button" id="zoom-reset" title="Fit the whole graph in the panel">Reset</button>
+                    </div>
+                </div>
+                {# Viewport for the graph, which can be panned and zoomed (see data_ops-report.js). #}
                 <div id="graph-nav">
-                    {{ graph_html | safe }}
+                    <div id="graph-canvas">
+                        {{ graph_html | safe }}
+                    </div>
                 </div>
             </nav>
-            <iframe id="node-frame" name="node-frame" class="node-frame"
-                    title="Details of the selected node"
-                    src="placeholder.html"></iframe>
+            {# Drag it to resize the graph and the drawer (see data_ops-report.js). #}
+            <div id="splitter" class="splitter" role="separator"
+                aria-orientation="vertical" aria-label="Resize the graph and node details panels"
+                aria-controls="graph-panel" tabindex="0" title="Drag to resize (double-click to reset)">
+                <div class="splitter-handle" aria-hidden="true"></div>
+            </div>
+            {#
+              The drawer displays the details of the selected node, or a source
+              code file linked from the node page; the "Back to node details"
+              button returns from source code to the node details. Both pages
+              are kept in the drawer, one on top of the other (see data-mode in
+              data_ops.css and data_ops-report.js).
+            #}
+            <div id="drawer" class="drawer" data-mode="node">
+                <div class="drawer-toolbar">
+                    <button type="button" id="close-drawer">Close</button>
+                    <button type="button" id="back-to-node">Back to node details</button>
+                </div>
+                <div class="drawer-body">
+                    <iframe id="node-frame" title="Details of the selected node"></iframe>
+                    <iframe id="source-frame" title="Source code"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 </body>
+<script>
+ {#- Panzoom (MIT), see panzoom-4.6.2/README.md #}
+ {% include "panzoom-4.6.2/panzoom.min.js" %}
+</script>
 <script>
  {% include "data_ops-report.js" %}
 </script>
