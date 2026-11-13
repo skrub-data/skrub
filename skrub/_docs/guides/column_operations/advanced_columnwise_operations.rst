@@ -7,8 +7,8 @@
 
 .. _user_guide_single_column_transformer:
 
-Advanced columnwise operations
-------------------------------
+How to define your own column-wise transformer
+----------------------------------------------
 
 .. _single_column_transformer:
 
@@ -56,26 +56,15 @@ requirements:
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>> class GeocodeParser(SingleColumnTransformer):
 ...     def fit_transform(self, X, y=None):
-...         if any(X.map(len) != 5):
-...             raise RejectColumn("This transformer only takes zip codes of length 5.")
-...         if not all(X.map(lambda s: s.isdigit())):
-...             raise RejectColumn("Input zip codes must be numeric")
+...         return self.transform(X)
+...
+...     def transform(self, X, y=None):
 ...         self.col_name_ = X.name
 ...         extracted = X.str.extractall(r"^(?P<dep>\d{2})(?P<city>\d{3})$").reset_index(
 ...             drop=True
 ...         )
 ...         if extracted.shape[0] != X.shape[0]:
 ...             raise RejectColumn("Incorrect format")
-...         return pd.DataFrame(
-...             {
-...                 f"{self.col_name_}_department": extracted["dep"],
-...                 f"{self.col_name_}_commune": extracted["city"],
-...             }
-...         )
-...
-...     def transform(self, X, y=None):
-...         department = X.map(lambda s: s[:2])
-...         commune = X.map(lambda s: s[2:])
 ...         return pd.DataFrame(
 ...             {
 ...                 f"{self.col_name_}_department": extracted["dep"],
