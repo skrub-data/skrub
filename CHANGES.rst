@@ -71,6 +71,11 @@ Bugfixes
   constant-column detection after filtering a categorical column.
   :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
 
+- :class:`TableVectorizer` now warns when the input contains columns with a
+  ``"geometry"`` dtype, such as GeoPandas geometry columns. These columns are
+  still encoded as strings unless they are handled with
+  ``specific_transformers`` or dropped.
+  :pr:`2374` by :user:`Oscar-man-shrestha <Oscar-man-shrestha>`.
 - :func:`set_config` and :func:`config_context` now correctly store the
   ``cardinality_threshold`` parameter. Previously, the value was validated but
   ignored, so the default threshold kept being used.
