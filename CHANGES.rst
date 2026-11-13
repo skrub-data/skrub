@@ -58,6 +58,11 @@ Changes
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
+- Navigating to different nodes in the report produced by
+  :meth:`DataOp.skb.report` no longer adds entries to the browser's Back button
+  history; node details and source code displays can be closed more easily; the
+  scrolling of the source code display is improved.
+  :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their

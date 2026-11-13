@@ -1,6 +1,6 @@
 {% import "docstrings.html" as docstrings %}
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 
 <head>
     <meta charset="utf-8">
@@ -9,7 +9,9 @@
     <style>
      {% include "data_ops.css" %}
     </style>
-    {% with node_id=node_nb %}{% include "node-shown-script.html" %}{% endwith %}
+    <script>
+     {% include "report-navigation.js" %}
+    </script>
 </head>
 
 <body class="node-page">

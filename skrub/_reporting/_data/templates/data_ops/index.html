@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 
 <head>
     <meta charset="utf-8">
@@ -11,30 +11,38 @@
     <style id="current-node-style"></style>
 </head>
 
-<body class="report-index">
+<body class="report-index" data-total-nodes="{{ total_n_nodes }}">
     <header class="report-header">
-        <button type="button" class="icon-button"
-            id="toggle-nav">{% include "icons/list.svg" %}</button>
-        {% if report_title %}
-        <h2 class="report-title">{{ report_title }}</h2>
-        {% endif %}
+        <h2 class="report-title">{{ report_title if report_title else "DataOp report" }}</h2>
+        <button type="button" class="header-button" id="toggle-nav"
+            aria-expanded="true" disabled>Hide graph</button>
     </header>
     <div class="data_op-node-wrapper">
         <div class="data_op-node">
-            {#
-              The graph is only shown in this page, and it is drawn only once.
-              Node pages are displayed in the iframe next to it; clicking on a
-              node of the graph targets that iframe, and node pages tell this
-              page which node they show (see data_ops-report.js).
-            #}
-            <nav class="main-nav" data-is-open>
+            {# Graph on the left, drawer on the right (see data_ops-report.js). #}
+            <nav id="graph-panel" class="main-nav" data-is-open>
+                <p class="graph-hint"><strong>Click a node</strong> to display its details.</p>
                 <div id="graph-nav">
                     {{ graph_html | safe }}
                 </div>
             </nav>
-            <iframe id="node-frame" name="node-frame" class="node-frame"
-                    title="Details of the selected node"
-                    src="placeholder.html"></iframe>
+            {#
+              The drawer displays the details of the selected node, or a source
+              code file linked from the node page; the "Back to node details"
+              button returns from source code to the node details. Both pages
+              are kept in the drawer, one on top of the other (see data-mode in
+              data_ops.css and data_ops-report.js).
+            #}
+            <div id="drawer" class="drawer" data-mode="node">
+                <div class="drawer-toolbar">
+                    <button type="button" id="close-drawer">Close</button>
+                    <button type="button" id="back-to-node">Back to node details</button>
+                </div>
+                <div class="drawer-body">
+                    <iframe id="node-frame" title="Details of the selected node"></iframe>
+                    <iframe id="source-frame" title="Source code"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 </body>
