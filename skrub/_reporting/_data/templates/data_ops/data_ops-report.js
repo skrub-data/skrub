@@ -180,8 +180,9 @@
     // ----------
     //
     // Pan and zoom of the graph, with the Panzoom library (included in the page).
-    // - drag: pan; buttons: zoom; Ctrl (or Cmd) + wheel, or pinch: zoom at the
-    //   pointer; wheel: pan, as the graph used to scroll before.
+    // - drag: pan; buttons: zoom; Ctrl (or Cmd) + wheel, or trackpad pinch: zoom
+    //   at the pointer; wheel: pan, as the graph used to scroll before. Pinching on
+    //   a touchscreen is disabled (see below).
     // - a drag must not click the node it ends on.
     const graphNav = document.getElementById('graph-nav');
     const graphCanvas = document.getElementById('graph-canvas');
@@ -279,6 +280,33 @@
                         {animate: false});
         }
     }, {passive: false});
+
+    // No pinch-to-zoom on touchscreens (use the buttons): Panzoom's own pinch
+    // handling assumes a centered transform origin, so with ours (top left) it
+    // zooms far too fast and in the wrong direction. Panzoom starts a pinch when it
+    // sees a second pointer, so we hide the extra touches from it (a single
+    // finger still pans). Window-level capture listeners run before Panzoom's.
+    const ignoredTouches = new Set();
+    for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+        window.addEventListener(name, (event) => {
+            if (event.pointerType !== 'touch') {
+                return;
+            }
+            if (name === 'pointerdown' && !event.isPrimary
+                && graphNav.contains(event.target)) {
+                ignoredTouches.add(event.pointerId);
+            }
+            // While several fingers are down, nothing moves (the first finger
+            // would otherwise pan the graph during a pinch).
+            if (ignoredTouches.has(event.pointerId)
+                || (name === 'pointermove' && ignoredTouches.size > 0)) {
+                event.stopImmediatePropagation();
+                if (name === 'pointerup' || name === 'pointercancel') {
+                    ignoredTouches.delete(event.pointerId);
+                }
+            }
+        }, true);
+    }
 
     // Do not treat the end of a drag as a click on a node.
     let pointerDownAt = null;
