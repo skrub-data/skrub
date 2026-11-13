@@ -18,6 +18,10 @@
 // displayed once it has loaded, so that nothing flashes either.
 //
 (function() {
+    //
+    // Navigation
+    // ----------
+    //
     const drawer = document.getElementById('drawer');
     const nodeFrame = document.getElementById('node-frame');
     let sourceFrame = document.getElementById('source-frame');
@@ -170,4 +174,179 @@
     toggleGraphButton.addEventListener('click', () => {
         setGraphOpen(!graphPanel.hasAttribute('data-is-open'));
     });
+
+    //
+    // Pan & zoom
+    // ----------
+    //
+    // Pan and zoom of the graph, with the Panzoom library (included in the page).
+    // - drag: pan; buttons: zoom; Ctrl (or Cmd) + wheel, or trackpad pinch: zoom
+    //   at the pointer; wheel: pan, as the graph used to scroll before. Pinching on
+    //   a touchscreen is disabled (see below).
+    // - a drag must not click the node it ends on.
+    const graphNav = document.getElementById('graph-nav');
+    const graphCanvas = document.getElementById('graph-canvas');
+    const MIN_SCALE = 0.05;
+    const MAX_SCALE = 4;
+    // Zoom per pixel of wheel movement: a classic mouse wheel notch (100 px)
+    // zooms by 10%, and the small deltas of a trackpad pinch zoom smoothly.
+    const ZOOM_PER_PIXEL = Math.log(1.1) / 100;
+    const MAX_WHEEL_ZOOM_DELTA = 100;
+    const LINE_HEIGHT = 16;
+    const panzoom = Panzoom(graphCanvas, {
+        origin: '0 0', canvas: true, cursor: 'inherit',
+        minScale: MIN_SCALE, maxScale: MAX_SCALE,
+    });
+
+    function setView(scale, x, y) {
+        panzoom.zoom(scale, {animate: false});
+        panzoom.pan(x, y, {animate: false});
+    }
+
+    // Initial view, and what the Reset button goes back to: the whole graph
+    // fits the panel (never enlarged), in its top left corner.
+    function resetView() {
+        const w = graphCanvas.offsetWidth, h = graphCanvas.offsetHeight;
+        const vw = graphNav.clientWidth, vh = graphNav.clientHeight;
+        if (!w || !h) {
+            return;
+        }
+        const scale = Math.max(Math.min(vw / w, vh / h, 1), MIN_SCALE);
+        setView(scale, 0, 0);
+    }
+
+    // Zoom keeping the point of the graph under (clientX, clientY) in place. We do
+    // it ourselves because the transform origin is the top left corner: the
+    // point under the pointer is at `p / scale - pan` in the graph's coordinates
+    // (p being the position in the viewport), and that must not change.
+    function zoomAround(factor, clientX, clientY) {
+        const rect = graphNav.getBoundingClientRect();
+        const px = clientX - rect.left - graphNav.clientLeft;
+        const py = clientY - rect.top - graphNav.clientTop;
+        const oldScale = panzoom.getScale();
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, oldScale * factor));
+        const pan = panzoom.getPan();
+        setView(newScale,
+                pan.x + px / newScale - px / oldScale,
+                pan.y + py / newScale - py / oldScale);
+    }
+
+    // Zoom for the buttons, around the center of the part of the graph that is
+    // visible: zooming around the center of the panel would push a graph smaller
+    // than the panel (or not centered in it) away from the center, possibly out
+    // of view.
+    function zoomAtCenter(factor) {
+        const scale = panzoom.getScale();
+        const pan = panzoom.getPan();
+        const center = (start, size, viewportSize) => {
+            const lo = Math.max(0, start * scale);
+            const hi = Math.min(viewportSize, (start + size) * scale);
+            return lo < hi ? (lo + hi) / 2 : viewportSize / 2;
+        };
+        const rect = graphNav.getBoundingClientRect();
+        zoomAround(factor,
+                   rect.left + graphNav.clientLeft + center(
+                       pan.x, graphCanvas.offsetWidth, graphNav.clientWidth),
+                   rect.top + graphNav.clientTop + center(
+                       pan.y, graphCanvas.offsetHeight, graphNav.clientHeight));
+    }
+
+    // Wheel deltas in pixels. Depending on the browser and device they can be
+    // given in lines or pages (deltaMode) rather than pixels.
+    function wheelDeltaPixels(event) {
+        let factorX = 1, factorY = 1;
+        if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+            factorX = factorY = LINE_HEIGHT;
+        } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+            factorX = graphNav.clientWidth;
+            factorY = graphNav.clientHeight;
+        }
+        return {x: event.deltaX * factorX, y: event.deltaY * factorY};
+    }
+
+    graphNav.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const delta = wheelDeltaPixels(event);
+        if (event.ctrlKey || event.metaKey) {
+            // also what browsers send for a trackpad pinch
+            const amount = Math.max(
+                -MAX_WHEEL_ZOOM_DELTA, Math.min(MAX_WHEEL_ZOOM_DELTA, delta.y));
+            zoomAround(Math.exp(-amount * ZOOM_PER_PIXEL),
+                       event.clientX, event.clientY);
+        } else {
+            const scale = panzoom.getScale();
+            const pan = panzoom.getPan();
+            panzoom.pan(pan.x - delta.x / scale, pan.y - delta.y / scale,
+                        {animate: false});
+        }
+    }, {passive: false});
+
+    // No pinch-to-zoom on touchscreens (use the buttons): Panzoom's own pinch
+    // handling assumes a centered transform origin, so with ours (top left) it
+    // zooms far too fast and in the wrong direction. Panzoom starts a pinch when it
+    // sees a second pointer, so we hide the extra touches from it (a single
+    // finger still pans). Window-level capture listeners run before Panzoom's.
+    const ignoredTouches = new Set();
+    for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+        window.addEventListener(name, (event) => {
+            if (event.pointerType !== 'touch') {
+                return;
+            }
+            if (name === 'pointerdown' && !event.isPrimary
+                && graphNav.contains(event.target)) {
+                ignoredTouches.add(event.pointerId);
+            }
+            // While several fingers are down, nothing moves (the first finger
+            // would otherwise pan the graph during a pinch).
+            if (ignoredTouches.has(event.pointerId)
+                || (name === 'pointermove' && ignoredTouches.size > 0)) {
+                event.stopImmediatePropagation();
+                if (name === 'pointerup' || name === 'pointercancel') {
+                    ignoredTouches.delete(event.pointerId);
+                }
+            }
+        }, true);
+    }
+
+    // Do not treat the end of a drag as a click on a node.
+    let pointerDownAt = null;
+    let dragged = false;
+    graphNav.addEventListener('pointerdown', (event) => {
+        pointerDownAt = {x: event.clientX, y: event.clientY};
+        dragged = false;
+        graphNav.classList.add('panning');
+    });
+    graphNav.addEventListener('pointermove', (event) => {
+        if (pointerDownAt && Math.hypot(
+            event.clientX - pointerDownAt.x, event.clientY - pointerDownAt.y) > 4) {
+            dragged = true;
+        }
+    });
+    for (const name of ['pointerup', 'pointercancel']) {
+        document.addEventListener(name, () => {
+            pointerDownAt = null;
+            graphNav.classList.remove('panning');
+            // The click (if any) is dispatched right after pointerup. If the
+            // pointer was released elsewhere there is none: do not let the flag
+            // swallow a later click.
+            setTimeout(() => { dragged = false; }, 0);
+        });
+    }
+    graphNav.addEventListener('click', (event) => {
+        if (dragged) {
+            event.preventDefault();
+            event.stopPropagation();
+            dragged = false;
+        }
+    }, true);
+
+    document.getElementById('zoom-in').addEventListener('click', () => zoomAtCenter(1.5));
+    document.getElementById('zoom-out').addEventListener('click', () => zoomAtCenter(1 / 1.5));
+    document.getElementById('zoom-reset').addEventListener('click', resetView);
+
+    // The size of the graph is known once it is drawn (immediately, unless the
+    // browser draws it). Panzoom resets the pan in a timeout of its own when it is
+    // created, so we must wait for it.
+    setTimeout(resetView, 0);
+    graphNav.addEventListener('graph-rendered', resetView);
 })();

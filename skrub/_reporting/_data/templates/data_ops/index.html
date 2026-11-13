@@ -21,9 +21,21 @@
         <div class="data_op-node">
             {# Graph on the left, drawer on the right (see data_ops-report.js). #}
             <nav id="graph-panel" class="main-nav" data-is-open>
-                <p class="graph-hint"><strong>Click a node</strong> to display its details.</p>
+                <div class="graph-toolbar">
+                    <p class="graph-hint"><strong>Click a node</strong> to display its details.
+                        <strong>Drag</strong> to pan, <strong>Ctrl + scroll</strong> to zoom.</p>
+                    {# Outside the viewport, so that they never hide part of the graph. #}
+                    <div class="graph-controls" role="group" aria-label="Graph zoom">
+                        <button type="button" id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+                        <button type="button" id="zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+                        <button type="button" id="zoom-reset" title="Fit the whole graph in the panel">Reset</button>
+                    </div>
+                </div>
+                {# Viewport for the graph, which can be panned and zoomed (see data_ops-report.js). #}
                 <div id="graph-nav">
-                    {{ graph_html | safe }}
+                    <div id="graph-canvas">
+                        {{ graph_html | safe }}
+                    </div>
                 </div>
             </nav>
             {#
@@ -46,6 +58,10 @@
         </div>
     </div>
 </body>
+<script>
+ {#- Panzoom (MIT), see panzoom-4.6.2/README.md #}
+ {% include "panzoom-4.6.2/panzoom.min.js" %}
+</script>
 <script>
  {% include "data_ops-report.js" %}
 </script>
