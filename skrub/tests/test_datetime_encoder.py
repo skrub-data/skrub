@@ -341,6 +341,19 @@ def test_time_not_extracted_from_date_col(datetime_cols):
     ]
 
 
+def test_polars_date_dtype():
+    # Non-regression test: the polars Date dtype has no time_zone attribute,
+    # which used to raise an AttributeError.
+    pl = pytest.importorskip("polars")
+    col = pl.Series("when", ["2020-01-01", None, "2022-12-31"]).str.to_date()
+    assert col.dtype == pl.Date
+    enc = DatetimeEncoder(resolution="nanosecond")
+    out = enc.fit_transform(col)
+    assert enc.extracted_features_ == ["year", "month", "day", "total_seconds"]
+    assert sbd.to_list(sbd.col(out, "when_year")) == [2020.0, None, 2022.0]
+    assert sbd.to_list(sbd.col(out, "when_day")) == [1.0, None, 31.0]
+
+
 def test_invalid_resolution(datetime_cols):
     with pytest.raises(ValueError, match=r".*'resolution' options are"):
         DatetimeEncoder(resolution="hello").fit(datetime_cols.datetime)
