@@ -30,7 +30,7 @@ order_ids = orders[["ID"]].skb.mark_as_X()
 fraud_flags = orders["fraud_flag"].skb.mark_as_y()
 
 
-def load_products(orders_ids, data_source):
+def load_products(order_ids, data_source):
     products = data_source["products"]
     return products[products["basket_ID"].isin(order_ids["ID"])]
 
