@@ -117,7 +117,8 @@ class LLMEncoder(SingleColumnTransformer):
           the machine where it was pickled. Note also that if a model with the
           same ``model_name`` and ``device`` is already loaded in the process
           where the ``LLMEncoder`` is unpickled, that model is used instead of
-          the pickled weights.
+          the pickled weights. This may relevant in case fine-tuning is performed
+          on the model.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
@@ -368,6 +369,8 @@ class LLMEncoder(SingleColumnTransformer):
         key = (str(self.model_name), self.device)
         # The lock avoids loading the same model several times when encoders are
         # fitted concurrently in different threads.
+        # Note that if a thread forks while another thread is holding the lock,
+        # then this would cause a deadlock. For simplicity, we ignore this case.
         with _MODELS_LOCK:
             # Keep a strong reference while the lock is held, otherwise the
             # model could be garbage-collected between the lookup and the return.

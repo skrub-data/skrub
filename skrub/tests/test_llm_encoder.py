@@ -12,7 +12,6 @@ disabling the filterwarnings in pyproject.toml to see if any deprecation
 warnings are being raised.
 """
 
-import gc
 import pickle
 import sys
 import time
@@ -50,16 +49,17 @@ class FakeModel:
 def fake_model(monkeypatch):
     """Replace the sentence-transformers model loading by a cheap fake model,
     and return the list of weak references to the loaded models."""
+    st = pytest.importorskip("sentence_transformers")
     loaded = []
 
-    def load(self):
+    def make_model(*args, **kwargs):
         # make concurrent loads more likely, in case the lock does not work
         time.sleep(0.1)
         model = FakeModel()
         loaded.append(weakref.ref(model))
         return model
 
-    monkeypatch.setattr(LLMEncoder, "_load_estimator", load)
+    monkeypatch.setattr(st, "SentenceTransformer", make_model)
     return loaded
 
 
@@ -277,7 +277,6 @@ def test_unpickle_stored_weights_are_shared(df_module, fake_model, shared_models
     encoder = LLMEncoder(n_components=None, store_weights_in_pickle=True).fit(X)
     obj = pickle.dumps(encoder)
     del encoder
-    gc.collect()
     assert len(shared_models) == 0
 
     encoder_unpickled = pickle.loads(obj)
@@ -299,11 +298,9 @@ def test_model_released_when_unused(df_module, fake_model, shared_models):
 
     # the model is kept while at least one encoder uses it
     del encoder_1
-    gc.collect()
     assert fake_model[0]() is encoder_2._estimator
 
     del encoder_2
-    gc.collect()
     assert fake_model[0]() is None
     assert len(shared_models) == 0
 
