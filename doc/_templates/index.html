@@ -137,45 +137,126 @@ fa-caret-down visible-small-screen"></i></p>
   </div>
 
   <!-- Feature Section 4 -->
-  <div class="row mb-0 flex-md-row-reverse  row-padding-between-features">
+  <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Tune arbitrary data wrangling</h4>
-      <h5 class="feature-title">Inspect it, apply it to new data</h5>
-      <p class="feature-text">Assemble and prepare tables for machine
-      learning with any operations and then <strong>tune the full pipeline,
-      inspect it</strong>, or apply it to new data.
-      </p>
-      <p class="feature-text">
-	Works with any computational or dataframe engine.
-      </p>
-      <div class="pipeline-img">
-	{% include "../generated_for_index/pipeline.svg" %}
-      </div>
+      <h4 class="feature-title">Build arbitrary stateful pipelines</h4>
+      <ul class="feature-text">
+        <li>Define a pipeline that transforms any data, from loading to the
+          final predictor, with
+          <a class="reference internal"
+          href="reference/generated/skrub.var.html#var"
+          title="skrub.var"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">var</span></code></a>.
+          <ul>
+            <li>No restrictions on input data types: dataframes
+              (with <a class="reference internal"
+              href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
+              title="skrub.TableVectorizer"><code class="xref py py-class docutils literal
+              notranslate"><span class="pre">TableVectorizer</span></code></a> and
+              <a class="reference internal"
+              href="{{ pathto('column_level_featurizing') }}">dedicated
+              transformers</a>), images (see this
+              <a class="reference internal"
+              href="{{ pathto('auto_examples/02_data_ops/1160_pytorch') }}">PyTorch
+              example</a>), or anything else
+              (<a class="reference internal"
+              href="reference/generated/skrub.DataOp.skb.apply_func.html#skrub-dataop-skb-apply-func"
+              title="skrub.DataOp.skb.apply_func"><code class="xref py py-meth docutils literal
+              notranslate"><span class="pre">apply_func</span></code></a>).</li>
+          </ul>
+        </li>
+        <li>Keep using scikit-learn transformers and predictors with
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.apply.html#skrub-dataop-skb-apply"
+          title="skrub.DataOp.skb.apply"><code class="xref py py-meth docutils literal
+          notranslate"><span class="pre">apply</span></code></a>, and export the
+          whole pipeline with
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.make_learner.html#skrub-dataop-skb-make-learner"
+          title="skrub.DataOp.skb.make_learner"><code class="xref py py-meth docutils
+          literal notranslate"><span class="pre">make_learner</span></code></a> to
+          get an estimator providing <code>fit()</code> and
+          <code>predict()</code>.</li>
+        <li>Create reports with
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.report.html#skrub-dataop-skb-report"
+          title="skrub.DataOp.skb.report"><code class="xref py py-meth docutils literal
+          notranslate"><span class="pre">report</span></code></a>: intermediate
+          results, and links to the source code of each estimator.</li>
+      </ul>
       <p class="feature-text-see-also">
-        <!-- name of the userguide file on DataOps -->
         <a href="{{ pathto('data_ops') }}">Discover the skrub DataOps →</a>
       </p>
     </div>
     <div class="col-md-7">
-        <details>
-          <summary>Given two input dataframes
-            <code class="docutils literal notranslate"><span
-class="pre">products_df</span></code> and <code class="docutils literal notranslate"><span
-class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
-	    {% include "../generated_for_index/code_block_0.html" %}
-	</details>
-	<div class="feature-flex" style="column-gap: 0.25em;">
-	    <div>
-		{% include "../generated_for_index/products.html" %}
-	    </div>
-	    <div>
-		{% include "../generated_for_index/baskets.html" %}
-	    </div>
-	</div>
-	{% include "../generated_for_index/code_block_2.html" %}
-	<div class="feature-img">
-	    {% include "../generated_for_index/parallel_coordinates.html" %}
-	</div>
+      <!-- Placeholder for a figure -->
+      <div class="d-flex align-items-center justify-content-center"
+           style="height: 100%; min-height: 16rem; border: 2px dashed var(--pst-color-border); border-radius: 1ex;">
+        <span class="text-muted">Figure placeholder</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Section 5 -->
+  <div class="row mb-0 row-padding-between-features">
+    <div class="col-md-5">
+      <h4 class="feature-title">Cross-validate without data leakage &amp; tune any choice</h4>
+      <ul class="feature-text">
+        <li>Include the construction of <code>X</code> and <code>y</code> in the
+          pipeline itself, with
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.mark_as_X.html#skrub-dataop-skb-mark-as-x"
+          title="skrub.DataOp.skb.mark_as_X"><code class="xref py py-meth docutils literal
+          notranslate"><span class="pre">mark_as_X</span></code></a> and
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.mark_as_y.html#skrub-dataop-skb-mark-as-y"
+          title="skrub.DataOp.skb.mark_as_y"><code class="xref py py-meth docutils literal
+          notranslate"><span class="pre">mark_as_y</span></code></a>, or directly with
+          <a class="reference internal"
+          href="reference/generated/skrub.X.html#x"
+          title="skrub.X"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">skrub.X</span></code></a> and
+          <a class="reference internal"
+          href="reference/generated/skrub.y.html#y"
+          title="skrub.y"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">skrub.y</span></code></a>.</li>
+        <li>Evaluate without data leakage with the built-in
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.cross_validate.html#skrub-dataop-skb-cross-validate"
+          title="skrub.DataOp.skb.cross_validate"><code class="xref py py-meth docutils
+          literal notranslate"><span class="pre">cross_validate</span></code></a>.</li>
+        <li>Turn any decision in the modelling into a choice to tune on
+          validation scores, with
+          <a class="reference internal"
+          href="reference/generated/skrub.choose_from.html#choose-from"
+          title="skrub.choose_from"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">choose_from</span></code></a>,
+          <a class="reference internal"
+          href="reference/generated/skrub.choose_int.html#choose-int"
+          title="skrub.choose_int"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">choose_int</span></code></a>,
+          <a class="reference internal"
+          href="reference/generated/skrub.choose_float.html#choose-float"
+          title="skrub.choose_float"><code class="xref py py-func docutils literal
+          notranslate"><span class="pre">choose_float</span></code></a>, and
+          <a class="reference internal"
+          href="reference/generated/skrub.DataOp.skb.make_randomized_search.html#skrub-dataop-skb-make-randomized-search"
+          title="skrub.DataOp.skb.make_randomized_search"><code class="xref py py-meth docutils
+          literal notranslate"><span class="pre">make_randomized_search</span></code></a>,
+          possibly with
+          <a class="reference internal"
+          href="{{ pathto('modules/data_ops/validation/tuning_with_optuna') }}">Optuna</a>.</li>
+      </ul>
+      <p class="feature-text-see-also">
+        <a href="{{ pathto('modules/data_ops/validation/tuning_validating_data_ops') }}">Tune and validate your pipelines →</a>
+      </p>
+    </div>
+    <div class="col-md-7 pe-5">
+      <!-- Placeholder for a figure -->
+      <div class="d-flex align-items-center justify-content-center"
+           style="height: 100%; min-height: 16rem; border: 2px dashed var(--pst-color-border); border-radius: 1ex;">
+        <span class="text-muted">Figure placeholder</span>
+      </div>
     </div>
   </div>
 
