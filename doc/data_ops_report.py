@@ -1,3 +1,4 @@
+import os
 import runpy
 import shutil
 import sys
@@ -24,16 +25,21 @@ def create_credit_fraud_report():
     if (output_dir / "index.html").exists():
         return output_dir
 
-    script = Path(__file__).parent / "credit_fraud_example_for_home_page"
-    script = script / "credit_fraud_with_choices.py"
+    doc_dir = Path(__file__).parent
+    # Run from the doc directory with a relative path so that the source
+    # locations embedded in the graph (shown as tooltips) stay relative
+    # instead of leaking absolute paths into the published page.
+    script = Path("credit_fraud_example_for_home_page") / "credit_fraud_with_choices.py"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        argv = sys.argv
+        argv, cwd = sys.argv, Path.cwd()
         sys.argv = [str(script), "--output_dir", tmp_dir]
+        os.chdir(doc_dir)
         try:
             runpy.run_path(str(script), run_name="__main__")
         finally:
             sys.argv = argv
+            os.chdir(cwd)
 
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(Path(tmp_dir) / "report", output_dir, dirs_exist_ok=True)

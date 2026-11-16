@@ -15,7 +15,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import runpy
 import shutil
 import sys
 import warnings
@@ -52,10 +51,6 @@ from data_ops_report import create_data_ops_report
 from table_report import generate_demo
 
 generate_demo()
-
-# Generate the HTML snippets for the DataOps demo on the homepage:
-if not os.path.exists("generated_for_index/code_block_2.html"):
-    runpy.run_path("generate_data_ops_example_for_index.py")
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
