@@ -139,13 +139,10 @@ fa-caret-down visible-small-screen"></i></p>
   <!-- Feature Section 4 -->
   <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Build arbitrary stateful pipelines</h4>
+      <h4 class="feature-title">Custom stateful pipelines</h4>
       <ul class="feature-text">
         <li>Define a pipeline that transforms any data, from loading to the
-          final predictor, with
-          <a class="reference internal"
-          href="{{ pathto('modules/data_ops/basics/what_are_data_ops') }}">DataOps
-          variables</a>.
+          final predictor.
           <ul>
             <li>No restrictions on input data types: dataframes (with
               <a class="reference internal"
@@ -157,14 +154,12 @@ fa-caret-down visible-small-screen"></i></p>
               <a class="reference internal"
               href="{{ pathto('modules/data_ops/basics/control_flow') }}">control
               flow in DataOps</a>).</li>
-            <li>For dataframes, use
+            <li>Apply different transformers to different columns with
               <a class="reference internal"
-              href="{{ pathto('modules/multi_column_operations/selectors') }}">selectors</a>
-              to pick the columns a transformer operates on, and combine them
-              with <code>.skb.apply</code> to
+              href="reference/generated/skrub.DataOp.skb.apply.html"><code>.skb.apply</code></a>
+              and
               <a class="reference internal"
-              href="{{ pathto('modules/data_ops/ml_pipeline/applying_different_transformers') }}">apply
-              different transformers to different columns</a>.</li>
+              href="{{ pathto('modules/multi_column_operations/selectors') }}">selectors</a>.</li>
           </ul>
         </li>
         <li>Keep using scikit-learn
@@ -186,10 +181,8 @@ fa-caret-down visible-small-screen"></i></p>
       </p>
     </div>
     <div class="col-md-7">
-      <!-- Placeholder for a DataOps graph figure -->
-      <div class="d-flex align-items-center justify-content-center"
-           style="min-height: 16rem; border: 2px dashed var(--pst-color-border); border-radius: 1ex;">
-        <span class="text-muted">DataOps graph figure</span>
+      <div class="pipeline-img">
+        {% include "../_build/html/_static/credit_fraud_report/credit_fraud_graph.svg" %}
       </div>
       <p class="text-center mt-3 mb-0">
         <a href="_static/credit_fraud_report/index.html">Open an interactive report →</a>
@@ -200,21 +193,26 @@ fa-caret-down visible-small-screen"></i></p>
   <!-- Feature Section 5 -->
   <div class="row mb-0 row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Cross-validate without data leakage &amp; tune any choice</h4>
+      <h4 class="feature-title">Leak-proof cross-validation</h4>
       <ul class="feature-text">
         <li>Include the construction of <code>X</code> and <code>y</code> in the
           pipeline itself.</li>
         <li>Evaluate without data leakage with the built-in
           <a class="reference internal"
           href="{{ pathto('modules/data_ops/validation/tuning_validating_data_ops') }}#improving-the-confidence-in-our-score-through-cross-validation">cross-validation</a>.</li>
-        <li>Turn any decision in the modelling into a choice to tune on
-          validation scores, with the
-          <a class="reference internal"
-          href="{{ pathto('modules/data_ops/validation/hyperparameter_tuning') }}"><code>choose_*</code>
-          functions</a> and
-          <a class="reference internal"
-          href="{{ pathto('modules/data_ops/validation/nesting_choices_choosing_pipelines') }}">nested
-          choices</a>, possibly with
+        <li>Tune data pipeline decisions, not only hyperparameters:
+          <ul>
+            <li>Combine and
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/nesting_choices_choosing_pipelines') }}">nest</a>
+              the
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/hyperparameter_tuning') }}"><code>choose_*</code>
+              functions</a> to build an extensive hyperparameter grid with no
+              effort.</li>
+          </ul>
+        </li>
+        <li>Explore the hyperparameter space with scikit-learn or
           <a class="reference internal"
           href="{{ pathto('modules/data_ops/validation/tuning_with_optuna') }}">Optuna</a>.</li>
       </ul>
@@ -223,15 +221,8 @@ fa-caret-down visible-small-screen"></i></p>
       </p>
     </div>
     <div class="col-md-7 pe-5">
-      <!-- The code blocks below are <pre> content: lines must not be indented. -->
-      <ul class="feature-text">
-        <li>Replace any value with a choice:
-          <pre><code>X_enc = X.skb.apply_func(build_feature_table,<span style="display: block; background-color: rgba(220, 53, 69, 0.16);"><strong>-</strong>    session_gap=30,</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    session_gap=skrub.choose_from([15, 30, 60]),</span><span style="display: block;">)</span><span style="display: block;">pred = X_enc.skb.apply(HGBC(), y=y)</span></code></pre>
-        </li>
-        <li>Tune data pipeline decisions, not only hyperparameters:
-          <pre><code>X_enc = X.skb.apply_func(build_feature_table,<span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    additional_features=skrub.choose_bool(),</span><span style="display: block;">)</span><span style="display: block;">pred = X_enc.skb.apply(HGBC(), y=y)</span></code></pre>
-        </li>
-      </ul>
+      <!-- The code block below is <pre> content: lines must not be indented. -->
+      <pre><code>features = order_ids.skb.apply_func(<span style="display: block;">    join_orders_products,</span><span style="display: block;">    vectorized_products,</span><span style="display: block; background-color: rgba(220, 53, 69, 0.16);"><strong>-</strong>    agg_func="mean",</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    agg_func=skrub.choose_from(["mean", "sum"]),</span><span style="display: block;">)</span><span style="display: block;">pred = features.skb.apply(</span><span style="display: block; background-color: rgba(220, 53, 69, 0.16);"><strong>-</strong>    HistGradientBoostingClassifier(learning_rate=0.1),</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    HistGradientBoostingClassifier(</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>        learning_rate=skrub.choose_float(0.01, 0.5, log=True)</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    ),</span><span style="display: block;">    y=fraud_flags,</span><span style="display: block;">)</span></code></pre>
     </div>
   </div>
 

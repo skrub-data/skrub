@@ -1,64 +1,46 @@
+import runpy
+import shutil
+import sys
+import tempfile
 from pathlib import Path
 
-from sklearn.ensemble import (
-    HistGradientBoostingClassifier,
-    HistGradientBoostingRegressor,
-)
+from sklearn.ensemble import HistGradientBoostingRegressor
 
 import skrub
 import skrub.datasets
 from skrub import TableVectorizer
-from skrub import selectors as s
 
 
 def create_credit_fraud_report():
+    """Generate the credit fraud report and the graph shown on the homepage.
+
+    Both come from the same example script so that the graph, the interactive
+    report and the code snippet on the homepage always describe the same
+    pipeline.
+    """
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )
     if (output_dir / "index.html").exists():
         return output_dir
 
-    dataset = skrub.datasets.fetch_credit_fraud()
+    script = Path(__file__).parent / "credit_fraud_example_for_home_page"
+    script = script / "credit_fraud_with_choices.py"
 
-    products = skrub.var("products", dataset.products)
-    baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
-    fraud_flags = skrub.var(
-        "fraud_flags", dataset.baskets["fraud_flag"]
-    ).skb.mark_as_y()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        argv = sys.argv
+        sys.argv = [str(script), "--output_dir", tmp_dir]
+        try:
+            runpy.run_path(str(script), run_name="__main__")
+        finally:
+            sys.argv = argv
 
-    products = products[products["basket_ID"].isin(baskets["ID"])]
-    products = products.assign(
-        total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
-    )
-    n = skrub.choose_int(5, 15, log=True, name="n_components")
-    encoder = skrub.choose_from(
-        {
-            "MinHash": skrub.MinHashEncoder(n_components=n),
-            "LSA": skrub.StringEncoder(n_components=n),
-        },
-        name="encoder",
-    )
-    vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
-
-    vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
-
-    aggregated_products = (
-        vectorized_products.groupby("basket_ID").agg("mean").reset_index()
-    )
-    baskets = baskets.merge(
-        aggregated_products, left_on="ID", right_on="basket_ID"
-    ).drop(columns=["ID", "basket_ID"])
-
-    hgb = HistGradientBoostingClassifier(
-        learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
-    )
-    predictions = baskets.skb.apply(hgb, y=fraud_flags)
-
-    predictions.skb.report(
-        output_dir=output_dir,
-        overwrite=True,
-        open=False,
-    )
+        output_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(Path(tmp_dir) / "report", output_dir, dirs_exist_ok=True)
+        shutil.copyfile(
+            Path(tmp_dir) / "credit_fraud_graph.svg",
+            output_dir / "credit_fraud_graph.svg",
+        )
 
     return output_dir
 
@@ -97,4 +79,5 @@ def create_data_ops_report():
     employee_salary_folder = create_employee_salaries_report()
 
     assert (credit_fraud_folder / "index.html").exists()
+    assert (credit_fraud_folder / "credit_fraud_graph.svg").exists()
     assert (employee_salary_folder / "index.html").exists()
