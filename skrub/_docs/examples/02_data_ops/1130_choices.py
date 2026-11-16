@@ -254,6 +254,9 @@ hgb = HistGradientBoostingClassifier(
 ridge = RidgeClassifier(alpha=skrub.choose_float(0.01, 100, log=True, name="α"))
 classifier = skrub.choose_from({"hgb": hgb, "ridge": ridge}, name="classifier")
 pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
+pred
+
+# %%
 print(pred.skb.describe_param_grid())
 
 # %%

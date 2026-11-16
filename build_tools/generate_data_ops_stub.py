@@ -67,6 +67,13 @@ class DataOp:
 """
 )
 
+output_types = {
+    "__dir__": "list",
+    "__repr__": "str",
+    "__skrub_short_repr__": "str",
+    "_ipython_key_completions_": "list",
+    "_repr_html_": "str",
+}
 for name in sorted(skrub.DataOp.__dict__):
     if name not in [
         "__bool__",
@@ -83,9 +90,11 @@ for name in sorted(skrub.DataOp.__dict__):
         "__signature__",
         "__static_attributes__",
         "__weakref__",
+        "__skrub_defining_module__",
         "skb",
     ]:
-        p(f"    def {name}(*args, **kwargs) -> DataOp: ...\n")
+        out = output_types.get(name, "DataOp")
+        p(f"    def {name}(*args, **kwargs) -> {out}: ...\n")
 
 p("\n")
 

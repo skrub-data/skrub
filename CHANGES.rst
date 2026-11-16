@@ -11,14 +11,58 @@ Ongoing Development
 
 New Features
 ------------
+- :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
+  skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
+  standard scikit-learn interface: ``fit(X, y)`` rather than the usual
+  SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
+  <SkrubLearner.with_sklearn_interface>` and an :ref:`example
+  <example_with_sklearn_interface>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>` and
+  :pr:`2423` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
   similar to what :meth:`DataOp.skb.get_vars` does for variables.
   :pr:`2313` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`TableReport.write_json` stores the report data into a JSON file,
+  similar to :meth:`TableReport.write_html`.
+  :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`ToFloat` has a new ``convert_percentage`` parameter. When it is
+  ``True``, strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are
+  converted to fractions (``0.125``, ``0.01``).
+  :pr:`2407` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
 
 Changes
 -------
+- :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
+  default for every parameter.
+  Explicit ``None`` values are no longer treated as "leave unchanged" and are
+  validated like other values. ``cache=None`` still disables caching and
+  ``target_cache_size=None`` still disables cache pruning.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
+- Evaluating a :class:`DataOp` and passing an environment that has extra keys
+  (keys in the environment that do not correspond to any variable, node or
+  choice name, or node ID, in the DataOp) now causes a warning displaying the
+  extra keys to help detect typos and mistakes. It can be silenced with the
+  warnings module, or, more robustly, by adding
+  ``{"skrub.ignore_extra_keys": True}`` to the environment dictionary.
+  :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
+- The special keys used by skrub in the environment dictionaries of
+  :class:`DataOp` have been renamed from ``_skrub_<name>`` to ``skrub.<name>``
+  (for example ``_skrub_predictions`` is now ``skrub.predictions``). Names of
+  variables, choices and nodes starting with ``skrub`` or ``_skrub`` are now
+  reserved. The old names lose their meaning, for example passing
+  ``"_skrub_predictions"`` now has no effect (except possibly triggering an
+  "unused key" warning).
+  :pr:`2420` by :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
+  not installed.
+  :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
+- Navigating to different nodes in the report produced by
+  :meth:`DataOp.skb.report` no longer adds entries to the browser's Back button
+  history; node details and source code displays can be closed more easily; the
+  scrolling of the source code display is improved.
+  :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
@@ -27,6 +71,24 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer counts unused pandas categories as distinct
+  values or includes them among the most frequent values. This also fixes
+  constant-column detection after filtering a categorical column.
+  :pr:`2348` by :user:`Aryan Ganjoo <AryanRG>`.
+
+- :func:`set_config` and :func:`config_context` now correctly store the
+  ``cardinality_threshold`` parameter. Previously, the value was validated but
+  ignored, so the default threshold kept being used.
+  :pr:`2366` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`DropSimilar` now checks the input dataframe with
+  :class:`~skrub._check_input.CheckInputDataFrame`, so column names that
+  are not unique strings no longer cause errors.
+  :pr:`2360` by :user:`Mann <m4nn2609-dot>`.
+- :class:`SquashingScaler` no longer maps large finite outliers to zero: an
+  intermediate overflow in the computation of the soft clipping is avoided, so
+  that large finite values are soft-clipped toward ``max_absolute_value`` as
+  intended.
+  :pr:`2370` by :user:`Jay Singh <JaySingh79>`.
 - :class:`DatetimeEncoder` no longer raises
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
@@ -38,9 +100,57 @@ Bugfixes
   by all encoders that use the same ``model_name`` and ``device``, which
   reduces memory usage.
   :pr:`2367` by :user:`Félix Lefebvre <flefebv>`.
+- :class:`DataOp.skb.make_randomized_search(backend='optuna')
+  <DataOp.skb.make_randomized_search>`: reusing an existing optuna study with incomplete
+  trials (i.e. which had been killed while running) could raise an exception.
+  This has been fixed in :pr:`2409` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`deduplicate` no longer fails when the input contains missing values;
+  missing values (``None``, ``np.nan``, ``pd.NA``) are left unchanged while the
+  remaining strings are deduplicated.
+  :pr:`2319` by :user:`Vinayak Deshmuk <Vinayak19112003>`.
+- The icon-only buttons (copy, close and dismiss) and the column filter of the
+  :class:`TableReport` now have accessible names, so that screen readers can
+  announce what they do.
+  :pr:`2389` by :user:`Eya Adouni <eyaadouni>`.
+- :class:`SessionEncoder` no longer ignores sub-second time gaps with polars
+  dataframes: the gaps were truncated to whole seconds, so events could be
+  wrongly put in the same session and results differed from pandas.
+  :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :meth:`DataOp.skb.make_grid_search` (and randomized search) could produce NaN
+  scores when using the default (built-in score method) scoring for fully unsupervised
+  pipelines (no ``y`` in the final estimator's ``.score()``). This has been fixed in
+  :pr:`2419` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
+  longer count ``NaN`` as a distinct value in float columns of polars
+  dataframes. ``NaN`` is already counted as a missing value there, so the
+  number of distinct values was off by one and differed from pandas.
+  :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
+- Removed the deprecated ``splitter`` parameter of :meth:`.skb.train_test_split
+  <DataOp.skb.train_test_split>`. Use ``split_func`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed support for the deprecated ``SKRUB_DATA_DIRECTORY`` environment
+  variable. Use ``SKB_DATA_DIRECTORY`` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated ``TextEncoder`` alias. Use :class:`LLMEncoder` instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameter ``drop_if_unique`` of
+  :class:`DropUninformative` and :class:`TableVectorizer`.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
+
+- Removed the deprecated parameters ``max_plot_columns`` and
+  ``max_association_columns`` of :func:`set_config` and :func:`config_context`,
+  and the corresponding environment variables ``SKB_MAX_PLOT_COLUMNS`` and
+  ``SKB_MAX_ASSOCIATION_COLUMNS``. Use ``table_report_plots_threshold`` and
+  ``table_report_associations_threshold`` (and the environment variables
+  ``SKB_TABLE_REPORT_PLOTS_THRESHOLD`` and
+  ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``) instead.
+  :pr:`2364` by :user:`Nour Cheour <Nour-Cheour>`.
 
 0.11.0
 ===================

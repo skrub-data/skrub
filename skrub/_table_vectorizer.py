@@ -120,7 +120,6 @@ def _get_preprocessors(
     *,
     cols,
     drop_null_fraction,
-    drop_if_unique=False,
     drop_if_constant,
     n_jobs,
     parse_numbers=False,
@@ -143,7 +142,6 @@ def _get_preprocessors(
             DropUninformative(
                 drop_null_fraction=drop_null_fraction,
                 drop_if_constant=drop_if_constant,
-                drop_if_unique=drop_if_unique,
             ),
             cols,
         ),
@@ -619,16 +617,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_if_unique : bool, default=False
-        If set to true, drop columns that contain only unique values, i.e., the number
-        of unique values is equal to the number of rows in the column. Numeric columns
-        are never dropped.
-
-        .. deprecated:: 0.9.0
-        This functionality can drop informative columns and is unlikely to be
-        of use in practice. It is therefore deprecated and will be removed in a
-        future version.
-
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
@@ -910,7 +898,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         specific_transformers=(),
         drop_null_fraction=1.0,
         drop_if_constant=False,
-        drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
         n_jobs=None,
@@ -928,7 +915,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
-        self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.null_strings = null_strings
 
@@ -1044,7 +1030,6 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
             cols=cols,
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
-            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_numbers=True,
             cast_to_float32=True,

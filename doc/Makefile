@@ -30,10 +30,7 @@ html:
 	#rm -rf _build/doctrees/
 	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD)  -D markdown_uri_doc_suffix="html.md" -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	# Build markdown sources so llms.txt links point to .md files
-	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
-	cp -r $(BUILDDIR)/markdown/. $(BUILDDIR)/html/_sources/
-	# Build markdown sources so llms.txt links point to .md files
-	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -D markdown_uri_doc_suffix="html.md" -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -D markdown_uri_doc_suffix="html.md" -D plot_gallery=0 -b markdown $(ALLSPHINXOPTS) $(BUILDDIR)/markdown
 	cp -r $(BUILDDIR)/markdown/. $(BUILDDIR)/html/_sources/
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

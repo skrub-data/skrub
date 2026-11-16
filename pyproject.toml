@@ -76,6 +76,7 @@ dev = [
 
   # test
   "pytest",
+  "pytest-asyncio>=0.24",
   "pytest-cov",
   "pytest-xdist",
 
@@ -111,14 +112,13 @@ scikit-learn = ">=1.5.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.6.1"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
 jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
-pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 sphinx-design = "*"
@@ -138,6 +138,7 @@ sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+tabicl = "*"
 
 [tool.pixi.feature.lint.dependencies]
 python = ">=3.13,<3.14"
@@ -168,6 +169,7 @@ pyarrow = "<21"
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
 pytest = "*"
+pytest-asyncio = ">=0.24"
 pytest-cov = "*"
 pytest-xdist = "*"
 
@@ -186,7 +188,6 @@ scikit-learn = "==1.5.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.6.1"
-pydot = "*"
 requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
@@ -219,7 +220,7 @@ scikit-learn = "*"
 scipy = "*"
 jinja2 = "*"
 matplotlib = "*"
-pydot = "*"
+pydot = ">=3.0.0"
 requests = "*"
 pyarrow = "*"
 plotly = "*"
@@ -337,10 +338,14 @@ ignore = [
 "examples/*" = ["E402"]
 "doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+"skrub/_docs/examples/**" = ["E402"]
+"skrub/_docs/tutorials/**" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
@@ -388,7 +393,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

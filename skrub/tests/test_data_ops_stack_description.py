@@ -66,7 +66,6 @@ def test_last_line_is_innermost_frame():
 # the DataOp is created inside _data_ops/tests/, so these tests must be here.
 
 
-@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_creation_stack_link(tmp_path):
     report_dir = tmp_path / "report"
     a = skrub.var("a") + 1
@@ -75,7 +74,6 @@ def test_creation_stack_link(tmp_path):
     assert "a = skrub.var" in source
 
 
-@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
 def test_creation_stack_link_unresolvable():
     # a creation-stack frame whose source cannot be found
     # (e.g. exec'd code with no matching linecache entry) must not crash the
@@ -135,7 +133,7 @@ def test_apply_eval_failure(eval_data_op):
         eval_data_op(e, {"a": 1.0, "b": 2.0})
 
 
-@pytest.mark.skipif(not _utils.has_graphviz(), reason="report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="requires graphviz")
 def test_escaping_characters():
     # fmt: off
     out = skrub.as_data_op("") + "\n" + '"' + "\t" +'\\ ' \

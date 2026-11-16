@@ -66,7 +66,7 @@ y = skrub.y(y)
 max_value = X.max().skb.freeze_after_fit()
 X_scaled = X / max_value
 X_reshaped = X_scaled.reshape(-1, 1, 8, 8).astype("float32")
-X_reshaped.skb.draw_graph()
+X_reshaped
 
 
 # %%
@@ -155,7 +155,7 @@ net = NeuralNetClassifier(
 
 y_int = y.astype("int64")
 predictor = X_reshaped.skb.apply(net, y=y_int)
-predictor.skb.draw_graph()
+predictor
 
 # %%
 # Finally, we use 4-fold cross-validation for the hyperparameter

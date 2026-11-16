@@ -29,7 +29,7 @@ _SINGLE_COL_LINE = (
 
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
 _SINGLE_COL_NOTE = (
-    f".. admonition:: A note on using single column transformations \n"
+    f".. note:: A note on using single column transformations \n"
     f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
 )
 
@@ -283,6 +283,12 @@ def _wrap_add_check_single_column(f):
 
 
 def _insert_after_first_paragraph(document, text_to_insert):
+    # Inserts `text_to_insert` above the first rst-style title (line underlined with
+    # '---') in `document`, or at the end if there is none.
+
+    if document == "":
+        return text_to_insert
+
     split_doc = document.splitlines(True)
     indent = min(
         (
@@ -292,23 +298,19 @@ def _insert_after_first_paragraph(document, text_to_insert):
         ),
         default=0,
     )
-    doc_lines = iter(split_doc)
-    output_lines = []
-    for line in doc_lines:
-        output_lines.append(line)
-        if line.strip():
-            break
-    for line in doc_lines:
-        output_lines.append(line)
-        if not line.strip():
-            break
-    else:
-        output_lines.append("\n")
-    for line in text_to_insert.splitlines(True):
-        output_lines.append(line if not line.strip() else " " * indent + line)
-    output_lines.append("\n")
-    output_lines.extend(doc_lines)
-    return "".join(output_lines)
+    note = [
+        line_insert if not line_insert.strip() else " " * indent + line_insert
+        for line_insert in text_to_insert.splitlines(True)
+    ]
+
+    title_idx = next(
+        (i for i, line in enumerate(split_doc[1:]) if re.match(r"^\s*---+\s*$", line)),
+        len(split_doc),
+    )
+    head = "".join(split_doc[:title_idx]).rstrip()
+    inserted = "".join(note)
+    tail = "".join(split_doc[title_idx:])
+    return "".join([head, "\n\n" if head else "", inserted, "\n" if tail else "", tail])
 
 
 def is_single_column_transformer(transformer):

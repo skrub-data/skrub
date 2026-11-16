@@ -50,11 +50,15 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
-from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
 from . import _caching, _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
+from ._utils import (
+    FITTED_PREDICTOR_METHODS,
+    NULL,
+    USE_VAR_VALUES_NAME,
+    attribute_error,
+)
 
 __all__ = [
     "var",
@@ -800,21 +804,10 @@ class DataOp:
         from ._inspection import node_report
         from ._subsampling import uses_subsampling
 
-        try:
-            graph = self.skb.draw_graph().svg.decode("utf-8")
-            graph = strip_xml_declaration(graph)
-            has_graph = True
-        except Exception:
-            graph = f"<p>{_utils.graphviz_error_message(html=True)}</p>"
-            has_graph = False
+        graph = self.skb.draw_graph().html_fragment()
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            if has_graph:
-                return f"<div>{graph}</div>"
-            return (
-                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
-                f"</div><div>{graph}</div></div>"
-            )
+            return f"<div>{graph}</div>"
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"
@@ -971,10 +964,7 @@ def check_name(name, is_var):
         raise TypeError(
             f"`name` must be {description}, got object of type: {type(name)}"
         )
-    if name.startswith("_skrub_"):
-        raise ValueError(
-            f"names starting with '_skrub_' are reserved for skrub use, got: {name!r}."
-        )
+    _utils.check_if_reserved_name(name)
 
 
 def _check_var_value(value):
@@ -1003,7 +993,7 @@ class Var(DataOpImpl):
         if e.name in environment:
             return environment[e.name]
         if (
-            e.becomes_default or environment.get("_skrub_use_var_values", False)
+            e.becomes_default or environment.get(USE_VAR_VALUES_NAME, False)
         ) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(e.name)
@@ -1036,7 +1026,7 @@ def var(name, value=NULL, *, becomes_default=False):
         The name for this input. It corresponds to a key in the dictionary that
         is passed to the learner's ``fit()`` method (see Examples below).
         Names must be unique within a learner and must not start with
-        ``"_skrub_"``
+        ``"skrub"`` or ``"_skrub"``
     value : object, optional
         Optionally, an initial value can be given to the variable. When it is
         available, it is used to provide a preview of the learner's results,
@@ -1536,8 +1526,9 @@ class Apply(DataOpImpl):
             # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
+                fit_args = (X,) if y is None else (X, y)
                 self.estimator_, _, self.estimator_id_ = _MEMORY.call_fitting_method(
-                    self.estimator_, "fit", (X, y), fit_kwargs, no_cache=no_cache
+                    self.estimator_, "fit", fit_args, fit_kwargs, no_cache=no_cache
                 )
             predict_kwargs = yield from self._eval_kwargs("predict")
             pred = _MEMORY.call_non_fitting_method(
@@ -1552,7 +1543,9 @@ class Apply(DataOpImpl):
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
 
-        if "fit" in method_name:
+        if y is None:
+            args = (X,)
+        elif "fit" in method_name:
             args = (X,) if self.unsupervised else (X, y)
         elif method_name == "score":
             args = (X, y)
@@ -2242,7 +2235,7 @@ class SplitX(DataOpImpl):
         return (yield self.X)
 
     def __repr__(self):
-        return "<X>"
+        return f"<X>\nX and y will be split with: {_utils.simple_repr(self.cv)}"
 
 
 def _scorer_repr(scorer_info):

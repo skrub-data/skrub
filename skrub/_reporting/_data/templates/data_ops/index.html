@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 
 <head>
     <meta charset="utf-8">
@@ -8,17 +8,42 @@
     <style>
      {% include "data_ops.css" %}
     </style>
+    <style id="current-node-style"></style>
 </head>
 
-<body>
-    {% if report_title %}
-        <h1>{{ report_title }}</h1>
-    {% endif %}
-    <p>
-        Click on a node to display more information.
-    </p>
-    <div id="graph-nav" data-node-status='{{ node_status | tojson }}'>
-        {{ svg | safe }}
+<body class="report-index" data-total-nodes="{{ total_n_nodes }}">
+    <header class="report-header">
+        <h2 class="report-title">{{ report_title if report_title else "DataOp report" }}</h2>
+        <button type="button" class="header-button" id="toggle-nav"
+            aria-expanded="true" disabled>Hide graph</button>
+    </header>
+    <div class="data_op-node-wrapper">
+        <div class="data_op-node">
+            {# Graph on the left, drawer on the right (see data_ops-report.js). #}
+            <nav id="graph-panel" class="main-nav" data-is-open>
+                <p class="graph-hint"><strong>Click a node</strong> to display its details.</p>
+                <div id="graph-nav">
+                    {{ graph_html | safe }}
+                </div>
+            </nav>
+            {#
+              The drawer displays the details of the selected node, or a source
+              code file linked from the node page; the "Back to node details"
+              button returns from source code to the node details. Both pages
+              are kept in the drawer, one on top of the other (see data-mode in
+              data_ops.css and data_ops-report.js).
+            #}
+            <div id="drawer" class="drawer" data-mode="node">
+                <div class="drawer-toolbar">
+                    <button type="button" id="close-drawer">Close</button>
+                    <button type="button" id="back-to-node">Back to node details</button>
+                </div>
+                <div class="drawer-body">
+                    <iframe id="node-frame" title="Details of the selected node"></iframe>
+                    <iframe id="source-frame" title="Source code"></iframe>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 <script>

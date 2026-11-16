@@ -1,4 +1,5 @@
 import datetime
+import doctest
 import inspect
 from types import SimpleNamespace
 
@@ -37,6 +38,28 @@ def _example_data_dict():
 # this is needed to ignore the skrub/_docs folder when running pytest
 # otherwise, the examples in the folder are executed any time test discovery is run
 collect_ignore_glob = ["_docs/**/*.py"]
+
+
+# Classes decorated with ``@set_module("skrub")`` have their ``__module__``
+# rewritten, which makes ``doctest`` skip their docstrings (and those of their
+# methods) when scanning the module where they are defined. ``set_module``
+# saves the original module in ``__skrub_defining_module__``; use it to collect
+# those doctests from their defining module.
+_orig_from_module = doctest.DocTestFinder._from_module
+
+
+def _from_module(self, module, obj):
+    if module is None:
+        return True
+    # Read from the class's __dict__, not getattr so that it is only taken into
+    # account for the class decorated with set_module and not its subclasses
+    defining_module = getattr(obj, "__dict__", {}).get("__skrub_defining_module__")
+    if defining_module is not None:
+        return defining_module == module.__name__
+    return _orig_from_module(self, module, obj)
+
+
+doctest.DocTestFinder._from_module = _from_module
 
 
 _DATAFRAME_MODULES_INFO = {}
@@ -256,12 +279,13 @@ BASE_CONFIG = get_config()
 
 
 @pytest.fixture(autouse=True)
-def reset_config_to_base():
+def reset_config_to_base(monkeypatch):
     """Autouse fixture that resets config to base_config before each test.
 
     This ensures that tests run in isolation, don't affect each other's
     configuration state, and clean up after themselves.
     """
+    monkeypatch.delenv("SKB_NO_GRAPHVIZ", raising=False)
     set_config(**BASE_CONFIG)
     yield
     # Also reset after the test to ensure clean state for next test

@@ -1,4 +1,5 @@
 import enum
+import os
 import re
 import shutil
 import time
@@ -10,9 +11,16 @@ import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
-X_NAME = "_skrub_X"
-Y_NAME = "_skrub_y"
-IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
+ESTIMATOR_METHODS = ["fit", "fit_transform", *FITTED_ESTIMATOR_METHODS]
+X_NAME = "skrub.X"
+Y_NAME = "skrub.y"
+IS_PREVIEW_DATA_ENV_NAME = "skrub.is_preview_data_env"
+IGNORE_EXTRA_KEYS_NAME = "skrub.ignore_extra_keys"
+USE_VAR_VALUES_NAME = "skrub.use_var_values"
+PREDICTIONS_NAME = "skrub.predictions"
+SHOULD_SUBSAMPLE_NAME = "skrub.should_subsample"
+# All the special keys above start with this prefix.
+SPECIAL_KEY_PREFIX = "skrub."
 
 
 class Sentinels(enum.Enum):
@@ -30,6 +38,16 @@ NULL = Sentinels.NULL
 OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
+def check_if_reserved_name(name):
+    if not isinstance(name, str):
+        return
+    if name.startswith(("_skrub", "skrub")):
+        raise ValueError(
+            "names starting with 'skrub' or '_skrub' "
+            f"are reserved for skrub use, got: {name!r}."
+        )
+
+
 def simple_repr(data_op):
     return repr(data_op).splitlines()[0].removeprefix("<").removesuffix(">")
 
@@ -38,7 +56,7 @@ def attribute_error(obj, name, comment=None):
     msg = f"{obj.__class__.__name__!r} object has no attribute {name!r}"
     if comment:
         msg = f"{msg}.\n{comment}"
-    raise AttributeError(msg)
+    raise AttributeError(msg) from None
 
 
 class _CloudPickle:
@@ -124,30 +142,12 @@ def unique_renaming():
     return rename
 
 
-def graphviz_error_message(html=False):
-    if html:
-        return """\
-To display the DataOp graph, please install Pydot and Graphviz
-and make sure the dot command is in your <code>$PATH</code>.<br/>
-You may also need to run <code>dot -c</code> in bash or powershell
-to rebuild the plugin cache of Graphviz.<br/>
-Graphviz must be installed using your system's
-package manager rather than pip.<br/>
-<a href="https://pypi.org/project/pydot/">Pydot documentation</a><br/>
-<a href="https://graphviz.org/download/">Graphviz installation instructions</a><br/>
-"""
-    else:
-        return """\
-To display the DataOp graph,
-please install Pydot and Graphviz and make sure the 'dot' command is in your $PATH.
-You may also need to run 'dot -c' in bash or powershell
-to rebuild the plugin cache of Graphviz.
-Graphviz must be installed using your system's package manager rather than pip.
-https://pypi.org/project/pydot/
-https://graphviz.org/download/"""
-
-
 def has_graphviz():
+    # (possibly temporary)
+    # Give beta-testers / maintainers an easy way to have skrub behave as
+    # if graphviz was not installed by defining an env variable.
+    if os.environ.get("SKB_NO_GRAPHVIZ") is not None:
+        return False
     try:
         import pydot
 
@@ -162,4 +162,13 @@ def has_graphviz():
 def check_graphviz():
     if has_graphviz():
         return
-    raise RuntimeError(graphviz_error_message())
+    raise RuntimeError(
+        """To render the DataOp graph, please install Graphviz and make sure
+the 'dot' command is in your $PATH.
+Graphviz must be installed using your system's package manager rather than pip,
+for example 'brew install graphviz', 'apt install graphviz' or
+'conda install graphviz'.
+On macOS you may also need to run 'dot -c' to rebuild the plugin cache of Graphviz.
+https://graphviz.org/download/
+"""
+    )
