@@ -22,7 +22,9 @@ def create_credit_fraud_report():
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )
-    if (output_dir / "index.html").exists():
+    if (output_dir / "index.html").exists() and (
+        output_dir / "credit_fraud_graph.svg"
+    ).exists():
         return output_dir
 
     doc_dir = Path(__file__).parent
