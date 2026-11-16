@@ -331,3 +331,49 @@ def test_non_supported_init(generate_data):
         ),
     ):
         gap_encoder.fit(X)
+
+
+def test_transform_does_not_change_fitted_state(df_module):
+    s = df_module.make_column("s", ["paris", "london", "berlin", "pqris", None] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(s)
+    fitted_H = {
+        string: activations.copy() for string, activations in enc.H_dict_.items()
+    }
+    names = enc.get_feature_names_out()
+    enc.transform(df_module.make_column("s", ["madrid", "paris", None, "rome"]))
+    assert enc.H_dict_.keys() == fitted_H.keys()
+    for string, activations in fitted_H.items():
+        assert_array_equal(enc.H_dict_[string], activations)
+    assert enc.get_feature_names_out() == names
+
+
+def test_feature_names_computed_once_per_fitted_state(df_module, monkeypatch):
+    calls = []
+    compute = GapEncoder._compute_feature_names_out
+
+    def counting_compute(self, n_labels):
+        calls.append(n_labels)
+        return compute(self, n_labels)
+
+    monkeypatch.setattr(GapEncoder, "_compute_feature_names_out", counting_compute)
+    s = df_module.make_column("s", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(s)
+    assert calls == [3]
+    enc.transform(s)
+    enc.transform(s)
+    assert calls == [3]
+    enc.get_feature_names_out(n_labels=1)
+    assert calls == [3, 1]
+    # partial_fit changes the topics, so the names are computed again
+    enc.partial_fit(s)
+    enc.transform(s)
+    assert calls == [3, 1, 3]
+
+
+def test_transform_without_feature_names_cache(df_module):
+    # Encoders pickled before the feature names were cached have no cache
+    s = df_module.make_column("s", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(s)
+    expected = enc.transform(s)
+    del enc._feature_names_out_cache
+    df_module.assert_frame_equal(enc.transform(s), expected)

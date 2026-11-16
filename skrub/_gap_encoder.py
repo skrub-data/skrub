@@ -4,8 +4,6 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 
 from __future__ import annotations
 
-from copy import deepcopy
-
 import numpy as np
 import scipy.sparse as sp
 from scipy import sparse
@@ -524,6 +522,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
+        # Compute the feature names now, so that a pickled encoder carries them
+        self._feature_names_out_cache = {}
+        self.get_feature_names_out()
         return self
 
     def get_feature_names_out(self, input_features=None, n_labels=3):
@@ -546,6 +547,17 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             The labels that best describe each topic.
         """
         check_is_fitted(self, "H_dict_")
+        # The labels only depend on the fitted state, and computing them encodes
+        # every word seen during fit, so they are computed once per fitted state.
+        # transform() calls this on every call: without the cache, encoding a
+        # single row costs as much as encoding the whole training vocabulary.
+        # Encoders pickled before the cache existed fill it on first use.
+        cache = self.__dict__.setdefault("_feature_names_out_cache", {})
+        if n_labels not in cache:
+            cache[n_labels] = self._compute_feature_names_out(n_labels)
+        return list(cache[n_labels])
+
+    def _compute_feature_names_out(self, n_labels):
         vectorizer = CountVectorizer()
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
@@ -597,8 +609,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             unq_V2 = self.word_count_.transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format="csr")
 
-        self._add_unseen_keys_to_H_dict(unq_X)
-        unq_H = self._get_H(unq_X)
+        unq_H = self._initial_H(unq_X, unq_V)
         # Given the learnt topics W, optimize the activations H to fit V = HW
         for slice in gen_batches(n=unq_H.shape[0], batch_size=self.batch_size):
             unq_H[slice] = _multiplicative_update_h(
@@ -703,23 +714,34 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         if not hasattr(self, "scaling_factor_"):
             self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
+        # The topics changed: the feature names are recomputed on next use
+        self._feature_names_out_cache = {}
         return self
 
-    def _add_unseen_keys_to_H_dict(self, X):
+    def _initial_H(self, unq_X, unq_V):
         """
-        Add activations of unseen string categories from `X` to `H_dict`.
-        """
-        unseen_X = np.setdiff1d(X, np.array([*self.H_dict_]))
-        if unseen_X.size > 0:
-            unseen_V = self.ngrams_count_.transform(unseen_X)
-            if self.add_words:
-                unseen_V2 = self.word_count_.transform(unseen_X)
-                unseen_V = sparse.hstack((unseen_V, unseen_V2), format="csr")
+        Starting activations for the unique strings `unq_X`, whose n-gram
+        counts are `unq_V`: the learned activations for the strings seen during
+        fit, the rescaled uniform activations for the others.
 
-            unseen_H = _rescale_h(
-                unseen_V, np.ones((unseen_V.shape[0], self.n_components))
+        This reads `H_dict_` and never modifies it, so its cost depends on the
+        number of strings to encode, not on the number of strings seen in fit.
+        """
+        H = np.empty((len(unq_X), self.n_components))
+        unseen = np.zeros(len(unq_X), dtype=bool)
+        for position, string in enumerate(unq_X):
+            activations = self.H_dict_.get(string)
+            if activations is None:
+                unseen[position] = True
+            else:
+                H[position] = activations
+        unseen_positions = np.flatnonzero(unseen)
+        if unseen_positions.size > 0:
+            H[unseen_positions] = _rescale_h(
+                unq_V[unseen_positions],
+                np.ones((unseen_positions.size, self.n_components)),
             )
-            self.H_dict_.update(zip(unseen_X, unseen_H))
+        return H
 
     def transform(self, X):
         """Return the encoded vectors (activations) `H` of input strings in `X`.
@@ -751,17 +773,13 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         raise err_type(f"Column {sbd.name(X)!r} does not contain strings.")
 
     def _transform(self, X, is_null):
-        # Copy the state of H before continuing fitting it
-        pre_trans_H_dict_ = deepcopy(self.H_dict_)
-        unq_X, _ = unique_strings(X, is_null)
+        unq_X, lookup = unique_strings(X, is_null)
         # Build the n-grams counts matrix V for the string data to encode
         unq_V = self.ngrams_count_.transform(unq_X)
         if self.add_words:  # Add words counts
             unq_V2 = self.word_count_.transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format="csr")
-        # Add unseen strings in X to H_dict
-        self._add_unseen_keys_to_H_dict(unq_X)
-        unq_H = self._get_H(unq_X)
+        unq_H = self._initial_H(unq_X, unq_V)
         # Loop over batches
         for slc in gen_batches(n=unq_H.shape[0], batch_size=self.batch_size):
             # Given the learnt topics W, optimize H to fit V = HW
@@ -775,12 +793,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 gamma_shape_prior=self.gamma_shape_prior,
                 gamma_scale_prior=self.gamma_scale_prior,
             )
-        # Store and return the encoded vectors of X
-        self.H_dict_.update(zip(unq_X, unq_H))
-        result = self._get_H(X)
-        # Restore H
-        self.H_dict_ = pre_trans_H_dict_
-        return result
+        # Return the encoded vectors of X; nulls map to the empty string
+        return unq_H[lookup]
 
 
 def _rescale_W(W, A):
@@ -866,19 +880,26 @@ def _multiplicative_update_h(
     """
     Multiplicative update step for the activations `H`.
     """
+    # Only the columns of W for the n-grams present in a row are used, so W is
+    # sliced per row and never divided or copied as a whole: that would cost
+    # n_components * n_vocab on every call, whatever the number of rows.
     if rescale_W:
         WT1 = 1 + 1 / gamma_scale_prior
-        W_WT1 = W / WT1
+        const = (gamma_shape_prior - 1) / WT1
     else:
-        WT1 = np.sum(W, axis=1) + 1 / gamma_scale_prior
-        W_WT1 = W / WT1.reshape(-1, 1)
-    const = (gamma_shape_prior - 1) / WT1
+        topic_sums = np.sum(W, axis=1) + 1 / gamma_scale_prior
+        const = (gamma_shape_prior - 1) / topic_sums
+        WT1 = topic_sums.reshape(-1, 1)
     squared_epsilon = epsilon**2
-    for vt, ht in zip(Vt, Ht):
-        vt_ = vt.data
-        idx = vt.indices
-        W_WT1_ = W_WT1[:, idx]
+    Vt = sp.csr_matrix(Vt)
+    for row, ht in enumerate(Ht):
+        # Read the row straight from the CSR buffers, rather than building a
+        # 1-row sparse matrix per row
+        row_slice = slice(Vt.indptr[row], Vt.indptr[row + 1])
+        vt_ = Vt.data[row_slice]
+        idx = Vt.indices[row_slice]
         W_ = W[:, idx]
+        W_WT1_ = W_ / WT1
         squared_norm = 1
         for _ in range(max_iter):
             if squared_norm <= squared_epsilon:
