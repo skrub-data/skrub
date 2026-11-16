@@ -113,11 +113,15 @@ class LLMEncoder(SingleColumnTransformer):
           the serialized object. Users deploying fine-tuned models stored on
           disk are recommended to use this option. Note that the machine
           where the ``LLMEncoder`` is unpickled must have the same device than
-          the machine where it was pickled. Note also that if a model with the
-          same ``model_name`` and ``device`` is already loaded in the process
-          where the ``LLMEncoder`` is unpickled, that model is used instead of
-          the pickled weights. This may relevant in case fine-tuning is performed
-          on the model.
+          the machine where it was pickled.
+
+        Note that if a model with the
+        same ``model_name`` and ``device`` is already loaded in the process
+        where the ``LLMEncoder`` is unpickled, that model is used instead of
+        the pickled weights. This means that if a fine-tuned model is unpickled
+        under (model_name, device), a new LLMEncoder instance with the same name
+        would load the fine-tuned model instead of the pre-trained one, which
+        may not be what you want.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
@@ -371,8 +375,6 @@ class LLMEncoder(SingleColumnTransformer):
         # Note that if a thread forks while another thread is holding the lock,
         # then this would cause a deadlock. For simplicity, we ignore this case.
         with _MODELS_LOCK:
-            # Keep a strong reference while the lock is held, otherwise the
-            # model could be garbage-collected between the lookup and the return.
             shared = _MODELS.get(key)
             if shared is None:
                 shared = self._load_estimator() if estimator is None else estimator
