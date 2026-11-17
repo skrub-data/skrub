@@ -75,4 +75,3 @@ def create_report(output_dir):
 
     graph = pred.skb.draw_graph()
     (output_dir / "credit_fraud_graph.svg").write_bytes(graph.svg)
-    (output_dir / "credit_fraud_graph.png").write_bytes(graph.png)
