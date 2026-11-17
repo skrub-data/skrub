@@ -50,8 +50,10 @@ _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
 sys.path.append(os.path.relpath("."))
 from data_ops_report import create_data_ops_report
 from table_report import generate_demo
+from tabular_pipeline_demo import generate_demo as generate_tabular_pipeline_demo
 
 generate_demo()
+generate_tabular_pipeline_demo()
 
 # Generate the HTML snippets for the DataOps demo on the homepage:
 if not os.path.exists("generated_for_index/code_block_2.html"):
