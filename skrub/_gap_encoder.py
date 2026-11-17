@@ -120,7 +120,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         Effective update rate for the `W` matrix.
     all_outputs_ : list of str
         The names of the output columns of ``transform``: for each topic, the
-        labels that best describe it. Computed by ``fit``.
+        labels that best describe it. Computed by ``fit``. ``partial_fit``
+        removes it, as it changes the topics, and encoders pickled with an
+        earlier version of skrub do not have it: ``transform`` then computes the
+        names on every call, which costs as much as encoding every word seen
+        during training. ``enc.all_outputs_ = enc.get_feature_names_out()``
+        computes them once.
     fitted_models_ : list of GapEncoderColumn
         Column-wise fitted GapEncoders.
     column_names_ : list of str

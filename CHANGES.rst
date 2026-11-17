@@ -132,7 +132,10 @@ Bugfixes
   ``fit``, and stored in the new ``all_outputs_`` attribute, and the activations
   of the strings to encode are initialized without scanning or copying the
   fitted state. Encoding one row with an encoder fitted on 200,000 strings goes
-  from minutes to milliseconds, with identical outputs. Calling ``score`` no
+  from minutes to milliseconds, with identical outputs. After ``partial_fit``,
+  and for encoders pickled with an earlier version, the names are computed on
+  every call until ``all_outputs_`` is set again, for instance with
+  ``enc.all_outputs_ = enc.get_feature_names_out()``. Calling ``score`` no
   longer changes the feature names.
   :pr:`2433` by :user:`Pierre Houssin <TTRh>`.
 
