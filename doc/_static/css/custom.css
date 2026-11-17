@@ -184,8 +184,9 @@ div.feature-img {
 /* For the pipeline svg */
 div.pipeline-img {
     transform: scale(0.8);
-    transform-origin: left top;
-    height: 283pt
+    transform-origin: center top;
+    text-align: center;
+    height: 263pt
 }
 
 div.pipeline-img svg > g > polygon {

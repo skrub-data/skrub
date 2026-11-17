@@ -139,7 +139,7 @@ fa-caret-down visible-small-screen"></i></p>
   <!-- Feature Section 4 -->
   <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Custom stateful pipelines</h4>
+      <h4 class="feature-title">Build custom stateful pipelines</h4>
       <ul class="feature-text">
         <li>Define a pipeline that transforms any data, from loading to the
           final predictor.
@@ -147,14 +147,9 @@ fa-caret-down visible-small-screen"></i></p>
             <li>No restrictions on input data types: dataframes (with
               <a class="reference internal"
               href="{{ pathto('column_level_featurizing') }}">dedicated
-              transformers</a>), images (see this
+              transformers</a>),
               <a class="reference internal"
-              href="{{ pathto('auto_examples/02_data_ops/1160_pytorch') }}">PyTorch
-              example</a>), or anything else (see
-              <a class="reference internal"
-              href="{{ pathto('modules/data_ops/basics/control_flow') }}">control
-              flow in DataOps</a>).</li>
-            <li>Apply different transformers to different columns with
+              href="{{ pathto('auto_examples/02_data_ops/1160_pytorch') }}">images</a>, or anything else. Apply different transformers to specific columns with
               <a class="reference internal"
               href="reference/generated/skrub.DataOp.skb.apply.html"><code>.skb.apply</code></a>
               and
@@ -184,7 +179,7 @@ fa-caret-down visible-small-screen"></i></p>
       <div class="pipeline-img">
         {% include "../_build/html/_static/credit_fraud_report/credit_fraud_graph.svg" %}
       </div>
-      <p class="text-center mt-3 mb-0">
+      <p class="text-center mt-0 mb-0">
         <a href="_static/credit_fraud_report/index.html">Open an interactive report →</a>
       </p>
     </div>
@@ -208,13 +203,13 @@ fa-caret-down visible-small-screen"></i></p>
               the
               <a class="reference internal"
               href="{{ pathto('modules/data_ops/validation/hyperparameter_tuning') }}"><code>choose_*</code>
-              functions</a> to build an extensive hyperparameter grid with no
+              functions</a> to build extensive hyperparameter grid with no
               effort.</li>
+            <li>Explore the hyperparameter space with scikit-learn or
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/tuning_with_optuna') }}">Optuna</a>.</li>
           </ul>
         </li>
-        <li>Explore the hyperparameter space with scikit-learn or
-          <a class="reference internal"
-          href="{{ pathto('modules/data_ops/validation/tuning_with_optuna') }}">Optuna</a>.</li>
       </ul>
       <p class="feature-text-see-also">
         <a href="{{ pathto('modules/data_ops/validation/tuning_validating_data_ops') }}">Tune and validate your pipelines →</a>
