@@ -244,6 +244,8 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
+    if "add_holidays" in params:
+        pytest.importorskip("holidays")
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.extracted_features_ == [f"{f}" for f in extracted_features]
@@ -355,6 +357,8 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
     ],
 )
 def test_all_outputs_choice(datetime_cols, params, all_outputs):
+    if "add_holidays" in params:
+        pytest.importorskip("holidays")
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
@@ -405,6 +409,7 @@ def test_reject_non_datetime(df_module):
 
 
 def test_invalid_holidays_country(datetime_cols):
+    pytest.importorskip("holidays")
     with pytest.raises(ValueError, match="Unknown country: ZZ for holidays.*"):
         DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
 
