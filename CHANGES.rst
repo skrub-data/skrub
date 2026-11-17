@@ -129,11 +129,11 @@ Bugfixes
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
 - :class:`GapEncoder` no longer redoes work proportional to its training set on
   every ``transform`` call: the feature names are now computed once, during
-  ``fit``, instead of on every call, and the activations of the strings to
-  encode are initialized without scanning or copying the fitted state. Encoding
-  one row with an encoder fitted on 200,000 strings goes from minutes to
-  milliseconds, with identical outputs. Calling ``score`` no longer changes the
-  feature names.
+  ``fit``, and stored in the new ``all_outputs_`` attribute, and the activations
+  of the strings to encode are initialized without scanning or copying the
+  fitted state. Encoding one row with an encoder fitted on 200,000 strings goes
+  from minutes to milliseconds, with identical outputs. Calling ``score`` no
+  longer changes the feature names.
   :pr:`2433` by :user:`Pierre Houssin <TTRh>`.
 
 Deprecations

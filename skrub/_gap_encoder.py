@@ -118,6 +118,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     ----------
     rho_ : float
         Effective update rate for the `W` matrix.
+    all_outputs_ : list of str
+        The names of the output columns of ``transform``: for each topic, the
+        labels that best describe it. Computed by ``fit``.
     fitted_models_ : list of GapEncoderColumn
         Column-wise fitted GapEncoders.
     column_names_ : list of str
@@ -522,14 +525,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
-        # Compute the feature names now, so that a pickled encoder carries them.
+        # transform names its output columns on every call, and computing the
+        # names encodes every word seen during fit, so fit computes them once.
         # When the column has nothing to build them from, the error is raised
-        # when they are first needed, as it was before they were cached.
-        self._feature_names_out_cache = {}
+        # when they are first needed, as before.
         try:
-            self.get_feature_names_out()
+            self.all_outputs_ = self._compute_feature_names_out(n_labels=3)
         except ValueError:
-            pass
+            vars(self).pop("all_outputs_", None)
         return self
 
     def get_feature_names_out(self, input_features=None, n_labels=3):
@@ -552,24 +555,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             The labels that best describe each topic.
         """
         check_is_fitted(self, "H_dict_")
-        # Computing the labels encodes every word seen during fit, and
-        # transform() calls this on every call: without the cache, encoding a
-        # single row costs as much as encoding the whole training vocabulary.
-        # The labels depend on the fitted state, which fit and partial_fit reset
-        # the cache for, and on the parameters _transform reads at call time,
-        # which are part of the key. Encoders pickled before the cache existed
-        # fill it on first use.
-        cache = self.__dict__.setdefault("_feature_names_out_cache", {})
-        key = (
-            n_labels,
-            self.add_words,
-            self.rescale_W,
-            self.gamma_shape_prior,
-            self.gamma_scale_prior,
-        )
-        if key not in cache:
-            cache[key] = self._compute_feature_names_out(n_labels)
-        return list(cache[key])
+        # The default labels are the output column names, which fit stores in
+        # all_outputs_. They are computed on demand for another n_labels, after
+        # partial_fit, and for encoders pickled before all_outputs_ existed.
+        if n_labels == 3 and hasattr(self, "all_outputs_"):
+            return self.all_outputs_
+        return self._compute_feature_names_out(n_labels)
 
     def _compute_feature_names_out(self, n_labels):
         vectorizer = CountVectorizer()
@@ -728,8 +719,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         if not hasattr(self, "scaling_factor_"):
             self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
-        # The topics changed: the feature names are recomputed on next use
-        self._feature_names_out_cache = {}
+        # The topics changed, so the names computed by fit no longer apply. They
+        # are computed when needed until the next fit: computing them here would
+        # encode every word seen so far on every call.
+        vars(self).pop("all_outputs_", None)
         return self
 
     def _initial_H(self, unq_X, unq_V):

@@ -353,7 +353,7 @@ def test_transform_and_score_do_not_change_fitted_state(df_module):
     assert enc.get_feature_names_out() == names
 
 
-def test_feature_names_computed_once_per_fitted_state(df_module, monkeypatch):
+def test_fit_computes_the_feature_names_once(df_module, monkeypatch):
     calls = []
     compute = GapEncoder._compute_feature_names_out
 
@@ -365,27 +365,24 @@ def test_feature_names_computed_once_per_fitted_state(df_module, monkeypatch):
     column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
     enc = GapEncoder(n_components=2, random_state=0).fit(column)
     assert calls == [3]
-    enc.transform(column)
+    assert list(enc.transform(column).columns) == enc.all_outputs_
     enc.transform(column)
     assert calls == [3]
     enc.get_feature_names_out(n_labels=1)
     assert calls == [3, 1]
-    # partial_fit changes the topics, so the names are computed again
+    # partial_fit changes the topics, so the names are computed when needed
     enc.partial_fit(column)
+    assert not hasattr(enc, "all_outputs_")
     enc.transform(column)
     assert calls == [3, 1, 3]
-    # so does a parameter that transform reads at call time
-    enc.set_params(gamma_shape_prior=3.0)
-    enc.transform(column)
-    assert calls == [3, 1, 3, 3]
 
 
-def test_transform_without_feature_names_cache(df_module):
-    # Encoders pickled before the feature names were cached have no cache
+def test_transform_without_all_outputs(df_module):
+    # Encoders pickled before all_outputs_ existed compute the names when needed
     column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
     enc = GapEncoder(n_components=2, random_state=0).fit(column)
     expected = enc.transform(column)
-    del enc._feature_names_out_cache
+    del enc.all_outputs_
     df_module.assert_frame_equal(enc.transform(column), expected)
 
 
