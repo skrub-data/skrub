@@ -522,9 +522,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
-        # Compute the feature names now, so that a pickled encoder carries them
+        # Compute the feature names now, so that a pickled encoder carries them.
+        # When the column has nothing to build them from, the error is raised
+        # when they are first needed, as it was before they were cached.
         self._feature_names_out_cache = {}
-        self.get_feature_names_out()
+        try:
+            self.get_feature_names_out()
+        except ValueError:
+            pass
         return self
 
     def get_feature_names_out(self, input_features=None, n_labels=3):
@@ -547,15 +552,18 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             The labels that best describe each topic.
         """
         check_is_fitted(self, "H_dict_")
-        # The labels only depend on the fitted state, and computing them encodes
-        # every word seen during fit, so they are computed once per fitted state.
+        # Computing the labels encodes every word seen during fit, and
         # transform() calls this on every call: without the cache, encoding a
         # single row costs as much as encoding the whole training vocabulary.
-        # Encoders pickled before the cache existed fill it on first use.
+        # The labels depend on the fitted state, which fit and partial_fit reset
+        # the cache for, and on the parameters _transform reads at call time,
+        # which are part of the key. Encoders pickled before the cache existed
+        # fill it on first use.
         cache = self.__dict__.setdefault("_feature_names_out_cache", {})
-        if n_labels not in cache:
-            cache[n_labels] = self._compute_feature_names_out(n_labels)
-        return list(cache[n_labels])
+        key = (n_labels, self.rescale_W, self.gamma_shape_prior, self.gamma_scale_prior)
+        if key not in cache:
+            cache[key] = self._compute_feature_names_out(n_labels)
+        return list(cache[key])
 
     def _compute_feature_names_out(self, n_labels):
         vectorizer = CountVectorizer()
@@ -727,21 +735,21 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         This reads `H_dict_` and never modifies it, so its cost depends on the
         number of strings to encode, not on the number of strings seen in fit.
         """
-        H = np.empty((len(unq_X), self.n_components))
+        initial_activations = np.empty((len(unq_X), self.n_components))
         unseen = np.zeros(len(unq_X), dtype=bool)
         for position, string in enumerate(unq_X):
-            activations = self.H_dict_.get(string)
-            if activations is None:
+            learned = self.H_dict_.get(string)
+            if learned is None:
                 unseen[position] = True
             else:
-                H[position] = activations
+                initial_activations[position] = learned
         unseen_positions = np.flatnonzero(unseen)
         if unseen_positions.size > 0:
-            H[unseen_positions] = _rescale_h(
+            initial_activations[unseen_positions] = _rescale_h(
                 unq_V[unseen_positions],
                 np.ones((unseen_positions.size, self.n_components)),
             )
-        return H
+        return initial_activations
 
     def transform(self, X):
         """Return the encoded vectors (activations) `H` of input strings in `X`.
@@ -881,8 +889,9 @@ def _multiplicative_update_h(
     Multiplicative update step for the activations `H`.
     """
     # Only the columns of W for the n-grams present in a row are used, so W is
-    # sliced per row and never divided or copied as a whole: that would cost
-    # n_components * n_vocab on every call, whatever the number of rows.
+    # sliced per row rather than divided or copied as a whole, which would cost
+    # n_components * n_vocab on every call whatever the number of rows. With
+    # rescale_W=False, the topic sums still read the whole of W once per call.
     if rescale_W:
         WT1 = 1 + 1 / gamma_scale_prior
         const = (gamma_shape_prior - 1) / WT1
