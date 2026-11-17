@@ -560,7 +560,13 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # which are part of the key. Encoders pickled before the cache existed
         # fill it on first use.
         cache = self.__dict__.setdefault("_feature_names_out_cache", {})
-        key = (n_labels, self.rescale_W, self.gamma_shape_prior, self.gamma_scale_prior)
+        key = (
+            n_labels,
+            self.add_words,
+            self.rescale_W,
+            self.gamma_shape_prior,
+            self.gamma_scale_prior,
+        )
         if key not in cache:
             cache[key] = self._compute_feature_names_out(n_labels)
         return list(cache[key])

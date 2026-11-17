@@ -431,14 +431,18 @@ def _update_h_with_whole_topics(
 
 
 @pytest.mark.parametrize("rescale_W", [True, False])
-def test_update_h_matches_whole_topics_formula(rescale_W):
+@pytest.mark.parametrize("shape_prior, scale_prior", [(1.1, 1.0), (1.3, 0.7)])
+def test_update_h_matches_whole_topics_formula(rescale_W, shape_prior, scale_prior):
+    # The second priors make every divisor inexact in floating point, so that
+    # changing where the topics are scaled would change the results
     rng = np.random.default_rng(0)
-    counts = sp.csr_matrix(rng.poisson(0.2, size=(40, 120)).astype(np.float64))
+    dense_counts = rng.poisson(0.2, size=(40, 120)).astype(np.float64)
+    dense_counts[0] = 0  # a string without any n-gram
+    counts = sp.csr_matrix(dense_counts)
     topics = rng.random((5, 120))
-    topics /= topics.sum(axis=1, keepdims=True)
     initial = rng.random((40, 5)) + 0.1
     expected = _update_h_with_whole_topics(
-        counts, topics, initial.copy(), 1e-3, 100, rescale_W, 1.1, 1.0
+        counts, topics, initial.copy(), 1e-3, 100, rescale_W, shape_prior, scale_prior
     )
     result = _multiplicative_update_h(
         counts,
@@ -447,7 +451,7 @@ def test_update_h_matches_whole_topics_formula(rescale_W):
         epsilon=1e-3,
         max_iter=100,
         rescale_W=rescale_W,
-        gamma_shape_prior=1.1,
-        gamma_scale_prior=1.0,
+        gamma_shape_prior=shape_prior,
+        gamma_scale_prior=scale_prior,
     )
     assert_array_equal(result, expected)
