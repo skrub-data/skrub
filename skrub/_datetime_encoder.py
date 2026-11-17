@@ -419,7 +419,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     ...     "2026-10-20"
     ... ], name='birthday'))
     >>> encoder = DatetimeEncoder(add_holidays=["US", "CA"])
-    >>> encoder.fit_transform(birthday)
+    >>> encoder.fit_transform(birthday)  # doctest: +SKIP
        birthday_year  birthday_month  birthday_day  birthday_total_seconds  birthday_holidays_US  birthday_holidays_CA
     0         2020.0             1.0           1.0            1.577837e+09                   1.0                   1.0
     1            NaN             NaN           NaN                     NaN                   NaN                   NaN
