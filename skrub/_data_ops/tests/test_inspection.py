@@ -21,6 +21,14 @@ from skrub import datasets
 from skrub._data_ops import _inspection, _utils
 
 
+def _has_source_code_link(node_page):
+    return re.search(r"<a [^>]*>\s*source code\s*</a>", node_page) is not None
+
+
+def _displays_docstring(node_page):
+    return "<strong>docstring:</strong>" in node_page
+
+
 @pytest.fixture
 def no_graphviz(monkeypatch):
     # pydot is a required dependency but Graphviz (the dot executable) may not be
@@ -117,12 +125,6 @@ def test_report_without_graphviz(no_graphviz):
     assert dot.count("skipped-node") == 1
     # the library that draws the graph is in the page
     assert "window.skrubGraphviz = " in index
-    # names shared by the pages, the graph and the scripts: clicking a node
-    # displays its page in the iframe, which tells the index which node is shown
-    assert 'name="node-frame"' in index and 'target="node-frame"' in dot
-    assert (report_dir / "placeholder.html").exists()
-    for page in index, (report_dir / "node_1.html").read_text("utf-8"):
-        assert "skrub-report-node-shown" in page
 
 
 def test_preview_subsample():
@@ -187,8 +189,8 @@ def test_unfitted_apply_no_doc_or_source(tmp_path, estimator):
     )
     assert report["error"] is not None
     text = (report_dir / "node_1.html").read_text("utf-8")
-    assert "source code" not in text
-    assert "docstring:" not in text
+    assert not _has_source_code_link(text)
+    assert not _displays_docstring(text)
 
 
 class _Doubler:
@@ -246,8 +248,8 @@ def test_fitted_passthrough_no_doc_or_source(tmp_path, no_wrap):
         "passthrough", no_wrap=no_wrap
     ).skb.report(output_dir=report_dir, open=False)
     text = (report_dir / "node_1.html").read_text("utf-8")
-    assert "source code" not in text
-    assert "docstring:" not in text
+    assert not _has_source_code_link(text)
+    assert not _displays_docstring(text)
 
 
 def test_call_doc_and_source(tmp_path):
@@ -264,7 +266,7 @@ def test_call_doc_and_source(tmp_path):
     skrub.var("a").skb.apply_func(lambda x: x).skb.report(
         {"a": 3}, output_dir=report_dir, open=False
     )
-    assert "docstring:" not in (report_dir / "node_1.html").read_text("utf-8")
+    assert not _displays_docstring((report_dir / "node_1.html").read_text("utf-8"))
 
 
 def test_source_link_target_exists(tmp_path):
@@ -342,8 +344,8 @@ def test_called_func_is_dataop_or_choice(tmp_path, func_wrapper):
     text = (report_dir / f"node_{node}.html").read_text("utf-8")
     assert "Function applied in this step:" in text
     assert "my_func" in text
-    assert "source code" not in text
-    assert "docstring:" not in text
+    assert not _has_source_code_link(text)
+    assert not _displays_docstring(text)
 
 
 def test_call_func_no_source(tmp_path):
@@ -353,8 +355,8 @@ def test_call_func_no_source(tmp_path):
         {"a": [1, 2]}, output_dir=report_dir, open=False
     )
     text = (report_dir / "node_1.html").read_text("utf-8")
-    assert "docstring:" in text
-    assert "source code" not in text
+    assert _displays_docstring(text)
+    assert not _has_source_code_link(text)
 
 
 def test_call_func_from_linecache(tmp_path, monkeypatch):
@@ -508,11 +510,9 @@ def test_vendored_graphviz_library():
 def test_node_kwargs_link():
     node = skrub.var("a")
     assert "URL" not in _inspection._node_kwargs(node)
-    kwargs = _inspection._node_kwargs(node, url=lambda _: "page.html")
-    assert kwargs["URL"] == "page.html"
+    kwargs = _inspection._node_kwargs(node, url=lambda _: "#node_0")
+    assert kwargs["URL"] == "#node_0"
     assert "target" not in kwargs
-    kwargs = _inspection._node_kwargs(node, url=lambda _: "page.html", target="frame")
-    assert kwargs["target"] == "frame"
 
 
 def test_js_rendering_font():

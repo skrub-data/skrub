@@ -11,10 +11,16 @@ import cloudpickle
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
-X_NAME = "_skrub_X"
-Y_NAME = "_skrub_y"
-IS_PREVIEW_DATA_ENV_NAME = "_skrub_is_preview_data_env"
-IGNORE_EXTRA_KEYS_NAME = "_skrub_ignore_extra_keys"
+ESTIMATOR_METHODS = ["fit", "fit_transform", *FITTED_ESTIMATOR_METHODS]
+X_NAME = "skrub.X"
+Y_NAME = "skrub.y"
+IS_PREVIEW_DATA_ENV_NAME = "skrub.is_preview_data_env"
+IGNORE_EXTRA_KEYS_NAME = "skrub.ignore_extra_keys"
+USE_VAR_VALUES_NAME = "skrub.use_var_values"
+PREDICTIONS_NAME = "skrub.predictions"
+SHOULD_SUBSAMPLE_NAME = "skrub.should_subsample"
+# All the special keys above start with this prefix.
+SPECIAL_KEY_PREFIX = "skrub."
 
 
 class Sentinels(enum.Enum):
@@ -32,6 +38,16 @@ NULL = Sentinels.NULL
 OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
+def check_if_reserved_name(name):
+    if not isinstance(name, str):
+        return
+    if name.startswith(("_skrub", "skrub")):
+        raise ValueError(
+            "names starting with 'skrub' or '_skrub' "
+            f"are reserved for skrub use, got: {name!r}."
+        )
+
+
 def simple_repr(data_op):
     return repr(data_op).splitlines()[0].removeprefix("<").removesuffix(">")
 
@@ -40,7 +56,7 @@ def attribute_error(obj, name, comment=None):
     msg = f"{obj.__class__.__name__!r} object has no attribute {name!r}"
     if comment:
         msg = f"{msg}.\n{comment}"
-    raise AttributeError(msg)
+    raise AttributeError(msg) from None
 
 
 class _CloudPickle:

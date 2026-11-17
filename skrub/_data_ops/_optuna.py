@@ -76,19 +76,22 @@ def _process_study_results(study):
     """
     Build the overall search results from the study once optimization is finished.
     """
+    # Trials that were interrupted (RUNNING) or failed before storing their
+    # results have no 'cv_results' attribute; skip them.
+    trials = [t for t in study.trials if "cv_results" in t.user_attrs]
     # Find all keys in the cv_results of all trials. Some trials may have
     # missing keys: when all splits raise an error only the 'params' key will
     # be present.
     all_keys = list(
         dict.fromkeys(
             itertools.chain(
-                *(trial.user_attrs["cv_results"].keys() for trial in study.trials)
+                *(trial.user_attrs["cv_results"].keys() for trial in trials)
             )
         )
     )
     result = {k: [] for k in all_keys}
     # Build the overall cv_results_
-    for trial in study.trials:
+    for trial in trials:
         trial_results = trial.user_attrs["cv_results"]
         for key, values in result.items():
             values.append(trial_results.get(key, None))
@@ -136,6 +139,10 @@ class OptunaParamSearch(_BaseParamSearch):
     Attributes of interest are ``best_learner_``, ``best_score_``,
     ``results_``, ``detailed_results_``, and ``study_`` (the Optuna study used
     to find hyperparameters).
+
+    Its methods accept a dictionary of inputs rather than ``X`` and ``y``. See
+    :meth:`OptunaParamSearch.with_sklearn_interface` to obtain an estimator
+    with the standard scikit-learn interface.
     """
 
     def __init__(

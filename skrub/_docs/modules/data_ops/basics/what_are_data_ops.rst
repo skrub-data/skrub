@@ -32,3 +32,5 @@ as a **learner** with :meth:`~skrub.DataOp.skb.make_learner()`. A learner is a
 special object akin to a scikit-learn estimator, but that takes as input a
 dictionary of variables rather than a single design matrix ``X`` and a target array
 ``y``.
+(When needed, :meth:`SkrubLearner.with_sklearn_interface` turns it into a standard
+scikit-learn estimator with ``fit(X, y)``.)

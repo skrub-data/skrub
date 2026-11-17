@@ -55,7 +55,12 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import IS_PREVIEW_DATA_ENV_NAME, NULL, attribute_error
+from ._utils import (
+    IS_PREVIEW_DATA_ENV_NAME,
+    NULL,
+    USE_VAR_VALUES_NAME,
+    attribute_error,
+)
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -208,7 +213,9 @@ class SkrubNamespace:
         Parameters
         ----------
         estimator : scikit-learn estimator
-            The transformer or predictor to apply.
+            The transformer or predictor to apply. Note this can be an
+            estimator created from another DataOp with
+            ``.skb.make_learner().with_sklearn_interface()``.
 
         y : dataframe, column or numpy array, optional
             The prediction targets when ``estimator`` is a supervised estimator.
@@ -292,6 +299,9 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
+        skrub.SkrubLearner.with_sklearn_interface :
+            Turn a skrub learner into a standard scikit-learn estimator, which
+            can be applied in another DataOp.
         skrub.ApplyToCols :
             Transformer that applies a given estimator to selected columns of a
             dataframe.
@@ -1147,7 +1157,7 @@ class SkrubNamespace:
         else:
             environment = {
                 **environment,
-                "_skrub_use_var_values": not _var_values_provided(
+                USE_VAR_VALUES_NAME: not _var_values_provided(
                     self._data_op, environment
                 ),
             }
@@ -1972,8 +1982,12 @@ class SkrubNamespace:
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
         to some training data and then apply it to unseen data by calling
-        ``transform()`` or ``predict()``. Unlike scikit-learn estimators, skrub
-        learners accept a dictionary of inputs rather than ``X`` and ``y`` arguments.
+        ``transform()`` or ``predict()``.
+
+        Unlike scikit-learn estimators, skrub learners accept a dictionary of
+        inputs rather than ``X`` and ``y`` arguments. To get an estimator with
+        the scikit-learn ``fit(X, y)`` interface, see
+        :meth:`SkrubLearner.with_sklearn_interface`.
 
         .. warning::
 
@@ -2038,6 +2052,16 @@ class SkrubNamespace:
             A skrub learner with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
+
+        See Also
+        --------
+        SkrubLearner.with_sklearn_interface :
+            Wrap a learner in an estimator that has the standard scikit-learn
+            ``fit(X, y)`` interface.
+        DataOp.skb.make_grid_search :
+            Find the best parameters with grid search.
+        DataOp.skb.make_randomized_search :
+            Find the best parameters with randomized search.
 
         Examples
         --------
@@ -2393,7 +2417,8 @@ class SkrubNamespace:
         scikit-learn's :class:`~sklearn.model_selection.GridSearchCV`, where
         the main difference is that ``fit()`` and ``predict()`` accept a
         dictionary of inputs rather than ``X`` and ``y``. The best learner can
-        be returned by calling ``.best_learner_``.
+        be returned by calling ``.best_learner_``. To get the standard
+        ``fit(X, y)`` interface, see :meth:`ParamSearch.with_sklearn_interface`.
 
         Parameters
         ----------
@@ -2427,6 +2452,9 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_randomized_search :
             Find the best parameters with randomized search.
+        skrub.ParamSearch.with_sklearn_interface :
+            Wrap the search in an estimator that has the standard scikit-learn
+            ``fit(X, y)`` interface.
 
         Examples
         --------
@@ -2527,7 +2555,10 @@ class SkrubNamespace:
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
         the main difference is ``fit()`` and ``predict()`` accept a
         dictionary of inputs rather than ``X`` and ``y``. The best learner is stored
-        in the attribute ``.best_learner_``.
+        in the attribute ``.best_learner_``. To get the standard ``fit(X, y)``
+        interface, see :meth:`ParamSearch.with_sklearn_interface` (or
+        :meth:`OptunaParamSearch.with_sklearn_interface` when using
+        ``backend='optuna'``).
 
         Parameters
         ----------
@@ -2667,6 +2698,9 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_grid_search :
             Find the best parameters with grid search.
+        skrub.ParamSearch.with_sklearn_interface :
+            Wrap the search in an estimator that has the standard scikit-learn
+            ``fit(X, y)`` interface.
         skrub.DataOp.skb.make_learner :
             Make a :class:`SkrubLearner` without actually searching for the
             best hyperparameters. The strategy to resolve choices can be use
@@ -3410,7 +3444,7 @@ class SkrubNamespace:
         ----------
         name : str
             The name for this step. Must be unique within a learner. Cannot
-            start with ``"_skrub_"``.
+            start with ``"skrub"`` or ``"_skrub"``.
 
         Returns
         -------

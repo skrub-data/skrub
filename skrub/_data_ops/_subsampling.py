@@ -3,12 +3,10 @@ import numpy as np
 from .. import _dataframe as sbd
 from .._config import get_config
 from . import _data_ops, _evaluation
+from ._utils import SHOULD_SUBSAMPLE_NAME
 
-# The key in the evaluation environment that indicates if subsampling should
-# take place or not. Subsampling can be turned on or off when evaluating a
-# DataOp by setting the corresponding value in the environment.
-
-SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
+# Subsampling can be turned on or off when evaluating a DataOp by setting the
+# `SHOULD_SUBSAMPLE_NAME` key in the evaluation environment.
 
 
 def _should_subsample(mode, environment):
@@ -22,7 +20,7 @@ def _should_subsample(mode, environment):
         return True
     if enable_subsampling == "force":
         return True
-    return environment.get(SHOULD_SUBSAMPLE_KEY, False)
+    return environment.get(SHOULD_SUBSAMPLE_NAME, False)
 
 
 class ShouldSubsample(_data_ops.DataOpImpl):
@@ -125,7 +123,7 @@ def env_with_subsampling(data_op, environment, keep_subsampling):
             " anywhere in the DataOp. Either pass `keep_subsampling=False` (the"
             " default) or configure subsampling with `.skb.subsample()`."
         )
-    return environment | {SHOULD_SUBSAMPLE_KEY: True}
+    return environment | {SHOULD_SUBSAMPLE_NAME: True}
 
 
 def uses_subsampling(data_op):

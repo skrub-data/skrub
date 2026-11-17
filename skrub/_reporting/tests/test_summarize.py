@@ -112,6 +112,20 @@ def test_high_cardinality_column(pd_module):
     assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
 
 
+@pytest.mark.parametrize("ordered", [False, True])
+def test_categorical_with_unobserved_categories(ordered):
+    df = pd.DataFrame(
+        {"city": pd.Categorical(["Paris", "Paris", "Lyon", "Nice"], ordered=ordered)}
+    )
+    df = df[df["city"] == "Paris"]
+    col = summarize_dataframe(df, with_plots=True)["columns"][0]
+    assert col["n_unique"] == 1
+    assert col["unique_proportion"] == 0.5
+    assert col["value_counts"] == [("Paris", 2)]
+    assert col["value_is_constant"]
+    assert col["constant_value"] == "Paris"
+
+
 @skip_polars_installed_without_pyarrow
 def test_all_null(df_module):
     df = df_module.make_dataframe(
