@@ -127,6 +127,13 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`GapEncoder` no longer redoes work proportional to its training set on
+  every ``transform`` call: the feature names are computed once at the end of
+  ``fit`` instead of on every call, and the activations of the strings to encode
+  are initialized without scanning or copying ``H_dict_``. Encoding one row with
+  an encoder fitted on 200,000 strings goes from minutes to milliseconds, with
+  identical outputs. ``score`` no longer adds the scored strings to ``H_dict_``.
+  :pr:`2433` by :user:`Pierre Houssin <TTRh>`.
 
 Deprecations
 ------------
