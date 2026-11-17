@@ -377,6 +377,23 @@ def test_fit_computes_the_feature_names_once(df_module, monkeypatch):
     assert calls == [3, 1, 3]
 
 
+def test_feature_names_are_a_copy(df_module):
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    names = enc.get_feature_names_out()
+    names.reverse()
+    assert list(enc.transform(column).columns) == enc.all_outputs_
+    assert enc.all_outputs_ == names[::-1]
+
+
+def test_failed_refit_drops_the_feature_names(df_module):
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    with pytest.raises(ValueError, match="empty vocabulary"):
+        enc.fit(df_module.make_column("column", ["", "", ""]))
+    assert not hasattr(enc, "all_outputs_")
+
+
 def test_transform_without_all_outputs(df_module):
     # Encoders pickled before all_outputs_ existed compute the names when needed
     column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)

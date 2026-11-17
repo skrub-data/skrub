@@ -457,6 +457,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError(
                 f"n_samples={n_samples} should be >= n_components={self.n_components}. "
             )
+        # The names of a previous fit must not outlive it, even if this one fails
+        if hasattr(self, "all_outputs_"):
+            del self.all_outputs_
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
@@ -532,7 +535,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         try:
             self.all_outputs_ = self._compute_feature_names_out(n_labels=3)
         except ValueError:
-            vars(self).pop("all_outputs_", None)
+            pass
         return self
 
     def get_feature_names_out(self, input_features=None, n_labels=3):
@@ -559,7 +562,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # all_outputs_. They are computed on demand for another n_labels, after
         # partial_fit, and for encoders pickled before all_outputs_ existed.
         if n_labels == 3 and hasattr(self, "all_outputs_"):
-            return self.all_outputs_
+            # a copy, so that editing the returned list cannot rename the
+            # columns of later transform calls
+            return list(self.all_outputs_)
         return self._compute_feature_names_out(n_labels)
 
     def _compute_feature_names_out(self, n_labels):
@@ -722,7 +727,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # The topics changed, so the names computed by fit no longer apply. They
         # are computed when needed until the next fit: computing them here would
         # encode every word seen so far on every call.
-        vars(self).pop("all_outputs_", None)
+        if hasattr(self, "all_outputs_"):
+            del self.all_outputs_
         return self
 
     def _initial_H(self, unq_X, unq_V):
