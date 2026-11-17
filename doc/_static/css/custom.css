@@ -107,6 +107,10 @@ div.card-body details[open] summary i {
     text-align: center;
 }
 
+.dataops-separator {
+    margin-bottom: 0;
+}
+
 .hero-description {
     font-family: var(--pst-font-family-base);
     text-align: center;

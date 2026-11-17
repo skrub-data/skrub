@@ -47,7 +47,8 @@ _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
-from data_ops_report import create_data_ops_report
+from credit_fraud_report import create_credit_fraud_report
+from employee_salaries_report import create_employee_salaries_report
 from table_report import generate_demo
 
 generate_demo()
@@ -654,7 +655,8 @@ linkcode_resolve = make_linkcode_resolve(
 copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
 
-create_data_ops_report()
+create_credit_fraud_report()
+create_employee_salaries_report()
 
 # -- Convert .rst.template files to .rst ---------------------------------------
 
