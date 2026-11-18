@@ -45,6 +45,18 @@ def test_to_float_percentage_with_surrounding_whitespace(df_module):
     assert sbd.to_list(out) == pytest.approx([0.125, 0.01])
 
 
+def test_to_float_does_not_strip_non_ascii_whitespace(df_module):
+    """A no-break space is not surrounding whitespace: both backends reject it.
+
+    Only ASCII whitespace is stripped, because that is what `pd.to_numeric`
+    ignores; stripping all Unicode whitespace on the polars side alone would
+    turn "\\xa01.5" into 1.5 there and keep rejecting it on pandas.
+    """
+    s = df_module.make_column("c", ["\u00a01.5", "1.5\u2009"])
+    with pytest.raises(RejectColumn):
+        ToFloat().fit_transform(s)
+
+
 @skip_polars_installed_without_pyarrow
 def test_rejected_columns(df_module):
     columns = [
