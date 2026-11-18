@@ -48,6 +48,7 @@ _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
 from credit_fraud_report import create_credit_fraud_report
+from employee_salaries_report import create_employee_salaries_report
 from table_report import generate_demo
 from tabular_pipeline_demo import generate_demo as generate_tabular_pipeline_demo
 
@@ -657,6 +658,7 @@ copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
 
 create_credit_fraud_report()
+create_employee_salaries_report()
 
 # -- Convert .rst.template files to .rst ---------------------------------------
 
