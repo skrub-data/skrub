@@ -693,7 +693,34 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
 
     Notes
     -----
-    The TableVectorizer applies a different transformation to each of several kinds of columns:
+    Before encoding, ``TableVectorizer`` applies to each column the same
+    preprocessing steps as :class:`Cleaner` (see its "Notes" section for
+    details), with some options always enabled:
+
+    - ``CleanNullStrings()``: replace strings used to represent missing values
+      with NA markers.
+
+    - :class:`DropUninformative`: drop columns that contain only missing values
+      (``drop_null_fraction``), a single constant value (``drop_if_constant``),
+      or only unique values (``drop_if_unique``).
+
+    - :class:`ToDatetime`: parse datetimes represented as strings, using
+      ``datetime_format`` if provided.
+
+    - :class:`DurationToFloat`: convert duration columns to a number of seconds.
+
+    - :class:`ToFloat`: convert numeric columns, and string columns whose
+      non-missing values can all be parsed as numbers, to ``float32``.
+
+    - ``CleanCategories()``: force consistent typing of categorical columns.
+
+    - ``ToStr()``: convert columns to strings unless they are numerical,
+      categorical, or datetime.
+
+    These steps are not applied to columns listed in ``specific_transformers``.
+
+    After cleaning, each column is dispatched to the proper encoders according
+    to the kind of columns:
 
     - `numeric`: floats, integers, and booleans.
     - `datetime`: datetimes and dates.
