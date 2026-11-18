@@ -30,8 +30,8 @@ where the XX digits report the number of the department, and the YYY contain the
 code of the municipality.
 Columns that do not satisfy this format should be ignored.
 
->>> import pandas as pd
->>> df = pd.DataFrame(
+>>> import polars as pl
+>>> df = pl.DataFrame(
 ...     {
 ...         "sent": ["75001", "13001", "69002"],
 ...         "received": ["91120", "12110", "88150"],
@@ -39,10 +39,16 @@ Columns that do not satisfy this format should be ignored.
 ...     }
 ... )
 >>> df
-    sent received    notes
-0  75001    91120     Sent
-1  13001    12110  Missing
-2  69002    88150     Sent
+shape: (3, 3)
+┌───────┬──────────┬─────────┐
+│ sent  ┆ received ┆ notes   │
+│ ---   ┆ ---      ┆ ---     │
+│ str   ┆ str      ┆ str     │
+╞═══════╪══════════╪═════════╡
+│ 75001 ┆ 91120    ┆ Sent    │
+│ 13001 ┆ 12110    ┆ Missing │
+│ 69002 ┆ 88150    ┆ Sent    │
+└───────┴──────────┴─────────┘
 
 We would like to be able to "unpack" the code so that we have a column for the
 department code and one for the municipality code. The transformer should also be able to handle columns
@@ -55,40 +61,55 @@ requirements:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>> class GeocodeParser(SingleColumnTransformer):
+...     pattern = r"^(?P<dep>\d{2})(?P<city>\d{3})$"
+...
 ...     def fit_transform(self, X, y=None):
+...         if not X.drop_nulls().str.contains(self.pattern).all():
+...             raise RejectColumn("Incorrect format")
+...         self.col_name_ = X.name
 ...         return self.transform(X)
 ...
 ...     def transform(self, X, y=None):
-...         self.col_name_ = X.name
-...         extracted = X.str.extractall(r"^(?P<dep>\d{2})(?P<city>\d{3})$").reset_index(
-...             drop=True
-...         )
-...         if extracted.shape[0] != X.shape[0]:
-...             raise RejectColumn("Incorrect format")
-...         return pd.DataFrame(
-...             {
-...                 f"{self.col_name_}_department": extracted["dep"],
-...                 f"{self.col_name_}_commune": extracted["city"],
-...             }
+...         return (
+...             X.str.extract_groups(self.pattern)
+...             .struct.unnest()
+...             .rename(
+...                 {
+...                     "dep": f"{self.col_name_}_department",
+...                     "city": f"{self.col_name_}_commune",
+...                 }
+...             )
 ...         )
 
 >>> GeocodeParser().fit_transform(df["sent"])
-  sent_department sent_commune
-0              75          001
-1              13          001
-2              69          002
+shape: (3, 2)
+┌─────────────────┬──────────────┐
+│ sent_department ┆ sent_commune │
+│ ---             ┆ ---          │
+│ str             ┆ str          │
+╞═════════════════╪══════════════╡
+│ 75              ┆ 001          │
+│ 13              ┆ 001          │
+│ 69              ┆ 002          │
+└─────────────────┴──────────────┘
 
 We can use |ApplyToCols| to apply this transformer to the entire dataframe at once,
 and set ``allow_reject=True`` to let rejected columns pass through without changes:
 
 >>> from skrub import ApplyToCols
 >>> ApplyToCols(GeocodeParser(), allow_reject=True).fit_transform(df)
-sent_department sent_commune received_department received_commune    notes
-0              75          001                  91              120     Sent
-1              13          001                  12              110  Missing
-2              69          002                  88              150     Sent
+shape: (3, 5)
+┌─────────────────┬──────────────┬─────────────────────┬──────────────────┬─────────┐
+│ sent_department ┆ sent_commune ┆ received_department ┆ received_commune ┆ notes   │
+│ ---             ┆ ---          ┆ ---                 ┆ ---              ┆ ---     │
+│ str             ┆ str          ┆ str                 ┆ str              ┆ str     │
+╞═════════════════╪══════════════╪═════════════════════╪══════════════════╪═════════╡
+│ 75              ┆ 001          ┆ 91                  ┆ 120              ┆ Sent    │
+│ 13              ┆ 001          ┆ 12                  ┆ 110              ┆ Missing │
+│ 69              ┆ 002          ┆ 88                  ┆ 150              ┆ Sent    │
+└─────────────────┴──────────────┴─────────────────────┴──────────────────┴─────────┘
 
-Note how the ``"received"`` column has been "rejected" and passed through unmodified.
+Note how the ``"notes"`` column was rejected and passed through unmodified.
 
 The |SingleColumnTransformer| is designed to work in conjunction with |ApplyToCols|
 and the skrub :ref:`selectors <user_guide_selectors>` to provide a high degree of
@@ -109,7 +130,7 @@ unchanged or to propagate the exception, based on the ``allow_reject`` parameter
 >>> ApplyToCols(GeocodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-RejectColumn: This transformer only takes zip codes of length 5.
+RejectColumn: Incorrect format
 Transformer GeocodeParser.fit_transform failed on column 'notes'. See above for the full traceback.
 
 In some cases, we may want to let columns through because we don't know which
@@ -117,6 +138,7 @@ columns will fail. For example, we may want to use |ToDatetime| to find datetime
 columns: in this case, we don't know in advance which columns should be chosen.
 
 >>> from skrub import ToDatetime
+>>> import pandas as pd
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
 >>> df
         birthday    city
