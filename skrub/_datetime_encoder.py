@@ -2,6 +2,7 @@
 This module provides the implementation of the DatetimeEncoder.
 """
 
+from collections.abc import Collection
 from datetime import UTC, datetime
 
 import numpy as np
@@ -503,7 +504,7 @@ class DatetimeEncoder(SingleColumnTransformer):
             match isos:
                 case str():
                     self.extracted_features_.append(f"holidays_{isos}")
-                case list() if all(isinstance(iso, str) for iso in isos):
+                case Collection() if all(isinstance(iso, str) for iso in isos):
                     self.extracted_features_.extend([f"holidays_{iso}" for iso in isos])
                 case _:
                     raise TypeError(
