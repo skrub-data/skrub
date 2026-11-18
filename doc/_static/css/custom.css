@@ -107,6 +107,10 @@ div.card-body details[open] summary i {
     text-align: center;
 }
 
+.dataops-separator {
+    margin-bottom: 0;
+}
+
 .hero-description {
     font-family: var(--pst-font-family-base);
     text-align: center;
@@ -184,7 +188,8 @@ div.feature-img {
 /* For the pipeline svg */
 div.pipeline-img {
     transform: scale(0.8);
-    transform-origin: left top;
+    transform-origin: center top;
+    text-align: center;
     height: 283pt
 }
 
