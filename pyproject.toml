@@ -138,6 +138,7 @@ sphinx-llms-txt = "*"
 sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
+holidays = "*"
 skorch = "*"
 tabicl = "*"
 
@@ -154,6 +155,7 @@ pyarrow = "*"
 polars = "*"
 plotly = "*"
 optuna = "*"
+holidays = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -196,6 +198,7 @@ pyarrow = "==15.0.2"
 polars = "==1.5.0"
 plotly = "*"
 optuna = "*"
+holidays = "*"
 
 [tool.pixi.feature.nightly-dependencies.pypi-options]
 # Get the nightly of as many dependencies as possible
@@ -231,7 +234,7 @@ polars = "*"
 polars = "*"
 plotly = "*"
 optuna = "*"
-
+holidays = "*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
