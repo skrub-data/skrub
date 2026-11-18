@@ -508,7 +508,8 @@ class DatetimeEncoder(SingleColumnTransformer):
                     self.extracted_features_.extend([f"holidays_{iso}" for iso in isos])
                 case _:
                     raise TypeError(
-                        f"add_holidays must be a single string or a list of strings, got: {isos!r}"
+                        "add_holidays must be a single string or a list of strings, "
+                        f"got: {isos!r}"
                     )
 
         col_name = sbd.name(column)
