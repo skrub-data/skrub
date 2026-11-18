@@ -414,6 +414,12 @@ def test_invalid_holidays_country(datetime_cols):
         DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
 
 
+def test_invalid_holidays_param(datetime_cols):
+    pytest.importorskip("holidays")
+    with pytest.raises(TypeError, match=r"add_holidays must be a .*"):
+        DatetimeEncoder(add_holidays=["FR", 42]).fit(datetime_cols.datetime)
+
+
 # Checking parameters for CircularEncoder and SplineEncoder
 @pytest.mark.parametrize(
     "params, transformers",
