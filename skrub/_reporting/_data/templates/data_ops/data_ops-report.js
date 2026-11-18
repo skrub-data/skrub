@@ -214,6 +214,9 @@
             return;
         }
         const rect = panels.getBoundingClientRect();
+        if (rect.width === 0) {
+            return;
+        }
         setGraphWidth(100 * (event.clientX - grabOffset - rect.left) / rect.width);
     });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
