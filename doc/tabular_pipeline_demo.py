@@ -8,7 +8,8 @@ def generate_demo():
     ``<script>``); we drop the ``<body>`` tags so the snippet can be included
     inside the landing page.
     """
-    html = tabular_pipeline("regressor")._repr_html_()
+    pipeline = tabular_pipeline("regressor")
+    html = pipeline._repr_html_()
     html = html.replace("<body>", "").replace("</body>", "")
 
     with open(

@@ -282,6 +282,23 @@ html[data-theme="dark"] .encoding-image {
     justify-content: flex-start;
 }
 
+/* The theme gives every <pre> a 1.5em vertical margin and basic.css gives
+   highlighted code blocks a 1em margin, which leaves a large gap between the
+   cross_val_score call and its output. Keep the output visually attached to
+   the code block above it. */
+div.doctest.tabular-pipeline-call {
+    margin-bottom: 0;
+}
+
+/* The inner <pre> margin would otherwise collapse through the wrapper. */
+div.doctest.tabular-pipeline-call pre {
+    margin-bottom: 0;
+}
+
+pre.tabular-pipeline-output {
+    margin-top: 0.25rem;
+}
+
 
 /** Styling **************************************************************/
 
