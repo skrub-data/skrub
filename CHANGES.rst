@@ -27,6 +27,10 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`DatetimeEncoder` has a new option `add_holidays`, indicating which
+  days are a holiday in the specified country or country list, provided the
+  holidays package is installed
+  :pr:`2357` by :user:`Laurent Steff <lsioctl>`
 - :class:`ToFloat` has a new ``convert_percentage`` parameter. When it is
   ``True``, strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are
   converted to fractions (``0.125``, ``0.01``).
