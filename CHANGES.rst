@@ -127,6 +127,10 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`DatetimeEncoder` (and therefore :class:`TableVectorizer`) no longer
+  raises an ``AttributeError`` when fitted on a polars column with the ``Date``
+  dtype.
+  :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
