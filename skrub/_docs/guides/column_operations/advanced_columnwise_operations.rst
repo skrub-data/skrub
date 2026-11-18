@@ -30,7 +30,8 @@ where the XX digits report the number of the department, and the YYY contain the
 code of the municipality.
 Columns that do not satisfy this format should be ignored.
 
->>> import polars as pl
+>>> import pytest
+>>> pl = pytest.importorskip("polars")
 >>> df = pl.DataFrame(
 ...     {
 ...         "sent": ["75001", "13001", "69002"],
