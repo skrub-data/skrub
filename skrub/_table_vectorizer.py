@@ -698,11 +698,10 @@ class TableVectorizer(TransformerMixin, SkrubBaseEstimator):
     details), with some options always enabled:
 
     - ``CleanNullStrings()``: replace strings used to represent missing values
-      with NA markers.
+      (such as "N/A") with actual NULL values.
 
     - :class:`DropUninformative`: drop columns that contain only missing values
-      (``drop_null_fraction``), a single constant value (``drop_if_constant``),
-      or only unique values (``drop_if_unique``).
+      (``drop_null_fraction``) or a single constant value (``drop_if_constant``).
 
     - :class:`ToDatetime`: parse datetimes represented as strings, using
       ``datetime_format`` if provided.
