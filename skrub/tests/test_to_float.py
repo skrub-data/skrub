@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat, _str_replace
+from skrub._to_float import ToFloat, _str_replace, _strip_percent
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -29,6 +29,32 @@ def test_to_float(values, df_module):
     s = df_module.make_column("c", values)
     out = ToFloat().fit_transform(s)
     assert is_float32(df_module, out)
+
+
+def test_to_float_surrounding_whitespace(df_module):
+    """Padded values convert the same way on every backend."""
+    s = df_module.make_column("c", [" 1.5", "2.5 ", "\t3.5"])
+    out = ToFloat().fit_transform(s)
+    assert sbd.to_list(out) == pytest.approx([1.5, 2.5, 3.5])
+
+
+def test_to_float_percentage_with_surrounding_whitespace(df_module):
+    """Percentages with leading whitespace are converted on every backend."""
+    s = df_module.make_column("c", [" 12.5%", "1 %"])
+    out = ToFloat(convert_percentage=True).fit_transform(s)
+    assert sbd.to_list(out) == pytest.approx([0.125, 0.01])
+
+
+def test_to_float_does_not_strip_non_ascii_whitespace(df_module):
+    """A no-break space is not surrounding whitespace: both backends reject it.
+
+    Only ASCII whitespace is stripped, because that is what `pd.to_numeric`
+    ignores; stripping all Unicode whitespace on the polars side alone would
+    turn "\\xa01.5" into 1.5 there and keep rejecting it on pandas.
+    """
+    s = df_module.make_column("c", ["\u00a01.5", "1.5\u2009"])
+    with pytest.raises(RejectColumn):
+        ToFloat().fit_transform(s)
 
 
 @skip_polars_installed_without_pyarrow
@@ -136,6 +162,8 @@ def test_parentheses_disabled(df_module):
 def test_error_dispatch():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         _str_replace(np.array([1]), decimal=".", thousand=None, parentheses=False)
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _strip_percent(np.array(["1%"]))
 
 
 def test_is_string(df_module):
@@ -147,3 +175,49 @@ def test_is_string(df_module):
     transformed = to_float.transform(new_column)
     expected = sbd.to_float32(df_module.make_column("col", [1400.5]))
     df_module.assert_column_equal(transformed, expected)
+
+
+@pytest.mark.parametrize(
+    "values, kwargs, expected",
+    [
+        (["1%", "55%", "100 %", "12.5   %"], {}, [0.01, 0.55, 1.0, 0.125]),
+        (["1%", "2", None], {}, [0.01, 2.0, np.nan]),
+        (["-3%", "1.5e1%"], {}, [-0.03, 0.15]),
+        (["1,234.5%"], {"thousand": ","}, [12.345]),
+        (["12,5 %"], {"decimal": ","}, [0.125]),
+        (
+            ["(1,5 %)", "(2,5)%", "(3)"],
+            {"decimal": ",", "parentheses": True},
+            [-0.015, -0.025, -3.0],
+        ),
+    ],
+)
+def test_percentage_enabled(df_module, values, kwargs, expected):
+    column = df_module.make_column("col", values)
+    result = ToFloat(convert_percentage=True, **kwargs).fit_transform(column)
+    np.testing.assert_allclose(sbd.to_numpy(result), expected, rtol=1e-6)
+
+
+def test_percentage_disabled(df_module):
+    column = df_module.make_column("col", ["1%", "2%"])
+    with pytest.raises(RejectColumn):
+        ToFloat().fit_transform(column)
+
+
+def test_percentage_transform(df_module):
+    to_float = ToFloat(convert_percentage=True).fit(
+        df_module.make_column("col", ["1%"])
+    )
+    result = to_float.transform(
+        df_module.make_column("col", ["50%", "0.5", "abc", None])
+    )
+    np.testing.assert_allclose(
+        sbd.to_numpy(result), [0.5, 0.5, np.nan, np.nan], rtol=1e-6
+    )
+
+
+def test_percentage_numeric_column(df_module):
+    # numbers are passed through unchanged, they are not divided by 100
+    column = df_module.make_column("col", [1.0, 50.0])
+    result = ToFloat(convert_percentage=True).fit_transform(column)
+    np.testing.assert_allclose(sbd.to_numpy(result), [1.0, 50.0])

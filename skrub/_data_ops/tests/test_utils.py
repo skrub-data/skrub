@@ -84,3 +84,14 @@ def test_prune_directory_catch_exception(tmp_dir, create_dir, monkeypatch):
 def test_prune_directory_nonexistent(tmp_dir):
     # A path that does not exist is a no-op rather than an error.
     _utils.prune_directory(tmp_dir / "does_not_exist")
+
+
+@pytest.mark.parametrize("name", [None, "my_name", ""])
+def test_check_if_reserved_name_ok(name):
+    _utils.check_if_reserved_name(name)
+
+
+@pytest.mark.parametrize("name", ["skrub_a", "skrub.a", "_skrub_a", "skrub"])
+def test_check_if_reserved_name_errors(name):
+    with pytest.raises(ValueError, match=rf"{name}"):
+        _utils.check_if_reserved_name(name)

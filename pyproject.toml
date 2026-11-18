@@ -76,6 +76,7 @@ dev = [
 
   # test
   "pytest",
+  "pytest-asyncio>=0.24",
   "pytest-cov",
   "pytest-xdist",
 
@@ -168,6 +169,7 @@ pyarrow = "<21"
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
 pytest = "*"
+pytest-asyncio = ">=0.24"
 pytest-cov = "*"
 pytest-xdist = "*"
 
@@ -342,6 +344,8 @@ ignore = [
 "skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
@@ -389,7 +393,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js,*/panzoom-4.6.2/*'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

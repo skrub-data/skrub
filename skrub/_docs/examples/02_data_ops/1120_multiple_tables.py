@@ -1,6 +1,6 @@
 """
-Multiples tables: building machine learning pipelines with DataOps
-==================================================================
+Multiple tables: building machine learning pipelines with DataOps
+=================================================================
 
 In this example, we show how to build a DataOps plan to handle
 pre-processing, validation and hyperparameter tuning of a dataset with **multiple
@@ -68,7 +68,6 @@ baskets
 # We mark the "ID" column of the ``baskets`` table as ``X``, and the
 # ``"fraud_flag"`` column as ``y``. This allows the DataOps to track the indices
 # of the variables when splitting for cross-validation.
-# so that DataOps can use their indices for train-test splitting and cross-validation.
 basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # %%

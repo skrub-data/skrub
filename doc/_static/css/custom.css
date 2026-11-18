@@ -80,8 +80,11 @@ div.card-body summary i {
 }
 
 div.card-body summary {
-  margin: -0.5em;
-  padding-left: 0.5em;
+  /* No negative margin: it would pull the summary outside the card body and
+     overlap the card's border. Use padding for the hover target instead. */
+  margin: 0;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
 }
 
 div.card-body summary:hover {
@@ -89,7 +92,7 @@ div.card-body summary:hover {
 }
 
 div.card-body details[open] summary {
-  margin-bottom: -0.5em;
+  margin-bottom: 0.25em;
 }
 
 div.card-body details[open] summary i {
@@ -105,6 +108,10 @@ div.card-body details[open] summary i {
     margin-bottom: 2rem;
     margin-top: 0px;
     text-align: center;
+}
+
+.dataops-separator {
+    margin-bottom: 0;
 }
 
 .hero-description {
@@ -136,6 +143,24 @@ div.card-body details[open] summary i {
 
 h5.feature-title {
     font-size: 1.5rem;
+}
+
+/* Sub-headings inside a landing-page feature column */
+.feature-subsection {
+    margin-bottom: 1.5rem;
+}
+
+.feature-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.feature-subtitle {
+    color: #4085a7; /* skrub blue */
+    font-family: var(--pst-font-family-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
 }
 
 .feature-text {
@@ -184,7 +209,8 @@ div.feature-img {
 /* For the pipeline svg */
 div.pipeline-img {
     transform: scale(0.8);
-    transform-origin: left top;
+    transform-origin: center top;
+    text-align: center;
     height: 283pt
 }
 
@@ -219,6 +245,63 @@ html[data-theme="light"] .encoding-image {
 
 html[data-theme="dark"] .encoding-image {
     background-image: url('../periodic_features_dark_transparent.png');
+}
+
+/* Estimator diagram of the tabular_pipeline demo on the landing page.
+   The sklearn HTML repr is laid out for a full-width notebook cell, so it is
+   wider than the landing-page column: shrink it to fit and let it scroll
+   horizontally if it still overflows. */
+.tabular-pipeline-diagram {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.tabular-pipeline-diagram .sk-top-container {
+    /* sklearn sets `overflow-x: scroll !important`, which would always show a
+       scrollbar; only show one when the diagram really overflows. */
+    overflow-x: auto !important;
+    font-size: 0.65rem;
+    max-width: 100%;
+}
+
+.tabular-pipeline-diagram .sk-top-container .sk-container {
+    max-width: 100%;
+}
+
+/* sklearn centers the parallel branches with `justify-content: center`. When
+   the content is wider than the container, centering pushes the left edge out
+   of reach so it cannot be scrolled to. Start-aligning keeps it reachable. */
+.tabular-pipeline-diagram .sk-parallel {
+    justify-content: flex-start;
+}
+
+.tabular-pipeline-diagram .sk-serial {
+    align-items: flex-start;
+}
+
+/* Let the labels wrap instead of forcing the diagram wider than the column. */
+.tabular-pipeline-diagram .sk-toggleable__label {
+    white-space: normal;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+/* The theme gives every <pre> a 1.5em vertical margin and basic.css gives
+   highlighted code blocks a 1em margin, which leaves a large gap between the
+   cross_val_score call and its output. Keep the output visually attached to
+   the code block above it. */
+div.doctest.tabular-pipeline-call {
+    margin-bottom: 0;
+}
+
+/* The inner <pre> margin would otherwise collapse through the wrapper. */
+div.doctest.tabular-pipeline-call pre {
+    margin-bottom: 0;
+}
+
+pre.tabular-pipeline-output {
+    margin-top: 0.25rem;
 }
 
 

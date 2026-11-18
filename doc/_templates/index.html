@@ -80,17 +80,28 @@ fa-caret-down visible-small-screen"></i></p>
   <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5 mb-5">
       <h4 class="feature-title">Effortless Tabular Learning</h4>
-      <p class="feature-text">Create strong scikit-learn pipeline baselines effortlessly with
-        <a class="reference internal"
-        href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
-        title="skrub.TableVectorizer"><code class="xref py py-class docutils
-        literal notranslate sk-landing-code"><span class="pre">TableVectorizer</span></code></a>
-        and
-        <a class="reference internal"
-        href="reference/generated/skrub.tabular_pipeline.html#skrub.tabular_pipeline"
-        title="skrub.tabular_pipeline"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">tabular_pipeline</span></code></a>.
-      </p>
+
+      <div class="feature-subsection">
+        <h5 class="feature-subtitle">The Table Vectorizer</h5>
+        <p class="feature-text">Turn your mixed-type dataframe into a numeric
+          feature matrix with the
+          <a class="reference internal"
+          href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
+          title="skrub.TableVectorizer"><code class="xref py py-class docutils
+          literal notranslate sk-landing-code"><span class="pre">TableVectorizer</span></code></a>.
+          Automatically performs <strong>preprocessing</strong> of the data, such as standardizing missing values and parsing dates,
+           before <strong>encoding</strong> based on whether a column contains numbers, strings, or datetimes.
+      </div>
+
+      <div class="feature-subsection">
+        <h5 class="feature-subtitle">The Tabular Pipeline</h5>
+        <p class="feature-text">Choose <code class="docutils literal notranslate"><span class="pre">regression</span></code> or <code class="docutils literal notranslate"><span class="pre">classification</span></code> and let <a class="reference internal"
+          href="reference/generated/skrub.tabular_pipeline.html#skrub.tabular_pipeline"
+          title="skrub.tabular_pipeline"><code class="xref py py-class docutils
+          literal notranslate"><span class="pre">tabular_pipeline</span></code></a> do the rest. Use the power of the <code class="docutils literal notranslate"><span class="pre">TableVectorizer</span></code>
+          to immediately create a scikit-learn baseline <strong>model with good defaults</strong> for each column <br>based on the datetype.
+        </p>
+      </div>
     </div>
 
 
@@ -136,46 +147,93 @@ fa-caret-down visible-small-screen"></i></p>
     </div>
   </div>
 
+  <!-- DataOps framework separator -->
+  <div class="row mb-0 mt-5">
+    <h2 class="hero-title dataops-separator">The skrub DataOps framework</h2>
+  </div>
+
   <!-- Feature Section 4 -->
-  <div class="row mb-0 flex-md-row-reverse  row-padding-between-features">
+  <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Tune arbitrary data wrangling</h4>
-      <h5 class="feature-title">Inspect it, apply it to new data</h5>
-      <p class="feature-text">Assemble and prepare tables for machine
-      learning with any operations and then <strong>tune the full pipeline,
-      inspect it</strong>, or apply it to new data.
-      </p>
-      <p class="feature-text">
-	Works with any computational or dataframe engine.
-      </p>
-      <div class="pipeline-img">
-	{% include "../generated_for_index/pipeline.svg" %}
-      </div>
+      <h4 class="feature-title">Custom trainable pipelines</h4>
+      <ul class="feature-text">
+        <li>Define a pipeline that transforms any data, from <b>loading</b> to the
+          <b>final predictor</b>.
+          <ul>
+            <li>No restrictions on input data types: dataframes (with
+              <a class="reference internal"
+              href="{{ pathto('column_level_featurizing') }}">dedicated
+              transformers</a>),
+              <a class="reference internal"
+              href="{{ pathto('auto_examples/02_data_ops/1160_pytorch') }}">images</a>, or anything else. Apply different transformers to specific columns with
+              <a class="reference internal"
+              href="reference/generated/skrub.DataOp.skb.apply.html"><code>.skb.apply</code></a>
+              and
+              <a class="reference internal"
+              href="{{ pathto('modules/multi_column_operations/selectors') }}">selectors</a>.</li>
+          </ul>
+        </li>
+        <li>Keep using scikit-learn
+          <a class="reference internal"
+          href="{{ pathto('modules/data_ops/ml_pipeline/applying_ml_estimators') }}">transformers
+          and predictors</a> in your pipeline, and
+          <a class="reference internal"
+          href="{{ pathto('modules/data_ops/validation/exporting_data_ops') }}#using-a-learner-as-a-standard-scikit-learn-estimator">export
+          it as a learner</a> providing <code>fit()</code> and
+          <code>predict()</code>.</li>
+        <li>
+          <a class="reference internal"
+          href="{{ pathto('modules/data_ops/ml_pipeline/evaluating_debugging_data_ops') }}">Create
+          reports</a> with intermediate results and links to the <b>source code</b> of
+          each estimator.</li>
+      </ul>
       <p class="feature-text-see-also">
-        <!-- name of the userguide file on DataOps -->
         <a href="{{ pathto('data_ops') }}">Discover the skrub DataOps →</a>
       </p>
     </div>
     <div class="col-md-7">
-        <details>
-          <summary>Given two input dataframes
-            <code class="docutils literal notranslate"><span
-class="pre">products_df</span></code> and <code class="docutils literal notranslate"><span
-class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
-	    {% include "../generated_for_index/code_block_0.html" %}
-	</details>
-	<div class="feature-flex" style="column-gap: 0.25em;">
-	    <div>
-		{% include "../generated_for_index/products.html" %}
-	    </div>
-	    <div>
-		{% include "../generated_for_index/baskets.html" %}
-	    </div>
-	</div>
-	{% include "../generated_for_index/code_block_2.html" %}
-	<div class="feature-img">
-	    {% include "../generated_for_index/parallel_coordinates.html" %}
-	</div>
+      <div class="pipeline-img">
+        {% include "../_build/html/_static/credit_fraud_report/credit_fraud_graph.svg" %}
+      </div>
+      <p class="text-center mt-0 mb-0">
+        <a href="_static/credit_fraud_report/index.html">Open an interactive report →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Feature Section 5 -->
+  <div class="row mb-0 row-padding-between-features">
+    <div class="col-md-5">
+      <h4 class="feature-title">Leakproof cross-validation</h4>
+      <ul class="feature-text">
+        <li>Include the construction of <code>X</code> and <code>y</code> in the
+          pipeline itself.</li>
+        <li>Evaluate <b>without data leakage</b> with the built-in
+          <a class="reference internal"
+          href="{{ pathto('modules/data_ops/validation/tuning_validating_data_ops') }}#improving-the-confidence-in-our-score-through-cross-validation">cross-validation</a>.</li>
+        <li>Tune data <b>pipeline decisions</b>, not only hyperparameters:
+          <ul>
+            <li>Combine and
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/nesting_choices_choosing_pipelines') }}">nest</a>
+              the
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/hyperparameter_tuning') }}"><code>choose_*</code>
+              functions</a> to build extensive hyperparameter grids with no
+              effort.</li>
+            <li>Explore the hyperparameter space with scikit-learn or
+              <a class="reference internal"
+              href="{{ pathto('modules/data_ops/validation/tuning_with_optuna') }}">Optuna</a>.</li>
+          </ul>
+        </li>
+      </ul>
+      <p class="feature-text-see-also">
+        <a href="{{ pathto('modules/data_ops/validation/tuning_validating_data_ops') }}">Tune and validate your pipelines →</a>
+      </p>
+    </div>
+    <div class="col-md-7 pe-5">
+      <!-- The code block below is <pre> content: lines must not be indented. -->
+      <pre><code>features = order_ids.skb.apply_func(<span style="display: block;">    join_orders_products,</span><span style="display: block;">    vectorized_products,</span><span style="display: block; background-color: rgba(220, 53, 69, 0.16);"><strong>-</strong>    agg_func="mean",</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    agg_func=skrub.choose_from(["mean", "sum"]),</span><span style="display: block;">)</span><span style="display: block;">pred = features.skb.apply(</span><span style="display: block; background-color: rgba(220, 53, 69, 0.16);"><strong>-</strong>    HistGradientBoostingClassifier(learning_rate=0.1),</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    HistGradientBoostingClassifier(</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>        learning_rate=skrub.choose_float(0.01, 0.5, log=True)</span><span style="display: block; background-color: rgba(25, 135, 84, 0.16);"><strong>+</strong>    ),</span><span style="display: block;">    y=fraud_flags,</span><span style="display: block;">)</span></code></pre>
     </div>
   </div>
 

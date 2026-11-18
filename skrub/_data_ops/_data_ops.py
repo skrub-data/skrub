@@ -53,7 +53,12 @@ from .._check_input import cast_column_names_to_strings
 from .._utils import PassThrough, set_module, short_repr
 from . import _caching, _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
+from ._utils import (
+    FITTED_PREDICTOR_METHODS,
+    NULL,
+    USE_VAR_VALUES_NAME,
+    attribute_error,
+)
 
 __all__ = [
     "var",
@@ -959,10 +964,7 @@ def check_name(name, is_var):
         raise TypeError(
             f"`name` must be {description}, got object of type: {type(name)}"
         )
-    if name.startswith("_skrub_"):
-        raise ValueError(
-            f"names starting with '_skrub_' are reserved for skrub use, got: {name!r}."
-        )
+    _utils.check_if_reserved_name(name)
 
 
 def _check_var_value(value):
@@ -991,7 +993,7 @@ class Var(DataOpImpl):
         if e.name in environment:
             return environment[e.name]
         if (
-            e.becomes_default or environment.get("_skrub_use_var_values", False)
+            e.becomes_default or environment.get(USE_VAR_VALUES_NAME, False)
         ) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(e.name)
@@ -1024,7 +1026,7 @@ def var(name, value=NULL, *, becomes_default=False):
         The name for this input. It corresponds to a key in the dictionary that
         is passed to the learner's ``fit()`` method (see Examples below).
         Names must be unique within a learner and must not start with
-        ``"_skrub_"``
+        ``"skrub"`` or ``"_skrub"``
     value : object, optional
         Optionally, an initial value can be given to the variable. When it is
         available, it is used to provide a preview of the learner's results,

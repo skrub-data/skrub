@@ -59,7 +59,10 @@ def _is_date_pandas(col):
 
 @_is_date.specialize("polars", argument_type="Column")
 def _is_date_polars(col):
-    if col.dtype.time_zone is not None:
+    import polars as pl
+
+    # Only Datetime has a time_zone attribute; the Date dtype does not.
+    if col.dtype == pl.Datetime and col.dtype.time_zone is not None:
         return False
     return (col.dt.date() == col).all()
 

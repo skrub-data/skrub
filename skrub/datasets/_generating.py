@@ -123,6 +123,7 @@ def toy_orders(split="train"):
     0     cup      5
     1     pen      2
     2   spoon      3
+    3    fork      3
     """
     X = pd.DataFrame(
         {
@@ -146,7 +147,9 @@ def toy_orders(split="train"):
         X, y = X.iloc[4:], y.iloc[4:]
     else:
         assert split == "all", split
-    products = pd.DataFrame({"product": ["cup", "pen", "spoon"], "price": [5, 2, 3]})
+    products = pd.DataFrame(
+        {"product": ["cup", "pen", "spoon", "fork"], "price": [5, 2, 3, 3]}
+    )
     return Bunch(
         X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y, products=products
     )
