@@ -74,12 +74,7 @@ requirements:
 ...         return (
 ...             X.str.extract_groups(self.pattern)
 ...             .struct.unnest()
-...             .rename(
-...                 {
-...                     "dep": f"{self.col_name_}_department",
-...                     "city": f"{self.col_name_}_commune",
-...                 }
-...             )
+...             .rename(lambda c: f"{self.col_name_}_{c}")
 ...         )
 
 >>> GeocodeParser().fit_transform(df["sent"])
