@@ -5,8 +5,9 @@ SquashingScaler that are shown in the home page of the website.
 It saves two transparent PNG files, following the same approach as
 ``demo_periodic_features.py``:
 
-- ``squashing_scaler_light.png``: dark text, for light backgrounds
-- ``squashing_scaler_dark.png``: light text, for dark backgrounds
+- ``squashing_scaler_light.png``: transparent background with dark text
+- ``squashing_scaler_dark.png``: light panel with dark text, so that the
+  low-alpha reference lines stay visible on dark backgrounds
 
 The images are written to ``doc/_static`` so that they can be referenced
 directly from the landing page template.
@@ -264,13 +265,25 @@ ax_before.set_title("Robust scaling and clipping of extreme values", fontsize=38
 
 
 # %%
-def style_for_background(fig, color):
-    """Make the figure transparent and recolor text and spines."""
-    fig.patch.set_alpha(0)
+def style_for_background(fig, color, background=None):
+    """Recolor text and spines and set the figure background.
+
+    ``background`` is ``None`` for a transparent figure or a color to fill the
+    whole figure, which keeps low-alpha lines drawn in dark colors visible.
+    """
+    if background is None:
+        fig.patch.set_alpha(0)
+    else:
+        fig.patch.set_facecolor(background)
+        fig.patch.set_alpha(1)
     for text in fig.texts:
         text.set_color(color)
     for ax in fig.axes:
-        ax.patch.set_alpha(0)
+        if background is None:
+            ax.patch.set_alpha(0)
+        else:
+            ax.patch.set_facecolor(background)
+            ax.patch.set_alpha(1)
         ax.title.set_color(color)
         ax.xaxis.label.set_color(color)
         ax.yaxis.label.set_color(color)
@@ -299,12 +312,14 @@ fig.savefig(
 )
 
 # %%
-# Dark mode version (light text for dark backgrounds)
-style_for_background(fig, "white")
+# Dark mode version: a muted light-gray panel behind the dark-colored lines
+# keeps the low-alpha reference lines and dashed thresholds visible on dark
+# pages without the glare of a plain white background.
+style_for_background(fig, "black", background="#e8eaed")
 fig.savefig(
     STATIC_DIR / "squashing_scaler_dark.png",
     dpi=300,
     bbox_inches="tight",
-    transparent=True,
+    transparent=False,
 )
 # %%

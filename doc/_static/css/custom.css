@@ -252,27 +252,29 @@ html[data-theme="dark"] .encoding-carousel .theme-light {
     display: none;
 }
 
+/* Controls and indicators live in a row below the slides so that the
+   buttons never overlap the plots. */
+.encoding-carousel .carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: .5rem;
+}
+
 /* The theme's default chevrons are white on light and black on dark,
    so we draw our own controls with the skrub accent color instead. */
 .encoding-carousel .carousel-control-prev,
 .encoding-carousel .carousel-control-next {
+    position: static;
+    flex: 0 0 auto;
     width: 2.5rem;
     height: 2.5rem;
-    top: 50%;
-    transform: translateY(-50%);
     opacity: 1;
     border-radius: 50%;
     background-color: var(--pst-color-surface);
     border: 1px solid var(--pst-color-border);
     box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
-}
-
-.encoding-carousel .carousel-control-prev {
-    left: 0;
-}
-
-.encoding-carousel .carousel-control-next {
-    right: 0;
 }
 
 .encoding-carousel .carousel-control-prev:hover,
@@ -297,9 +299,11 @@ html[data-theme="dark"] .encoding-carousel .theme-light {
 }
 
 .encoding-carousel .carousel-indicators {
-    bottom: -1.25rem;
-    margin-left: 0;
-    margin-right: 0;
+    position: static;
+    flex: 0 1 auto;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
 }
 
 .encoding-carousel .carousel-indicators [data-bs-target] {
