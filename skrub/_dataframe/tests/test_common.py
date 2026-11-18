@@ -1080,3 +1080,10 @@ def test_is_sorted_object_dtypes(col, df_module):
     # to add the code / computation time to handle those discrepancies.
     # However, is_sorted should not crash and return a Boolean in all cases.
     assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)
+
+
+def test_to_float32_strips_surrounding_whitespace(df_module):
+    """Padded numeric strings convert the same way on every backend."""
+    col = df_module.make_column("c", [" 1.5", "2.5 ", "\t3.5"])
+    out = ns.to_float32(col)
+    assert ns.to_list(out) == pytest.approx([1.5, 2.5, 3.5])

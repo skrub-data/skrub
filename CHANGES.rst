@@ -34,6 +34,10 @@ New Features
 
 Changes
 -------
+- :class:`ToFloat` now converts numbers padded with surrounding whitespace
+  identically on the pandas and polars backends. Previously such values were
+  cast to null, or rejected together with their column, by the polars backend.
+  :pr:`2430` by :user:`Dongze Li <lidongze1002>`.
 - :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
   default for every parameter.
   Explicit ``None`` values are no longer treated as "leave unchanged" and are
