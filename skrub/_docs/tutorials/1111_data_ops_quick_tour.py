@@ -75,7 +75,7 @@ learner.fit({"employee_data": train_dataset.X, "salary": train_dataset.y})
 # keys correspond to the names of the variables we used to define our learner,
 # here ``"employee_data"`` and ``"salary"``.
 #
-# If needed, it _is_ possible to obtain an estimator that follows the standard
+# If needed, it *is* possible to obtain an estimator that follows the standard
 # ``fit(X, y)`` interface by calling
 # :meth:`SkrubLearner.with_sklearn_interface` on the returned learner. In this
 # case any additional inputs beyond X and y are passed to fit, predict, etc.
