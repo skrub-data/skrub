@@ -80,8 +80,11 @@ div.card-body summary i {
 }
 
 div.card-body summary {
-  margin: -0.5em;
-  padding-left: 0.5em;
+  /* No negative margin: it would pull the summary outside the card body and
+     overlap the card's border. Use padding for the hover target instead. */
+  margin: 0;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
 }
 
 div.card-body summary:hover {
@@ -89,7 +92,7 @@ div.card-body summary:hover {
 }
 
 div.card-body details[open] summary {
-  margin-bottom: -0.5em;
+  margin-bottom: 0.25em;
 }
 
 div.card-body details[open] summary i {
@@ -105,6 +108,10 @@ div.card-body details[open] summary i {
     margin-bottom: 2rem;
     margin-top: 0px;
     text-align: center;
+}
+
+.dataops-separator {
+    margin-bottom: 0;
 }
 
 .hero-description {
@@ -136,6 +143,24 @@ div.card-body details[open] summary i {
 
 h5.feature-title {
     font-size: 1.5rem;
+}
+
+/* Sub-headings inside a landing-page feature column */
+.feature-subsection {
+    margin-bottom: 1.5rem;
+}
+
+.feature-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.feature-subtitle {
+    color: #4085a7; /* skrub blue */
+    font-family: var(--pst-font-family-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
 }
 
 .feature-text {
@@ -184,7 +209,8 @@ div.feature-img {
 /* For the pipeline svg */
 div.pipeline-img {
     transform: scale(0.8);
-    transform-origin: left top;
+    transform-origin: center top;
+    text-align: center;
     height: 283pt
 }
 
@@ -205,20 +231,175 @@ div.pipeline-img svg g.edge polygon {
     fill: var(--sg-text-color);
 }
 
-.encoding-image {
+/* Carousel of encoding examples on the landing page */
+.encoding-carousel {
     width: 100%;
-    aspect-ratio: 1.2;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
 }
 
-html[data-theme="light"] .encoding-image {
-    background-image: url('../periodic_features_light_transparent.png');
+/* On wide screens the text column leaves a gap to the left of the
+   carousel, so let the slides extend into it while keeping the right
+   edge (and the gutter added by the column's pe-* class) unchanged. */
+@media (min-width: 768px) {
+    .encoding-carousel {
+        width: calc(100% + 3rem);
+        margin-left: -3rem;
+    }
 }
 
-html[data-theme="dark"] .encoding-image {
-    background-image: url('../periodic_features_dark_transparent.png');
+.encoding-carousel .carousel-item {
+    /* Match the aspect ratio of the slide images so that
+       object-fit: contain does not add vertical whitespace. */
+    aspect-ratio: 1.49;
+    /* Slides only advance on user interaction, so use a plain slide. */
+    transition: transform .6s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .encoding-carousel .carousel-item {
+        transition: none;
+    }
+}
+
+.encoding-carousel .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Only one of the two theme variants is shown at a time */
+html[data-theme="light"] .encoding-carousel .theme-dark {
+    display: none;
+}
+
+html[data-theme="dark"] .encoding-carousel .theme-light {
+    display: none;
+}
+
+/* Controls and indicators live in a row below the slides so that the
+   buttons never overlap the plots. */
+.encoding-carousel .carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: .5rem;
+}
+
+/* The theme's default chevrons are white on light and black on dark,
+   so we draw our own controls with the skrub accent color instead. */
+.encoding-carousel .carousel-control-prev,
+.encoding-carousel .carousel-control-next {
+    position: static;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    opacity: 1;
+    border-radius: 50%;
+    background-color: var(--pst-color-surface);
+    border: 1px solid var(--pst-color-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
+}
+
+.encoding-carousel .carousel-control-prev:hover,
+.encoding-carousel .carousel-control-next:hover {
+    background-color: #fbe1ca;
+    border-color: #DA7007;
+}
+
+.encoding-carousel .carousel-control-prev-icon,
+.encoding-carousel .carousel-control-next-icon {
+    width: 1rem;
+    height: 1rem;
+    filter: none;
+}
+
+.encoding-carousel .carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23DA7007' viewBox='0 0 16 16'%3E%3Cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0'/%3E%3C/svg%3E");
+}
+
+.encoding-carousel .carousel-control-next-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23DA7007' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708'/%3E%3C/svg%3E");
+}
+
+.encoding-carousel .carousel-indicators {
+    position: static;
+    flex: 0 1 auto;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.encoding-carousel .carousel-indicators [data-bs-target] {
+    width: 1.75rem;
+    height: 3px;
+    border: 0;
+    background-color: var(--pst-color-text-muted);
+    opacity: .4;
+}
+
+.encoding-carousel .carousel-indicators .active {
+    background-color: #DA7007;
+    opacity: 1;
+}
+
+/* Estimator diagram of the tabular_pipeline demo on the landing page.
+   The sklearn HTML repr is laid out for a full-width notebook cell, so it is
+   wider than the landing-page column: shrink it to fit and let it scroll
+   horizontally if it still overflows. */
+.tabular-pipeline-diagram {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.tabular-pipeline-diagram .sk-top-container {
+    /* sklearn sets `overflow-x: scroll !important`, which would always show a
+       scrollbar; only show one when the diagram really overflows. */
+    overflow-x: auto !important;
+    font-size: 0.65rem;
+    max-width: 100%;
+}
+
+.tabular-pipeline-diagram .sk-top-container .sk-container {
+    max-width: 100%;
+}
+
+/* sklearn centers the parallel branches with `justify-content: center`. When
+   the content is wider than the container, centering pushes the left edge out
+   of reach so it cannot be scrolled to. Start-aligning keeps it reachable. */
+.tabular-pipeline-diagram .sk-parallel {
+    justify-content: flex-start;
+}
+
+.tabular-pipeline-diagram .sk-serial {
+    align-items: flex-start;
+}
+
+/* Let the labels wrap instead of forcing the diagram wider than the column. */
+.tabular-pipeline-diagram .sk-toggleable__label {
+    white-space: normal;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+/* The theme gives every <pre> a 1.5em vertical margin and basic.css gives
+   highlighted code blocks a 1em margin, which leaves a large gap between the
+   cross_val_score call and its output. Keep the output visually attached to
+   the code block above it. */
+div.doctest.tabular-pipeline-call {
+    margin-bottom: 0;
+}
+
+/* The inner <pre> margin would otherwise collapse through the wrapper. */
+div.doctest.tabular-pipeline-call pre {
+    margin-bottom: 0;
+}
+
+pre.tabular-pipeline-output {
+    margin-top: 0.25rem;
 }
 
 

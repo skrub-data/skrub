@@ -820,6 +820,12 @@ def _to_float32_polars(col, strict=True):
             # old versions of polars don't have .cat.physical()
             return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
         return col.cat.physical().cast(pl.Float32)
+    if col.dtype == pl.String:
+        # polars' cast is strict about surrounding whitespace, whereas
+        # `pd.to_numeric` ignores it. Strip exactly what the pandas path
+        # ignores: ASCII whitespace only, so a no-break space (U+00A0) or a
+        # thin space is rejected by both backends rather than only by pandas.
+        col = col.str.strip_chars(" \t\n\r\f\v")
     return col.cast(pl.Float32, strict=strict)
 
 

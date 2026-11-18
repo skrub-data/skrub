@@ -15,7 +15,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import runpy
 import shutil
 import sys
 import warnings
@@ -48,14 +47,13 @@ _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
-from data_ops_report import create_data_ops_report
+from credit_fraud_report import create_credit_fraud_report
+from employee_salaries_report import create_employee_salaries_report
 from table_report import generate_demo
+from tabular_pipeline_demo import generate_demo as generate_tabular_pipeline_demo
 
 generate_demo()
-
-# Generate the HTML snippets for the DataOps demo on the homepage:
-if not os.path.exists("generated_for_index/code_block_2.html"):
-    runpy.run_path("generate_data_ops_example_for_index.py")
+generate_tabular_pipeline_demo()
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
@@ -659,7 +657,8 @@ linkcode_resolve = make_linkcode_resolve(
 copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
 
-create_data_ops_report()
+create_credit_fraud_report()
+create_employee_salaries_report()
 
 # -- Convert .rst.template files to .rst ---------------------------------------
 
