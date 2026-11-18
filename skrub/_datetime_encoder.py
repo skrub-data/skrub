@@ -152,7 +152,7 @@ def _is_holidays_polars(col, country):
             "'holidays.list_supported_countries().keys()'"
         )
 
-    return col.dt.date().is_in(country_holidays)
+    return col.dt.date().is_in(list(country_holidays))
 
 
 class DatetimeEncoder(SingleColumnTransformer):
