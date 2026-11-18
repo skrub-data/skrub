@@ -115,35 +115,101 @@ fa-caret-down visible-small-screen"></i></p>
 
   <!-- Feature Section 3 -->
   <div class="row mb-0 row-padding-between-features">
-    <div class="col-md-5">
+    <div class="col-md-6">
       <h4 class="feature-title">Powerful Feature Engineering</h4>
-      <p class="feature-text">Encode text and high cardinality categorical data
-        (<a class="reference internal"
-        href="reference/generated/skrub.StringEncoder.html#stringencoder"
-        title="skrub.StringEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringEncoder</span></code></a>,
-	<a class="reference internal" href="reference/generated/skrub.LLMEncoder.html#LLMEncoder"
-        title="skrub.LLMEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMEncoder</span></code></a>,
-	<a class="reference internal" href="reference/generated/skrub.GapEncoder.html#gapencoder"
-        title="skrub.GapEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GapEncoder</span></code></a>,
-        and
+      <p class="feature-text">Encode text and high cardinality categorical data:</p>
+      <ul class="feature-text">
+        <li>
+          <a class="reference internal"
+          href="reference/generated/skrub.StringEncoder.html#stringencoder"
+          title="skrub.StringEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringEncoder</span></code></a>
+        </li>
+        <li>
+          <a class="reference internal" href="reference/generated/skrub.LLMEncoder.html#LLMEncoder"
+          title="skrub.LLMEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMEncoder</span></code></a>
+        </li>
+      </ul>
+      <p class="feature-text">Extract temporal features with:</p>
+      <ul class="feature-text">
+        <li>
+          <a class="reference internal"
+          href="reference/generated/skrub.DatetimeEncoder.html#datetimeencoder"
+          title="skrub.DatetimeEncoder"><code class="xref py py-class docutils
+          literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>
+        </li>
+        <li>
+          <a class="reference internal"
+          href="reference/generated/skrub.SessionEncoder.html#sessionencoder"
+          title="skrub.SessionEncoder"><code class="xref py py-class docutils
+          literal notranslate"><span class="pre">SessionEncoder</span></code></a>
+        </li>
+      </ul>
+      <p class="feature-text">Robustly scale and clip numerical features with:</p>
+      <ul class="feature-text">
+        <li>
+          <a class="reference internal"
+          href="reference/generated/skrub.SquashingScaler.html#squashingscaler"
+          title="skrub.SquashingScaler"><code class="xref py py-class docutils
+          literal notranslate"><span class="pre">SquashingScaler</span></code></a>
+        </li>
+      </ul>
+      <p class="feature-text">Many more transformations, all <strong>scikit-learn<br>compatible</strong>. All transformers can be applied<br>to a custom selection of columns
+        using
         <a class="reference internal"
-        href="reference/generated/skrub.MinHashEncoder.html#minhashencoder"
-        title="skrub.MinHashEncoder"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">MinHashEncoder</span></code></a>), or
-        extract features from dates with the
-        <a class="reference internal"
-        href="reference/generated/skrub.DatetimeEncoder.html#datetimeencoder"
-        title="skrub.DatetimeEncoder"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>,
-        or robustly scale and clip numerical features with the
-        <a class="reference internal"
-        href="reference/generated/skrub.SquashingScaler.html#squashingscaler"
-        title="skrub.SquashingScaler"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">SquashingScaler</span></code></a>.
-      </p>
+        href="reference/generated/skrub.ApplyToCols.html#skrub.ApplyToCols"
+        title="skrub.ApplyToCols"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">ApplyToCols</span></code></a>.</p>
     </div>
-    <div class="col-md-7 pe-5">
-      <div class="encoding-image"></div>
+    <div class="col-md-6 pe-4">
+      <div id="encoding-carousel" class="carousel slide encoding-carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img class="theme-light"
+                 src="{{ pathto('_static/periodic_features_light_transparent.png', 1) }}"
+                 alt="Periodic features extracted from a datetime column: hourly, weekly, daily and monthly cycles.">
+            <img class="theme-dark"
+                 src="{{ pathto('_static/periodic_features_dark_transparent.png', 1) }}"
+                 alt="Periodic features extracted from a datetime column: hourly, weekly, daily and monthly cycles.">
+          </div>
+          <div class="carousel-item">
+            <img class="theme-light"
+                 src="{{ pathto('_static/llm_encoder_light.png', 1) }}"
+                 alt="Similarity heatmap of the embeddings produced by the LLMEncoder for a column of words.">
+            <img class="theme-dark"
+                 src="{{ pathto('_static/llm_encoder_dark.png', 1) }}"
+                 alt="Similarity heatmap of the embeddings produced by the LLMEncoder for a column of words.">
+          </div>
+          <div class="carousel-item">
+            <img class="theme-light"
+                 src="{{ pathto('_static/squashing_scaler_light.png', 1) }}"
+                 alt="Effect of the SquashingScaler on a numerical feature: values are robustly scaled and clipped.">
+            <img class="theme-dark"
+                 src="{{ pathto('_static/squashing_scaler_dark.png', 1) }}"
+                 alt="Effect of the SquashingScaler on a numerical feature: values are robustly scaled and clipped.">
+          </div>
+        </div>
+        <div class="carousel-controls">
+          <button class="carousel-control-prev" type="button"
+                  data-bs-target="#encoding-carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <div class="carousel-indicators">
+            <button type="button" data-bs-target="#encoding-carousel"
+                    data-bs-slide-to="0" class="active"
+                    aria-current="true" aria-label="Periodic features"></button>
+            <button type="button" data-bs-target="#encoding-carousel"
+                    data-bs-slide-to="1" aria-label="LLMEncoder embeddings"></button>
+            <button type="button" data-bs-target="#encoding-carousel"
+                    data-bs-slide-to="2" aria-label="SquashingScaler"></button>
+          </div>
+          <button class="carousel-control-next" type="button"
+                  data-bs-target="#encoding-carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

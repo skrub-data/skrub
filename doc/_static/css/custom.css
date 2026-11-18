@@ -231,20 +231,118 @@ div.pipeline-img svg g.edge polygon {
     fill: var(--sg-text-color);
 }
 
-.encoding-image {
+/* Carousel of encoding examples on the landing page */
+.encoding-carousel {
     width: 100%;
-    aspect-ratio: 1.2;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
 }
 
-html[data-theme="light"] .encoding-image {
-    background-image: url('../periodic_features_light_transparent.png');
+/* On wide screens the text column leaves a gap to the left of the
+   carousel, so let the slides extend into it while keeping the right
+   edge (and the gutter added by the column's pe-* class) unchanged. */
+@media (min-width: 768px) {
+    .encoding-carousel {
+        width: calc(100% + 3rem);
+        margin-left: -3rem;
+    }
 }
 
-html[data-theme="dark"] .encoding-image {
-    background-image: url('../periodic_features_dark_transparent.png');
+.encoding-carousel .carousel-item {
+    /* Match the aspect ratio of the slide images so that
+       object-fit: contain does not add vertical whitespace. */
+    aspect-ratio: 1.49;
+    /* Slides only advance on user interaction, so use a plain slide. */
+    transition: transform .6s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .encoding-carousel .carousel-item {
+        transition: none;
+    }
+}
+
+.encoding-carousel .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Only one of the two theme variants is shown at a time */
+html[data-theme="light"] .encoding-carousel .theme-dark {
+    display: none;
+}
+
+html[data-theme="dark"] .encoding-carousel .theme-light {
+    display: none;
+}
+
+/* Controls and indicators live in a row below the slides so that the
+   buttons never overlap the plots. */
+.encoding-carousel .carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: .5rem;
+}
+
+/* The theme's default chevrons are white on light and black on dark,
+   so we draw our own controls with the skrub accent color instead. */
+.encoding-carousel .carousel-control-prev,
+.encoding-carousel .carousel-control-next {
+    position: static;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    opacity: 1;
+    border-radius: 50%;
+    background-color: var(--pst-color-surface);
+    border: 1px solid var(--pst-color-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
+}
+
+.encoding-carousel .carousel-control-prev:hover,
+.encoding-carousel .carousel-control-next:hover {
+    background-color: #fbe1ca;
+    border-color: #DA7007;
+}
+
+.encoding-carousel .carousel-control-prev-icon,
+.encoding-carousel .carousel-control-next-icon {
+    width: 1rem;
+    height: 1rem;
+    filter: none;
+}
+
+.encoding-carousel .carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23DA7007' viewBox='0 0 16 16'%3E%3Cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0'/%3E%3C/svg%3E");
+}
+
+.encoding-carousel .carousel-control-next-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23DA7007' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708'/%3E%3C/svg%3E");
+}
+
+.encoding-carousel .carousel-indicators {
+    position: static;
+    flex: 0 1 auto;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.encoding-carousel .carousel-indicators [data-bs-target] {
+    width: 1.75rem;
+    height: 3px;
+    border: 0;
+    background-color: var(--pst-color-text-muted);
+    opacity: .4;
+}
+
+.encoding-carousel .carousel-indicators .active {
+    background-color: #DA7007;
+    opacity: 1;
 }
 
 /* Estimator diagram of the tabular_pipeline demo on the landing page.
