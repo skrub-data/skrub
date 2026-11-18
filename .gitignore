@@ -76,6 +76,7 @@ doc/modules/
 doc/tutorials/
 .DS_Store
 doc/_templates/demo_table_report_generated.html
+doc/_templates/demo_tabular_pipeline_generated.html
 doc/reference/*.rst
 doc/benchmark_indications.rst
 

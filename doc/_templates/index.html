@@ -80,17 +80,28 @@ fa-caret-down visible-small-screen"></i></p>
   <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5 mb-5">
       <h4 class="feature-title">Effortless Tabular Learning</h4>
-      <p class="feature-text">Create strong scikit-learn pipeline baselines effortlessly with
-        <a class="reference internal"
-        href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
-        title="skrub.TableVectorizer"><code class="xref py py-class docutils
-        literal notranslate sk-landing-code"><span class="pre">TableVectorizer</span></code></a>
-        and
-        <a class="reference internal"
-        href="reference/generated/skrub.tabular_pipeline.html#skrub.tabular_pipeline"
-        title="skrub.tabular_pipeline"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">tabular_pipeline</span></code></a>.
-      </p>
+
+      <div class="feature-subsection">
+        <h5 class="feature-subtitle">The Table Vectorizer</h5>
+        <p class="feature-text">Turn your mixed-type dataframe into a numeric
+          feature matrix with the
+          <a class="reference internal"
+          href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
+          title="skrub.TableVectorizer"><code class="xref py py-class docutils
+          literal notranslate sk-landing-code"><span class="pre">TableVectorizer</span></code></a>.
+          Automatically performs <strong>preprocessing</strong> of the data, such as standardizing missing values and parsing dates,
+           before <strong>encoding</strong> based on whether a column contains numbers, strings, or datetimes.
+      </div>
+
+      <div class="feature-subsection">
+        <h5 class="feature-subtitle">The Tabular Pipeline</h5>
+        <p class="feature-text">Choose <code class="docutils literal notranslate"><span class="pre">regression</span></code> or <code class="docutils literal notranslate"><span class="pre">classification</span></code> and let <a class="reference internal"
+          href="reference/generated/skrub.tabular_pipeline.html#skrub.tabular_pipeline"
+          title="skrub.tabular_pipeline"><code class="xref py py-class docutils
+          literal notranslate"><span class="pre">tabular_pipeline</span></code></a> do the rest. Use the power of the <code class="docutils literal notranslate"><span class="pre">TableVectorizer</span></code>
+          to immediately create a scikit-learn baseline <strong>model with good defaults</strong> for each column <br>based on the datetype.
+        </p>
+      </div>
     </div>
 
 

@@ -49,8 +49,10 @@ _SKIP_JUPYTERLITE = os.environ.get("SKIP_JUPYTERLITE", "").strip() in (
 sys.path.append(os.path.relpath("."))
 from credit_fraud_report import create_credit_fraud_report
 from table_report import generate_demo
+from tabular_pipeline_demo import generate_demo as generate_tabular_pipeline_demo
 
 generate_demo()
+generate_tabular_pipeline_demo()
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
