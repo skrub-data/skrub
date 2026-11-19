@@ -79,15 +79,15 @@ requirements:
 
 >>> GeocodeParser().fit_transform(df["sent"])
 shape: (3, 2)
-┌─────────────────┬──────────────┐
-│ sent_department ┆ sent_commune │
-│ ---             ┆ ---          │
-│ str             ┆ str          │
-╞═════════════════╪══════════════╡
-│ 75              ┆ 001          │
-│ 13              ┆ 001          │
-│ 69              ┆ 002          │
-└─────────────────┴──────────────┘
+┌──────────┬───────────┐
+│ sent_dep ┆ sent_city │
+│ ---      ┆ ---       │
+│ str      ┆ str       │
+╞══════════╪═══════════╡
+│ 75       ┆ 001       │
+│ 13       ┆ 001       │
+│ 69       ┆ 002       │
+└──────────┴───────────┘
 
 We can use |ApplyToCols| to apply this transformer to the entire dataframe at once,
 and set ``allow_reject=True`` to let rejected columns pass through without changes:
@@ -95,15 +95,15 @@ and set ``allow_reject=True`` to let rejected columns pass through without chang
 >>> from skrub import ApplyToCols
 >>> ApplyToCols(GeocodeParser(), allow_reject=True).fit_transform(df)
 shape: (3, 5)
-┌─────────────────┬──────────────┬─────────────────────┬──────────────────┬─────────┐
-│ sent_department ┆ sent_commune ┆ received_department ┆ received_commune ┆ notes   │
-│ ---             ┆ ---          ┆ ---                 ┆ ---              ┆ ---     │
-│ str             ┆ str          ┆ str                 ┆ str              ┆ str     │
-╞═════════════════╪══════════════╪═════════════════════╪══════════════════╪═════════╡
-│ 75              ┆ 001          ┆ 91                  ┆ 120              ┆ Sent    │
-│ 13              ┆ 001          ┆ 12                  ┆ 110              ┆ Missing │
-│ 69              ┆ 002          ┆ 88                  ┆ 150              ┆ Sent    │
-└─────────────────┴──────────────┴─────────────────────┴──────────────────┴─────────┘
+┌──────────┬───────────┬──────────────┬───────────────┬─────────┐
+│ sent_dep ┆ sent_city ┆ received_dep ┆ received_city ┆ notes   │
+│ ---      ┆ ---       ┆ ---          ┆ ---           ┆ ---     │
+│ str      ┆ str       ┆ str          ┆ str           ┆ str     │
+╞══════════╪═══════════╪══════════════╪═══════════════╪═════════╡
+│ 75       ┆ 001       ┆ 91           ┆ 120           ┆ Sent    │
+│ 13       ┆ 001       ┆ 12           ┆ 110           ┆ Missing │
+│ 69       ┆ 002       ┆ 88           ┆ 150           ┆ Sent    │
+└──────────┴───────────┴──────────────┴───────────────┴─────────┘
 
 Note how the ``"notes"`` column was rejected and passed through unmodified.
 
@@ -137,7 +137,7 @@ columns: in this case, we don't know in advance which columns should be chosen.
 >>> import pandas as pd
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
 >>> df
-        birthday    city
+     birthday    city
 0  29/01/2024  London
 >>> df.dtypes
 birthday    ...
