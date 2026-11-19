@@ -50,6 +50,7 @@ disabled directly when generating the table report.
 
 The same data is also available as a Python dictionary with
 :func:`~skrub.TableReport.dict`.
+
 Finally, :func:`~skrub.TableReport.markdown` produces a shortened summary of the
 report in Markdown format. This summary contains the measured statistics and the
 associations (if measured): plots and table preview are skipped from this view.
