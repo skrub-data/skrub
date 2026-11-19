@@ -48,6 +48,19 @@ disabled directly when generating the table report.
     tr = TableReport(df, plot_distributions=False)
     json_data = tr.json()
 
+The same data is also available as a Python dictionary with
+:func:`~skrub.TableReport.dict`. This is useful to reuse the statistics measured
+by the |TableReport| directly in a Python script, without parsing the JSON
+output. The dictionary follows the same schema as the JSON data.
+
+.. code-block::
+
+    tr = TableReport(df, plot_distributions=False)
+    report = tr.dict()
+    report["n_rows"], report["n_columns"]
+    # per-column statistics, e.g. the number of missing values in each column
+    {col["name"]: col["null_count"] for col in report["columns"]}
+
 Finally, :func:`~skrub.TableReport.markdown` produces a shortened summary of the
 report in Markdown format. This summary contains the measured statistics and the
 associations (if measured): plots and table preview are skipped from this view.
