@@ -13,6 +13,10 @@ features on the employee salaries dataset.
     The reports displayed in this page are **interactive**. Most of their features only appear when you interact with them:
     as you read this example, click on each |TableReport| to try them out!
 
+.. image:: ../_static/table_report_demo.gif
+    :alt: Animation showing clicks on the cells, tabs and column filters of a
+          TableReport
+
 .. seealso::
 
     The :ref:`user guide <user_guide_table_report_start>` for a description of
