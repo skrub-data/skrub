@@ -85,7 +85,7 @@ Bugfixes
 --------
 - :class:`SessionEncoder` now preserves the index of pandas dataframes.
   Previously the output had a new ``RangeIndex``.
-  :pr:`XXXX` by :user:`LolPanda2004 <LolPanda2004>`.
+  :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.
 
 - :class:`TableReport` no longer counts unused pandas categories as distinct
   values or includes them among the most frequent values. This also fixes
