@@ -234,10 +234,11 @@ def _get_safe_hist_range(values):
 def _robust_hist(col, ax=None, color=None):
     result = {}
     col = sbd.drop_nulls(col)
-    if sbd.is_float(col):
+    if sbd.is_numeric(col) and not sbd.is_integer(col):
         # avoid any issues with pandas nullable dtypes
         # (to_numpy can yield a numpy array with object dtype in old pandas
-        # version if there are inf or nan)
+        # version if there are inf or nan), and with decimal columns (to_numpy
+        # gives an object array of decimal.Decimal that np.quantile rejects)
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
     if sbd.is_any_date(col):
