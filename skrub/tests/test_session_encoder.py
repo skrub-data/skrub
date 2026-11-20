@@ -750,3 +750,26 @@ def test_empty_column_name(df_module):
     assert sbd.shape(result)[0] == 4
     assert "timestamp_session_id" in sbd.column_names(result)
     assert sbd.to_list(sbd.col(result, "timestamp_session_id")) == [0, 0, 1, 1]
+
+
+def test_pandas_index_is_preserved():
+    # Non-regression test for #2443: the output must keep the input index.
+    df = pd.DataFrame(
+        {
+            "user_id": [1, 1, 2, 1],
+            "timestamp": pd.to_datetime(
+                [
+                    "2024-01-01 10:10",
+                    "2024-01-01 10:00",
+                    "2024-01-01 12:00",
+                    None,
+                ]
+            ),
+        },
+        index=[30, 10, 20, 10],
+    )
+    encoder = SessionEncoder(timestamp_col="timestamp", split_by="user_id")
+    result = encoder.fit_transform(df)
+    assert result.index.tolist() == [30, 10, 20, 10]
+    assert result["timestamp_session_id"].tolist() == [0, 0, 1, -1]
+    assert encoder.transform(df).index.tolist() == [30, 10, 20, 10]

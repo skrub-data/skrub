@@ -1039,6 +1039,16 @@ def test_with_columns(df_module):
     df_module.assert_frame_equal(out, expected)
 
 
+def test_with_columns_preserves_pandas_index():
+    df = pd.DataFrame({"a": [1, 2], "b": [3, 4]}, index=[10, 20])
+    # the new column's own index is ignored, values are added by position
+    new_col = pd.Series([5, 6], index=[100, 200])
+    out = ns.with_columns(df, c=new_col, d=[7, 8])
+    assert out.index.tolist() == [10, 20]
+    assert out["c"].tolist() == [5, 6]
+    assert out["d"].tolist() == [7, 8]
+
+
 def test_abs(df_module):
     s = df_module.make_column("", [-1.0, 2.0, None])
     df_module.assert_column_equal(
