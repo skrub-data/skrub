@@ -105,7 +105,8 @@ Bugfixes
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
-  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`
+  and :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
 - :class:`LLMEncoder` no longer loads a separate copy of the language model for
   each column it encodes, e.g. in :class:`ApplyToCols` or
   :class:`TableVectorizer`. The model is now loaded once per process and shared
@@ -137,10 +138,6 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
-- :class:`DatetimeEncoder` (and therefore :class:`TableVectorizer`) no longer
-  raises an ``AttributeError`` when fitted on a polars column with the ``Date``
-  dtype.
-  :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------
