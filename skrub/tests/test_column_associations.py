@@ -7,6 +7,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import column_associations
+from skrub._column_associations import _contingency_table
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -76,3 +77,23 @@ def test_infinite(df_module):
         column_associations(
             df_module.make_dataframe({"a": [float("inf"), 1.5], "b": [0.0, 1.5]})
         )
+
+
+def test_contingency_table():
+    rng = np.random.default_rng(42)
+
+    categories = rng.integers(0, 2, size=(5, 20))
+    encoded = np.eye(2, dtype=bool)[categories].transpose(0, 2, 1)
+
+    expected = np.einsum(
+        "ack,bdk",
+        encoded,
+        encoded,
+        dtype=np.int32,
+    )
+
+    result = _contingency_table(encoded)
+
+    assert result.shape == (5, 5, 2, 2)
+    assert result.dtype == np.int32
+    np.testing.assert_array_equal(result, expected)

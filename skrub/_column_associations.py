@@ -240,12 +240,30 @@ def _contingency_table(encoded):
     This function computes for each pair of columns, the n bins x n bins
     contingency table that will be used to measure their association.
 
-    The result is an array of shape n cols, n cols, n bins, n bind where result
-    [i, j, :, :] is the contingency table for column i vs column j.
+    The result is an array of shape n cols, n cols, n bins, n bins where
+    result[i, j, :, :] is the contingency table for column i vs column j.
     """
     n_cols, n_bins, _ = encoded.shape
+    block_size = 4
+
     out = np.empty((n_cols, n_cols, n_bins, n_bins), dtype="int32")
-    return np.einsum("ack,bdk", encoded, encoded, out=out)
+
+    for i in range(0, n_cols, block_size):
+        i_end = min(i + block_size, n_cols)
+        left = encoded[i:i_end].astype(np.int32)
+
+        for j in range(i, n_cols, block_size):
+            j_end = min(j + block_size, n_cols)
+            right = encoded[j:j_end].astype(np.int32)
+
+            block = left[:, None, :, :] @ right.transpose(0, 2, 1)[None, :, :, :]
+
+            out[i:i_end, j:j_end] = block
+
+            if i != j:
+                out[j:j_end, i:i_end] = block.transpose(1, 0, 3, 2)
+
+    return out
 
 
 def _compute_cramer(table, n_samples):
