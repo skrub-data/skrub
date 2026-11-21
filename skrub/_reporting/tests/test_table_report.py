@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from sklearn.utils import Bunch
+from sklearn.utils.fixes import parse_version
 
 from skrub import TableReport, ToDatetime, config_context
 from skrub import _dataframe as sbd
@@ -169,6 +170,8 @@ def test_decimal_column(df_module):
         )
     else:
         pa = pytest.importorskip("pyarrow")
+        if parse_version(df_module.module.__version__) < parse_version("2.0.0"):
+            pytest.skip("pandas < 2.0 cannot compute correlations on Arrow nulls")
         dtype = df_module.module.ArrowDtype(pa.decimal128(10, 2))
         col = df_module.module.Series(values, name="a", dtype=dtype)
     # build the dataframe directly: make_dataframe would convert the dtype
