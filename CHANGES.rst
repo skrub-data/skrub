@@ -83,6 +83,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer fails on pandas dataframes that contain a
+  ``float16`` column.
+  :pr:`2452` by :user:`Jeremy891102 <Jeremy891102>`.
+
 - :class:`SessionEncoder` now preserves the index of pandas dataframes.
   Previously the output had a new ``RangeIndex``.
   :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.
