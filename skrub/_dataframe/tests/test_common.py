@@ -1080,6 +1080,15 @@ def test_is_sorted(col, expected, df_module):
         assert ns.is_sorted(col[::-1], descending=True)
 
 
+def test_is_sorted_pandas_float16():
+    # pandas cannot build a float16 index, which it uses to check monotonicity.
+    col = pd.Series(np.array([1.0, np.nan, 2.0, 3.0], dtype=np.float16))
+    assert ns.is_sorted(col)
+    assert not ns.is_sorted(col[::-1])
+    assert ns.is_sorted(col[::-1], descending=True)
+    assert not ns.is_sorted(col.iloc[[0, 3, 2]])
+
+
 @pytest.mark.parametrize(
     "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
 )

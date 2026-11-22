@@ -1514,6 +1514,10 @@ def is_sorted(col, descending=False):
 
 @is_sorted.specialize("pandas", argument_type="Column")
 def _is_sorted_pandas(col, descending=False):
+    if col.dtype == np.float16:
+        # pandas builds an Index to check monotonicity, and float16 indexes are not
+        # supported. Upcasting is exact and does not change the order.
+        col = col.astype(np.float32)
     if descending:
         return col.dropna().is_monotonic_decreasing
     return col.dropna().is_monotonic_increasing
