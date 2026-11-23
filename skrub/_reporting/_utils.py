@@ -1,10 +1,13 @@
 import base64
+import datetime
+import decimal
 import json
 import numbers
 import re
 import unicodedata
 
 import numpy as np
+import pandas as pd
 
 from skrub import _dataframe as sbd
 from skrub._config import get_config
@@ -117,6 +120,16 @@ class JSONEncoder(json.JSONEncoder):
                 return float(value)
             if isinstance(value, np.ndarray):
                 return value.tolist()
+            if isinstance(value, decimal.Decimal):
+                return float(value)
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value).decode("utf-8", errors="replace")
+            if isinstance(value, (pd.Period, pd.Interval, pd.Timestamp)):
+                return str(value)
+            if isinstance(value, (complex, np.complexfloating)):
+                return str(value)
+            if isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
+                return value.isoformat()
             raise
 
 

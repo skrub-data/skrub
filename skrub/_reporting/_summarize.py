@@ -211,7 +211,11 @@ def _add_nulls_summary(summary, column, dataframe_summary):
 
 
 def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
-    if sbd.is_numeric(column) or sbd.is_any_date(column) or sbd.is_duration(column):
+    if (
+        (sbd.is_numeric(column) and not sbd.is_complex(column))
+        or sbd.is_any_date(column)
+        or sbd.is_duration(column)
+    ):
         return
     n_unique, value_counts = _utils.top_k_value_counts(column, k=10)
     # if the column contains all nulls, _add_value_counts does not get called
@@ -274,6 +278,10 @@ def _add_numeric_summary(
         column, duration_unit = _utils.duration_to_numeric(column)
     else:
         summary["is_duration"] = False
+        if sbd.is_complex(column):
+            # quantiles, histograms etc. are not defined for complex numbers,
+            # so complex columns are summarized with value counts instead
+            return
         if not sbd.is_numeric(column):
             if sbd.is_bool(column):
                 summary["mean"] = sbd.mean(column)

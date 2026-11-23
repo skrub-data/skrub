@@ -83,6 +83,11 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer fails on columns containing ``bytes`` that
+  are not valid UTF-8, complex numbers, ``decimal.Decimal`` values,
+  ``Period`` or ``Interval`` values, or timezone-aware timestamps with
+  different time zones. See :issue:`2453` by :user:`Tony Ya <tony1233200>`.
+
 - :class:`SessionEncoder` now preserves the index of pandas dataframes.
   Previously the output had a new ``RangeIndex``.
   :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.

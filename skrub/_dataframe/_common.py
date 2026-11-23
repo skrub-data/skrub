@@ -67,6 +67,7 @@ __all__ = [
     "is_numeric",
     "is_integer",
     "is_float",
+    "is_complex",
     "to_float32",
     "is_string",
     "to_string",
@@ -795,6 +796,22 @@ def _is_float_polars(col):
 
 
 @dispatch
+def is_complex(col):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@is_complex.specialize("pandas", argument_type="Column")
+def _is_complex_pandas(col):
+    return pd.api.types.is_complex_dtype(col)
+
+
+@is_complex.specialize("polars", argument_type="Column")
+def _is_complex_polars(col):
+    # polars has no complex dtype
+    return False
+
+
+@dispatch
 def to_float32(col, strict=True):
     raise_dispatch_unregistered_type(col, kind="Series")
 
@@ -872,7 +889,20 @@ def to_string(col):
 def _to_string_pandas(col):
     is_na = col.isna()
     if not (is_pandas_object(col) and is_string(col)):
-        col = col.astype("str")
+        try:
+            col = col.astype("str")
+        except UnicodeDecodeError:
+            # pandas decodes bytes as UTF-8 when casting to str, which fails
+            # for bytes that are not valid UTF-8. Decode those with
+            # replacement characters instead of raising.
+            col = col.map(
+                lambda value: (
+                    value.decode("utf-8", errors="replace")
+                    if isinstance(value, bytes)
+                    else str(value)
+                ),
+                na_action="ignore",
+            )
         col[is_na] = np.nan
         return col
     if not is_na.any():
@@ -884,6 +914,22 @@ def _to_string_pandas(col):
 def _to_string_polars(col):
     # polars raises an error when trying to cast those types to string directly
     # so we have to use map_elements
+    if col.dtype == pl.Binary:
+        # casting binary to string decodes as UTF-8 and fails for bytes that
+        # are not valid UTF-8. Decode those with replacement characters
+        # instead of raising.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=pl.exceptions.PolarsInefficientMapWarning
+            )
+            return col.map_elements(
+                lambda value: (
+                    value.decode("utf-8", errors="replace")
+                    if isinstance(value, bytes)
+                    else value
+                ),
+                return_dtype=pl.String,
+            )
     if col.dtype not in (pl.Object, pl.List, pl.Array):
         return _cast_polars(col, pl.String)
     # polars emits a performance warning when using map_elements

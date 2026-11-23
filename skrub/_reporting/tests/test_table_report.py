@@ -130,6 +130,53 @@ def test_nat(df_module):
     TableReport(df).html()
 
 
+def test_table_report_unusual_dtypes():
+    # non-regression test for https://github.com/skrub-data/skrub/issues/2453
+    # (float16 columns are covered by #2452)
+    import decimal
+
+    import pandas as pd
+
+    n = 10
+    cases = {
+        "bytes": pd.DataFrame({"b": [b"ab", b"\xff\xfe"] * 5}),
+        "complex": pd.DataFrame({"c": np.arange(n) + 1j}),
+        "Decimal": pd.DataFrame(
+            {"d": [decimal.Decimal("1.5"), decimal.Decimal("2.25")] * 5}
+        ),
+        "Period": pd.DataFrame({"p": pd.period_range("2024-01", periods=n, freq="M")}),
+        "Interval": pd.DataFrame({"iv": pd.interval_range(0, n)}),
+        "mixed tz": pd.DataFrame(
+            {
+                "d": [
+                    pd.Timestamp("2024-01-01", tz="UTC"),
+                    pd.Timestamp("2024-01-01", tz="Asia/Taipei"),
+                ]
+                * 5
+            }
+        ),
+    }
+    for df in cases.values():
+        report = TableReport(df)
+        report.html()
+        json.loads(report.json())
+    # complex columns are summarized with value counts, not with a numeric
+    # summary (quantiles are not defined for complex numbers)
+    data = json.loads(TableReport(cases["complex"]).json())
+    assert "value_counts" in data["columns"][0]
+    assert "mean" not in data["columns"][0]
+
+
+@skip_polars_installed_without_pyarrow
+def test_table_report_bytes_polars():
+    # non-regression test for https://github.com/skrub-data/skrub/issues/2453
+    pl = pytest.importorskip("polars")
+    df = pl.DataFrame({"b": [b"ab", b"\xff\xfe"] * 5})
+    report = TableReport(df)
+    report.html()
+    json.loads(report.json())
+
+
 @skip_polars_installed_without_pyarrow
 def test_bool_column_mean(df_module):
     df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})

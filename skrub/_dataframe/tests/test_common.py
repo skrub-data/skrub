@@ -567,6 +567,13 @@ def test_to_string_polars_object(pl_module):
     ns.to_string(s)
 
 
+def test_to_string_bytes(df_module):
+    # non-regression test for https://github.com/skrub-data/skrub/issues/2453
+    # bytes that are not valid UTF-8 used to raise when converting to string
+    s = df_module.make_column("b", [b"ab", b"\xff\xfe"])
+    assert ns.to_list(ns.to_string(s)) == ["ab", "\ufffd\ufffd"]
+
+
 def test_is_object(df_module):
     if df_module.name == "polars":
         import polars as pl

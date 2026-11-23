@@ -1,7 +1,9 @@
 import datetime
+import decimal
 import json
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -105,6 +107,28 @@ def test_json_encoder():
     assert json.dumps(d, cls=_utils.JSONEncoder) == '{"a": 1, "b": 1.0}'
     with pytest.raises(TypeError, match=".*JSON serializable"):
         json.dumps({"a": np}, cls=_utils.JSONEncoder)
+
+
+def test_json_encoder_unusual_types():
+    # non-regression test for https://github.com/skrub-data/skrub/issues/2453
+    d = {
+        "decimal": decimal.Decimal("1.5"),
+        "bytes": b"\xff",
+        "period": pd.Period("2024-01", freq="M"),
+        "interval": pd.Interval(0, 1),
+        "timestamp": pd.Timestamp("2024-01-01", tz="UTC"),
+        "complex": 1 + 2j,
+        "date": datetime.date(2024, 1, 2),
+    }
+    assert json.loads(json.dumps(d, cls=_utils.JSONEncoder)) == {
+        "decimal": 1.5,
+        "bytes": "\ufffd",
+        "period": "2024-01",
+        "interval": "(0, 1]",
+        "timestamp": "2024-01-01 00:00:00+00:00",
+        "complex": "(1+2j)",
+        "date": "2024-01-02",
+    }
 
 
 def test_svg_to_img_src():
