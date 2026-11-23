@@ -142,6 +142,13 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`ToDatetime` (and therefore :class:`TableVectorizer`, :class:`Cleaner`
+  and :func:`to_datetime`) now parses string columns of polars dataframes that
+  use the ``Z`` suffix for UTC (e.g. ``"2020-01-01T10:00:00Z"``) or offsets
+  such as ``+02``. Previously these columns were rejected, so the
+  :class:`TableVectorizer` encoded them as categories, whereas pandas parsed
+  them.
+  :pr:`XXXX` by :user:`Tushar Sharma <tushar-mahalya>`.
 
 Deprecations
 ------------

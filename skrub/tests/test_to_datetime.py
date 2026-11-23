@@ -127,6 +127,37 @@ def test_mixed_offsets(df_module):
     ]
 
 
+@skip_polars_installed_without_pyarrow
+@pytest.mark.parametrize(
+    "values",
+    [
+        ["2020-01-02T08:00:01Z", "2020-01-03T08:00:01Z"],
+        ["2020-01-02T08:00:01Z", "2020-01-03T10:00:01+02:00"],
+        ["2020-01-02T08:00:01Z", None],
+    ],
+)
+def test_utc_suffix(df_module, values):
+    """The "Z" (Zulu) suffix is parsed with both pandas and polars."""
+    s = df_module.make_column("when", values)
+    encoder = ToDatetime()
+    transformed = encoder.fit_transform(s)
+    assert encoder.output_time_zone_ == "UTC"
+    expected = [
+        "2020-01-02T08:00:01",
+        "????" if values[1] is None else "2020-01-03T08:00:01",
+    ]
+    for out in transformed, encoder.transform(s):
+        assert sbd.to_list(sbd.fill_nulls(strftime(out, ISO), "????")) == expected
+
+
+@skip_polars_installed_without_pyarrow
+def test_fit_offset_transform_utc_suffix(df_module):
+    fit = df_module.make_column("when", ["2020-01-02T08:00:01+0200"])
+    test = df_module.make_column("when", ["2020-01-02T06:00:01Z"])
+    encoder = ToDatetime().fit(fit)
+    assert to_iso(encoder.transform(test)) == ["2020-01-02T06:00:01"]
+
+
 def localize(df_module, dt_col, time_zone):
     if df_module.name == "pandas":
         return dt_col.dt.tz_localize(time_zone)
