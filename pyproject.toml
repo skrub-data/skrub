@@ -95,9 +95,10 @@ Source = "https://github.com/skrub-data/skrub"
 Issues = "https://github.com/skrub-data/skrub/issues"
 
 [tool.setuptools.packages.find]
-# Discover `skrub` and all its subpackages. `namespaces = true` is needed for
-# data-only directories such as `skrub/_docs`, which are shipped as namespace
-# packages so that setuptools does not treat them as undeclared packages.
+# Include subpackages via discovery rather than listing only skrub.
+# namespaces is needed to include data-only directories such as `skrub/_docs`
+# Without this, setuptools warns that the packages are missing when
+# building the package
 include = ["skrub*"]
 namespaces = true
 
