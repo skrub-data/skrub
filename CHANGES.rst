@@ -148,7 +148,7 @@ Bugfixes
   such as ``+02``. Previously these columns were rejected, so the
   :class:`TableVectorizer` encoded them as categories, whereas pandas parsed
   them.
-  :pr:`XXXX` by :user:`Tushar Sharma <tushar-mahalya>`.
+  :pr:`2456` by :user:`Tushar Sharma <tushar-mahalya>`.
 
 Deprecations
 ------------
