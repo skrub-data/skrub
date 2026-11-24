@@ -820,6 +820,12 @@ def _to_float32_polars(col, strict=True):
             # old versions of polars don't have .cat.physical()
             return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
         return col.cat.physical().cast(pl.Float32)
+    if col.dtype == pl.String:
+        # polars' cast is strict about surrounding whitespace, whereas
+        # `pd.to_numeric` ignores it. Strip exactly what the pandas path
+        # ignores: ASCII whitespace only, so a no-break space (U+00A0) or a
+        # thin space is rejected by both backends rather than only by pandas.
+        col = col.str.strip_chars(" \t\n\r\f\v")
     return col.cast(pl.Float32, strict=strict)
 
 
@@ -1447,7 +1453,7 @@ def _replace_polars(col, old, new):
 def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
-    return make_dataframe_like(df, cols)
+    return copy_index(df, make_dataframe_like(df, cols))
 
 
 @dispatch

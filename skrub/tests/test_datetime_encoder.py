@@ -21,7 +21,7 @@ def date(df_module):
     return sbd.to_datetime(
         df_module.make_column(
             "when",
-            ["2020-01-01", None, "2022-01-01", "2018-11-04"],
+            ["2020-01-01", None, "2022-01-01", "2018-11-04", "2026-11-11"],
         ),
         "%Y-%m-%d",
     )
@@ -31,7 +31,13 @@ def datetime(df_module):
     return sbd.to_datetime(
         df_module.make_column(
             "when",
-            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43", "2018-11-04 12:00:00"],
+            [
+                "2020-01-01 10:12:01",
+                None,
+                "2022-01-01 23:23:43",
+                "2018-11-04 12:00:00",
+                "2026-11-11 20:00:00",
+            ],
         ),
         "%Y-%m-%d %H:%M:%S",
     )
@@ -42,7 +48,13 @@ def tz_datetime(df_module):
     col = sbd.to_datetime(
         df_module.make_column(
             "when",
-            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43", "2018-11-04 12:00:00"],
+            [
+                "2020-01-01 10:12:01",
+                None,
+                "2022-01-01 23:23:43",
+                "2018-11-04 12:00:00",
+                "2026-11-11 20:00:00",
+            ],
         ),
         "%Y-%m-%d %H:%M:%S",
     )
@@ -62,6 +74,7 @@ def nanoseconds(df_module):
                 None,
                 "2022-01-01 23:23:43.123987654",
                 "2018-11-04 12:00:00.123456789",
+                "2026-11-11 20:00:00.123456788",
             ],
         ),
         (
@@ -92,16 +105,24 @@ def a_datetime_col(request, df_module):
 @pytest.fixture
 def expected_features(df_module):
     values = {
-        "when_year": [2020.0, None, 2022.0, 2018.0],
-        "when_month": [1.0, None, 1.0, 11.0],
-        "when_day": [1.0, None, 1.0, 4.0],
-        "when_hour": [10.0, None, 23.0, 12.0],
-        "when_minute": [12.0, None, 23.0, 0],
-        "when_second": [1.0, None, 43.0, 0],
-        "when_microsecond": [123456.0, None, 123987.0, 123456.0],
-        "when_nanosecond": [789.0, None, 654.0, 789.0],
-        "when_total_seconds": [1577873536.0, None, 1641079424.0, 1541340032.0],
-        "when_weekday": [3.0, None, 6.0, 3.0],
+        "when_year": [2020.0, None, 2022.0, 2018.0, 2026.0],
+        "when_month": [1.0, None, 1.0, 11.0, 11.0],
+        "when_day": [1.0, None, 1.0, 4.0, 11.0],
+        "when_hour": [10.0, None, 23.0, 12.0, 20.0],
+        "when_minute": [12.0, None, 23.0, 0, 0],
+        "when_second": [1.0, None, 43.0, 0, 0],
+        "when_microsecond": [123456.0, None, 123987.0, 123456.0, 123456.0],
+        "when_nanosecond": [789.0, None, 654.0, 789.0, 788.0],
+        "when_total_seconds": [
+            1577873536.0,
+            None,
+            1641079424.0,
+            1541340032.0,
+            1794427264.0,
+        ],
+        "when_weekday": [3.0, None, 6.0, 3.0, 3.0],
+        "when_holidays_FR": [1.0, None, 1.0, 0.0, 1.0],
+        "when_holidays_CA": [1.0, None, 1.0, 0.0, 0.0],
     }
 
     res = df_module.make_dataframe(values)
@@ -204,9 +225,27 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             ),
             ["year", "month", "day", "day_of_year"],
         ),
+        (
+            dict(add_holidays="FR"),
+            ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
+        ),
+        (
+            dict(add_holidays=["FR", "CA"]),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "total_seconds",
+                "holidays_FR",
+                "holidays_CA",
+            ],
+        ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
+    if "add_holidays" in params:
+        pytest.importorskip("holidays")
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.extracted_features_ == [f"{f}" for f in extracted_features]
@@ -299,9 +338,27 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
             ),
             ["weekday_circular_0", "weekday_circular_1"],
         ),
+        (
+            dict(add_holidays="FR"),
+            ["year", "month", "day", "hour", "total_seconds", "holidays_FR"],
+        ),
+        (
+            dict(add_holidays=["FR", "CA"]),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "total_seconds",
+                "holidays_FR",
+                "holidays_CA",
+            ],
+        ),
     ],
 )
 def test_all_outputs_choice(datetime_cols, params, all_outputs):
+    if "add_holidays" in params:
+        pytest.importorskip("holidays")
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
@@ -341,6 +398,19 @@ def test_time_not_extracted_from_date_col(datetime_cols):
     ]
 
 
+def test_polars_date_dtype():
+    # Non-regression test: the polars Date dtype has no time_zone attribute,
+    # which used to raise an AttributeError.
+    pl = pytest.importorskip("polars")
+    col = pl.Series("when", ["2020-01-01", None, "2022-12-31"]).str.to_date()
+    assert col.dtype == pl.Date
+    enc = DatetimeEncoder(resolution="nanosecond")
+    out = enc.fit_transform(col)
+    assert enc.extracted_features_ == ["year", "month", "day", "total_seconds"]
+    assert sbd.to_list(sbd.col(out, "when_year")) == [2020.0, None, 2022.0]
+    assert sbd.to_list(sbd.col(out, "when_day")) == [1.0, None, 31.0]
+
+
 def test_invalid_resolution(datetime_cols):
     with pytest.raises(ValueError, match=r".*'resolution' options are"):
         DatetimeEncoder(resolution="hello").fit(datetime_cols.datetime)
@@ -349,6 +419,18 @@ def test_invalid_resolution(datetime_cols):
 def test_reject_non_datetime(df_module):
     with pytest.raises(ValueError, match=".*does not have Date or Datetime dtype."):
         DatetimeEncoder().fit_transform(df_module.example_column)
+
+
+def test_invalid_holidays_country(datetime_cols):
+    pytest.importorskip("holidays")
+    with pytest.raises(ValueError, match="Unknown country: ZZ for holidays.*"):
+        DatetimeEncoder(add_holidays="ZZ").fit(datetime_cols.datetime)
+
+
+def test_invalid_holidays_param(datetime_cols):
+    pytest.importorskip("holidays")
+    with pytest.raises(TypeError, match=r"add_holidays must be a .*"):
+        DatetimeEncoder(add_holidays=["FR", 42]).fit(datetime_cols.datetime)
 
 
 # Checking parameters for CircularEncoder and SplineEncoder

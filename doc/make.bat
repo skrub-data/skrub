@@ -54,10 +54,6 @@ if exist "reference\generated\" (
     rmdir /q /s "reference\generated"
     echo. Removed reference\generated\
 )
-if exist "generated_for_index\" (
-    rmdir /q /s "generated_for_index"
-    echo. Removed generated_for_index\
-)
 if exist "reference\" (
     for %%i in ("reference\*.rst") do del /q "%%i" 2>nul
     echo. Removed reference\*.rst

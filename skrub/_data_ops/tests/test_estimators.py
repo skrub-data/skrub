@@ -386,7 +386,7 @@ def test_score_caching():
     CountingDummy.counts.clear()
     # called only for my_accuracy_on_subset and builtin_score
     new_scores = learner.score(
-        {"X": X_test, "y": y_test, "_skrub_predictions": {"predict": prediction}}
+        {"X": X_test, "y": y_test, "skrub.predictions": {"predict": prediction}}
     )
     assert new_scores == scores
     # predict called only for my_accuracy_on_subset and builtin_score
@@ -455,15 +455,15 @@ def test_score_provide_predictions():
     )
     prediction = learner.predict(test_env)
     assert learner.score(test_env) == learner.score(
-        test_env | {"_skrub_predictions": {"predict": prediction}}
+        test_env | {"skrub.predictions": {"predict": prediction}}
     )
 
     # check that the prediction in the env is actually being used
-    assert learner.score(test_env | {"_skrub_predictions": {"predict": y_test}}) == {
+    assert learner.score(test_env | {"skrub.predictions": {"predict": y_test}}) == {
         "accuracy": 1.0
     }
 
-    # when using the builtin score '_skrub_predictions' is not used
+    # when using the builtin score 'skrub.predictions' is not used
     learner_no_scoring = (
         skrub.X()
         .skb.apply(DummyClassifier(), y=skrub.y())
@@ -471,7 +471,7 @@ def test_score_provide_predictions():
         .fit(train_env)
     )
     assert (
-        learner_no_scoring.score(test_env | {"_skrub_predictions": {"predict": y_test}})
+        learner_no_scoring.score(test_env | {"skrub.predictions": {"predict": y_test}})
         == 0.44
     )
 
@@ -655,6 +655,15 @@ def test_unsupervised_no_y():
     sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
     sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
     assert_allclose(sklearn_scores, data_op_scores)
+
+
+def test_grid_search_default_score_no_y():
+    X = np.random.default_rng(0).normal(size=(30, 20))
+    data_op = skrub.X(X).skb.apply(
+        PCA(**skrub.choose_from([4, 8], name="n_components"))
+    )
+    scores = data_op.skb.make_grid_search(fitted=True).results_["mean_test_score"]
+    assert not scores.isna().any()
 
 
 def test_unsupervised():
@@ -906,15 +915,15 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {
                 "n": 8,
-                "_skrub_X": [0, 1, 2, 3, 4, 5],
-                "_skrub_y": [8, 9, 10, 11, 12, 13],
-                "_skrub_is_preview_data_env": True,
+                "skrub.X": [0, 1, 2, 3, 4, 5],
+                "skrub.y": [8, 9, 10, 11, 12, 13],
+                "skrub.is_preview_data_env": True,
             },
             "test": {
                 "n": 8,
-                "_skrub_X": [6, 7],
-                "_skrub_y": [14, 15],
-                "_skrub_is_preview_data_env": True,
+                "skrub.X": [6, 7],
+                "skrub.y": [14, 15],
+                "skrub.is_preview_data_env": True,
             },
             "X": list(range(8)),
             "y": list(range(8, 16)),
@@ -927,13 +936,13 @@ def test_train_test_split(with_y):
         assert split == {
             "train": {
                 "n": 8,
-                "_skrub_X": [0, 1, 2, 3, 4, 5],
-                "_skrub_is_preview_data_env": True,
+                "skrub.X": [0, 1, 2, 3, 4, 5],
+                "skrub.is_preview_data_env": True,
             },
             "test": {
                 "n": 8,
-                "_skrub_X": [6, 7],
-                "_skrub_is_preview_data_env": True,
+                "skrub.X": [6, 7],
+                "skrub.is_preview_data_env": True,
             },
             "X": list(range(8)),
             "X_train": [0, 1, 2, 3, 4, 5],
@@ -942,8 +951,8 @@ def test_train_test_split(with_y):
     split = e.skb.train_test_split({"n": 4}, shuffle=False)
     if with_y:
         assert split == {
-            "train": {"n": 4, "_skrub_X": [0, 1, 2], "_skrub_y": [4, 5, 6]},
-            "test": {"n": 4, "_skrub_X": [3], "_skrub_y": [7]},
+            "train": {"n": 4, "skrub.X": [0, 1, 2], "skrub.y": [4, 5, 6]},
+            "test": {"n": 4, "skrub.X": [3], "skrub.y": [7]},
             "X": list(range(4)),
             "y": list(range(4, 8)),
             "X_train": [0, 1, 2],
@@ -956,8 +965,8 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0, 8, 9, 10, 11, 12, 13, 14, 15]
     else:
         assert split == {
-            "train": {"n": 4, "_skrub_X": [0, 1, 2]},
-            "test": {"n": 4, "_skrub_X": [3]},
+            "train": {"n": 4, "skrub.X": [0, 1, 2]},
+            "test": {"n": 4, "skrub.X": [3]},
             "X": list(range(4)),
             "X_train": [0, 1, 2],
             "X_test": [3],
@@ -1069,13 +1078,13 @@ def test_iter_cv_splits():
     X = skrub.X(np.arange(5) * 10)
     splits = X.skb.iter_cv_splits()
     s = next(splits)
-    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
-    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["X_train"]) == list(s["train"]["skrub.X"]) == [10, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["skrub.X"]) == [0]
     assert list(s["row_indices_train"]) == [1, 2, 3, 4]
     assert list(s["row_indices_test"]) == [0]
     s = next(splits)
-    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
-    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["X_train"]) == list(s["train"]["skrub.X"]) == [0, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["skrub.X"]) == [10]
     assert list(s["row_indices_train"]) == [0, 2, 3, 4]
     assert list(s["row_indices_test"]) == [1]
 
@@ -1083,17 +1092,17 @@ def test_iter_cv_splits():
     y = skrub.y(np.arange(4) * -10)
     splits = skrub.as_data_op((X, y)).skb.iter_cv_splits(cv=4)
     s = next(splits)
-    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30]
-    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
-    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
-    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    assert list(s["X_train"]) == list(s["train"]["skrub.X"]) == [10, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["skrub.X"]) == [0]
+    assert list(s["y_train"]) == list(s["train"]["skrub.y"]) == [-10, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["skrub.y"]) == [0]
     assert list(s["row_indices_train"]) == [1, 2, 3]
     assert list(s["row_indices_test"]) == [0]
     s = next(splits)
-    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
-    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
-    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
-    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+    assert list(s["X_train"]) == list(s["train"]["skrub.X"]) == [0, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["skrub.X"]) == [10]
+    assert list(s["y_train"]) == list(s["train"]["skrub.y"]) == [0, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["skrub.y"]) == [-10]
     assert list(s["row_indices_train"]) == [0, 2, 3]
     assert list(s["row_indices_test"]) == [1]
 

@@ -11,13 +11,29 @@ Ongoing Development
 
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+0.12.0
+======
+
+New Features
+------------
 - :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
   skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
   standard scikit-learn interface: ``fit(X, y)`` rather than the usual
   SkrubLearner ``fit({"var_name": ..., ...})``. See the :meth:`reference
   <SkrubLearner.with_sklearn_interface>` and an :ref:`example
   <example_with_sklearn_interface>`.
-  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`2372` by :user:`Jérôme Dockès <jeromedockes>` and
+  :pr:`2423` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.get_choices` allows inspecting all the choices (created
   with :func:`choose_from`, :func:`choose_float`, :func:`choose_int`,
   :func:`choose_bool` or :func:`optional`) contained in a :class:`DataOp`,
@@ -26,9 +42,21 @@ New Features
 - :meth:`TableReport.write_json` stores the report data into a JSON file,
   similar to :meth:`TableReport.write_html`.
   :pr:`2356` by :user:`Jad Yehya <Jad-yehya>`.
+- :class:`DatetimeEncoder` has a new option `add_holidays`, indicating which
+  days are a holiday in the specified country or country list, provided the
+  holidays package is installed
+  :pr:`2357` by :user:`Laurent Steff <lsioctl>`
+- :class:`ToFloat` has a new ``convert_percentage`` parameter. When it is
+  ``True``, strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are
+  converted to fractions (``0.125``, ``0.01``).
+  :pr:`2407` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
 
 Changes
 -------
+- :class:`ToFloat` now converts numbers padded with surrounding whitespace
+  identically on the pandas and polars backends. Previously such values were
+  cast to null, or rejected together with their column, by the polars backend.
+  :pr:`2430` by :user:`Dongze Li <lidongze1002>`.
 - :func:`set_config` and :func:`config_context` now use ``UNCHANGED`` as the
   default for every parameter.
   Explicit ``None`` values are no longer treated as "leave unchanged" and are
@@ -40,11 +68,28 @@ Changes
   choice name, or node ID, in the DataOp) now causes a warning displaying the
   extra keys to help detect typos and mistakes. It can be silenced with the
   warnings module, or, more robustly, by adding
-  ``{"_skrub_ignore_extra_keys": True}`` to the environment dictionary.
+  ``{"skrub.ignore_extra_keys": True}`` to the environment dictionary.
   :pr:`2314` by :user:`Jérôme Dockès <jeromedockes>`
+- The special keys used by skrub in the environment dictionaries of
+  :class:`DataOp` have been renamed from ``_skrub_<name>`` to ``skrub.<name>``
+  (for example ``_skrub_predictions`` is now ``skrub.predictions``). Names of
+  variables, choices and nodes starting with ``skrub`` or ``_skrub`` are now
+  reserved. The old names lose their meaning, for example passing
+  ``"_skrub_predictions"`` now has no effect (except possibly triggering an
+  "unused key" warning).
+  :pr:`2420` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`DataOp` graphs are now rendered in the browser when GraphViz is
   not installed.
   :pr:`2227` by :user:`Jérôme Dockès <jeromedockes>`.
+- Navigating to different nodes in the report produced by
+  :meth:`DataOp.skb.report` no longer adds entries to the browser's Back button
+  history; node details and source code displays can be closed more easily; the
+  scrolling of the source code display is improved.
+  :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
+- The graph displayed in the :meth:`DataOp.skb.report` can be panned and zoomed
+  and its panel can be resized
+  :pr:`2414` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`2415` by :user:`Jérôme Dockès <jeromedockes>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
@@ -53,6 +98,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`SessionEncoder` now preserves the index of pandas dataframes.
+  Previously the output had a new ``RangeIndex``.
+  :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.
+
 - :class:`TableReport` no longer counts unused pandas categories as distinct
   values or includes them among the most frequent values. This also fixes
   constant-column detection after filtering a categorical column.
@@ -80,7 +129,14 @@ Bugfixes
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
-  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`
+  and :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`LLMEncoder` no longer loads a separate copy of the language model for
+  each column it encodes, e.g. in :class:`ApplyToCols` or
+  :class:`TableVectorizer`. The model is now loaded once per process and shared
+  by all encoders that use the same ``model_name`` and ``device``, which
+  reduces memory usage.
+  :pr:`2367` by :user:`Félix Lefebvre <flefebv>`.
 - :class:`DataOp.skb.make_randomized_search(backend='optuna')
   <DataOp.skb.make_randomized_search>`: reusing an existing optuna study with incomplete
   trials (i.e. which had been killed while running) could raise an exception.
@@ -97,6 +153,10 @@ Bugfixes
   dataframes: the gaps were truncated to whole seconds, so events could be
   wrongly put in the same session and results differed from pandas.
   :pr:`2337` by :user:`Joey Tan <JoeyTan21>`.
+- :meth:`DataOp.skb.make_grid_search` (and randomized search) could produce NaN
+  scores when using the default (built-in score method) scoring for fully unsupervised
+  pipelines (no ``y`` in the final estimator's ``.score()``). This has been fixed in
+  :pr:`2419` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`TableReport` and the :func:`selectors.cardinality_below` selector no
   longer count ``NaN`` as a distinct value in float columns of polars
   dataframes. ``NaN`` is already counted as a missing value there, so the

@@ -11,13 +11,15 @@ True colors of oceanography. Oceanography, 29(3), 10.
 To reproduce, install the cmocean package and use the following colormap:
 cmap = cmocean.cm.thermal
 
-link: http://tos.org/oceanography/assets/docs/29-3_thyng.pdf
+link: https://matplotlib.org/cmocean/
 """
 
 # %%
 import datetime as dt
 from datetime import datetime
+from pathlib import Path
 
+# import cmocean
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import polars as pl
@@ -25,9 +27,13 @@ from polars import selectors as cs
 
 from skrub import DatetimeEncoder
 
-plt.rcParams.update({"font.size": 25})  # Set to your desired font size
+STATIC_DIR = Path(__file__).parent / "_static"
+
+plt.rcParams.update({"font.size": 28})  # Set to your desired font size
 # %%
 # Defining a separate dataframe for each range for better control on the x-axis ticks
+cmap = "viridis"
+# cmap = cmocean.cm.thermal  # requires the cmocean package
 
 df_day = pl.datetime_range(
     datetime(2022, 1, 1), datetime(2022, 1, 3), interval="30m", eager=True
@@ -77,21 +83,21 @@ def day_tick_formatter(x, pos):
     # x is the tick position (index)
     base_time = datetime(2022, 1, 1)
     delta = base_time + dt.timedelta(minutes=60 * int(x))
-    return delta.strftime("%A")
+    return delta.strftime("%a")
 
 
 def day_in_month_tick_formatter(x, pos):
     # x is the tick position (index)
     base_time = datetime(2022, 1, 1)
     delta = base_time + dt.timedelta(days=int(x))
-    return delta.strftime("%a,\n%d %B")
+    return delta.strftime("%a,\n%d %b")
 
 
 def month_tick_formatter(x, pos):
     # x is the tick position (index)
     base_time = datetime(2022, 1, 1)
     delta = base_time + dt.timedelta(weeks=4 * int(x))
-    return delta.strftime("%a,\n%d %B")
+    return delta.strftime("%a,\n%d %b")
 
 
 def first_of_month_tick_formatter(x, pos):
@@ -99,13 +105,7 @@ def first_of_month_tick_formatter(x, pos):
     # This avoids having to keep track of the number of days in each month
     base_time = datetime(2022, 1, 1)
     date = base_time + dt.timedelta(days=int(x))
-    return date.strftime("%B") if date.day == 1 else ""
-
-
-def get_aspect(shape, H=2, W=20):
-    cols, rows = shape
-    aspect = (H / W) * (cols / rows)
-    return aspect
+    return date.strftime("%b") if date.day == 1 else ""
 
 
 titlefontsize = 38
@@ -116,6 +116,19 @@ fig, axs = plt.subplots(
     figsize=(18, 12),
     layout="constrained",
 )
+# Constrained layout only reserves space for a suptitle, so a second line
+# added with ``fig.text`` would overlap the "Hourly" axes title. Reserve the
+# top of the figure for both lines and place them there explicitly.
+fig.get_layout_engine().set(rect=(0, 0, 1, 0.885))
+suptitle = fig.text(0.5, 0.985, "Datetime Encoder", ha="center", va="top", fontsize=48)
+subtitle = fig.text(
+    0.5,
+    0.925,
+    "Extract periodic features from datetime data",
+    ha="center",
+    va="top",
+    fontsize=36,
+)
 
 ax_hour = axs[0]
 ax_week = axs[1]
@@ -123,7 +136,7 @@ ax_month = axs[2]
 ax_year = axs[3]
 
 # Plot for hours in a day
-ax_hour.imshow(hour.T, aspect=get_aspect(hour.shape))
+ax_hour.imshow(hour.T, aspect="auto", cmap=cmap)
 major_tick_positions = range(0, 48 * 2, 48)
 minor_tick_positions = range(0, 48 * 2, 12)
 ax_hour.set_xticks(major_tick_positions)
@@ -134,7 +147,7 @@ ax_hour.set_title("Hourly", fontsize=titlefontsize)
 ax_hour.set_yticks([])
 
 # Plot for weekdays in a week
-ax_week.imshow(day[: 24 * 7].T, aspect=get_aspect(day.shape))
+ax_week.imshow(day[: 24 * 7].T, aspect="auto", cmap=cmap)
 major_tick_positions = range(0, 24 * 7, 24)
 minor_tick_positions = range(0, 24 * 7, 12)
 ax_week.set_xticks(major_tick_positions)
@@ -144,7 +157,7 @@ ax_week.set_title("Daily", fontsize=titlefontsize)
 ax_week.set_yticks([])
 
 # Plot for days in a month
-ax_month.imshow(week[:].T, aspect=get_aspect(week.shape))
+ax_month.imshow(week[:].T, aspect="auto", cmap=cmap)
 major_tick_positions = range(0, 2 * 31, 7 * 2)
 ax_month.set_xticks(major_tick_positions)
 ax_month.xaxis.set_major_formatter(ticker.FuncFormatter(day_in_month_tick_formatter))
@@ -152,7 +165,7 @@ ax_month.set_title("Monthly", fontsize=titlefontsize)
 ax_month.set_yticks([])
 
 # Plot for months in a year
-ax_year.imshow(month[:].T, aspect=get_aspect(month.shape))
+ax_year.imshow(month[:].T, aspect="auto", cmap=cmap)
 first_days = []
 base_time = datetime(2022, 1, 1)
 for i in range((datetime(2023, 1, 1) - base_time).days):
@@ -166,10 +179,12 @@ ax_year.xaxis.set_major_formatter(ticker.FuncFormatter(first_of_month_tick_forma
 ax_year.set_title("Yearly", fontsize=titlefontsize)
 ax_year.set_yticks([])
 
-fig.savefig("periodic_features.png", dpi=300, bbox_inches="tight")
+fig.savefig(STATIC_DIR / "periodic_features.png", dpi=300, bbox_inches="tight")
 
 # Make backgrounds transparent and save light mode version (for dark websites)
 fig.patch.set_alpha(0)
+suptitle.set_color("white")
+subtitle.set_color("white")
 for ax in axs:
     ax.patch.set_alpha(0)
     ax.title.set_color("white")
@@ -182,13 +197,15 @@ for ax in axs:
 
 # Save dark mode version (light text for dark backgrounds)
 fig.savefig(
-    "periodic_features_dark_transparent.png",
+    STATIC_DIR / "periodic_features_dark_transparent.png",
     dpi=300,
     bbox_inches="tight",
     transparent=True,
 )
 
 # Now save light mode version (dark text for light backgrounds)
+suptitle.set_color("black")
+subtitle.set_color("black")
 for ax in axs:
     ax.title.set_color("black")
     ax.tick_params(axis="both", which="both", colors="black")
@@ -200,7 +217,7 @@ for ax in axs:
 
 # Save light mode version (dark text for light backgrounds)
 fig.savefig(
-    "periodic_features_light_transparent.png",
+    STATIC_DIR / "periodic_features_light_transparent.png",
     dpi=300,
     bbox_inches="tight",
     transparent=True,
