@@ -11,6 +11,21 @@ Ongoing Development
 
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+0.12.0
+======
+
+New Features
+------------
 - :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
   skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
   standard scikit-learn interface: ``fit(X, y)`` rather than the usual
