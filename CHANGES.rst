@@ -17,6 +17,13 @@ Changes
 
 Bugfixes
 --------
+- :meth:`DataOp.skb.subsample` with ``how="random"`` now selects the same rows
+  for numpy arrays and for pandas and polars dataframes and columns. Previously
+  each container type used a different random generator, so ``X`` and ``y``
+  subsampled separately were misaligned when, for example, ``X`` was a
+  dataframe and ``y`` a numpy array. Random subsamples of pandas and polars
+  objects now contain different rows than before.
+  :pr:`2470` by :user:`Toma Stefan Ionescu <tomaionescu>`.
 
 Deprecations
 ------------
