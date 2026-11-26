@@ -313,3 +313,12 @@ def test_choice_bounds(func, log):
     assert sample_min == pytest.approx(low, abs=0.001)
     assert sample_max == pytest.approx(high, abs=0.001)
     assert low <= sample_min <= sample_max <= high
+
+
+def test_choose_int_negative_low():
+    # sampled floats used to be truncated towards 0, so with a negative low,
+    # low was never sampled and 0 was sampled twice as often as other values
+    sample = skrub.choose_int(-3, 3).rvs(size=70_000, random_state=0)
+    values, counts = np.unique(sample, return_counts=True)
+    assert values.tolist() == list(range(-3, 4))
+    assert counts.min() > 0.9 * counts.max()
