@@ -1360,3 +1360,54 @@ DropUninformative (1 columns):
         cleaner_output.split("\n"), expected_cleaner_output.split("\n")
     ):
         assert output == expected
+
+
+class _FakeGeometryDtype(pd.api.extensions.ExtensionDtype):
+    # Minimal extension dtype named like the geopandas one. Subclassing an
+    # existing pandas dtype does not work because old pandas versions convert
+    # it back to the parent dtype.
+    name = "geometry"
+    type = object
+
+
+class _FakeGeometryArray(pd.api.extensions.ExtensionArray):
+    # Only the methods needed by the TableVectorizer in the test below.
+    def __init__(self, values):
+        self._data = np.asarray(values, dtype=object)
+
+    @property
+    def dtype(self):
+        return _FakeGeometryDtype()
+
+    def __getitem__(self, item):
+        result = self._data[item]
+        return type(self)(result) if isinstance(result, np.ndarray) else result
+
+    def __len__(self):
+        return len(self._data)
+
+    def isna(self):
+        return pd.isna(self._data)
+
+    def copy(self):
+        return type(self)(self._data.copy())
+
+
+def test_geometry_columns_warning():
+    # Only the dtype name is checked, so a fake dtype named "geometry" is
+    # enough to test the warning without installing geopandas.
+    df = pd.DataFrame(
+        {
+            "city": ["Paris", "Berlin", "Madrid"],
+            "geometry": _FakeGeometryArray(["a", "b", "c"]),
+        }
+    )
+    with pytest.warns(UserWarning, match=r"\['geometry'\] have a 'geometry' dtype"):
+        TableVectorizer().fit_transform(df)
+
+    # No warning when the geometry column is handled by a specific transformer.
+    tv = TableVectorizer(specific_transformers=[("drop", ["geometry"])])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=".*'geometry' dtype.*")
+        out = tv.fit_transform(df)
+    assert "geometry" not in sbd.column_names(out)

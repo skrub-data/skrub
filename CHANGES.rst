@@ -14,6 +14,11 @@ New Features
 
 Changes
 -------
+- :class:`TableVectorizer` now warns when the input contains columns with a
+  ``"geometry"`` dtype, such as GeoPandas geometry columns. These columns are
+  still encoded as strings unless they are handled with
+  ``specific_transformers`` or dropped.
+  :pr:`2374` by :user:`Oscar-man-shrestha <Oscar-man-shrestha>`.
 
 Bugfixes
 --------
