@@ -221,3 +221,32 @@ def test_percentage_numeric_column(df_module):
     column = df_module.make_column("col", [1.0, 50.0])
     result = ToFloat(convert_percentage=True).fit_transform(column)
     np.testing.assert_allclose(sbd.to_numpy(result), [1.0, 50.0])
+
+
+@pytest.mark.parametrize(
+    "kwargs, strings",
+    [
+        ({"decimal": ","}, ["1,5", "2,5"]),
+        ({"thousand": ","}, ["1.5", "2.5"]),
+        ({"parentheses": True}, ["1.5", "2.5"]),
+        ({"convert_percentage": True}, ["150%", "250%"]),
+    ],
+)
+def test_transform_dtype_differs_from_fit(df_module, kwargs, strings):
+    # Non-regression test for #2444: the string parsing is applied depending
+    # on the dtype of the column passed to transform, not on the dtype of the
+    # column seen during fit.
+    string_column = df_module.make_column("x", strings)
+    numeric_column = df_module.make_column("x", [1.5, 2.5])
+
+    # fit on strings, transform numbers
+    to_float = ToFloat(**kwargs).fit(string_column)
+    result = to_float.transform(numeric_column)
+    assert is_float32(df_module, result)
+    np.testing.assert_allclose(sbd.to_numpy(result), [1.5, 2.5])
+
+    # fit on numbers, transform strings
+    to_float = ToFloat(**kwargs).fit(numeric_column)
+    result = to_float.transform(string_column)
+    assert is_float32(df_module, result)
+    np.testing.assert_allclose(sbd.to_numpy(result), [1.5, 2.5])

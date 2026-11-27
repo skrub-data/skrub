@@ -336,21 +336,9 @@ class ToFloat(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
-            self._needs_str_replace = False
-            # Default case it's directly converted to float32.
-            # Regex validation and string replacement is skipped.
-            # Optimization: allows us to avoid manipulation for
-            # formats that Python can parse natively.
-            if (
-                self.decimal != "."
-                or self._thousand != ""
-                or self.parentheses
-                or self.convert_percentage
-            ) and sbd.is_string(column):
-                self._needs_str_replace = True
+            if self._needs_str_replace(column):
                 return self._parse_strings(column, strict=True)
-            numeric = sbd.to_float32(column, strict=True)
-            return numeric
+            return sbd.to_float32(column, strict=True)
         except Exception as e:
             raise RejectColumn(
                 f"Could not convert column {sbd.name(column)!r} to numbers."
@@ -369,9 +357,24 @@ class ToFloat(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Float32.
         """
-        if self._needs_str_replace:
+        if self._needs_str_replace(column):
             return self._parse_strings(column, strict=False)
         return sbd.to_float32(column, strict=False)
+
+    def _needs_str_replace(self, column):
+        # The string manipulation is only needed when a non-default option is
+        # set (formats that can be parsed natively are converted directly), and
+        # it can only be applied to a string column. The dtype is checked on
+        # the column we receive, in ``fit_transform`` and in ``transform``,
+        # because the column seen by ``transform`` may not have the same dtype
+        # as the one seen during ``fit``.
+        has_non_default_options = (
+            self.decimal != "."
+            or self._thousand != ""
+            or self.parentheses
+            or self.convert_percentage
+        )
+        return has_non_default_options and sbd.is_string(column)
 
     def _parse_strings(self, column, strict):
         if self.convert_percentage:
