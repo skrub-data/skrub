@@ -17,6 +17,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`column_associations` now matches Pearson correlations by column
+  position, so duplicate column names no longer duplicate association rows
+  or attach correlations to the wrong pair.
+  :pr:`2471` by :user:`HussainZaman920 <HussainZaman920>`.
 - :func:`choose_int` now samples every integer in the range uniformly during
   randomized hyperparameter search when ``low`` is negative. Previously
   ``low`` was never sampled; ``high+1`` could be sampled when ``high`` was negative and ``0`` sampled too frequently otherwise

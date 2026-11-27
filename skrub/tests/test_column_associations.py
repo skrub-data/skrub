@@ -3,6 +3,7 @@ import sys
 import warnings
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -27,6 +28,27 @@ def test_column_associations(df_module):
     )
     assert sbd.to_list(sbd.col(asso, "pearson_corr")) == pytest.approx(
         [-1.0, -0.13484, 0.13484]
+    )
+
+
+def test_column_associations_duplicate_column_names():
+    df = pd.DataFrame(
+        [[0, 0, 0], [1, 1, 1], [2, 0, 4], [3, 1, 9]],
+        columns=["dup", "dup", "other"],
+    )
+
+    associations = column_associations(df)
+
+    pairs = set(
+        zip(associations["left_column_idx"], associations["right_column_idx"])
+    )
+    assert pairs == {(0, 1), (0, 2), (1, 2)}
+    pearson_by_pair = {
+        (row.left_column_idx, row.right_column_idx): row.pearson_corr
+        for row in associations.itertuples()
+    }
+    assert pearson_by_pair == pytest.approx(
+        {(0, 1): 0.4472136, (0, 2): 0.9583148, (1, 2): 0.4285714}
     )
 
 

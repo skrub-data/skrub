@@ -115,7 +115,7 @@ def column_associations(df, *, compute_pearson=True):
     if not compute_pearson:
         return cramer_v_table
     pearson_c_table = _compute_pearson(df)
-    on = ["left_column_name", "right_column_name"]
+    on = ["left_column_idx", "right_column_idx"]
     return _join_utils.left_join(
         cramer_v_table, pearson_c_table, right_on=on, left_on=on
     )
@@ -276,26 +276,29 @@ def _compute_cramer(table, n_samples):
 
 
 def _compute_pearson(df):
-    """Compute the Pearson's correlation coefficient for all pairs of columns.
+    """Compute Pearson correlations for pairs of numeric columns.
 
-    This returns the Pearson's correlation as a dataframe in the long format, of shape
-    (n samples * n samples, 3), whose module is the same as the input.
+    This returns the correlations in long format, identified by column position
+    so that duplicate column names remain unambiguous.
     """
-    corr = sbd.pearson_corr(df)
-    if sbd.shape(corr)[0] == 0:
-        return sbd.make_dataframe_like(
-            df,
-            {
-                "left_column_name": np.array([], dtype="str"),
-                "right_column_name": np.array([], dtype="str"),
-                "pearson_corr": np.array([], dtype="float64"),
-            },
-        )
-    return _melt(
-        corr,
-        left_col="left_column_name",
-        right_col="right_column_name",
-        val="pearson_corr",
+    # Give columns unique names before computing correlations: pandas preserves
+    # duplicate labels in DataFrame.corr, which makes name-based reshaping ambiguous.
+    n_columns = sbd.shape(df)[1]
+    df_with_unique_names = sbd.set_column_names(
+        df, [str(i) for i in range(n_columns)]
+    )
+    corr = sbd.pearson_corr(df_with_unique_names)
+
+    column_indices = np.asarray(sbd.column_names(corr), dtype=np.intp)
+    correlations = sbd.to_numpy(corr)
+    left, right = np.triu_indices_from(correlations, k=1)
+    return sbd.make_dataframe_like(
+        df,
+        {
+            "left_column_idx": column_indices[left],
+            "right_column_idx": column_indices[right],
+            "pearson_corr": correlations[left, right],
+        },
     )
 
 
