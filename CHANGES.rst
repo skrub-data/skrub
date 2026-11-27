@@ -102,7 +102,7 @@ Bugfixes
   now handles a column passed to ``transform`` whose dtype differs from the
   fitted one. Previously a numeric column raised an error, and a string column
   was converted to nulls when the transformer had been fitted on numbers.
-  :pr:`XXXX` by :user:`LolPanda2004 <LolPanda2004>`.
+  :pr:`2468` by :user:`LolPanda2004 <LolPanda2004>`.
 
 - :class:`SessionEncoder` now preserves the index of pandas dataframes.
   Previously the output had a new ``RangeIndex``.
