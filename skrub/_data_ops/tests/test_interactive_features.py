@@ -328,6 +328,14 @@ def test_repr():
           - make_scorer(roc_auc_score, response_method=('decision_function', 'predict_proba'))
           - weighted_accuracy: 'accuracy'
         Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.
+
+    XySkrubLearner and its environment
+
+    >>> (
+    ...     skrub.X() + skrub.y() + skrub.var("a")
+    ... ).skb.make_learner().with_sklearn_interface(environment={"a": "a" * 100})
+    XySkrubLearner(environment={'a': 'aaaaaaaaaaaa...aaaaaaaaaaaaa'},
+                   learner=SkrubLearner(data_op=<BinOp: add>))
     """  # noqa: E501
 
 

@@ -321,13 +321,13 @@ used, it will always be empty.
 If we happen to already have the predictions for the data we are scoring on, but
 would like to use the learner's ``score`` method to get the scores, we can
 inject the precomputed predictions in the input environment, under the special
-key ``"_skrub_predictions"``:
+key ``"skrub.predictions"``:
 
 >>> predict_proba = learner.predict_proba(split['test'])
->>> learner.score(split['test'] | {'_skrub_predictions': {'predict_proba': predict_proba}})
+>>> learner.score(split['test'] | {'skrub.predictions': {'predict_proba': predict_proba}})
 {'neg_log_loss': -0.63...}
 
 With the above, ``predict()`` is not called during scoring. As for
 ``return_predictions``, this only applies to scorers added with
 :meth:`DataOp.skb.with_scoring`. If no scorer has been configured
-``'_skrub_predictions'`` will be ignored.
+``'skrub.predictions'`` will be ignored.

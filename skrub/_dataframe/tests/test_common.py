@@ -794,6 +794,26 @@ def test_value_counts(df_module):
         df_module.assert_frame_equal(counts, expected)
 
 
+@pytest.mark.parametrize(
+    "values, expected_values, expected_counts",
+    [(["b", "b", "c", None], ["b", "c"], [2, 1]), ([], [], []), ([None, None], [], [])],
+)
+def test_value_counts_unobserved_categories(
+    df_module, values, expected_values, expected_counts
+):
+    col = df_module.make_column("x", values or ["b"])
+    col = ns.to_categorical(col.head(len(values)))
+    if ns.is_pandas(col):
+        col = col.cat.set_categories(["a", "b", "c", "d"])
+    else:
+        import polars as pl
+
+        col = col.cast(pl.Enum(["a", "b", "c", "d"]))
+    counts = ns.sort(ns.value_counts(col), by="value")
+    assert ns.to_list(ns.col(counts, "value")) == expected_values
+    assert ns.to_list(ns.col(counts, "count")) == expected_counts
+
+
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
 @pytest.mark.parametrize(
     "interpolation", ["nearest", "higher", "lower", "midpoint", "linear"]
@@ -891,6 +911,17 @@ def test_unique(df_module):
     df_module.assert_column_equal(
         ns.unique(s), ns.pandas_convert_dtypes(df_module.make_column("", [0, 2, 4]))
     )
+
+
+def test_unique_ignores_nan(df_module):
+    # NaN is treated as a null value (as in is_null and drop_nulls), so it is
+    # not counted as a distinct value
+    s = df_module.make_column("", [1.0, np.nan, 2.0, np.nan, 1.0])
+    assert ns.n_unique(s) == 2
+    assert sorted(ns.to_list(ns.unique(s))) == [1.0, 2.0]
+    s = df_module.make_column("", [np.nan, np.nan])
+    assert ns.n_unique(s) == 0
+    assert ns.to_list(ns.unique(s)) == []
 
 
 def test_filter(df_module):
@@ -1008,6 +1039,16 @@ def test_with_columns(df_module):
     df_module.assert_frame_equal(out, expected)
 
 
+def test_with_columns_preserves_pandas_index():
+    df = pd.DataFrame({"a": [1, 2], "b": [3, 4]}, index=[10, 20])
+    # the new column's own index is ignored, values are added by position
+    new_col = pd.Series([5, 6], index=[100, 200])
+    out = ns.with_columns(df, c=new_col, d=[7, 8])
+    assert out.index.tolist() == [10, 20]
+    assert out["c"].tolist() == [5, 6]
+    assert out["d"].tolist() == [7, 8]
+
+
 def test_abs(df_module):
     s = df_module.make_column("", [-1.0, 2.0, None])
     df_module.assert_column_equal(
@@ -1039,6 +1080,15 @@ def test_is_sorted(col, expected, df_module):
         assert ns.is_sorted(col[::-1], descending=True)
 
 
+def test_is_sorted_pandas_float16():
+    # pandas cannot build a float16 index, which it uses to check monotonicity.
+    col = pd.Series(np.array([1.0, np.nan, 2.0, 3.0], dtype=np.float16))
+    assert ns.is_sorted(col)
+    assert not ns.is_sorted(col[::-1])
+    assert ns.is_sorted(col[::-1], descending=True)
+    assert not ns.is_sorted(col.iloc[[0, 3, 2]])
+
+
 @pytest.mark.parametrize(
     "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
 )
@@ -1049,3 +1099,10 @@ def test_is_sorted_object_dtypes(col, df_module):
     # to add the code / computation time to handle those discrepancies.
     # However, is_sorted should not crash and return a Boolean in all cases.
     assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)
+
+
+def test_to_float32_strips_surrounding_whitespace(df_module):
+    """Padded numeric strings convert the same way on every backend."""
+    col = df_module.make_column("c", [" 1.5", "2.5 ", "\t3.5"])
+    out = ns.to_float32(col)
+    assert ns.to_list(out) == pytest.approx([1.5, 2.5, 3.5])

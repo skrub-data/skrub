@@ -91,6 +91,14 @@ def test_few_rows(df_module):
     TableReport(df).html()
 
 
+def test_float16_column():
+    pd = pytest.importorskip("pandas")
+    df = pd.DataFrame({"a": np.arange(5, dtype=np.float16), "b": [1, 2, 3, 4, 5]})
+    report = TableReport(df)
+    report.html()
+    assert report._summary["columns"][0]["is_ordered"]
+
+
 def test_empty_dataframe(df_module):
     html = TableReport(df_module.empty_dataframe).html()
     assert "The dataframe is empty." in html

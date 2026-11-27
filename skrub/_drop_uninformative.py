@@ -1,5 +1,4 @@
 import numbers
-import warnings
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -13,7 +12,7 @@ class DropUninformative(SingleColumnTransformer):
     """Drop column if it is found to be uninformative according to various criteria.
 
     Columns are considered "uninformative" if the fraction of missing values is larger
-    than a threshold, if they contain one unique value, or if all values are unique.
+    than a threshold, or if they contain one unique value.
 
     Parameters
     ----------
@@ -24,16 +23,6 @@ class DropUninformative(SingleColumnTransformer):
     drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
-
-    drop_if_unique : bool, default=False
-        If True, drop the column if all values are unique (i.e. the
-        number of unique values is equal to the number of rows). Missing values
-        do not count as unique values for this criterion.
-
-        .. deprecated:: 0.9.0
-        This functionality can drop informative columns and is unlikely to be
-        of use in practice. It is therefore deprecated and will be removed in a
-        future version.
 
     Attributes
     ----------
@@ -90,28 +79,15 @@ class DropUninformative(SingleColumnTransformer):
     def __init__(
         self,
         drop_if_constant=False,
-        drop_if_unique=False,
         drop_null_fraction=1.0,
     ):
         self.drop_if_constant = drop_if_constant
-        self.drop_if_unique = drop_if_unique
         self.drop_null_fraction = drop_null_fraction
 
     def _check_params(self):
         if not isinstance(self.drop_if_constant, bool):
             raise TypeError(
                 f"drop_if_constant must be boolean, found {self.drop_if_constant}."
-            )
-        if self.drop_if_unique is not False:
-            warnings.warn(
-                "The `drop_if_unique` parameter of `DropUninformative` is deprecated"
-                " and will be removed in a future version.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-        if not isinstance(self.drop_if_unique, bool):
-            raise TypeError(
-                f"drop_if_unique must be boolean, found {self.drop_if_unique}."
             )
 
         if self.drop_null_fraction is not None:
@@ -135,15 +111,6 @@ class DropUninformative(SingleColumnTransformer):
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
             if (sbd.n_unique(column) == 1) and (self._null_count == 0):
-                return True
-        return False
-
-    def _drop_if_unique(self, column):
-        if self.drop_if_unique and not sbd.is_numeric(column):
-            n_unique = sbd.n_unique(column)
-            if self._null_count > 0:
-                return False
-            if n_unique == len(column):
                 return True
         return False
 
@@ -175,7 +142,6 @@ class DropUninformative(SingleColumnTransformer):
             for check in [
                 self._drop_if_too_many_nulls,
                 self._drop_if_constant,
-                self._drop_if_unique,
             ]
         )
 

@@ -820,6 +820,12 @@ def _to_float32_polars(col, strict=True):
             # old versions of polars don't have .cat.physical()
             return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
         return col.cat.physical().cast(pl.Float32)
+    if col.dtype == pl.String:
+        # polars' cast is strict about surrounding whitespace, whereas
+        # `pd.to_numeric` ignores it. Strip exactly what the pandas path
+        # ignores: ASCII whitespace only, so a no-break space (U+00A0) or a
+        # thin space is rejected by both backends rather than only by pandas.
+        col = col.str.strip_chars(" \t\n\r\f\v")
     return col.cast(pl.Float32, strict=strict)
 
 
@@ -1152,11 +1158,10 @@ def value_counts(col):
 
 @value_counts.specialize("pandas", argument_type="Column")
 def _value_counts_pandas(col):
-    return (
-        col.value_counts(dropna=True)
-        .reset_index()
-        .set_axis(["value", "count"], axis="columns")
-    )
+    counts = col.value_counts(dropna=True)
+    # Categorical columns also list unused categories with a count of zero.
+    counts = counts[counts > 0]
+    return counts.reset_index().set_axis(["value", "count"], axis="columns")
 
 
 @value_counts.specialize("polars", argument_type="Column")
@@ -1284,10 +1289,7 @@ def _n_unique_pandas(col):
 
 @n_unique.specialize("polars", argument_type="Column")
 def _n_unique_polars(col):
-    n = col.n_unique()
-    if col.is_null().any():
-        n -= 1
-    return n
+    return drop_nulls(col).n_unique()
 
 
 @dispatch
@@ -1302,7 +1304,7 @@ def _unique_pandas(col):
 
 @unique.specialize("polars", argument_type="Column")
 def _unique_polars(col):
-    return col.unique().drop_nulls()
+    return drop_nulls(col.unique())
 
 
 @dispatch
@@ -1451,7 +1453,7 @@ def _replace_polars(col, old, new):
 def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
-    return make_dataframe_like(df, cols)
+    return copy_index(df, make_dataframe_like(df, cols))
 
 
 @dispatch
@@ -1512,6 +1514,10 @@ def is_sorted(col, descending=False):
 
 @is_sorted.specialize("pandas", argument_type="Column")
 def _is_sorted_pandas(col, descending=False):
+    if col.dtype == np.float16:
+        # pandas builds an Index to check monotonicity, and float16 indexes are not
+        # supported. Upcasting is exact and does not change the order.
+        col = col.astype(np.float32)
     if descending:
         return col.dropna().is_monotonic_decreasing
     return col.dropna().is_monotonic_increasing

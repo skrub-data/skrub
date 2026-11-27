@@ -76,6 +76,7 @@ dev = [
 
   # test
   "pytest",
+  "pytest-asyncio>=0.24",
   "pytest-cov",
   "pytest-xdist",
 
@@ -84,6 +85,7 @@ dev = [
   "polars",
   "plotly",
   "optuna",
+  "holidays"
 ]
 transformers = ["sentence-transformers"]
 
@@ -92,8 +94,13 @@ Homepage = "https://skrub-data.org/"
 Source = "https://github.com/skrub-data/skrub"
 Issues = "https://github.com/skrub-data/skrub/issues"
 
-[tool.setuptools]
-packages = ["skrub"]
+[tool.setuptools.packages.find]
+# Include subpackages via discovery rather than listing only skrub.
+# namespaces is needed to include data-only directories such as `skrub/_docs`
+# Without this, setuptools warns that the packages are missing when
+# building the package
+include = ["skrub*"]
+namespaces = true
 
 [tool.setuptools.package-data]
 # Needed to prevent pytest from executing the examples and doctests when
@@ -136,6 +143,7 @@ sphinx-llms-txt = "*"
 sphinx-markdown-builder = "*"
 statsmodels = "*"
 optuna = "*"
+holidays = "*"
 skorch = "*"
 tabicl = "*"
 
@@ -152,6 +160,7 @@ pyarrow = "*"
 polars = "*"
 plotly = "*"
 optuna = "*"
+holidays = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -168,6 +177,7 @@ pyarrow = "<21"
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
 pytest = "*"
+pytest-asyncio = ">=0.24"
 pytest-cov = "*"
 pytest-xdist = "*"
 
@@ -193,6 +203,7 @@ pyarrow = "==15.0.2"
 polars = "==1.5.0"
 plotly = "*"
 optuna = "*"
+holidays = "*"
 
 [tool.pixi.feature.nightly-dependencies.pypi-options]
 # Get the nightly of as many dependencies as possible
@@ -228,7 +239,7 @@ polars = "*"
 polars = "*"
 plotly = "*"
 optuna = "*"
-
+holidays = "*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -336,10 +347,14 @@ ignore = [
 "examples/*" = ["E402"]
 "doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+"skrub/_docs/examples/**" = ["E402"]
+"skrub/_docs/tutorials/**" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   # Turn deprecation warnings into errors
   "error::FutureWarning",
@@ -387,7 +402,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,*/prism-1.29.0/*,*/wasm-graphviz/graphviz.js,*/panzoom-4.6.2/*'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

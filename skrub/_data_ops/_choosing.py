@@ -9,7 +9,7 @@ from scipy import stats
 from sklearn.utils import check_random_state
 
 from .. import _utils
-from ._utils import NULL, OPTIONAL_VALUE
+from ._utils import NULL, OPTIONAL_VALUE, check_if_reserved_name
 
 
 def _with_fields(obj, **fields):
@@ -98,6 +98,7 @@ def _check_name(name):
         raise TypeError(
             f"choice `name` must be a `str` or `None`, got object of type: {type(name)}"
         )
+    check_if_reserved_name(name)
 
 
 class _Ellipsis:
@@ -720,7 +721,7 @@ class NumericChoice(BaseNumericChoice):
         _check_bounds(self.low, self.high, self.log)
         _check_default_numeric_outcome(self.default_outcome, self.to_int)
 
-        # if choose_int, sampled values will be truncated to produce int so we
+        # if choose_int, sampled values will be floored to produce int so we
         # sample in [ low, high+1 [ (otherwise high would be excluded from the
         # range)
         offset = 1 - 1e-6 if self.to_int else 0
@@ -735,7 +736,7 @@ class NumericChoice(BaseNumericChoice):
     def rvs(self, size=None, random_state=None):
         value = self._distrib.rvs(size=size, random_state=random_state)
         if self.to_int:
-            value = value.astype(int)
+            value = np.floor(value).astype(int)
         return value
 
     def default(self):

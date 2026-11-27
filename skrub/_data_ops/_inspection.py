@@ -65,6 +65,11 @@ def _use_table_report_display():
 
 
 def node_report(data_op, mode="preview", environment=None, **report_kwargs):
+    # report() passes the environment for the full DataOp but this gets called
+    # for every node (not just the root) so extra keys in the env
+    # are expected -> ignore extra keys
+    if environment is not None:
+        environment = {**environment, _utils.IGNORE_EXTRA_KEYS_NAME: True}
     result = evaluate(data_op, mode=mode, environment=environment)
     if sbd.is_column(result):
         # TODO say in page that it was a column not df
@@ -286,9 +291,10 @@ def _make_report(
         return f"node_{node_name}.html"
 
     def make_url(node):
-        return node_name_to_url(node_rindex[id(node)])
+        # in-page links, turned into a drawer view by data_ops-report.js
+        return f"#node_{node_rindex[id(node)]}"
 
-    graph_drawing = draw_data_op_graph(data_op, url=make_url, target="node-frame")
+    graph_drawing = draw_data_op_graph(data_op, url=make_url)
     for node_id, status in node_status.items():
         # graphviz adds the class to the node's <g> in the svg (see data_ops.css)
         if status in ("error", "skipped"):
@@ -302,15 +308,11 @@ def _make_report(
             "graph_html": graph_html,
             "report_title": title,
             "eval": eval,
+            "total_n_nodes": len(g["nodes"]),
         }
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
-    # shown in the index's iframe when no node is selected
-    placeholder = jinja_env.get_template("placeholder.html").render(
-        {"report_title": title}
-    )
-    (output_dir / "placeholder.html").write_text(placeholder, "utf-8")
 
     for i, node in g["nodes"].items():
         report, error, error_msg = None, None, None
@@ -505,12 +507,9 @@ class GraphDrawing:
         return f"<{self.__class__.__name__}: use .open() to display>"
 
 
-def _node_kwargs(data_op, *, url=None, target=None, show_ids=False):
-    # `url` is a function mapping a node to the address of the page the node
-    # links to (graphviz's "URL" attribute: where the link goes). `target` is
-    # the name of the browsing context (e.g. an iframe) in which that page is
-    # opened (graphviz's "target" attribute: where the link opens). It is only
-    # used for nodes that have a link, so it has no effect without `url`.
+def _node_kwargs(data_op, *, url=None, show_ids=False):
+    # `url` is a function mapping a node to the address its graph node links
+    # to (graphviz's "URL" attribute).
     impl = data_op._skrub_impl
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
@@ -536,8 +535,6 @@ def _node_kwargs(data_op, *, url=None, target=None, show_ids=False):
         label = f"{label}\nid: {impl.uuid}"
     if url is not None and (computed_url := url(data_op)) is not None:
         kwargs["URL"] = computed_url
-        if target is not None:
-            kwargs["target"] = target
         label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
@@ -557,13 +554,11 @@ def _dot_id(n):
     return f"node_{n}"
 
 
-def draw_data_op_graph(
-    data_op, *, url=None, target=None, direction="TB", show_ids=False
-):
+def draw_data_op_graph(data_op, *, url=None, direction="TB", show_ids=False):
     g = graph(data_op)
     dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
-        kwargs = _node_kwargs(e, url=url, target=target, show_ids=show_ids)
+        kwargs = _node_kwargs(e, url=url, show_ids=show_ids)
         kwargs["id"] = _dot_id(node_id)
         node = pydot.Node(_dot_id(node_id), **kwargs)
         dot_graph.add_node(node)

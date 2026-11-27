@@ -3,12 +3,10 @@ import numpy as np
 from .. import _dataframe as sbd
 from .._config import get_config
 from . import _data_ops, _evaluation
+from ._utils import SHOULD_SUBSAMPLE_NAME
 
-# The key in the evaluation environment that indicates if subsampling should
-# take place or not. Subsampling can be turned on or off when evaluating a
-# DataOp by setting the corresponding value in the environment.
-
-SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
+# Subsampling can be turned on or off when evaluating a DataOp by setting the
+# `SHOULD_SUBSAMPLE_NAME` key in the evaluation environment.
 
 
 def _should_subsample(mode, environment):
@@ -22,7 +20,7 @@ def _should_subsample(mode, environment):
         return True
     if enable_subsampling == "force":
         return True
-    return environment.get(SHOULD_SUBSAMPLE_KEY, False)
+    return environment.get(SHOULD_SUBSAMPLE_NAME, False)
 
 
 class ShouldSubsample(_data_ops.DataOpImpl):
@@ -67,12 +65,6 @@ def should_subsample():
     return _data_ops.DataOp(ShouldSubsample())
 
 
-def _sample_numpy(a, n, seed):
-    rng = np.random.default_rng(seed)
-    idx = rng.choice(a.shape[0], size=n, replace=False)
-    return a[idx]
-
-
 def _head_numpy(a, n):
     return a[:n]
 
@@ -100,12 +92,11 @@ class SubsamplePreviews(_data_ops.DataOpImpl):
         n = min(e.n, shape[0])
         if e.how == "head":
             return _head_numpy(e.target, n=n) if is_numpy else sbd.head(e.target, n=n)
-        seed = get_config()["subsampling_seed"]
-        return (
-            _sample_numpy(e.target, n=n, seed=seed)
-            if is_numpy
-            else sbd.sample(e.target, n=n, seed=seed)
-        )
+        # Draw the row positions the same way for all container types, so that
+        # e.g. a dataframe X and a numpy y subsampled separately stay aligned.
+        rng = np.random.default_rng(get_config()["subsampling_seed"])
+        idx = rng.choice(shape[0], size=n, replace=False)
+        return e.target[idx] if is_numpy else sbd.select_rows(e.target, idx)
 
 
 def env_with_subsampling(data_op, environment, keep_subsampling):
@@ -125,7 +116,7 @@ def env_with_subsampling(data_op, environment, keep_subsampling):
             " anywhere in the DataOp. Either pass `keep_subsampling=False` (the"
             " default) or configure subsampling with `.skb.subsample()`."
         )
-    return environment | {SHOULD_SUBSAMPLE_KEY: True}
+    return environment | {SHOULD_SUBSAMPLE_NAME: True}
 
 
 def uses_subsampling(data_op):
