@@ -157,6 +157,11 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
+- :class:`TableReport` no longer raises a ``TypeError`` when the dataframe
+  contains a decimal column (polars ``Decimal`` or pandas ``ArrowDtype``
+  decimal): the values are now converted to floats before computing the
+  histogram.
+  :pr:`2449` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------

@@ -3,11 +3,13 @@ import datetime
 import json
 import re
 import warnings
+from decimal import Decimal
 from pathlib import Path
 
 import numpy as np
 import pytest
 from sklearn.utils import Bunch
+from sklearn.utils.fixes import parse_version
 
 from skrub import TableReport, ToDatetime, config_context
 from skrub import _dataframe as sbd
@@ -156,6 +158,26 @@ def test_infinite_values(df_module):
         )
 
     TableReport(df).html()
+
+
+def test_decimal_column(df_module):
+    # Non-regression test: the histogram failed with a TypeError on decimal
+    # columns because np.quantile received an object array of Decimal values.
+    values = [Decimal("1.50"), None, Decimal("2.00"), Decimal("3.25")]
+    if df_module.name == "polars":
+        col = df_module.module.Series(
+            "a", values, dtype=df_module.module.Decimal(10, 2)
+        )
+    else:
+        pa = pytest.importorskip("pyarrow")
+        if parse_version(df_module.module.__version__) < parse_version("2.0.0"):
+            pytest.skip("pandas < 2.0 cannot compute correlations on Arrow nulls")
+        dtype = df_module.module.ArrowDtype(pa.decimal128(10, 2))
+        col = df_module.module.Series(values, name="a", dtype=dtype)
+    # build the dataframe directly: make_dataframe would convert the dtype
+    report = TableReport(df_module.module.DataFrame({"a": col}))
+    report.html()
+    assert report._summary["columns"][0]["histogram_data"]["bin_counts"].sum() == 3
 
 
 @skip_polars_installed_without_pyarrow
