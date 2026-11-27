@@ -61,6 +61,10 @@ New Features
   ``True``, strings with a trailing ``%`` such as ``"12.5%"`` or ``"1 %"`` are
   converted to fractions (``0.125``, ``0.01``).
   :pr:`2407` by :user:`Rishav Bhattarai <Rishavbhattarai>`.
+- :class:`ToDatetime` has a new ``epoch_seconds`` parameter. When set to
+  ``True``, numeric columns are interpreted as seconds since the Unix epoch and
+  converted to (UTC, time zone naive) datetimes.
+  :pr:`2379` by :user:`Turki <turki013>`.
 
 Changes
 -------
