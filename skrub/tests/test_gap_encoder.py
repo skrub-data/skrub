@@ -3,12 +3,14 @@ import re
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
 from skrub import _dataframe as sbd
+from skrub._gap_encoder import _multiplicative_update_h
 from skrub._single_column_transformer import RejectColumn
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data as _gen_data
@@ -331,3 +333,139 @@ def test_non_supported_init(generate_data):
         ),
     ):
         gap_encoder.fit(X)
+
+
+def test_transform_and_score_do_not_change_fitted_state(df_module):
+    column = df_module.make_column(
+        "column", ["paris", "london", "berlin", "pqris", None] * 6
+    )
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    fitted_H = {
+        string: activations.copy() for string, activations in enc.H_dict_.items()
+    }
+    names = enc.get_feature_names_out()
+    unseen = df_module.make_column("column", ["madrid", "paris", None, "rome"])
+    enc.transform(unseen)
+    enc.score(unseen)
+    assert enc.H_dict_.keys() == fitted_H.keys()
+    for string, activations in fitted_H.items():
+        assert_array_equal(enc.H_dict_[string], activations)
+    assert enc.get_feature_names_out() == names
+
+
+def test_fit_computes_the_feature_names_once(df_module, monkeypatch):
+    calls = []
+    compute = GapEncoder._compute_feature_names_out
+
+    def counting_compute(self, n_labels):
+        calls.append(n_labels)
+        return compute(self, n_labels)
+
+    monkeypatch.setattr(GapEncoder, "_compute_feature_names_out", counting_compute)
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    assert calls == [3]
+    assert list(enc.transform(column).columns) == enc.all_outputs_
+    enc.transform(column)
+    assert calls == [3]
+    enc.get_feature_names_out(n_labels=1)
+    assert calls == [3, 1]
+    # partial_fit changes the topics, so the names are computed when needed
+    enc.partial_fit(column)
+    assert not hasattr(enc, "all_outputs_")
+    enc.transform(column)
+    assert calls == [3, 1, 3]
+
+
+def test_feature_names_are_a_copy(df_module):
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    names = enc.get_feature_names_out()
+    names.reverse()
+    assert list(enc.transform(column).columns) == enc.all_outputs_
+    assert enc.all_outputs_ == names[::-1]
+
+
+def test_failed_refit_drops_the_feature_names(df_module):
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    with pytest.raises(ValueError, match="empty vocabulary"):
+        enc.fit(df_module.make_column("column", ["", "", ""]))
+    assert not hasattr(enc, "all_outputs_")
+
+
+def test_transform_without_all_outputs(df_module):
+    # Encoders pickled before all_outputs_ existed compute the names when needed
+    column = df_module.make_column("column", ["paris", "london", "berlin", "pqris"] * 6)
+    enc = GapEncoder(n_components=2, random_state=0).fit(column)
+    expected = enc.transform(column)
+    del enc.all_outputs_
+    df_module.assert_frame_equal(enc.transform(column), expected)
+
+
+def test_fit_defers_feature_name_errors(df_module):
+    # Without any word to build the labels from, the error is raised when the
+    # names are first needed, not by fit
+    column = df_module.make_column("column", ["", " ", "  ", ""] * 3)
+    enc = GapEncoder(n_components=2, hashing=True, random_state=0).fit(column)
+    with pytest.raises(ValueError, match="empty vocabulary"):
+        enc.get_feature_names_out()
+
+
+def _update_h_with_whole_topics(
+    counts, topics, activations, epsilon, max_iter, rescale_W, shape_prior, scale_prior
+):
+    # The activation update as it was before it sliced the topics per row:
+    # the whole topic matrix is divided first, then sliced.
+    if rescale_W:
+        topic_sums = 1 + 1 / scale_prior
+        scaled_topics = topics / topic_sums
+    else:
+        topic_sums = np.sum(topics, axis=1) + 1 / scale_prior
+        scaled_topics = topics / topic_sums.reshape(-1, 1)
+    const = (shape_prior - 1) / topic_sums
+    squared_epsilon = epsilon**2
+    for row_counts, row_activations in zip(counts, activations):
+        values = row_counts.data
+        columns = row_counts.indices
+        row_scaled_topics = scaled_topics[:, columns]
+        row_topics = topics[:, columns]
+        squared_norm = 1
+        for _ in range(max_iter):
+            if squared_norm <= squared_epsilon:
+                break
+            ratios = values / (np.dot(row_activations, row_topics) + 1e-10)
+            updated = row_activations * np.dot(row_scaled_topics, ratios) + const
+            change = updated - row_activations
+            squared_norm = np.dot(change, change) / np.dot(
+                row_activations, row_activations
+            )
+            row_activations[:] = updated
+    return activations
+
+
+@pytest.mark.parametrize("rescale_W", [True, False])
+@pytest.mark.parametrize("shape_prior, scale_prior", [(1.1, 1.0), (1.3, 0.7)])
+def test_update_h_matches_whole_topics_formula(rescale_W, shape_prior, scale_prior):
+    # The second priors make every divisor inexact in floating point, so that
+    # changing where the topics are scaled would change the results
+    rng = np.random.default_rng(0)
+    dense_counts = rng.poisson(0.2, size=(40, 120)).astype(np.float64)
+    dense_counts[0] = 0  # a string without any n-gram
+    counts = sp.csr_matrix(dense_counts)
+    topics = rng.random((5, 120))
+    initial = rng.random((40, 5)) + 0.1
+    expected = _update_h_with_whole_topics(
+        counts, topics, initial.copy(), 1e-3, 100, rescale_W, shape_prior, scale_prior
+    )
+    result = _multiplicative_update_h(
+        counts,
+        topics,
+        initial.copy(),
+        epsilon=1e-3,
+        max_iter=100,
+        rescale_W=rescale_W,
+        gamma_shape_prior=shape_prior,
+        gamma_scale_prior=scale_prior,
+    )
+    assert_array_equal(result, expected)
