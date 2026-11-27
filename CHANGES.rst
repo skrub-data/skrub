@@ -17,6 +17,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`choose_int` now samples every integer in the range uniformly during
+  randomized hyperparameter search when ``low`` is negative. Previously
+  ``low`` was never sampled; ``high+1`` could be sampled when ``high`` was negative and ``0`` sampled too frequently otherwise
+  :pr:`2469` by :user:`Toma Stefan Ionescu <tomaionescu>`.
 - :meth:`DataOp.skb.subsample` with ``how="random"`` now selects the same rows
   for numpy arrays and for pandas and polars dataframes and columns. Previously
   each container type used a different random generator, so ``X`` and ``y``

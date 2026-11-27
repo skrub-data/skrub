@@ -721,7 +721,7 @@ class NumericChoice(BaseNumericChoice):
         _check_bounds(self.low, self.high, self.log)
         _check_default_numeric_outcome(self.default_outcome, self.to_int)
 
-        # if choose_int, sampled values will be truncated to produce int so we
+        # if choose_int, sampled values will be floored to produce int so we
         # sample in [ low, high+1 [ (otherwise high would be excluded from the
         # range)
         offset = 1 - 1e-6 if self.to_int else 0
@@ -736,7 +736,7 @@ class NumericChoice(BaseNumericChoice):
     def rvs(self, size=None, random_state=None):
         value = self._distrib.rvs(size=size, random_state=random_state)
         if self.to_int:
-            value = value.astype(int)
+            value = np.floor(value).astype(int)
         return value
 
     def default(self):
