@@ -323,3 +323,9 @@ def test_choose_int_negative_low():
     values, counts = np.unique(sample, return_counts=True)
     assert values.tolist() == list(range(-3, 4))
     assert counts.min() > 0.9 * counts.max()
+
+    # with a negative high, high + 1 was sampled instead of low
+    sample = skrub.choose_int(-3, -1).rvs(size=30_000, random_state=0)
+    values, counts = np.unique(sample, return_counts=True)
+    assert values.tolist() == [-3, -2, -1]
+    assert counts.min() > 0.9 * counts.max()
