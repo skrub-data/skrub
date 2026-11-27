@@ -1,0 +1,424 @@
+/* ===== Tab Container ===== */
+.tab-container {
+    padding: 0;
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Header hover effect */
+h1:hover {
+    color: #007acc;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Tab bar */
+.tab-bar {
+    display: flex;
+}
+.tab-button {
+    flex: none;
+    min-width: 120px;
+    padding: 12px 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    transition: background-color 0.2s, color 0.2s;
+    outline: none;
+    border-radius: 8px 8px 0 0;
+}
+.tab-button:hover {
+    background-color: #e0e0e0;
+    border-radius: 8px 8px 0 0;
+}
+.tab-button.active {
+    background-color: #e0e0e0;
+    color: #000;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Tab content panels — hidden tabs keep dimensions for Plotly */
+.tab-content {
+    visibility: hidden;
+    position: absolute;
+    left: -9999px;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.tab-content.active {
+    visibility: visible;
+    position: relative;
+    left: auto;
+    overflow: visible;
+    pointer-events: auto;
+}
+
+.sub-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    min-height: 0;
+    max-width: 220px;
+}
+.sub-buttons.sub-container {
+    margin: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: transparent;
+    padding: 0;
+    flex: 0 1 30%;
+    max-width: none;
+}
+.sub-button {
+    padding: 8px 16px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    color: ≈;
+    text-align: left;
+    white-space: nowrap;
+}
+.sub-button:hover {
+    background: #e0e0e0;
+}
+.sub-button.active {
+    background: #007acc;
+    color: #fff;
+    border-color: #007acc;
+}
+.meta-button {
+    border: 1px solid #ddd;
+    background: #f5f5f5;
+    border-radius: 0;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #333;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    cursor: pointer;
+    text-align: left;
+    display: inline-block;
+    white-space: nowrap;
+}
+.meta-button:hover {
+    background: color-mix(in srgb, var(--hover-color, #e0e0e0) 40%, white 60%);
+    color: #333;
+    border-color: var(--hover-color, #ccc);
+}
+.meta-button.active,
+.meta-button:active {
+    background: var(--hover-color, #e0e0e0);
+    color: #fff;
+    border-color: var(--hover-color, #999);
+}
+.meta-label {
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 0;
+    min-width: 150px;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #333;
+    text-align: left;
+    display: inline-block;
+    white-space: nowrap;
+}
+td:has(.meta-button),
+td:has(.meta-label) {
+    padding: 0;
+}
+
+/* Hidden sub-panels keep dimensions for Plotly */
+.sub-panel {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: none;
+}
+.sub-panel.active {
+    visibility: visible;
+    pointer-events: auto;
+}
+/* Base plot always visible in background */
+.panel-area > .sub-panel.base-plot.active {
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    display: flex !important;
+    opacity: 1 !important;
+}
+/* Regular plots appear above base */
+.sub-panel:not(.base-plot) {
+    z-index: 1;
+}
+/* Metadata overlays appear above regular plots */
+.sub-panel[class*="meta-"] {
+    z-index: 2;
+    pointer-events: none;
+}
+/* When overlay is active, allow pointer events */
+.sub-panel:not(.base-plot).active {
+    pointer-events: auto;
+}
+/* Active metadata overlays allow pointer events */
+.sub-panel[class*="meta-"].active {
+    pointer-events: auto;
+}
+
+.tab-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+    overflow: hidden;
+}
+.panel-area {
+    flex: 1;
+    min-width: 0;
+    min-height: 450px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.main-container {
+    border: 2px solid #333;
+    padding: 20px;
+    margin: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 0;
+    max-width: 100%;
+}
+
+.sub-container {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    min-height: 400px;
+    overflow: auto;
+    max-width: 100%;
+}
+.sub-panel > .sub-container,
+.sub-panel.sub-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    padding: 0px;
+    overflow: hidden;
+    max-width: 100%;
+    background-color: transparent;
+    border: none;
+}
+/* Plotly inside the active panel fills the space */
+.sub-panel.active .js-plotly-plot {
+    flex: 1;
+    min-height: 0;
+}
+.flex-row > div:first-child {
+    flex: 2;
+    margin-right: 20px;
+    min-width: 0;
+    overflow: hidden;
+}
+.flex-row > table {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+}
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+    padding: 4px 8px;
+}
+
+/* Make all Plotly plots responsive */
+.js-plotly-plot {
+    width: 100% !important;
+    height: 0;
+    min-height: 350px;
+    max-height: 100%;
+    max-width: 100% !important;
+    flex-shrink: 1;
+}
+.plot-container {
+    max-width: 100%;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+.js-plotly-plot .svg-container {
+    width: 100% !important;
+    max-width: 100%;
+    height: 100% !important;
+    max-height: 100%;
+    overflow: hidden;
+}
+.js-plotly-plot svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* At-a-glance rows */
+.glance-row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+}
+.glance-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.glance-meta {
+    flex: 0 0 auto;
+    border: none;
+    border-right: 1px solid #ccc;
+    padding: 8px 12px 8px 12px;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: left;
+}
+.glance-meta:hover {
+    background: #e8e8e8;
+}
+.glance-label {
+    font-weight: 600;
+    color: #333;
+    white-space: normal;
+    overflow-wrap: normal;
+}
+.glance-meta-text {
+    font-family: monospace;
+    font-size: 12px;
+    color: #666;
+}
+.glance-plot {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 70px;
+    overflow: hidden;
+}
+.glance-plot svg {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+}
+.glance-plot .js-plotly-plot .svg-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+}
+
+/* Overview tab static two-column layout */
+.overview-stats {
+    flex: 0 0 280px;
+    border-right: 2px solid #ccc;
+    padding-right: 20px;
+    margin-right: 8px;
+}
+.overview-plots {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Statistics table styling */
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.stats-table thead th {
+    background: #007acc;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #005a9e;
+}
+
+.stats-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.stats-table tbody tr:hover {
+    background-color: #f0f8ff;
+}
+
+.stats-table .stat-label {
+    font-weight: 500;
+    color: #555;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    width: 60%;
+}
+
+.stats-table .stat-value {
+    color: #222;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: right;
+    font-weight: 600;
+    width: 40%;
+}
+
+.stats-table tbody tr:last-child .stat-label,
+.stats-table tbody tr:last-child .stat-value {
+    border-bottom: none;
+}
