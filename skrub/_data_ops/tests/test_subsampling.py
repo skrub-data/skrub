@@ -112,11 +112,24 @@ def test_how(as_frame):
     assert (_to_np(X.skb.preview()) == _to_np(X_a)[:2]).all()
 
     X = skrub.X(X_a).skb.subsample(n=2, how="random")
-    # sampling is done differently for numpy arrays and in df.sample()
-    idx = [2, 1] if as_frame else [1, 2]
+    idx = [1, 2]
     assert (_to_np(X.skb.eval()) == _to_np(X_a)).all()
     assert (_to_np(X.skb.eval(keep_subsampling=True)) == _to_np(X_a)[idx]).all()
     assert (_to_np(X.skb.preview()) == _to_np(X_a)[idx]).all()
+
+
+def test_random_subsample_dataframe_and_numpy_aligned(df_module):
+    # X and y subsampled separately must keep the same rows even when one is a
+    # dataframe or column and the other a numpy array.
+    ids = np.arange(100)
+    X = skrub.X(df_module.make_dataframe({"id": ids})).skb.subsample(n=5, how="random")
+    y = skrub.y(ids).skb.subsample(n=5, how="random")
+    assert sbd.to_list(sbd.col(X.skb.preview(), "id")) == y.skb.preview().tolist()
+    y_col = skrub.y(df_module.make_column("id", ids)).skb.subsample(n=5, how="random")
+    assert sbd.to_list(y_col.skb.preview()) == y.skb.preview().tolist()
+    X_fit = X.skb.eval(keep_subsampling=True)
+    y_fit = y.skb.eval(keep_subsampling=True)
+    assert sbd.to_list(sbd.col(X_fit, "id")) == y_fit.tolist()
 
 
 def test_sample_errors():

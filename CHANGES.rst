@@ -21,6 +21,13 @@ Bugfixes
   randomized hyperparameter search when ``low`` is negative. Previously
   ``low`` was never sampled; ``high+1`` could be sampled when ``high`` was negative and ``0`` sampled too frequently otherwise
   :pr:`2469` by :user:`Toma Stefan Ionescu <tomaionescu>`.
+- :meth:`DataOp.skb.subsample` with ``how="random"`` now selects the same rows
+  for numpy arrays and for pandas and polars dataframes and columns. Previously
+  each container type used a different random generator, so ``X`` and ``y``
+  subsampled separately were misaligned when, for example, ``X`` was a
+  dataframe and ``y`` a numpy array. Random subsamples of pandas and polars
+  objects now contain different rows than before.
+  :pr:`2470` by :user:`Toma Stefan Ionescu <tomaionescu>`.
 
 Deprecations
 ------------
@@ -102,6 +109,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`TableReport` no longer fails on pandas dataframes that contain a
+  ``float16`` column.
+  :pr:`2452` by :user:`Jeremy891102 <Jeremy891102>`.
+
 - :class:`SessionEncoder` now preserves the index of pandas dataframes.
   Previously the output had a new ``RangeIndex``.
   :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.

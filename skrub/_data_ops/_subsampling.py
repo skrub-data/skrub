@@ -65,12 +65,6 @@ def should_subsample():
     return _data_ops.DataOp(ShouldSubsample())
 
 
-def _sample_numpy(a, n, seed):
-    rng = np.random.default_rng(seed)
-    idx = rng.choice(a.shape[0], size=n, replace=False)
-    return a[idx]
-
-
 def _head_numpy(a, n):
     return a[:n]
 
@@ -98,12 +92,11 @@ class SubsamplePreviews(_data_ops.DataOpImpl):
         n = min(e.n, shape[0])
         if e.how == "head":
             return _head_numpy(e.target, n=n) if is_numpy else sbd.head(e.target, n=n)
-        seed = get_config()["subsampling_seed"]
-        return (
-            _sample_numpy(e.target, n=n, seed=seed)
-            if is_numpy
-            else sbd.sample(e.target, n=n, seed=seed)
-        )
+        # Draw the row positions the same way for all container types, so that
+        # e.g. a dataframe X and a numpy y subsampled separately stay aligned.
+        rng = np.random.default_rng(get_config()["subsampling_seed"])
+        idx = rng.choice(shape[0], size=n, replace=False)
+        return e.target[idx] if is_numpy else sbd.select_rows(e.target, idx)
 
 
 def env_with_subsampling(data_op, environment, keep_subsampling):
