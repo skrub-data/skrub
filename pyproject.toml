@@ -94,8 +94,13 @@ Homepage = "https://skrub-data.org/"
 Source = "https://github.com/skrub-data/skrub"
 Issues = "https://github.com/skrub-data/skrub/issues"
 
-[tool.setuptools]
-packages = ["skrub"]
+[tool.setuptools.packages.find]
+# Include subpackages via discovery rather than listing only skrub.
+# namespaces is needed to include data-only directories such as `skrub/_docs`
+# Without this, setuptools warns that the packages are missing when
+# building the package
+include = ["skrub*"]
+namespaces = true
 
 [tool.setuptools.package-data]
 # Needed to prevent pytest from executing the examples and doctests when

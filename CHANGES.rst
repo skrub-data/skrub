@@ -11,6 +11,36 @@ Ongoing Development
 
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+- :func:`column_associations` now matches Pearson correlations by column
+  position, so duplicate column names no longer duplicate association rows
+  or attach correlations to the wrong pair.
+  :pr:`2471` by :user:`HussainZaman920 <HussainZaman920>`.
+- :func:`choose_int` now samples every integer in the range uniformly during
+  randomized hyperparameter search when ``low`` is negative. Previously
+  ``low`` was never sampled; ``high+1`` could be sampled when ``high`` was negative and ``0`` sampled too frequently otherwise
+  :pr:`2469` by :user:`Toma Stefan Ionescu <tomaionescu>`.
+- :meth:`DataOp.skb.subsample` with ``how="random"`` now selects the same rows
+  for numpy arrays and for pandas and polars dataframes and columns. Previously
+  each container type used a different random generator, so ``X`` and ``y``
+  subsampled separately were misaligned when, for example, ``X`` was a
+  dataframe and ``y`` a numpy array. Random subsamples of pandas and polars
+  objects now contain different rows than before.
+  :pr:`2470` by :user:`Toma Stefan Ionescu <tomaionescu>`.
+
+Deprecations
+------------
+
+0.12.0
+======
+
+New Features
+------------
 - :meth:`SkrubLearner.with_sklearn_interface` allows wrapping a SkrubLearner (or
   skrub ParamSearch or OptunaParamSearch) in an adapter that exposes the
   standard scikit-learn interface: ``fit(X, y)`` rather than the usual
@@ -71,8 +101,10 @@ Changes
   history; node details and source code displays can be closed more easily; the
   scrolling of the source code display is improved.
   :pr:`2403` by :user:`Jérôme Dockès <jeromedockes>`.
-- The graph displayed in the :meth:`DataOp.skb.report` can be panned and zoomed.
-  :pr:`2414` by :user:`Jérôme Dockès <jeromedockes>`.
+- The graph displayed in the :meth:`DataOp.skb.report` can be panned and zoomed
+  and its panel can be resized
+  :pr:`2414` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`2415` by :user:`Jérôme Dockès <jeromedockes>`.
 - Whenever a datetime column is timezone-aware, it will be treated like a full
   datetime (and not a plain date) by :class:`DatetimeEncoder`, i.e. the ``hour``
   feature is extracted by default, even if all items in the column have their
@@ -81,9 +113,13 @@ Changes
 
 Bugfixes
 --------
-- :func:`column_associations` now matches Pearson correlations by column position, so duplicate
-  column names no longer duplicate association rows or attach a
-  correlation to the wrong pair.
+- :class:`TableReport` no longer fails on pandas dataframes that contain a
+  ``float16`` column.
+  :pr:`2452` by :user:`Jeremy891102 <Jeremy891102>`.
+
+- :class:`SessionEncoder` now preserves the index of pandas dataframes.
+  Previously the output had a new ``RangeIndex``.
+  :pr:`2448` by :user:`LolPanda2004 <LolPanda2004>`.
 
 - :class:`TableReport` no longer counts unused pandas categories as distinct
   values or includes them among the most frequent values. This also fixes
@@ -107,7 +143,8 @@ Bugfixes
   `ValueError: ... is a nonexistent time due to ...` with Pandas when trying to
   identify a date vs a datetime with `col.dt.normalize()` against some specific
   timezoned string datetime.
-  :pr:`2334` by :user:`Laurent Steff <lsioctl>`.
+  :pr:`2334` by :user:`Laurent Steff <lsioctl>`
+  and :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
 - :class:`LLMEncoder` no longer loads a separate copy of the language model for
   each column it encodes, e.g. in :class:`ApplyToCols` or
   :class:`TableVectorizer`. The model is now loaded once per process and shared
@@ -139,10 +176,6 @@ Bugfixes
   dataframes. ``NaN`` is already counted as a missing value there, so the
   number of distinct values was off by one and differed from pandas.
   :pr:`2417` by :user:`Joey Tan <JoeyTan21>`.
-- :class:`DatetimeEncoder` (and therefore :class:`TableVectorizer`) no longer
-  raises an ``AttributeError`` when fitted on a polars column with the ``Date``
-  dtype.
-  :pr:`2432` by :user:`Joey Tan <JoeyTan21>`.
 
 Deprecations
 ------------

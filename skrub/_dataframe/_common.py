@@ -1453,7 +1453,7 @@ def _replace_polars(col, old, new):
 def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
-    return make_dataframe_like(df, cols)
+    return copy_index(df, make_dataframe_like(df, cols))
 
 
 @dispatch
@@ -1514,6 +1514,10 @@ def is_sorted(col, descending=False):
 
 @is_sorted.specialize("pandas", argument_type="Column")
 def _is_sorted_pandas(col, descending=False):
+    if col.dtype == np.float16:
+        # pandas builds an Index to check monotonicity, and float16 indexes are not
+        # supported. Upcasting is exact and does not change the order.
+        col = col.astype(np.float32)
     if descending:
         return col.dropna().is_monotonic_decreasing
     return col.dropna().is_monotonic_increasing
