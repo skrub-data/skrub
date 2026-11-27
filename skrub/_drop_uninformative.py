@@ -80,9 +80,11 @@ class DropUninformative(SingleColumnTransformer):
         self,
         drop_if_constant=False,
         drop_null_fraction=1.0,
+        variance_threshold=0,
     ):
         self.drop_if_constant = drop_if_constant
         self.drop_null_fraction = drop_null_fraction
+        self.variance_threshold = variance_threshold
 
     def _check_params(self):
         if not isinstance(self.drop_if_constant, bool):
@@ -99,6 +101,17 @@ class DropUninformative(SingleColumnTransformer):
                     f"Threshold {self.drop_null_fraction} is invalid. Threshold"
                     " should be a number in the range [0, 1], or None."
                 )
+        if isinstance(self.variance_threshold, bool) or not isinstance(
+            self.variance_threshold, numbers.Real
+        ):
+            raise TypeError(
+                f"variance_threshold must be a number, found {self.variance_threshold}."
+            )
+        if not self.variance_threshold >= 0:
+            raise ValueError(
+                "variance_threshold must be non-negative, "
+                f"found {self.variance_threshold}."
+            )
 
     def _drop_if_too_many_nulls(self, column):
         if self.drop_null_fraction == 1.0:
@@ -111,6 +124,13 @@ class DropUninformative(SingleColumnTransformer):
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
             if (sbd.n_unique(column) == 1) and (self._null_count == 0):
+                return True
+            if (
+                self.variance_threshold > 0
+                and sbd.is_numeric(column)
+                and self._null_count == 0
+                and column.var(ddof=0) < self.variance_threshold
+            ):
                 return True
         return False
 
