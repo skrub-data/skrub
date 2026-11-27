@@ -81,6 +81,10 @@ Changes
 
 Bugfixes
 --------
+- :func:`column_associations` now matches Pearson correlations by column position, so duplicate
+  column names no longer duplicate association rows or attach a
+  correlation to the wrong pair.
+
 - :class:`TableReport` no longer counts unused pandas categories as distinct
   values or includes them among the most frequent values. This also fixes
   constant-column detection after filtering a categorical column.
