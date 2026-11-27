@@ -736,7 +736,6 @@ class NumericChoice(BaseNumericChoice):
     def rvs(self, size=None, random_state=None):
         value = self._distrib.rvs(size=size, random_state=random_state)
         if self.to_int:
-            # not astype(int), which truncates towards 0 for negative values
             value = np.floor(value).astype(int)
         return value
 

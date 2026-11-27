@@ -19,8 +19,7 @@ Bugfixes
 --------
 - :func:`choose_int` now samples every integer in the range uniformly during
   randomized hyperparameter search when ``low`` is negative. Previously
-  ``low`` was never sampled and ``0`` was sampled twice as often as the other
-  values.
+  ``low`` was never sampled; ``high+1`` could be sampled when ``high`` was negative and ``0`` sampled too frequently otherwise
   :pr:`2469` by :user:`Toma Stefan Ionescu <tomaionescu>`.
 
 Deprecations

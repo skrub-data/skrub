@@ -316,6 +316,7 @@ def test_choice_bounds(func, log):
 
 
 def test_choose_int_negative_low():
+    # non-regression for #2466
     # sampled floats used to be truncated towards 0, so with a negative low,
     # low was never sampled and 0 was sampled twice as often as other values
     sample = skrub.choose_int(-3, 3).rvs(size=70_000, random_state=0)
