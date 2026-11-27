@@ -950,6 +950,12 @@ def _to_datetime_polars(col, format, strict=True):
         # avoid ChronoFormatWarning due to pandas and polars writing this
         # differently.
         format = format.replace(".%f", "%.f")
+        # polars' strict "%z" rejects the "Z" suffix and "+HH" offsets that
+        # pandas accepts. chrono parses "%#z" like TimezoneOffsetColonZ, which
+        # accepts "Z", but with the minutes optional:
+        # https://docs.rs/chrono/latest/chrono/format/enum.Fixed.html#variant.TimezoneOffsetColonZ
+        # https://github.com/chronotope/chrono/blob/6adaa5240c26fecb7bd9077334a91f8f67f4f3fe/src/format/mod.rs#L281-L289
+        format = format.replace("%z", "%#z")
         return col.str.to_datetime(format=format, strict=strict)
     except (pl.exceptions.ComputeError, pl.exceptions.InvalidOperationError) as e:
         raise ValueError("Failed to convert to datetime") from e
